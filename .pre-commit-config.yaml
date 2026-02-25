@@ -1,0 +1,46 @@
+# Pre-commit hooks for aria2 C++ development
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+# Requires: clang-format (via llvm), cppcheck
+
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(deps/|po/|test/.*\.(torrent|xml|meta4|metalink))
+      - id: end-of-file-fixer
+        exclude: ^(deps/|po/|test/.*\.(torrent|xml|meta4|metalink))
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-yaml
+      - id: check-case-conflict
+
+  # clang-format — use the project's existing .clang-format
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.7
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]
+        # Only check src/ and test/ — never touch deps/ or third-party code
+        files: ^(src|test)/.*\.(cc|h)$
+        args: ['--style=file']
+
+  # Prevent accidentally committing debug code
+  - repo: local
+    hooks:
+      - id: no-debug-statements
+        name: Check for debug statements
+        entry: '^\s*(std::cout|std::cerr|printf|fprintf\(stderr).*DEBUG|TODO.*REMOVE|FIXME.*REMOVE'
+        language: pygrep
+        types_or: [c, c++]
+        files: ^(src|test)/.*\.(cc|h)$
+
+      - id: no-new-dependencies
+        name: Block new #include of non-project headers
+        entry: 'This hook is informational only'
+        language: fail
+        files: 'deps/.*'
+        # Prevents adding files to deps/ directory

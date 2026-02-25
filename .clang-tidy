@@ -1,0 +1,40 @@
+# Clang-Tidy configuration for aria2
+# Adapted for C++11 codebase — no modernize checks that require C++14+
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  cert-*,
+  -cert-err58-cpp,
+  clang-analyzer-*,
+  misc-*,
+  -misc-non-private-member-variables-in-classes,
+  -misc-no-recursion,
+  -misc-include-cleaner,
+  performance-*,
+  readability-braces-around-statements,
+  readability-container-size-empty,
+  readability-duplicate-include,
+  readability-misleading-indentation,
+  readability-redundant-smartptr-get,
+  readability-string-compare
+
+# Don't suggest fixes automatically — review only
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '^src/.*\.h$'
+
+CheckOptions:
+  # Match project conventions
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+
+FormatStyle: file
