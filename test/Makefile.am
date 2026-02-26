@@ -227,7 +227,8 @@ aria2c_SOURCES += BtAllowedFastMessageTest.cc\
 	ExtensionMessageRegistryTest.cc\
 	UDPTrackerClientTest.cc\
 	BtOrchestrationTest.cc\
-	DHTCommandTest.cc
+	DHTCommandTest.cc\
+	BtPeerIntegrationTest.cc
 endif # ENABLE_BITTORRENT
 
 if ENABLE_METALINK
