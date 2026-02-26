@@ -100,3 +100,60 @@ jobs:
     - name: Build aria2
       run: |
         make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check
+
+  # ASan is not supported with MinGW gcc, so no sanitizer flags here.
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: actions/checkout@v6
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cppunit
+          mingw-w64-x86_64-openssl
+          mingw-w64-x86_64-c-ares
+          mingw-w64-x86_64-sqlite3
+          mingw-w64-x86_64-libssh2
+          mingw-w64-x86_64-zlib
+          mingw-w64-x86_64-libxml2
+          autoconf
+          automake
+          libtool
+          make
+          pkg-config
+          gettext-devel
+    - name: Build and test
+      run: |
+        autoreconf -i
+        ./configure \
+          --without-gnutls --with-openssl --with-libxml2 \
+          --with-libcares --with-sqlite3 --with-libssh2
+        make -j$(nproc) check
+
+  build-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Build and test on FreeBSD
+      uses: vmactions/freebsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg install -y \
+            autoconf automake libtool pkgconf \
+            cppunit openssl c-ares sqlite3 libssh2 expat
+        run: |
+          asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+          export CPPFLAGS="$asanflags -g3"
+          export LDFLAGS="$asanflags"
+          autoreconf -i
+          ./configure \
+            --without-gnutls --with-openssl --with-libexpat \
+            --with-libcares --with-sqlite3 --with-libssh2
+          make -j$(sysctl -n hw.ncpu) check
