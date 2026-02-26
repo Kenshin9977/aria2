@@ -4,6 +4,7 @@ check_PROGRAMS = $(TESTS)
 aria2c_SOURCES = AllTest.cc\
 	TestUtil.cc TestUtil.h\
 	TestEngineHelper.h\
+	MockSocketCore.h\
 	SocketCoreTest.cc\
 	array_funTest.cc\
 	Base64Test.cc\
