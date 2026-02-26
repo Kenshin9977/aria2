@@ -174,9 +174,8 @@ public:
 
   void testProcess()
   {
-    // handleTimeout() on empty storage is a no-op; verify no crash
+    // handleTimeout() on empty storage is a no-op; reaching here = no crash
     runCmdThenHalt(e_.get(), createCmd(std::chrono::seconds(0)));
-    CPPUNIT_ASSERT(true);
   }
 };
 

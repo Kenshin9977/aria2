@@ -95,7 +95,7 @@ public:
   // RAII wrapper for file descriptors to prevent leaks on assertion failure.
   struct FdGuard {
     int fd;
-    FdGuard(int fd) : fd(fd) {}
+    explicit FdGuard(int fd) : fd(fd) {}
     ~FdGuard()
     {
       if (fd >= 0) {
