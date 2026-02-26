@@ -99,7 +99,8 @@ aria2c_SOURCES = AllTest.cc\
 	TimeBasedCommandTest.cc \
 	RealtimeCommandTest.cc \
 	HttpCommandIntegrationTest.cc \
-	FtpCommandIntegrationTest.cc
+	FtpCommandIntegrationTest.cc \
+	SmallClassCoverageTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
@@ -228,7 +229,9 @@ aria2c_SOURCES += BtAllowedFastMessageTest.cc\
 	UDPTrackerClientTest.cc\
 	BtOrchestrationTest.cc\
 	DHTCommandTest.cc\
-	BtPeerIntegrationTest.cc
+	BtPeerIntegrationTest.cc\
+	BtValidatorTest.cc\
+	StreamPieceSelectorTest.cc
 endif # ENABLE_BITTORRENT
 
 if ENABLE_METALINK
