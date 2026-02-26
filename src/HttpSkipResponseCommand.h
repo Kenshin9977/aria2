@@ -73,7 +73,7 @@ public:
                           const std::shared_ptr<HttpConnection>& httpConnection,
                           std::unique_ptr<HttpResponse> httpResponse,
                           DownloadEngine* e,
-                          const std::shared_ptr<SocketCore>& s);
+                          const std::shared_ptr<ISocketCore>& s);
 
   virtual ~HttpSkipResponseCommand();
 

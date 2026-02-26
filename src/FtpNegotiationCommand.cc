@@ -82,12 +82,12 @@ namespace aria2 {
 FtpNegotiationCommand::FtpNegotiationCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& socket, Seq seq,
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& socket, Seq seq,
     const std::string& baseWorkingDir)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, socket),
       sequence_(seq),
       ftp_(std::make_shared<FtpConnection>(
-          cuid, socket, req,
+          cuid, std::static_pointer_cast<SocketCore>(socket), req,
           e->getAuthConfigFactory()->createAuthConfig(
               req, requestGroup->getOption().get()),
           getOption().get())),
@@ -115,7 +115,8 @@ bool FtpNegotiationCommand::executeInternal()
   else if (sequence_ == SEQ_NEGOTIATION_COMPLETED) {
     auto command = make_unique<FtpDownloadCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(), ftp_,
-        getDownloadEngine(), dataSocket_, getSocket());
+        getDownloadEngine(), dataSocket_,
+        std::static_pointer_cast<SocketCore>(getSocket()));
     command->setStartupIdleTime(
         std::chrono::seconds(getOption()->getAsInt(PREF_STARTUP_IDLE_TIME)));
     command->setLowestDownloadSpeedLimit(
@@ -998,9 +999,10 @@ void FtpNegotiationCommand::poolConnection() const
 {
   if (getOption()->getAsBool(PREF_FTP_REUSE_CONNECTION)) {
     // Store ftp_->getBaseWorkingDir() as options
-    getDownloadEngine()->poolSocket(getRequest(), ftp_->getUser(),
-                                    createProxyRequest(), getSocket(),
-                                    ftp_->getBaseWorkingDir());
+    getDownloadEngine()->poolSocket(
+        getRequest(), ftp_->getUser(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()),
+        ftp_->getBaseWorkingDir());
   }
 }
 

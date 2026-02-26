@@ -43,7 +43,7 @@ namespace aria2 {
 class HttpConnection;
 class HttpDownloadCommand;
 class HttpResponse;
-class SocketCore;
+class ISocketCore;
 class StreamFilter;
 class Checksum;
 
@@ -90,7 +90,7 @@ public:
                       const std::shared_ptr<FileEntry>& fileEntry,
                       RequestGroup* requestGroup,
                       const std::shared_ptr<HttpConnection>& httpConnection,
-                      DownloadEngine* e, const std::shared_ptr<SocketCore>& s);
+                      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
   ~HttpResponseCommand();
 };
 

@@ -61,7 +61,7 @@ HttpDownloadCommand::HttpDownloadCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     std::unique_ptr<HttpResponse> httpResponse,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
     : DownloadCommand(cuid, req, fileEntry, requestGroup, e, socket,
                       httpConnection->getSocketRecvBuffer()),
       httpResponse_(std::move(httpResponse)),
@@ -102,8 +102,9 @@ bool HttpDownloadCommand::prepareForNextSegment()
     // pool terminated socket.  In HTTP/1.1, keep-alive is default,
     // so closing connection without Connection: close header means
     // that server is broken or not configured properly.
-    getDownloadEngine()->poolSocket(getRequest(), createProxyRequest(),
-                                    getSocket());
+    getDownloadEngine()->poolSocket(
+        getRequest(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()));
   }
 
   // The request was sent assuming that server supported pipelining, but

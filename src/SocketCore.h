@@ -43,6 +43,7 @@
 #include <vector>
 #include <memory>
 
+#include "ISocketCore.h"
 #include "a2netcompat.h"
 #include "a2io.h"
 #include "a2netcompat.h"
@@ -59,7 +60,7 @@ class TLSSession;
 class SSHSession;
 #endif // HAVE_LIBSSH2
 
-class SocketCore {
+class SocketCore : public ISocketCore {
   friend bool operator==(const SocketCore& s1, const SocketCore& s2);
   friend bool operator!=(const SocketCore& s1, const SocketCore& s2);
   friend bool operator<(const SocketCore& s1, const SocketCore& s2);

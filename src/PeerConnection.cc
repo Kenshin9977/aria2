@@ -64,7 +64,7 @@ enum {
 } // namespace
 
 PeerConnection::PeerConnection(cuid_t cuid, const std::shared_ptr<Peer>& peer,
-                               const std::shared_ptr<SocketCore>& socket)
+                               const std::shared_ptr<ISocketCore>& socket)
     : cuid_(cuid),
       peer_(peer),
       socket_(socket),

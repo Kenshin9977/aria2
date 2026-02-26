@@ -76,7 +76,7 @@ namespace aria2 {
 DownloadCommand::DownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& s,
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& s,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       socketRecvBuffer),

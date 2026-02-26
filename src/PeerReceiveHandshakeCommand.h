@@ -40,7 +40,7 @@
 namespace aria2 {
 
 class PeerConnection;
-class SocketCore;
+class ISocketCore;
 class Peer;
 
 class PeerReceiveHandshakeCommand : public PeerAbstractCommand {
@@ -54,7 +54,7 @@ protected:
 public:
   PeerReceiveHandshakeCommand(
       cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-      const std::shared_ptr<SocketCore>& s,
+      const std::shared_ptr<ISocketCore>& s,
       std::unique_ptr<PeerConnection> peerConnection = nullptr);
 
   virtual ~PeerReceiveHandshakeCommand();

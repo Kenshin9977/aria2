@@ -40,7 +40,7 @@
 namespace aria2 {
 
 class HttpConnection;
-class SocketCore;
+class ISocketCore;
 
 class AbstractProxyRequestCommand : public AbstractCommand {
 private:
@@ -66,7 +66,7 @@ public:
                               const std::shared_ptr<FileEntry>& fileEntry,
                               RequestGroup* requestGroup, DownloadEngine* e,
                               const std::shared_ptr<Request>& proxyRequest,
-                              const std::shared_ptr<SocketCore>& s);
+                              const std::shared_ptr<ISocketCore>& s);
 
   virtual ~AbstractProxyRequestCommand();
 

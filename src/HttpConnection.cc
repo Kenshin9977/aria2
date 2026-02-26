@@ -85,7 +85,7 @@ HttpRequestEntry::getHttpHeaderProcessor() const
 }
 
 HttpConnection::HttpConnection(
-    cuid_t cuid, const std::shared_ptr<SocketCore>& socket,
+    cuid_t cuid, const std::shared_ptr<ISocketCore>& socket,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer)
     : cuid_(cuid),
       socket_(socket),

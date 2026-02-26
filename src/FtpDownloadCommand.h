@@ -57,7 +57,7 @@ public:
                      RequestGroup* requestGroup,
                      const std::shared_ptr<FtpConnection>& ftpConnection,
                      DownloadEngine* e,
-                     const std::shared_ptr<SocketCore>& dataSocket,
+                     const std::shared_ptr<ISocketCore>& dataSocket,
                      const std::shared_ptr<SocketCore>& ctrlSocket);
   virtual ~FtpDownloadCommand();
 };

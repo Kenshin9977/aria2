@@ -54,7 +54,7 @@ namespace aria2 {
 SftpFinishDownloadCommand::SftpFinishDownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& socket)
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& socket)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, socket)
 {
   disableReadCheckSocket();
@@ -74,7 +74,7 @@ bool SftpFinishDownloadCommand::execute()
     if (readEventEnabled() || writeEventEnabled() || hupEventEnabled()) {
       getCheckPoint() = global::wallclock();
 
-      if (!getSocket()->sshSFTPClose()) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())->sshSFTPClose()) {
         setWriteCheckSocketIf(getSocket(), getSocket()->wantWrite());
         setReadCheckSocketIf(getSocket(), getSocket()->wantRead());
         addCommandSelf();
@@ -85,8 +85,9 @@ bool SftpFinishDownloadCommand::execute()
           getDownloadEngine()->getAuthConfigFactory()->createAuthConfig(
               getRequest(), getRequestGroup()->getOption().get());
 
-      getDownloadEngine()->poolSocket(getRequest(), authConfig->getUser(),
-                                      createProxyRequest(), getSocket(), "");
+      getDownloadEngine()->poolSocket(
+          getRequest(), authConfig->getUser(), createProxyRequest(),
+          std::static_pointer_cast<SocketCore>(getSocket()), "");
     }
     else if (getCheckPoint().difference(global::wallclock()) >= getTimeout()) {
       A2_LOG_INFO(fmt("CUID#%" PRId64

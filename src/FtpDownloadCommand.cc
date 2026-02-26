@@ -52,7 +52,7 @@ FtpDownloadCommand::FtpDownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<FtpConnection>& ftpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& dataSocket,
+    const std::shared_ptr<ISocketCore>& dataSocket,
     const std::shared_ptr<SocketCore>& ctrlSocket)
     : DownloadCommand(cuid, req, fileEntry, requestGroup, e, dataSocket,
                       std::make_shared<SocketRecvBuffer>(dataSocket)),

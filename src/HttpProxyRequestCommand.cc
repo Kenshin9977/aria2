@@ -45,7 +45,7 @@ HttpProxyRequestCommand::HttpProxyRequestCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     DownloadEngine* e, const std::shared_ptr<Request>& proxyRequest,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractProxyRequestCommand(cuid, req, fileEntry, requestGroup, e,
                                   proxyRequest, s)
 {

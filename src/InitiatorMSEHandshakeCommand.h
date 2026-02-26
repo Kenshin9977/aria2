@@ -85,7 +85,7 @@ public:
                                const std::shared_ptr<Peer>& peer,
                                DownloadEngine* e,
                                const std::shared_ptr<BtRuntime>& btRuntime,
-                               const std::shared_ptr<SocketCore>& s);
+                               const std::shared_ptr<ISocketCore>& s);
 
   virtual ~InitiatorMSEHandshakeCommand();
 

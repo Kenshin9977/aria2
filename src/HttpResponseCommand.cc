@@ -131,7 +131,7 @@ HttpResponseCommand::HttpResponseCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       httpConnection->getSocketRecvBuffer()),
       httpConnection_(httpConnection)
@@ -561,8 +561,9 @@ HttpResponseCommand::createHttpDownloadCommand(
 void HttpResponseCommand::poolConnection()
 {
   if (getRequest()->supportsPersistentConnection()) {
-    getDownloadEngine()->poolSocket(getRequest(), createProxyRequest(),
-                                    getSocket());
+    getDownloadEngine()->poolSocket(
+        getRequest(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()));
   }
 }
 

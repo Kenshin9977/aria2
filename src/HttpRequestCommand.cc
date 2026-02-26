@@ -66,7 +66,7 @@ HttpRequestCommand::HttpRequestCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       httpConnection->getSocketRecvBuffer()),
       httpConnection_(httpConnection)
@@ -126,7 +126,8 @@ bool HttpRequestCommand::executeInternal()
   if (httpConnection_->sendBufferIsEmpty()) {
 #ifdef ENABLE_SSL
     if (getRequest()->getProtocol() == "https") {
-      if (!getSocket()->tlsConnect(getRequest()->getHost())) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())
+               ->tlsConnect(getRequest()->getHost())) {
         setReadCheckSocketIf(getSocket(), getSocket()->wantRead());
         setWriteCheckSocketIf(getSocket(), getSocket()->wantWrite());
         addCommandSelf();

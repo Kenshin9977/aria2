@@ -46,6 +46,7 @@ namespace aria2 {
 
 class RequestGroup;
 class DownloadEngine;
+class ISocketCore;
 class SocketCore;
 
 // Used to communicate mainCommand and backup IPv4 connection command.
@@ -55,7 +56,7 @@ class SocketCore;
 // member becomes true.
 struct BackupConnectInfo {
   std::string ipaddr;
-  std::shared_ptr<SocketCore> socket;
+  std::shared_ptr<ISocketCore> socket;
   bool cancel;
   BackupConnectInfo();
 };

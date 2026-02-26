@@ -54,6 +54,7 @@ class PieceStorage;
 class Request;
 class DownloadEngine;
 class Segment;
+class ISocketCore;
 class SocketCore;
 class Option;
 class SocketRecvBuffer;
@@ -66,10 +67,10 @@ class AbstractCommand : public Command {
 private:
   std::shared_ptr<Request> req_;
   std::shared_ptr<FileEntry> fileEntry_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   std::shared_ptr<SocketRecvBuffer> socketRecvBuffer_;
-  std::shared_ptr<SocketCore> readCheckTarget_;
-  std::shared_ptr<SocketCore> writeCheckTarget_;
+  std::shared_ptr<ISocketCore> readCheckTarget_;
+  std::shared_ptr<ISocketCore> writeCheckTarget_;
 
 #ifdef ENABLE_ASYNC_DNS
   std::unique_ptr<AsyncNameResolverMan> asyncNameResolverMan_;
@@ -112,11 +113,11 @@ public:
 
   DownloadEngine* getDownloadEngine() const { return e_; }
 
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
+  const std::shared_ptr<ISocketCore>& getSocket() const { return socket_; }
 
-  std::shared_ptr<SocketCore>& getSocket() { return socket_; }
+  std::shared_ptr<ISocketCore>& getSocket() { return socket_; }
 
-  void setSocket(const std::shared_ptr<SocketCore>& s);
+  void setSocket(const std::shared_ptr<ISocketCore>& s);
 
   void createSocket();
 
@@ -140,9 +141,9 @@ public:
 
   void tryReserved();
 
-  void setReadCheckSocket(const std::shared_ptr<SocketCore>& socket);
+  void setReadCheckSocket(const std::shared_ptr<ISocketCore>& socket);
 
-  void setWriteCheckSocket(const std::shared_ptr<SocketCore>& socket);
+  void setWriteCheckSocket(const std::shared_ptr<ISocketCore>& socket);
 
   void disableReadCheckSocket();
 
@@ -152,18 +153,18 @@ public:
    * If pred == true, calls setReadCheckSocket(socket). Otherwise, calls
    * disableReadCheckSocket().
    */
-  void setReadCheckSocketIf(const std::shared_ptr<SocketCore>& socket,
+  void setReadCheckSocketIf(const std::shared_ptr<ISocketCore>& socket,
                             bool pred);
   /**
    * If pred == true, calls setWriteCheckSocket(socket). Otherwise, calls
    * disableWriteCheckSocket().
    */
-  void setWriteCheckSocketIf(const std::shared_ptr<SocketCore>& socket,
+  void setWriteCheckSocketIf(const std::shared_ptr<ISocketCore>& socket,
                              bool pred);
 
   // Swaps socket_ with socket. This disables current read and write
   // check.
-  void swapSocket(std::shared_ptr<SocketCore>& socket);
+  void swapSocket(std::shared_ptr<ISocketCore>& socket);
 
   std::chrono::seconds getTimeout() const { return timeout_; }
 
@@ -179,7 +180,7 @@ public:
   // InitiateConnectionCommandFactory and it is pushed to
   // DownloadEngine and returns false. If no addresses left, DlRetryEx
   // exception is thrown.
-  bool checkIfConnectionEstablished(const std::shared_ptr<SocketCore>& socket,
+  bool checkIfConnectionEstablished(const std::shared_ptr<ISocketCore>& socket,
                                     const std::string& connectedHostname,
                                     const std::string& connectedAddr,
                                     uint16_t connectedPort);
@@ -227,7 +228,7 @@ public:
   AbstractCommand(
       cuid_t cuid, const std::shared_ptr<Request>& req,
       const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-      DownloadEngine* e, const std::shared_ptr<SocketCore>& s = nullptr,
+      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s = nullptr,
       const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer = nullptr,
       bool incNumConnection = true);
 

@@ -49,6 +49,7 @@
 #include "StatCalc.h"
 #include "LogFactory.h"
 #include "Logger.h"
+#include "ISocketCore.h"
 #include "SocketCore.h"
 #include "util.h"
 #include "a2functional.h"
@@ -200,28 +201,28 @@ void DownloadEngine::waitData()
 }
 
 bool DownloadEngine::addSocketForReadCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->addEvents(socket->getSockfd(), command,
                                EventPoll::EVENT_READ);
 }
 
 bool DownloadEngine::deleteSocketForReadCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->deleteEvents(socket->getSockfd(), command,
                                   EventPoll::EVENT_READ);
 }
 
 bool DownloadEngine::addSocketForWriteCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->addEvents(socket->getSockfd(), command,
                                EventPoll::EVENT_WRITE);
 }
 
 bool DownloadEngine::deleteSocketForWriteCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->deleteEvents(socket->getSockfd(), command,
                                   EventPoll::EVENT_WRITE);

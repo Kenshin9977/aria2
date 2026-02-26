@@ -54,7 +54,7 @@ public:
   SftpDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                       const std::shared_ptr<FileEntry>& fileEntry,
                       RequestGroup* requestGroup, DownloadEngine* e,
-                      const std::shared_ptr<SocketCore>& socket,
+                      const std::shared_ptr<ISocketCore>& socket,
                       std::unique_ptr<AuthConfig> authConfig);
   virtual ~SftpDownloadCommand();
 };

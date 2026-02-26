@@ -69,7 +69,7 @@ namespace aria2 {
 SftpNegotiationCommand::SftpNegotiationCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& socket, Seq seq)
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& socket, Seq seq)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, socket),
       sequence_(seq),
       authConfig_(e->getAuthConfigFactory()->createAuthConfig(
@@ -97,15 +97,17 @@ bool SftpNegotiationCommand::executeInternal()
     switch (sequence_) {
     case SEQ_HANDSHAKE:
       setReadCheckSocket(getSocket());
-      if (!getSocket()->sshHandshake(hashType_, digest_)) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())
+               ->sshHandshake(hashType_, digest_)) {
         goto again;
       }
       A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - SSH handshake success", getCuid()));
       sequence_ = SEQ_AUTH_PASSWORD;
       break;
     case SEQ_AUTH_PASSWORD:
-      if (!getSocket()->sshAuthPassword(authConfig_->getUser(),
-                                        authConfig_->getPassword())) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())
+               ->sshAuthPassword(authConfig_->getUser(),
+                                 authConfig_->getPassword())) {
         goto again;
       }
       A2_LOG_DEBUG(
@@ -113,7 +115,8 @@ bool SftpNegotiationCommand::executeInternal()
       sequence_ = SEQ_SFTP_OPEN;
       break;
     case SEQ_SFTP_OPEN:
-      if (!getSocket()->sshSFTPOpen(path_)) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())
+               ->sshSFTPOpen(path_)) {
         goto again;
       }
       A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - SFTP file %s opened", getCuid(),
@@ -123,7 +126,8 @@ bool SftpNegotiationCommand::executeInternal()
     case SEQ_SFTP_STAT: {
       int64_t totalLength;
       time_t mtime;
-      if (!getSocket()->sshSFTPStat(totalLength, mtime, path_)) {
+      if (!std::static_pointer_cast<SocketCore>(getSocket())
+               ->sshSFTPStat(totalLength, mtime, path_)) {
         goto again;
       }
       Time t(mtime);
@@ -151,7 +155,8 @@ bool SftpNegotiationCommand::executeInternal()
 
       A2_LOG_INFO(fmt("CUID#%" PRId64 " - SFTP seek to %" PRId64, getCuid(),
                       segment->getPositionToWrite()));
-      getSocket()->sshSFTPSeek(segment->getPositionToWrite());
+      std::static_pointer_cast<SocketCore>(getSocket())
+          ->sshSFTPSeek(segment->getPositionToWrite());
 
       break;
     }
@@ -314,8 +319,9 @@ void SftpNegotiationCommand::poolConnection() const
   if (getOption()->getAsBool(PREF_FTP_REUSE_CONNECTION)) {
     // TODO we don't need options.  Probably, we need to pool socket
     // using scheme, port and auth info as key
-    getDownloadEngine()->poolSocket(getRequest(), authConfig_->getUser(),
-                                    createProxyRequest(), getSocket(), "");
+    getDownloadEngine()->poolSocket(
+        getRequest(), authConfig_->getUser(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()), "");
   }
 }
 

@@ -50,6 +50,7 @@
 #include "InitiateConnectionCommandFactory.h"
 #include "StreamCheckIntegrityEntry.h"
 #include "PieceStorage.h"
+#include "ISocketCore.h"
 #include "SocketCore.h"
 #include "message.h"
 #include "prefs.h"
@@ -77,7 +78,7 @@ namespace aria2 {
 AbstractCommand::AbstractCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& s,
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& s,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer,
     bool incNumConnection)
     : Command(cuid),
@@ -213,7 +214,8 @@ bool AbstractCommand::execute()
         // accessed the remote server and discovered that the server
         // supports pipelining.
         if (req_ && req_->isPipeliningEnabled()) {
-          e_->poolSocket(req_, createProxyRequest(), socket_);
+          e_->poolSocket(req_, createProxyRequest(),
+                         std::static_pointer_cast<SocketCore>(socket_));
         }
         return prepareForRetry(0);
       }
@@ -540,7 +542,7 @@ void AbstractCommand::disableReadCheckSocket()
 }
 
 void AbstractCommand::setReadCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableReadCheckSocket();
@@ -548,7 +550,7 @@ void AbstractCommand::setReadCheckSocket(
   }
 
   if (checkSocketIsReadable_) {
-    if (*readCheckTarget_ != *socket) {
+    if (readCheckTarget_->getSockfd() != socket->getSockfd()) {
       e_->deleteSocketForReadCheck(readCheckTarget_, this);
       e_->addSocketForReadCheck(socket, this);
       readCheckTarget_ = socket;
@@ -562,7 +564,7 @@ void AbstractCommand::setReadCheckSocket(
 }
 
 void AbstractCommand::setReadCheckSocketIf(
-    const std::shared_ptr<SocketCore>& socket, bool pred)
+    const std::shared_ptr<ISocketCore>& socket, bool pred)
 {
   if (pred) {
     setReadCheckSocket(socket);
@@ -583,7 +585,7 @@ void AbstractCommand::disableWriteCheckSocket()
 }
 
 void AbstractCommand::setWriteCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableWriteCheckSocket();
@@ -591,7 +593,7 @@ void AbstractCommand::setWriteCheckSocket(
   }
 
   if (checkSocketIsWritable_) {
-    if (*writeCheckTarget_ != *socket) {
+    if (writeCheckTarget_->getSockfd() != socket->getSockfd()) {
       e_->deleteSocketForWriteCheck(writeCheckTarget_, this);
       e_->addSocketForWriteCheck(socket, this);
       writeCheckTarget_ = socket;
@@ -605,7 +607,7 @@ void AbstractCommand::setWriteCheckSocket(
 }
 
 void AbstractCommand::setWriteCheckSocketIf(
-    const std::shared_ptr<SocketCore>& socket, bool pred)
+    const std::shared_ptr<ISocketCore>& socket, bool pred)
 {
   if (pred) {
     setWriteCheckSocket(socket);
@@ -615,7 +617,7 @@ void AbstractCommand::setWriteCheckSocketIf(
   disableWriteCheckSocket();
 }
 
-void AbstractCommand::swapSocket(std::shared_ptr<SocketCore>& socket)
+void AbstractCommand::swapSocket(std::shared_ptr<ISocketCore>& socket)
 {
   disableReadCheckSocket();
   disableWriteCheckSocket();
@@ -833,7 +835,7 @@ void AbstractCommand::prepareForNextAction(
 }
 
 bool AbstractCommand::checkIfConnectionEstablished(
-    const std::shared_ptr<SocketCore>& socket,
+    const std::shared_ptr<ISocketCore>& socket,
     const std::string& connectedHostname, const std::string& connectedAddr,
     uint16_t connectedPort)
 {
@@ -906,7 +908,7 @@ void AbstractCommand::setFileEntry(const std::shared_ptr<FileEntry>& fileEntry)
   fileEntry_ = fileEntry;
 }
 
-void AbstractCommand::setSocket(const std::shared_ptr<SocketCore>& s)
+void AbstractCommand::setSocket(const std::shared_ptr<ISocketCore>& s)
 {
   socket_ = s;
 }

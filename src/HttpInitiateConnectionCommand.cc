@@ -82,7 +82,8 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     if (!pooledSocket) {
       A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(), addr.c_str(), port));
       createSocket();
-      getSocket()->establishConnection(addr, port);
+      std::static_pointer_cast<SocketCore>(getSocket())
+          ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
       auto c = make_unique<ConnectCommand>(
@@ -122,7 +123,8 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     if (!pooledSocket) {
       A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(), addr.c_str(), port));
       createSocket();
-      getSocket()->establishConnection(addr, port);
+      std::static_pointer_cast<SocketCore>(getSocket())
+          ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
       auto c = make_unique<ConnectCommand>(getCuid(), getRequest(),

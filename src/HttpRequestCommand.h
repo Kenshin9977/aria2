@@ -40,7 +40,7 @@
 namespace aria2 {
 
 class HttpConnection;
-class SocketCore;
+class ISocketCore;
 
 // HttpRequestCommand sends HTTP request header to remote server.
 // Because network I/O is non-blocking, execute() returns false if all
@@ -62,7 +62,7 @@ public:
                      const std::shared_ptr<FileEntry>& fileEntry,
                      RequestGroup* requestGroup,
                      const std::shared_ptr<HttpConnection>& httpConnection,
-                     DownloadEngine* e, const std::shared_ptr<SocketCore>& s);
+                     DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
   virtual ~HttpRequestCommand();
 
   void setProxyRequest(const std::shared_ptr<Request>& proxyRequest);

@@ -55,12 +55,13 @@ namespace aria2 {
 
 ReceiverMSEHandshakeCommand::ReceiverMSEHandshakeCommand(
     cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     :
 
       PeerAbstractCommand(cuid, peer, e, s),
       sequence_(RECEIVER_IDENTIFY_HANDSHAKE),
-      mseHandshake_(make_unique<MSEHandshake>(cuid, s, e->getOption()))
+      mseHandshake_(make_unique<MSEHandshake>(
+          cuid, std::static_pointer_cast<SocketCore>(s), e->getOption()))
 {
   setTimeout(std::chrono::seconds(
       e->getOption()->getAsInt(PREF_PEER_CONNECTION_TIMEOUT)));

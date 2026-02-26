@@ -48,7 +48,7 @@ public:
                  const std::shared_ptr<Request>& proxyRequest,
                  const std::shared_ptr<FileEntry>& fileEntry,
                  RequestGroup* requestGroup, DownloadEngine* e,
-                 const std::shared_ptr<SocketCore>& s);
+                 const std::shared_ptr<ISocketCore>& s);
   virtual ~ConnectCommand();
   void
   setControlChain(const std::shared_ptr<ControlChain<ConnectCommand*>>& chain);

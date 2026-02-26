@@ -62,12 +62,13 @@ namespace aria2 {
 InitiatorMSEHandshakeCommand::InitiatorMSEHandshakeCommand(
     cuid_t cuid, RequestGroup* requestGroup, const std::shared_ptr<Peer>& p,
     DownloadEngine* e, const std::shared_ptr<BtRuntime>& btRuntime,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : PeerAbstractCommand(cuid, p, e, s),
       requestGroup_(requestGroup),
       btRuntime_(btRuntime),
       sequence_(INITIATOR_SEND_KEY),
-      mseHandshake_(make_unique<MSEHandshake>(cuid, s, getOption().get()))
+      mseHandshake_(make_unique<MSEHandshake>(
+          cuid, std::static_pointer_cast<SocketCore>(s), getOption().get()))
 {
   disableReadCheckSocket();
   setWriteCheckSocket(getSocket());

@@ -37,6 +37,7 @@
 #include "DownloadEngine.h"
 #include "Option.h"
 #include "DlAbortEx.h"
+#include "ISocketCore.h"
 #include "SocketCore.h"
 #include "Logger.h"
 #include "LogFactory.h"
@@ -52,7 +53,7 @@ namespace aria2 {
 PeerAbstractCommand::PeerAbstractCommand(cuid_t cuid,
                                          const std::shared_ptr<Peer>& peer,
                                          DownloadEngine* e,
-                                         const std::shared_ptr<SocketCore>& s)
+                                         const std::shared_ptr<ISocketCore>& s)
     : Command(cuid),
       checkPoint_(global::wallclock()),
       // TODO referring global option
@@ -127,14 +128,14 @@ void PeerAbstractCommand::disableReadCheckSocket()
 }
 
 void PeerAbstractCommand::setReadCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableReadCheckSocket();
   }
   else {
     if (checkSocketIsReadable_) {
-      if (*readCheckTarget_ != *socket) {
+      if (readCheckTarget_->getSockfd() != socket->getSockfd()) {
         e_->deleteSocketForReadCheck(readCheckTarget_, this);
         e_->addSocketForReadCheck(socket, this);
         readCheckTarget_ = socket;
@@ -158,14 +159,14 @@ void PeerAbstractCommand::disableWriteCheckSocket()
 }
 
 void PeerAbstractCommand::setWriteCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableWriteCheckSocket();
   }
   else {
     if (checkSocketIsWritable_) {
-      if (*writeCheckTarget_ != *socket) {
+      if (writeCheckTarget_->getSockfd() != socket->getSockfd()) {
         e_->deleteSocketForWriteCheck(writeCheckTarget_, this);
         e_->addSocketForWriteCheck(socket, this);
         writeCheckTarget_ = socket;

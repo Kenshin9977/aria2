@@ -77,9 +77,10 @@ bool PeerInitiateConnectionCommand::executeInternal()
   A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(),
                   getPeer()->getIPAddress().c_str(), getPeer()->getPort()));
   createSocket();
-  getSocket()->establishConnection(getPeer()->getIPAddress(),
-                                   getPeer()->getPort(), false);
-  getSocket()->applyIpDscp();
+  std::static_pointer_cast<SocketCore>(getSocket())
+      ->establishConnection(getPeer()->getIPAddress(), getPeer()->getPort(),
+                            false);
+  std::static_pointer_cast<SocketCore>(getSocket())->applyIpDscp();
   if (mseHandshakeEnabled_) {
     auto c = make_unique<InitiatorMSEHandshakeCommand>(
         getCuid(), requestGroup_, getPeer(), getDownloadEngine(), btRuntime_,

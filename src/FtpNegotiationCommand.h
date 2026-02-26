@@ -42,6 +42,7 @@
 namespace aria2 {
 
 class FtpConnection;
+class ISocketCore;
 class SocketCore;
 class HttpConnection;
 
@@ -162,7 +163,7 @@ public:
   FtpNegotiationCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                         const std::shared_ptr<FileEntry>& fileEntry,
                         RequestGroup* requestGroup, DownloadEngine* e,
-                        const std::shared_ptr<SocketCore>& s,
+                        const std::shared_ptr<ISocketCore>& s,
                         Seq seq = SEQ_RECV_GREETING,
                         const std::string& baseWorkingDir = "/");
   virtual ~FtpNegotiationCommand();

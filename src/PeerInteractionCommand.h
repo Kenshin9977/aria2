@@ -84,7 +84,7 @@ public:
       const std::shared_ptr<BtRuntime>& btRuntime,
       const std::shared_ptr<PieceStorage>& pieceStorage,
       const std::shared_ptr<PeerStorage>& peerStorage,
-      const std::shared_ptr<SocketCore>& s, Seq sequence,
+      const std::shared_ptr<ISocketCore>& s, Seq sequence,
       std::unique_ptr<PeerConnection> peerConnection = nullptr);
 
   virtual ~PeerInteractionCommand();

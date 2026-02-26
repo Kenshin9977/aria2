@@ -59,6 +59,7 @@ namespace aria2 {
 class Option;
 class RequestGroupMan;
 class StatCalc;
+class ISocketCore;
 class SocketCore;
 class CookieStorage;
 class AuthConfigFactory;
@@ -182,13 +183,13 @@ public:
   // processed. Otherwise, returns 0.
   int run(bool oneshot = false);
 
-  bool addSocketForReadCheck(const std::shared_ptr<SocketCore>& socket,
+  bool addSocketForReadCheck(const std::shared_ptr<ISocketCore>& socket,
                              Command* command);
-  bool deleteSocketForReadCheck(const std::shared_ptr<SocketCore>& socket,
+  bool deleteSocketForReadCheck(const std::shared_ptr<ISocketCore>& socket,
                                 Command* command);
-  bool addSocketForWriteCheck(const std::shared_ptr<SocketCore>& socket,
+  bool addSocketForWriteCheck(const std::shared_ptr<ISocketCore>& socket,
                               Command* command);
-  bool deleteSocketForWriteCheck(const std::shared_ptr<SocketCore>& socket,
+  bool deleteSocketForWriteCheck(const std::shared_ptr<ISocketCore>& socket,
                                  Command* command);
 
 #ifdef ENABLE_ASYNC_DNS
