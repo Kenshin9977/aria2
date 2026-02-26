@@ -98,7 +98,8 @@ aria2c_SOURCES = AllTest.cc\
 	SocketBufferTest.cc \
 	TimeBasedCommandTest.cc \
 	RealtimeCommandTest.cc \
-	HttpCommandIntegrationTest.cc
+	HttpCommandIntegrationTest.cc\
+	FtpCommandIntegrationTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
