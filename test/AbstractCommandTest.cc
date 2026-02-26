@@ -66,7 +66,7 @@ class AbstractCommandTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testGetProxyUri);
   CPPUNIT_TEST(testExecute_haltReturnsTrue);
   CPPUNIT_TEST(testExecute_noSocketCallsInternal);
-  CPPUNIT_TEST(testExecute_readableSocketCallsInternal);
+  CPPUNIT_TEST(testExecute_noCheckFallthrough);
   CPPUNIT_TEST(testExecute_mockSocketPassedToInternal);
   CPPUNIT_TEST_SUITE_END();
 
@@ -79,7 +79,7 @@ public:
   void testGetProxyUri();
   void testExecute_haltReturnsTrue();
   void testExecute_noSocketCallsInternal();
-  void testExecute_readableSocketCallsInternal();
+  void testExecute_noCheckFallthrough();
   void testExecute_mockSocketPassedToInternal();
 };
 
@@ -147,7 +147,7 @@ void AbstractCommandTest::testExecute_noSocketCallsInternal()
   CPPUNIT_ASSERT_EQUAL(1, cmd->executeInternalCount);
 }
 
-void AbstractCommandTest::testExecute_readableSocketCallsInternal()
+void AbstractCommandTest::testExecute_noCheckFallthrough()
 {
   auto mockSocket = std::make_shared<MockSocketCore>();
   mockSocket->readable = true;

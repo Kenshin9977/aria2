@@ -183,7 +183,7 @@ bool HttpServerCommand::execute()
       if (httpServer_->getSecure()) {
         // tlsAccept() just returns true if handshake has already
         // finished.
-        if (!std::static_pointer_cast<SocketCore>(socket_)->tlsAccept()) {
+        if (!socket_->tlsAccept()) {
           updateWriteCheck();
           e_->addCommand(std::unique_ptr<Command>(this));
           return false;

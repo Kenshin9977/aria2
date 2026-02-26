@@ -57,14 +57,9 @@ public:
 
   ssize_t readDataFrom(void* data, size_t len, Endpoint& sender) override
   {
-    size_t available = readBuffer.size() - readPos;
-    size_t toRead = std::min(len, available);
-    if (toRead > 0) {
-      std::memcpy(data, readBuffer.data() + readPos, toRead);
-      readPos += toRead;
-    }
+    readData(data, len);
     sender = peerInfo;
-    return static_cast<ssize_t>(toRead);
+    return static_cast<ssize_t>(len);
   }
 
   ssize_t writeVector(a2iovec* iov, size_t iovcnt) override

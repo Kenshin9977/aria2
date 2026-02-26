@@ -44,9 +44,7 @@
 #include <memory>
 
 #include "ISocketCore.h"
-#include "a2netcompat.h"
 #include "a2io.h"
-#include "a2netcompat.h"
 #include "a2time.h"
 
 namespace aria2 {

@@ -102,6 +102,8 @@ public:
         close(fd);
       }
     }
+    FdGuard(const FdGuard&) = delete;
+    FdGuard& operator=(const FdGuard&) = delete;
   };
 
   void testSocketPool_basic()
