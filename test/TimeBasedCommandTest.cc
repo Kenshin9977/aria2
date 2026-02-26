@@ -62,13 +62,15 @@ class TimeBasedCommandTest : public CppUnit::TestFixture {
   std::unique_ptr<DownloadEngine> e_;
 
 public:
-  void setUp() { e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest"); }
+  void setUp()
+  {
+    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", true);
+  }
 
   void tearDown() {}
 
   void testExecute_intervalNotElapsed()
   {
-    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", true);
     TimedCommandCounters counters;
     auto* cmd = new MockTimedCommand(e_->newCUID(), e_.get(),
                                      std::chrono::seconds(60), counters);
@@ -98,7 +100,6 @@ public:
 
   void testExecute_prePostProcessCalled()
   {
-    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", true);
     TimedCommandCounters counters;
     auto* cmd = new MockTimedCommand(e_->newCUID(), e_.get(),
                                      std::chrono::seconds(60), counters);
@@ -113,25 +114,28 @@ public:
 
   void testAutoSaveCommand_exitOnHalt()
   {
-    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", true);
     e_->requestHalt();
     auto cmd = make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
                                             std::chrono::seconds(60));
     e_->addCommand(std::move(cmd));
     e_->run(false);
+    CPPUNIT_ASSERT(e_->isHaltRequested());
   }
 
   void testAutoSaveCommand_exitOnFinished()
   {
+    // keepRunning=false so engine exits when downloads finish
+    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", false);
     auto cmd = make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
                                             std::chrono::seconds(60));
     e_->addCommand(std::move(cmd));
     e_->run(false);
+    // Engine stopped because downloadFinished() returned true
+    CPPUNIT_ASSERT(!e_->isHaltRequested());
   }
 
   void testTimedHaltCommand()
   {
-    e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", true);
     e_->setNoWait(true);
     auto cmd = make_unique<TimedHaltCommand>(e_->newCUID(), e_.get(),
                                              std::chrono::seconds(0));

@@ -20,6 +20,30 @@
 
 namespace aria2 {
 
+namespace {
+
+// Runs a command inside the engine with a halt command to stop it.
+// The target command is added first so it executes before the halt.
+void runCmdThenHalt(DownloadEngine* e, std::unique_ptr<Command> cmd)
+{
+  e->setNoWait(true);
+  e->addCommand(std::move(cmd));
+  e->addCommand(make_unique<TestHaltCommand>(e->newCUID(), e));
+  e->run(true);
+}
+
+// Runs a halt command first, then the target command.
+// Use when testing that preProcess() exits on halt.
+void runHaltThenCmd(DownloadEngine* e, std::unique_ptr<Command> cmd)
+{
+  e->setNoWait(true);
+  e->addCommand(make_unique<TestHaltCommand>(e->newCUID(), e));
+  e->addCommand(std::move(cmd));
+  e->run(true);
+}
+
+} // namespace
+
 class DHTBucketRefreshCommandTest : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE(DHTBucketRefreshCommandTest);
@@ -29,53 +53,41 @@ class DHTBucketRefreshCommandTest : public CppUnit::TestFixture {
 
   std::shared_ptr<Option> option_;
   std::unique_ptr<DownloadEngine> e_;
+  std::shared_ptr<DHTNode> localNode_;
+  std::unique_ptr<DHTRoutingTable> routingTable_;
+  MockDHTTaskQueue taskQueue_;
+  MockDHTTaskFactory taskFactory_;
 
 public:
-  void setUp() { e_ = createTestEngine(option_, "aria2_DHTCommandTest", true); }
+  void setUp()
+  {
+    e_ = createTestEngine(option_, "aria2_DHTCommandTest", true);
+    localNode_ = std::make_shared<DHTNode>();
+    routingTable_ = make_unique<DHTRoutingTable>(localNode_);
+  }
+
   void tearDown() {}
+
+  std::unique_ptr<DHTBucketRefreshCommand>
+  createCmd(std::chrono::seconds interval)
+  {
+    auto cmd =
+        make_unique<DHTBucketRefreshCommand>(e_->newCUID(), e_.get(), interval);
+    cmd->setRoutingTable(routingTable_.get());
+    cmd->setTaskQueue(&taskQueue_);
+    cmd->setTaskFactory(&taskFactory_);
+    return cmd;
+  }
 
   void testExitOnHalt()
   {
-    e_->setNoWait(true);
-    auto localNode = std::make_shared<DHTNode>();
-    DHTRoutingTable routingTable(localNode);
-    MockDHTTaskQueue taskQueue;
-    MockDHTTaskFactory taskFactory;
-
-    auto cmd = make_unique<DHTBucketRefreshCommand>(e_->newCUID(), e_.get(),
-                                                    std::chrono::seconds(60));
-    cmd->setRoutingTable(&routingTable);
-    cmd->setTaskQueue(&taskQueue);
-    cmd->setTaskFactory(&taskFactory);
-
-    // Halt the engine — preProcess() should call enableExit()
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
+    runHaltThenCmd(e_.get(), createCmd(std::chrono::seconds(60)));
   }
 
   void testProcess()
   {
-    e_->setNoWait(true);
-    auto localNode = std::make_shared<DHTNode>();
-    DHTRoutingTable routingTable(localNode);
-    MockDHTTaskQueue taskQueue;
-    MockDHTTaskFactory taskFactory;
-
-    // interval=0 so process() fires immediately on first execute()
-    auto cmd = make_unique<DHTBucketRefreshCommand>(e_->newCUID(), e_.get(),
-                                                    std::chrono::seconds(0));
-    cmd->setRoutingTable(&routingTable);
-    cmd->setTaskQueue(&taskQueue);
-    cmd->setTaskFactory(&taskFactory);
-
-    // Add DHT command first so it executes before the halt
-    e_->addCommand(std::move(cmd));
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->run(true);
-
-    // process() should have added a task to periodicTaskQueue1
-    CPPUNIT_ASSERT_EQUAL((size_t)1, taskQueue.periodicTaskQueue1_.size());
+    runCmdThenHalt(e_.get(), createCmd(std::chrono::seconds(0)));
+    CPPUNIT_ASSERT_EQUAL((size_t)1, taskQueue_.periodicTaskQueue1_.size());
   }
 };
 
@@ -90,47 +102,42 @@ class DHTTokenUpdateCommandTest : public CppUnit::TestFixture {
 
   std::shared_ptr<Option> option_;
   std::unique_ptr<DownloadEngine> e_;
+  DHTTokenTracker tokenTracker_;
 
 public:
   void setUp() { e_ = createTestEngine(option_, "aria2_DHTCommandTest", true); }
   void tearDown() {}
 
+  std::unique_ptr<DHTTokenUpdateCommand>
+  createCmd(std::chrono::seconds interval)
+  {
+    auto cmd =
+        make_unique<DHTTokenUpdateCommand>(e_->newCUID(), e_.get(), interval);
+    cmd->setTokenTracker(&tokenTracker_);
+    return cmd;
+  }
+
   void testExitOnHalt()
   {
-    e_->setNoWait(true);
-    DHTTokenTracker tokenTracker;
-
-    auto cmd = make_unique<DHTTokenUpdateCommand>(e_->newCUID(), e_.get(),
-                                                  std::chrono::seconds(60));
-    cmd->setTokenTracker(&tokenTracker);
-
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
+    runHaltThenCmd(e_.get(), createCmd(std::chrono::seconds(60)));
   }
 
   void testProcess()
   {
-    e_->setNoWait(true);
-    DHTTokenTracker tokenTracker;
-    // Generate a token before update to verify it changes
     unsigned char infoHash[20];
     memset(infoHash, 0, sizeof(infoHash));
     std::string tokenBefore =
-        tokenTracker.generateToken(infoHash, "192.168.0.1", 6881);
+        tokenTracker_.generateToken(infoHash, "192.168.0.1", 6881);
 
-    auto cmd = make_unique<DHTTokenUpdateCommand>(e_->newCUID(), e_.get(),
-                                                  std::chrono::seconds(0));
-    cmd->setTokenTracker(&tokenTracker);
+    runCmdThenHalt(e_.get(), createCmd(std::chrono::seconds(0)));
 
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
-
-    // Token secret was updated — the old token should still validate
-    // (DHTTokenTracker keeps 2 secrets), but internal state changed.
-    CPPUNIT_ASSERT(
-        tokenTracker.validateToken(tokenBefore, infoHash, "192.168.0.1", 6881));
+    // Secret rotated — new token should differ
+    std::string tokenAfter =
+        tokenTracker_.generateToken(infoHash, "192.168.0.1", 6881);
+    CPPUNIT_ASSERT(tokenBefore != tokenAfter);
+    // Old token still validates (two-secret scheme)
+    CPPUNIT_ASSERT(tokenTracker_.validateToken(tokenBefore, infoHash,
+                                               "192.168.0.1", 6881));
   }
 };
 
@@ -145,38 +152,31 @@ class DHTPeerAnnounceCommandTest : public CppUnit::TestFixture {
 
   std::shared_ptr<Option> option_;
   std::unique_ptr<DownloadEngine> e_;
+  DHTPeerAnnounceStorage storage_;
 
 public:
   void setUp() { e_ = createTestEngine(option_, "aria2_DHTCommandTest", true); }
   void tearDown() {}
 
+  std::unique_ptr<DHTPeerAnnounceCommand>
+  createCmd(std::chrono::seconds interval)
+  {
+    auto cmd =
+        make_unique<DHTPeerAnnounceCommand>(e_->newCUID(), e_.get(), interval);
+    cmd->setPeerAnnounceStorage(&storage_);
+    return cmd;
+  }
+
   void testExitOnHalt()
   {
-    e_->setNoWait(true);
-    DHTPeerAnnounceStorage storage;
-
-    auto cmd = make_unique<DHTPeerAnnounceCommand>(e_->newCUID(), e_.get(),
-                                                   std::chrono::seconds(60));
-    cmd->setPeerAnnounceStorage(&storage);
-
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
+    runHaltThenCmd(e_.get(), createCmd(std::chrono::seconds(60)));
   }
 
   void testProcess()
   {
-    e_->setNoWait(true);
-    DHTPeerAnnounceStorage storage;
-
-    auto cmd = make_unique<DHTPeerAnnounceCommand>(e_->newCUID(), e_.get(),
-                                                   std::chrono::seconds(0));
-    cmd->setPeerAnnounceStorage(&storage);
-
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
-    // handleTimeout() on empty storage is a no-op but should not crash
+    // handleTimeout() on empty storage is a no-op; verify no crash
+    runCmdThenHalt(e_.get(), createCmd(std::chrono::seconds(0)));
+    CPPUNIT_ASSERT(true);
   }
 };
 
@@ -202,7 +202,6 @@ public:
 
   void testExitOnHalt()
   {
-    e_->setNoWait(true);
     auto localNode = std::make_shared<DHTNode>();
     DHTRoutingTable routingTable(localNode);
 
@@ -211,10 +210,7 @@ public:
     cmd->setLocalNode(localNode);
     cmd->setRoutingTable(&routingTable);
 
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
-    // The command should save and exit cleanly
+    runHaltThenCmd(e_.get(), std::move(cmd));
   }
 };
 
@@ -256,7 +252,6 @@ public:
     cmd->setPeerStorage(peerStorage_);
     cmd->setTaskQueue(&taskQueue);
     cmd->setTaskFactory(&taskFactory);
-    // execute() returns true when btRuntime is halted
     CPPUNIT_ASSERT(cmd->execute());
   }
 };

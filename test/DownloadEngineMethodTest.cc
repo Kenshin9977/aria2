@@ -56,9 +56,9 @@ public:
   {
     e_->cacheIPAddress("example.com", "1.2.3.4", 80);
     e_->cacheIPAddress("example.com", "5.6.7.8", 80);
-    // Both should be cached; findCachedIPAddress returns the first good one
-    std::string found = e_->findCachedIPAddress("example.com", 80);
-    CPPUNIT_ASSERT(!found.empty());
+    // Both cached; findCachedIPAddress returns the first good one
+    CPPUNIT_ASSERT_EQUAL(std::string("1.2.3.4"),
+                         e_->findCachedIPAddress("example.com", 80));
   }
 
   void testMarkBadIPAddress()
@@ -92,10 +92,23 @@ public:
   }
 
 #ifndef __MINGW32__
+  // RAII wrapper for file descriptors to prevent leaks on assertion failure.
+  struct FdGuard {
+    int fd;
+    FdGuard(int fd) : fd(fd) {}
+    ~FdGuard()
+    {
+      if (fd >= 0) {
+        close(fd);
+      }
+    }
+  };
+
   void testSocketPool_basic()
   {
     int fds[2];
     CPPUNIT_ASSERT_EQUAL(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
+    FdGuard guard(fds[1]);
     auto sock = std::make_shared<SocketCore>(fds[0]);
 
     e_->poolSocket("127.0.0.1", 80, "", 0, sock);
@@ -106,14 +119,13 @@ public:
     // Pool is now empty
     auto empty = e_->popPooledSocket("127.0.0.1", 80, "", 0);
     CPPUNIT_ASSERT(!empty);
-
-    close(fds[1]);
   }
 
   void testSocketPool_withAuth()
   {
     int fds[2];
     CPPUNIT_ASSERT_EQUAL(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
+    FdGuard guard(fds[1]);
     auto sock = std::make_shared<SocketCore>(fds[0]);
 
     std::string options;
@@ -122,8 +134,7 @@ public:
     auto retrieved =
         e_->popPooledSocket(options, "127.0.0.1", 80, "user", "", 0);
     CPPUNIT_ASSERT(retrieved);
-
-    close(fds[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string(""), options);
   }
 
   void testSocketPool_multipleAddrs()
@@ -131,6 +142,8 @@ public:
     int fds1[2], fds2[2];
     CPPUNIT_ASSERT_EQUAL(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds1));
     CPPUNIT_ASSERT_EQUAL(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds2));
+    FdGuard guard1(fds1[1]);
+    FdGuard guard2(fds2[1]);
 
     auto sock1 = std::make_shared<SocketCore>(fds1[0]);
     auto sock2 = std::make_shared<SocketCore>(fds2[0]);
@@ -141,9 +154,6 @@ public:
     std::vector<std::string> addrs{"10.0.0.1", "10.0.0.2", "10.0.0.3"};
     auto retrieved = e_->popPooledSocket(addrs, 80);
     CPPUNIT_ASSERT(retrieved);
-
-    close(fds1[1]);
-    close(fds2[1]);
   }
 #endif // !__MINGW32__
 
@@ -154,7 +164,8 @@ public:
     // Session ID should be consistent within same engine
     CPPUNIT_ASSERT_EQUAL(sid, e_->getSessionId());
     // Different engine should have different session ID
-    auto e2 = make_unique<DownloadEngine>(make_unique<SelectEventPoll>());
+    std::shared_ptr<Option> opt2;
+    auto e2 = createTestEngine(opt2, "aria2_DownloadEngineMethodTest_sid");
     CPPUNIT_ASSERT(sid != e2->getSessionId());
   }
 };

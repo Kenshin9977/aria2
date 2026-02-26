@@ -45,24 +45,25 @@ createTestEngine(std::shared_ptr<Option>& option,
 // Use this in tests to stop the engine after other commands have executed.
 class TestHaltCommand : public Command {
 public:
-  DownloadEngine* e;
-  bool forceHalt;
-
   TestHaltCommand(cuid_t cuid, DownloadEngine* engine, bool force = true)
-      : Command(cuid), e(engine), forceHalt(force)
+      : Command(cuid), e_(engine), forceHalt_(force)
   {
   }
 
   bool execute() override
   {
-    if (forceHalt) {
-      e->requestForceHalt();
+    if (forceHalt_) {
+      e_->requestForceHalt();
     }
     else {
-      e->requestHalt();
+      e_->requestHalt();
     }
     return true;
   }
+
+private:
+  DownloadEngine* e_;
+  bool forceHalt_;
 };
 
 } // namespace aria2

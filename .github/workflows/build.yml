@@ -103,6 +103,9 @@ jobs:
 
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
   build-windows:
+    strategy:
+      matrix:
+        bittorrent: [with-bt, without-bt]
     runs-on: windows-latest
     defaults:
       run:
@@ -128,12 +131,17 @@ jobs:
           make
           pkg-config
           gettext-devel
+    - name: Disable BitTorrent
+      if: matrix.bittorrent == 'without-bt'
+      run: |
+        echo 'FEATURE_FLAGS=--disable-bittorrent' >> $GITHUB_ENV
     - name: Build and test
       run: |
         autoreconf -i
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
-          --with-libcares --with-sqlite3 --with-libssh2
+          --with-libcares --with-sqlite3 --with-libssh2 \
+          $FEATURE_FLAGS
         make -j$(nproc) check
 
   build-freebsd:

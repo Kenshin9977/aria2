@@ -21,10 +21,8 @@ namespace {
 // SeedCriteria that always returns false (seed forever).
 class NeverSeedCriteria : public SeedCriteria {
 public:
-  int resetCount;
-  NeverSeedCriteria() : resetCount(0) {}
   bool evaluate() override { return false; }
-  void reset() override { ++resetCount; }
+  void reset() override {}
 };
 
 // SeedCriteria that returns true after N evaluations.
@@ -34,6 +32,27 @@ public:
   CountdownSeedCriteria(int n) : remaining(n) {}
   bool evaluate() override { return --remaining <= 0; }
   void reset() override {}
+};
+
+// Shared setUp for BT orchestration test fixtures.
+struct BtTestContext {
+  std::shared_ptr<Option> option;
+  std::unique_ptr<DownloadEngine> engine;
+  std::shared_ptr<RequestGroup> rg;
+  std::shared_ptr<BtRuntime> btRuntime;
+  std::shared_ptr<MockPieceStorage> pieceStorage;
+  std::shared_ptr<MockPeerStorage> peerStorage;
+
+  void setUp(bool needRequestGroup = true)
+  {
+    engine = createTestEngine(option, "aria2_BtOrchestrationTest", true);
+    btRuntime = std::make_shared<BtRuntime>();
+    pieceStorage = std::make_shared<MockPieceStorage>();
+    peerStorage = std::make_shared<MockPeerStorage>();
+    if (needRequestGroup) {
+      rg = std::make_shared<RequestGroup>(GroupId::create(), option);
+    }
+  }
 };
 
 } // namespace
@@ -46,60 +65,42 @@ class SeedCheckCommandTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testCriteriaEvaluated);
   CPPUNIT_TEST_SUITE_END();
 
-  std::shared_ptr<Option> option_;
-  std::unique_ptr<DownloadEngine> e_;
-  std::shared_ptr<RequestGroup> rg_;
-  std::shared_ptr<BtRuntime> btRuntime_;
-  std::shared_ptr<MockPieceStorage> pieceStorage_;
+  BtTestContext ctx_;
 
 public:
-  void setUp()
-  {
-    e_ = createTestEngine(option_, "aria2_BtOrchestrationTest", true);
-    rg_ = std::make_shared<RequestGroup>(GroupId::create(), option_);
-    btRuntime_ = std::make_shared<BtRuntime>();
-    pieceStorage_ = std::make_shared<MockPieceStorage>();
-  }
+  void setUp() { ctx_.setUp(); }
   void tearDown() {}
 
   void testExitOnHalt()
   {
-    btRuntime_->setHalt(true);
-    auto cmd = make_unique<SeedCheckCommand>(e_->newCUID(), rg_.get(), e_.get(),
+    ctx_.btRuntime->setHalt(true);
+    auto cmd = make_unique<SeedCheckCommand>(ctx_.engine->newCUID(),
+                                             ctx_.rg.get(), ctx_.engine.get(),
                                              make_unique<NeverSeedCriteria>());
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    // execute() should return true immediately when halted
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
     CPPUNIT_ASSERT(cmd->execute());
   }
 
   void testNoCriteria()
   {
-    // When constructed with nullptr seed criteria, execute() returns false
-    // and re-enqueues itself (does nothing but loop).
-    auto cmd = make_unique<SeedCheckCommand>(e_->newCUID(), rg_.get(), e_.get(),
-                                             nullptr);
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    // execute() returns false (command keeps running)
+    auto cmd = make_unique<SeedCheckCommand>(
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), nullptr);
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
     CPPUNIT_ASSERT(!cmd->execute());
-    // Command re-added itself; retrieve it from engine to prevent leak
   }
 
   void testCriteriaEvaluated()
   {
-    // Download is finished, seed criteria evaluates to true after 1 call
-    pieceStorage_->setDownloadFinished(true);
-    auto cmd =
-        make_unique<SeedCheckCommand>(e_->newCUID(), rg_.get(), e_.get(),
-                                      make_unique<CountdownSeedCriteria>(1));
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-
-    // First execute: downloadFinished() → checkStarted=true → evaluate() →
-    // countdown reaches 0 → btRuntime.setHalt(true)
+    ctx_.pieceStorage->setDownloadFinished(true);
+    auto cmd = make_unique<SeedCheckCommand>(
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
+        make_unique<CountdownSeedCriteria>(1));
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
     cmd->execute();
-    CPPUNIT_ASSERT(btRuntime_->isHalt());
+    CPPUNIT_ASSERT(ctx_.btRuntime->isHalt());
   }
 };
 
@@ -112,38 +113,30 @@ class PeerChokeCommandTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testChokeNotElapsed);
   CPPUNIT_TEST_SUITE_END();
 
-  std::shared_ptr<Option> option_;
-  std::unique_ptr<DownloadEngine> e_;
-  std::shared_ptr<BtRuntime> btRuntime_;
-  std::shared_ptr<MockPeerStorage> peerStorage_;
+  BtTestContext ctx_;
 
 public:
-  void setUp()
-  {
-    e_ = createTestEngine(option_, "aria2_BtOrchestrationTest", true);
-    btRuntime_ = std::make_shared<BtRuntime>();
-    peerStorage_ = std::make_shared<MockPeerStorage>();
-  }
+  void setUp() { ctx_.setUp(false); }
   void tearDown() {}
 
   void testExitOnHalt()
   {
-    btRuntime_->setHalt(true);
-    auto cmd = make_unique<PeerChokeCommand>(e_->newCUID(), e_.get());
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPeerStorage(peerStorage_);
+    ctx_.btRuntime->setHalt(true);
+    auto cmd = make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
+                                             ctx_.engine.get());
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPeerStorage(ctx_.peerStorage);
     CPPUNIT_ASSERT(cmd->execute());
   }
 
   void testChokeNotElapsed()
   {
-    // MockPeerStorage::chokeRoundIntervalElapsed() returns false by default,
-    // so executeChoke() should NOT be called.
-    auto cmd = make_unique<PeerChokeCommand>(e_->newCUID(), e_.get());
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPeerStorage(peerStorage_);
+    auto cmd = make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
+                                             ctx_.engine.get());
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPeerStorage(ctx_.peerStorage);
     cmd->execute();
-    CPPUNIT_ASSERT_EQUAL(0, peerStorage_->getNumChokeExecuted());
+    CPPUNIT_ASSERT_EQUAL(0, ctx_.peerStorage->getNumChokeExecuted());
   }
 };
 
@@ -156,50 +149,47 @@ class BtStopDownloadCommandTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testExitOnDownloadFinished);
   CPPUNIT_TEST_SUITE_END();
 
-  std::shared_ptr<Option> option_;
-  std::unique_ptr<DownloadEngine> e_;
-  std::shared_ptr<RequestGroup> rg_;
-  std::shared_ptr<BtRuntime> btRuntime_;
-  std::shared_ptr<MockPieceStorage> pieceStorage_;
+  BtTestContext ctx_;
 
 public:
   void setUp()
   {
-    e_ = createTestEngine(option_, "aria2_BtOrchestrationTest", true);
-    rg_ = std::make_shared<RequestGroup>(GroupId::create(), option_);
-    rg_->setDownloadContext(
+    ctx_.setUp();
+    ctx_.rg->setDownloadContext(
         std::make_shared<DownloadContext>(1048576, 0, "dummy"));
-    btRuntime_ = std::make_shared<BtRuntime>();
-    pieceStorage_ = std::make_shared<MockPieceStorage>();
   }
   void tearDown() {}
 
   void testExitOnHalt()
   {
-    btRuntime_->setHalt(true);
-    e_->setNoWait(true);
+    ctx_.btRuntime->setHalt(true);
+    ctx_.engine->setNoWait(true);
     auto cmd = make_unique<BtStopDownloadCommand>(
-        e_->newCUID(), rg_.get(), e_.get(), std::chrono::seconds(60));
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    // Force halt to stop the engine
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
-    // BtStopDownloadCommand should have exited via preProcess()
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
+        std::chrono::seconds(60));
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
+    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+                                                         ctx_.engine.get()));
+    ctx_.engine->addCommand(std::move(cmd));
+    ctx_.engine->run(true);
+    CPPUNIT_ASSERT(ctx_.btRuntime->isHalt());
   }
 
   void testExitOnDownloadFinished()
   {
-    pieceStorage_->setDownloadFinished(true);
-    e_->setNoWait(true);
+    ctx_.pieceStorage->setDownloadFinished(true);
+    ctx_.engine->setNoWait(true);
     auto cmd = make_unique<BtStopDownloadCommand>(
-        e_->newCUID(), rg_.get(), e_.get(), std::chrono::seconds(60));
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
-    e_->addCommand(std::move(cmd));
-    e_->run(true);
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
+        std::chrono::seconds(60));
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
+    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+                                                         ctx_.engine.get()));
+    ctx_.engine->addCommand(std::move(cmd));
+    ctx_.engine->run(true);
+    CPPUNIT_ASSERT(ctx_.pieceStorage->downloadFinished());
   }
 };
 
@@ -212,54 +202,38 @@ class TrackerWatcherCommandTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testExitOnForceHalt);
   CPPUNIT_TEST_SUITE_END();
 
-  std::shared_ptr<Option> option_;
-  std::unique_ptr<DownloadEngine> e_;
-  std::shared_ptr<RequestGroup> rg_;
-  std::shared_ptr<BtRuntime> btRuntime_;
-  std::shared_ptr<MockPieceStorage> pieceStorage_;
-  std::shared_ptr<MockPeerStorage> peerStorage_;
+  BtTestContext ctx_;
 
 public:
-  void setUp()
-  {
-    e_ = createTestEngine(option_, "aria2_BtOrchestrationTest", true);
-    rg_ = std::make_shared<RequestGroup>(GroupId::create(), option_);
-    btRuntime_ = std::make_shared<BtRuntime>();
-    pieceStorage_ = std::make_shared<MockPieceStorage>();
-    peerStorage_ = std::make_shared<MockPeerStorage>();
-  }
+  void setUp() { ctx_.setUp(); }
   void tearDown() {}
 
   void testExitOnNoMoreAnnounce()
   {
-    // MockBtAnnounce with noMoreAnnounce overridden to return true
     class NoMoreAnnounce : public MockBtAnnounce {
     public:
       bool noMoreAnnounce() override { return true; }
     };
     auto btAnnounce = std::make_shared<NoMoreAnnounce>();
-    auto cmd =
-        make_unique<TrackerWatcherCommand>(e_->newCUID(), rg_.get(), e_.get());
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    cmd->setPeerStorage(peerStorage_);
+    auto cmd = make_unique<TrackerWatcherCommand>(
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get());
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
+    cmd->setPeerStorage(ctx_.peerStorage);
     cmd->setBtAnnounce(btAnnounce);
-    // execute() should return true because noMoreAnnounce() is true
     CPPUNIT_ASSERT(cmd->execute());
   }
 
   void testExitOnForceHalt()
   {
     auto btAnnounce = std::make_shared<MockBtAnnounce>();
-    auto cmd =
-        make_unique<TrackerWatcherCommand>(e_->newCUID(), rg_.get(), e_.get());
-    cmd->setBtRuntime(btRuntime_);
-    cmd->setPieceStorage(pieceStorage_);
-    cmd->setPeerStorage(peerStorage_);
+    auto cmd = make_unique<TrackerWatcherCommand>(
+        ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get());
+    cmd->setBtRuntime(ctx_.btRuntime);
+    cmd->setPieceStorage(ctx_.pieceStorage);
+    cmd->setPeerStorage(ctx_.peerStorage);
     cmd->setBtAnnounce(btAnnounce);
-
-    // Force halt with no pending tracker request → should return true
-    rg_->setForceHaltRequested(true);
+    ctx_.rg->setForceHaltRequested(true);
     CPPUNIT_ASSERT(cmd->execute());
   }
 };

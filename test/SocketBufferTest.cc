@@ -18,62 +18,57 @@ class SocketBufferTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testMultiplePush);
   CPPUNIT_TEST_SUITE_END();
 
+  std::shared_ptr<SocketCore> sock_;
+  std::unique_ptr<SocketBuffer> buf_;
+
 public:
-  void setUp() {}
+  void setUp()
+  {
+    sock_ = std::make_shared<SocketCore>();
+    buf_ = make_unique<SocketBuffer>(sock_);
+  }
   void tearDown() {}
 
   void testPushStr()
   {
-    // SocketBuffer needs a SocketCore but we only test queue operations
-    // here (no send). Create a dummy unconnected socket.
-    auto sock = std::make_shared<SocketCore>();
-    SocketBuffer buf(sock);
-    CPPUNIT_ASSERT(buf.sendBufferIsEmpty());
-    buf.pushStr("hello");
-    CPPUNIT_ASSERT(!buf.sendBufferIsEmpty());
+    CPPUNIT_ASSERT(buf_->sendBufferIsEmpty());
+    buf_->pushStr("hello");
+    CPPUNIT_ASSERT(!buf_->sendBufferIsEmpty());
   }
 
   void testPushBytes()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketBuffer buf(sock);
     std::vector<unsigned char> data{0x01, 0x02, 0x03};
-    buf.pushBytes(std::move(data));
-    CPPUNIT_ASSERT(!buf.sendBufferIsEmpty());
-    CPPUNIT_ASSERT_EQUAL((size_t)1, buf.getBufferEntrySize());
+    buf_->pushBytes(std::move(data));
+    CPPUNIT_ASSERT(!buf_->sendBufferIsEmpty());
+    CPPUNIT_ASSERT_EQUAL((size_t)1, buf_->getBufferEntrySize());
   }
 
   void testSendBufferIsEmpty()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketBuffer buf(sock);
-    CPPUNIT_ASSERT(buf.sendBufferIsEmpty());
-    CPPUNIT_ASSERT_EQUAL((size_t)0, buf.getBufferEntrySize());
-    buf.pushStr("test");
-    CPPUNIT_ASSERT(!buf.sendBufferIsEmpty());
-    CPPUNIT_ASSERT_EQUAL((size_t)1, buf.getBufferEntrySize());
+    CPPUNIT_ASSERT(buf_->sendBufferIsEmpty());
+    CPPUNIT_ASSERT_EQUAL((size_t)0, buf_->getBufferEntrySize());
+    buf_->pushStr("test");
+    CPPUNIT_ASSERT(!buf_->sendBufferIsEmpty());
+    CPPUNIT_ASSERT_EQUAL((size_t)1, buf_->getBufferEntrySize());
   }
 
   void testGetBufferEntrySize()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketBuffer buf(sock);
-    buf.pushStr("aaa");
-    buf.pushStr("bbb");
-    buf.pushStr("ccc");
-    CPPUNIT_ASSERT_EQUAL((size_t)3, buf.getBufferEntrySize());
+    buf_->pushStr("aaa");
+    buf_->pushStr("bbb");
+    buf_->pushStr("ccc");
+    CPPUNIT_ASSERT_EQUAL((size_t)3, buf_->getBufferEntrySize());
   }
 
   void testMultiplePush()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketBuffer buf(sock);
-    buf.pushStr("first");
+    buf_->pushStr("first");
     std::vector<unsigned char> data{0x0A, 0x0B};
-    buf.pushBytes(std::move(data));
-    buf.pushStr("third");
-    CPPUNIT_ASSERT_EQUAL((size_t)3, buf.getBufferEntrySize());
-    CPPUNIT_ASSERT(!buf.sendBufferIsEmpty());
+    buf_->pushBytes(std::move(data));
+    buf_->pushStr("third");
+    CPPUNIT_ASSERT_EQUAL((size_t)3, buf_->getBufferEntrySize());
+    CPPUNIT_ASSERT(!buf_->sendBufferIsEmpty());
   }
 };
 
@@ -86,25 +81,28 @@ class SocketRecvBufferTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testTruncateBuffer_initial);
   CPPUNIT_TEST_SUITE_END();
 
+  std::shared_ptr<SocketCore> sock_;
+  std::unique_ptr<SocketRecvBuffer> buf_;
+
 public:
-  void setUp() {}
+  void setUp()
+  {
+    sock_ = std::make_shared<SocketCore>();
+    buf_ = make_unique<SocketRecvBuffer>(sock_);
+  }
   void tearDown() {}
 
   void testBufferEmpty()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketRecvBuffer buf(sock);
-    CPPUNIT_ASSERT(buf.bufferEmpty());
-    CPPUNIT_ASSERT_EQUAL((size_t)0, buf.getBufferLength());
+    CPPUNIT_ASSERT(buf_->bufferEmpty());
+    CPPUNIT_ASSERT_EQUAL((size_t)0, buf_->getBufferLength());
   }
 
   void testTruncateBuffer_initial()
   {
-    auto sock = std::make_shared<SocketCore>();
-    SocketRecvBuffer buf(sock);
     // Truncate on an empty buffer should be safe
-    buf.truncateBuffer();
-    CPPUNIT_ASSERT(buf.bufferEmpty());
+    buf_->truncateBuffer();
+    CPPUNIT_ASSERT(buf_->bufferEmpty());
   }
 };
 

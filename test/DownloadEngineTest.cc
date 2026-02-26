@@ -33,7 +33,8 @@ public:
     if (counter >= maxExecutions) {
       return true; // done, delete this command
     }
-    // Re-add self to engine
+    // Re-add self — engine takes ownership, does not delete when
+    // execute() returns false.
     e->addCommand(std::unique_ptr<Command>(this));
     return false;
   }
