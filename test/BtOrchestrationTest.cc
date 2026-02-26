@@ -37,11 +37,13 @@ public:
 // Shared setUp for BT orchestration test fixtures.
 struct BtTestContext {
   std::shared_ptr<Option> option;
-  std::unique_ptr<DownloadEngine> engine;
   std::shared_ptr<RequestGroup> rg;
   std::shared_ptr<BtRuntime> btRuntime;
   std::shared_ptr<MockPieceStorage> pieceStorage;
   std::shared_ptr<MockPeerStorage> peerStorage;
+  // engine must be declared last: its commands hold raw pointers to rg,
+  // so rg must outlive the engine.
+  std::unique_ptr<DownloadEngine> engine;
 
   void setUp(bool needRequestGroup = true)
   {
@@ -84,11 +86,20 @@ public:
 
   void testNoCriteria()
   {
+    // SeedCheckCommand::execute() always re-enqueues via addCommand(this),
+    // so release ownership before calling execute() to avoid double-free.
     auto cmd = make_unique<SeedCheckCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), nullptr);
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
-    CPPUNIT_ASSERT(!cmd->execute());
+    auto* rawCmd = cmd.release();
+    CPPUNIT_ASSERT(!rawCmd->execute());
+
+    ctx_.btRuntime->setHalt(true);
+    ctx_.engine->setNoWait(true);
+    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+                                                         ctx_.engine.get()));
+    ctx_.engine->run(true);
   }
 
   void testCriteriaEvaluated()
@@ -99,8 +110,14 @@ public:
         make_unique<CountdownSeedCriteria>(1));
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
-    cmd->execute();
+    auto* rawCmd = cmd.release();
+    rawCmd->execute();
     CPPUNIT_ASSERT(ctx_.btRuntime->isHalt());
+
+    ctx_.engine->setNoWait(true);
+    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+                                                         ctx_.engine.get()));
+    ctx_.engine->run(true);
   }
 };
 
@@ -131,12 +148,21 @@ public:
 
   void testChokeNotElapsed()
   {
+    // PeerChokeCommand::execute() always re-enqueues via addCommand(this),
+    // so release ownership before calling execute() to avoid double-free.
     auto cmd = make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
                                              ctx_.engine.get());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPeerStorage(ctx_.peerStorage);
-    cmd->execute();
+    auto* rawCmd = cmd.release();
+    rawCmd->execute();
     CPPUNIT_ASSERT_EQUAL(0, ctx_.peerStorage->getNumChokeExecuted());
+
+    ctx_.btRuntime->setHalt(true);
+    ctx_.engine->setNoWait(true);
+    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+                                                         ctx_.engine.get()));
+    ctx_.engine->run(true);
   }
 };
 

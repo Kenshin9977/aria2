@@ -126,9 +126,11 @@ public:
 // Shared context for both fixtures.
 struct RealtimeTestContext {
   std::shared_ptr<Option> option;
-  std::unique_ptr<DownloadEngine> engine;
   std::shared_ptr<RequestGroup> rg;
   std::shared_ptr<MockPieceStorage> pieceStorage;
+  // engine must be declared last: its commands hold raw pointers to rg,
+  // so rg must outlive the engine.
+  std::unique_ptr<DownloadEngine> engine;
 
   void setUp()
   {

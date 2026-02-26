@@ -42,9 +42,11 @@ protected:
 
 struct CommandTestContext {
   std::shared_ptr<Option> option;
-  std::unique_ptr<DownloadEngine> engine;
   std::shared_ptr<RequestGroup> rg;
   std::shared_ptr<FileEntry> fileEntry;
+  // engine must be declared last: its commands hold raw pointers to rg,
+  // so rg must outlive the engine.
+  std::unique_ptr<DownloadEngine> engine;
 
   void setUp()
   {

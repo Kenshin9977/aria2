@@ -7,8 +7,12 @@
 #include <string>
 #include <vector>
 
+#include "CheckIntegrityEntry.h"
+#include "CheckIntegrityMan.h"
 #include "Command.h"
 #include "DownloadEngine.h"
+#include "FileAllocationEntry.h"
+#include "FileAllocationMan.h"
 #include "SelectEventPoll.h"
 #include "RequestGroupMan.h"
 #include "RequestGroup.h"
@@ -38,6 +42,8 @@ createTestEngine(std::shared_ptr<Option>& option,
       std::vector<std::shared_ptr<RequestGroup>>{}, 1, option.get());
   rgman->setKeepRunning(keepRunning);
   e->setRequestGroupMan(std::move(rgman));
+  e->setCheckIntegrityMan(make_unique<CheckIntegrityMan>());
+  e->setFileAllocationMan(make_unique<FileAllocationMan>());
   return e;
 }
 
