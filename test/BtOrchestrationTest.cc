@@ -29,7 +29,7 @@ public:
 class CountdownSeedCriteria : public SeedCriteria {
 public:
   int remaining;
-  CountdownSeedCriteria(int n) : remaining(n) {}
+  explicit CountdownSeedCriteria(int n) : remaining(n) {}
   bool evaluate() override { return --remaining <= 0; }
   void reset() override {}
 };

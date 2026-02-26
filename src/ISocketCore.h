@@ -44,6 +44,10 @@
 
 namespace aria2 {
 
+// Abstract network I/O interface used by Command classes.
+// In production, all instances are SocketCore.  Mock implementations
+// (MockSocketCore) exist only in tests.  Code that needs concrete
+// SocketCore methods (TLS, SSH, socket pool) uses static_pointer_cast.
 class ISocketCore {
 public:
   virtual ~ISocketCore() = default;

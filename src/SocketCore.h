@@ -122,9 +122,9 @@ public:
 
   ~SocketCore();
 
-  sock_t getSockfd() const { return sockfd_; }
+  sock_t getSockfd() const override { return sockfd_; }
 
-  bool isOpen() const { return sockfd_ != (sock_t)-1; }
+  bool isOpen() const override { return sockfd_ != (sock_t)-1; }
 
   void setMulticastInterface(const std::string& localAddr);
 
@@ -136,7 +136,7 @@ public:
                           uint16_t multicastPort, const std::string& localAddr);
 
   // Enables TCP_NODELAY socket option if f == true.
-  void setTcpNodelay(bool f);
+  void setTcpNodelay(bool f) override;
 
   // Set DSCP byte
   void applyIpDscp();
@@ -170,7 +170,7 @@ public:
   /**
    * Returns host address, family and port of this socket.
    */
-  Endpoint getAddrInfo() const;
+  Endpoint getAddrInfo() const override;
 
   /**
    * Stores address of this socket to sockaddr.  len must be
@@ -184,12 +184,12 @@ public:
    * Returns address family of this socket.
    * The socket must be connected or bounded to address.
    */
-  int getAddressFamily() const;
+  int getAddressFamily() const override;
 
   /**
    * Returns peer's address, family and port.
    */
-  Endpoint getPeerInfo() const;
+  Endpoint getPeerInfo() const override;
 
   /**
    * Accepts incoming connection on this socket.
@@ -210,17 +210,17 @@ public:
   void establishConnection(const std::string& host, uint16_t port,
                            bool tcpNodelay = true);
 
-  void setNonBlockingMode();
+  void setNonBlockingMode() override;
 
   /**
    * Makes this socket blocking mode.
    */
-  void setBlockingMode();
+  void setBlockingMode() override;
 
   /**
    * Closes the connection of this socket.
    */
-  void closeConnection();
+  void closeConnection() override;
 
   /**
    * Checks whether this socket is available for writing.
@@ -229,7 +229,7 @@ public:
    * @return true if the socket is available for writing,
    * otherwise returns false.
    */
-  bool isWritable(time_t timeout);
+  bool isWritable(time_t timeout) override;
 
   /**
    * Checks whether this socket is available for reading.
@@ -238,7 +238,7 @@ public:
    * @return true if the socket is available for reading,
    * otherwise returns false.
    */
-  bool isReadable(time_t timeout);
+  bool isReadable(time_t timeout) override;
 
   /**
    * Writes data into this socket. data is a pointer pointing the first
@@ -252,16 +252,16 @@ public:
    * @param data data to write
    * @param len length of data
    */
-  ssize_t writeData(const void* data, size_t len);
+  ssize_t writeData(const void* data, size_t len) override;
   ssize_t writeData(const std::string& msg)
   {
     return writeData(msg.c_str(), msg.size());
   }
 
   ssize_t writeData(const void* data, size_t len, const std::string& host,
-                    uint16_t port);
+                    uint16_t port) override;
 
-  ssize_t writeVector(a2iovec* iov, size_t iovcnt);
+  ssize_t writeVector(a2iovec* iov, size_t iovcnt) override;
 
   /**
    * Reads up to len bytes from this socket.
@@ -279,10 +279,10 @@ public:
    * @param len the maximum size data can store. This method assigns
    * the number of bytes read to len.
    */
-  void readData(void* data, size_t& len);
+  void readData(void* data, size_t& len) override;
 
   // sender.addr will be numerihost assigned.
-  ssize_t readDataFrom(void* data, size_t len, Endpoint& sender);
+  ssize_t readDataFrom(void* data, size_t len, Endpoint& sender) override;
 
 #ifdef ENABLE_SSL
   // Performs TLS server side handshake. If handshake is completed,
@@ -321,25 +321,25 @@ public:
 
   bool operator<(const SocketCore& s) { return sockfd_ < s.sockfd_; }
 
-  std::string getSocketError() const;
+  std::string getSocketError() const override;
 
   /**
    * Returns true if the underlying socket gets EAGAIN in the previous
    * readData() or writeData() and the socket needs more incoming data to
    * continue the operation.
    */
-  bool wantRead() const;
+  bool wantRead() const override;
 
   /**
    * Returns true if the underlying socket gets EAGAIN in the previous
    * readData() or writeData() and the socket needs to write more data.
    */
-  bool wantWrite() const;
+  bool wantWrite() const override;
 
   // Returns buffered data which are already received.  This data was
   // already read from socket, and ready to read without reading
   // socket.
-  size_t getRecvBufferedLength() const;
+  size_t getRecvBufferedLength() const override;
 
 #ifdef ENABLE_SSL
   static void

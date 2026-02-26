@@ -38,7 +38,7 @@ public:
   int onFinishedCount = 0;
   int onIncompleteCount = 0;
 
-  MockCheckEntry(RequestGroup* rg) : CheckIntegrityEntry(rg) {}
+  explicit MockCheckEntry(RequestGroup* rg) : CheckIntegrityEntry(rg) {}
 
   bool isValidationReady() override { return true; }
   void initValidator() override {}
@@ -114,7 +114,7 @@ class MockAllocEntry : public FileAllocationEntry {
 public:
   int prepareCount = 0;
 
-  MockAllocEntry(RequestGroup* rg) : FileAllocationEntry(rg) {}
+  explicit MockAllocEntry(RequestGroup* rg) : FileAllocationEntry(rg) {}
 
   void prepareForNextAction(std::vector<std::unique_ptr<Command>>& commands,
                             DownloadEngine* e) override
