@@ -18,12 +18,6 @@ namespace aria2 {
 
 namespace {
 
-void waitRead(const std::shared_ptr<SocketCore>& socket)
-{
-  while (!socket->isReadable(0))
-    ;
-}
-
 struct FtpIntegrationContext {
   std::shared_ptr<Option> option;
   std::shared_ptr<RequestGroup> rg;
@@ -57,8 +51,7 @@ struct FtpIntegrationContext {
 
     clientSocket = std::make_shared<SocketCore>();
     clientSocket->establishConnection("localhost", port);
-    while (!clientSocket->isWritable(0))
-      ;
+    waitWrite(clientSocket);
     serverSocket = listenSock.acceptConnection();
     serverSocket->setBlockingMode();
 
@@ -84,7 +77,11 @@ class FtpCommandIntegrationTest : public CppUnit::TestFixture {
   FtpIntegrationContext ctx_;
 
 public:
-  void setUp() { ctx_.setUp(); }
+  void setUp()
+  {
+    ctx_.setUp();
+    ctx_.engine->setNoWait(true);
+  }
   void tearDown() {}
 
   void testGreetingAndUser()
@@ -115,7 +112,6 @@ public:
     CPPUNIT_ASSERT(sent.find("USER") != std::string::npos);
 
     // Drain the engine to clean up re-enqueued commands.
-    ctx_.engine->setNoWait(true);
     ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
@@ -166,7 +162,6 @@ public:
     // The 530 response triggers an exception in recvPass(), which
     // AbstractCommand::execute() catches and handles. The command will
     // be destroyed. Drain with TestHaltCommand to clean up.
-    ctx_.engine->setNoWait(true);
     ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);

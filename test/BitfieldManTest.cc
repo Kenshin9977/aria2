@@ -41,6 +41,13 @@ class BitfieldManTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testGetFirstNMissingUnusedIndex);
   CPPUNIT_TEST(testGetInorderMissingUnusedIndex);
   CPPUNIT_TEST(testGetGeomMissingUnusedIndex);
+  CPPUNIT_TEST(testGetLastBlockLength);
+  CPPUNIT_TEST(testSetAllUseBit);
+  CPPUNIT_TEST(testUnsetBitRange);
+  CPPUNIT_TEST(testIsBitRangeSet);
+  CPPUNIT_TEST(testIsAllFilterBitSet);
+  CPPUNIT_TEST(testHasMissingPiece);
+  CPPUNIT_TEST(testCountMissingBlock_filter);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -73,6 +80,13 @@ public:
   void testGetFirstNMissingUnusedIndex();
   void testGetInorderMissingUnusedIndex();
   void testGetGeomMissingUnusedIndex();
+  void testGetLastBlockLength();
+  void testSetAllUseBit();
+  void testUnsetBitRange();
+  void testIsBitRangeSet();
+  void testIsAllFilterBitSet();
+  void testHasMissingPiece();
+  void testCountMissingBlock_filter();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(BitfieldManTest);
@@ -813,6 +827,172 @@ void BitfieldManTest::testGetGeomMissingUnusedIndex()
                                               ignoreBitfield, length, 2, 0));
   CPPUNIT_ASSERT_EQUAL((size_t)12, index);
   bt.setUseBit(12);
+}
+
+void BitfieldManTest::testGetLastBlockLength()
+{
+  // Non-aligned: totalLength=256, blockLength=100
+  // blocks = ceil(256/100) = 3
+  // lastBlockLength = 256 - 100*(3-1) = 256-200 = 56
+  BitfieldMan bt1(100, 256);
+  CPPUNIT_ASSERT_EQUAL((int32_t)56, bt1.getLastBlockLength());
+
+  // Aligned: totalLength=300, blockLength=100
+  // blocks = 3, lastBlockLength = 300 - 100*2 = 100
+  BitfieldMan bt2(100, 300);
+  CPPUNIT_ASSERT_EQUAL((int32_t)100, bt2.getLastBlockLength());
+
+  // Single block: totalLength=50, blockLength=100
+  // blocks = 1, lastBlockLength = 50 - 100*0 = 50
+  BitfieldMan bt3(100, 50);
+  CPPUNIT_ASSERT_EQUAL((int32_t)50, bt3.getLastBlockLength());
+}
+
+void BitfieldManTest::testSetAllUseBit()
+{
+  BitfieldMan bt(1_k, 10_k);
+  bt.setAllUseBit();
+  for (size_t i = 0; i < bt.countBlock(); ++i) {
+    CPPUNIT_ASSERT(bt.isUseBitSet(i));
+  }
+  // Verify no missing unused index exists when all use bits are set
+  size_t index;
+  CPPUNIT_ASSERT(!bt.getFirstMissingUnusedIndex(index));
+}
+
+void BitfieldManTest::testUnsetBitRange()
+{
+  size_t blockLength = 1_m;
+  int64_t totalLength = 10 * blockLength;
+
+  BitfieldMan bf(blockLength, totalLength);
+
+  bf.setBitRange(0, 4);
+  // Verify bits 0-4 are set
+  for (size_t i = 0; i < 5; ++i) {
+    CPPUNIT_ASSERT(bf.isBitSet(i));
+  }
+  // Unset bits 1-3
+  bf.unsetBitRange(1, 3);
+  // Bit 0 and 4 should still be set
+  CPPUNIT_ASSERT(bf.isBitSet(0));
+  CPPUNIT_ASSERT(bf.isBitSet(4));
+  // Bits 1-3 should be cleared
+  for (size_t i = 1; i <= 3; ++i) {
+    CPPUNIT_ASSERT(!bf.isBitSet(i));
+  }
+}
+
+void BitfieldManTest::testIsBitRangeSet()
+{
+  size_t blockLength = 1_m;
+  int64_t totalLength = 10 * blockLength;
+
+  BitfieldMan bf(blockLength, totalLength);
+
+  bf.setBitRange(0, 4);
+  CPPUNIT_ASSERT(bf.isBitRangeSet(0, 4));
+  CPPUNIT_ASSERT(bf.isBitRangeSet(0, 0));
+  CPPUNIT_ASSERT(bf.isBitRangeSet(2, 3));
+
+  // Unset bit 2
+  bf.unsetBit(2);
+  CPPUNIT_ASSERT(!bf.isBitRangeSet(0, 4));
+  CPPUNIT_ASSERT(bf.isBitRangeSet(0, 1));
+  CPPUNIT_ASSERT(bf.isBitRangeSet(3, 4));
+  CPPUNIT_ASSERT(!bf.isBitRangeSet(1, 3));
+}
+
+void BitfieldManTest::testIsAllFilterBitSet()
+{
+  BitfieldMan bt(1_k, 10_k);
+  // No filter bitfield allocated yet
+  CPPUNIT_ASSERT(!bt.isAllFilterBitSet());
+
+  // Add filter for entire range
+  bt.addFilter(0, 10_k);
+  bt.enableFilter();
+  CPPUNIT_ASSERT(bt.isAllFilterBitSet());
+
+  // Clear filter deallocates filterBitfield
+  bt.clearFilter();
+  CPPUNIT_ASSERT(!bt.isAllFilterBitSet());
+
+  // Partial filter should not be all set
+  bt.addFilter(0, 5_k);
+  bt.enableFilter();
+  CPPUNIT_ASSERT(!bt.isAllFilterBitSet());
+}
+
+void BitfieldManTest::testHasMissingPiece()
+{
+  BitfieldMan bt(1_k, 4_k);
+  // bt has 4 blocks, all clear
+
+  // Create peer bitfield with all bits set
+  BitfieldMan peerBf(1_k, 4_k);
+  peerBf.setAllBit();
+
+  // All pieces are missing on our side, peer has them all
+  CPPUNIT_ASSERT(
+      bt.hasMissingPiece(peerBf.getBitfield(), peerBf.getBitfieldLength()));
+
+  // Set all our bits - no missing pieces
+  bt.setAllBit();
+  CPPUNIT_ASSERT(
+      !bt.hasMissingPiece(peerBf.getBitfield(), peerBf.getBitfieldLength()));
+
+  // Clear our bits, clear peer bits - peer has nothing we need
+  bt.clearAllBit();
+  peerBf.clearAllBit();
+  CPPUNIT_ASSERT(
+      !bt.hasMissingPiece(peerBf.getBitfield(), peerBf.getBitfieldLength()));
+
+  // Peer has only bit 2, we are missing it
+  peerBf.setBit(2);
+  CPPUNIT_ASSERT(
+      bt.hasMissingPiece(peerBf.getBitfield(), peerBf.getBitfieldLength()));
+
+  // We acquire bit 2 - no longer missing
+  bt.setBit(2);
+  CPPUNIT_ASSERT(
+      !bt.hasMissingPiece(peerBf.getBitfield(), peerBf.getBitfieldLength()));
+
+  // Mismatched bitfield length should return false
+  // 4_k with 1_k blocks = 4 blocks = 1 byte bitfield
+  // 16_k with 1_k blocks = 16 blocks = 2 byte bitfield
+  BitfieldMan otherBf(1_k, 16_k);
+  otherBf.setAllBit();
+  CPPUNIT_ASSERT(
+      !bt.hasMissingPiece(otherBf.getBitfield(), otherBf.getBitfieldLength()));
+}
+
+void BitfieldManTest::testCountMissingBlock_filter()
+{
+  BitfieldMan bt(1_k, 10_k);
+  CPPUNIT_ASSERT_EQUAL((size_t)10, bt.countMissingBlock());
+
+  // Set some bits
+  bt.setBit(0);
+  bt.setBit(1);
+  bt.setBit(2);
+  CPPUNIT_ASSERT_EQUAL((size_t)7, bt.countMissingBlock());
+
+  // Enable filter for last 5 blocks
+  bt.addFilter(5_k, 5_k);
+  bt.enableFilter();
+  // Only blocks 5-9 are filtered, none are set
+  CPPUNIT_ASSERT_EQUAL((size_t)5, bt.countMissingBlock());
+
+  // Set a filtered block
+  bt.setBit(7);
+  CPPUNIT_ASSERT_EQUAL((size_t)4, bt.countMissingBlock());
+
+  // Set all filtered blocks
+  for (size_t i = 5; i < 10; ++i) {
+    bt.setBit(i);
+  }
+  CPPUNIT_ASSERT_EQUAL((size_t)0, bt.countMissingBlock());
 }
 
 } // namespace aria2

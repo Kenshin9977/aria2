@@ -7,8 +7,13 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h>
+
+#include <cppunit/extensions/HelperMacros.h>
+
 #include "CheckIntegrityEntry.h"
 #include "CheckIntegrityMan.h"
+#include "SocketCore.h"
 #include "Command.h"
 #include "DownloadEngine.h"
 #include "FileAllocationEntry.h"
@@ -71,6 +76,55 @@ private:
   DownloadEngine* e_;
   bool forceHalt_;
 };
+
+// Timeout-safe socket wait helpers.  Replace bare busy-wait loops
+// (while(!isReadable(0));) so tests fail fast instead of hanging.
+inline void waitRead(const std::shared_ptr<SocketCore>& socket,
+                     int timeoutMs = 5000)
+{
+  for (int i = 0; i < timeoutMs; ++i) {
+    if (socket->isReadable(0)) {
+      return;
+    }
+    usleep(1000);
+  }
+  CPPUNIT_FAIL("waitRead timed out");
+}
+
+inline void waitWrite(const std::shared_ptr<SocketCore>& socket,
+                      int timeoutMs = 5000)
+{
+  for (int i = 0; i < timeoutMs; ++i) {
+    if (socket->isWritable(0)) {
+      return;
+    }
+    usleep(1000);
+  }
+  CPPUNIT_FAIL("waitWrite timed out");
+}
+
+// Overloads for stack-allocated SocketCore (used by HttpServerTest, etc.)
+inline void waitRead(SocketCore& socket, int timeoutMs = 5000)
+{
+  for (int i = 0; i < timeoutMs; ++i) {
+    if (socket.isReadable(0)) {
+      return;
+    }
+    usleep(1000);
+  }
+  CPPUNIT_FAIL("waitRead timed out");
+}
+
+inline void waitWrite(SocketCore& socket, int timeoutMs = 5000)
+{
+  for (int i = 0; i < timeoutMs; ++i) {
+    if (socket.isWritable(0)) {
+      return;
+    }
+    usleep(1000);
+  }
+  CPPUNIT_FAIL("waitWrite timed out");
+}
 
 } // namespace aria2
 

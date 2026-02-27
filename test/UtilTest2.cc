@@ -1,5 +1,6 @@
 #include "util.h"
 
+#include <cerrno>
 #include <cmath>
 #include <cstring>
 #include <string>
@@ -67,6 +68,13 @@ class UtilTest2 : public CppUnit::TestFixture {
   CPPUNIT_TEST(testSecfmt);
   CPPUNIT_TEST(testTlsHostnameMatch);
   CPPUNIT_TEST(testParseDoubleNoThrow);
+  CPPUNIT_TEST(testTorrentPercentEncode);
+  CPPUNIT_TEST(testIso8859p1ToUtf8);
+  CPPUNIT_TEST(testCharacterClassification);
+  CPPUNIT_TEST(testGetConfigFile);
+  CPPUNIT_TEST(testCreateSafePath);
+  CPPUNIT_TEST(testMakeString);
+  CPPUNIT_TEST(testSafeStrerror);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -117,6 +125,13 @@ public:
   void testSecfmt();
   void testTlsHostnameMatch();
   void testParseDoubleNoThrow();
+  void testTorrentPercentEncode();
+  void testIso8859p1ToUtf8();
+  void testCharacterClassification();
+  void testGetConfigFile();
+  void testCreateSafePath();
+  void testMakeString();
+  void testSafeStrerror();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(UtilTest2);
@@ -996,6 +1011,175 @@ void UtilTest2::testParseDoubleNoThrow()
 
   CPPUNIT_ASSERT(!util::parseDoubleNoThrow(n, ""));
   CPPUNIT_ASSERT(!util::parseDoubleNoThrow(n, "123x"));
+}
+
+void UtilTest2::testTorrentPercentEncode()
+{
+  std::string src = "hello world";
+  std::string encoded = util::torrentPercentEncode(src);
+  // torrentPercentEncode encodes everything except unreserved chars
+  CPPUNIT_ASSERT(encoded.find("hello") != std::string::npos);
+  // Space should be encoded as %20
+  CPPUNIT_ASSERT(encoded.find("%20") != std::string::npos);
+
+  // Test with raw bytes
+  unsigned char bytes[] = {0x00, 0x41, 0xFF};
+  std::string result = util::torrentPercentEncode(bytes, 3);
+  CPPUNIT_ASSERT(result.find("A") != std::string::npos);
+  CPPUNIT_ASSERT(result.find("%00") != std::string::npos);
+  CPPUNIT_ASSERT(result.find("%ff") != std::string::npos ||
+                 result.find("%FF") != std::string::npos);
+}
+
+void UtilTest2::testIso8859p1ToUtf8()
+{
+  // ASCII chars pass through unchanged
+  CPPUNIT_ASSERT_EQUAL(std::string("hello"), util::iso8859p1ToUtf8("hello"));
+
+  // ISO-8859-1 high byte chars (> 0x7F) get encoded to UTF-8
+  // 0xC0 = Latin capital A with grave (À) -> UTF-8: 0xC3 0x80
+  std::string iso = "\xC0";
+  std::string utf8 = util::iso8859p1ToUtf8(iso);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, utf8.size());
+  CPPUNIT_ASSERT_EQUAL('\xC3', utf8[0]);
+  CPPUNIT_ASSERT_EQUAL('\x80', utf8[1]);
+
+  // 0xFF = Latin small y with diaeresis (ÿ) -> UTF-8: 0xC3 0xBF
+  iso = "\xFF";
+  utf8 = util::iso8859p1ToUtf8(iso);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, utf8.size());
+  CPPUNIT_ASSERT_EQUAL('\xC3', utf8[0]);
+  CPPUNIT_ASSERT_EQUAL('\xBF', utf8[1]);
+
+  // 0x80-0x9F are treated as invalid, returns empty string
+  iso = "\x80";
+  utf8 = util::iso8859p1ToUtf8(iso);
+  CPPUNIT_ASSERT_EQUAL(std::string(""), utf8);
+
+  // 0xA0 -> UTF-8: 0xC2 0xA0 (non-breaking space)
+  iso = "\xA0";
+  utf8 = util::iso8859p1ToUtf8(iso);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, utf8.size());
+  CPPUNIT_ASSERT_EQUAL('\xC2', utf8[0]);
+  CPPUNIT_ASSERT_EQUAL('\xA0', utf8[1]);
+
+  // Empty string
+  CPPUNIT_ASSERT_EQUAL(std::string(""), util::iso8859p1ToUtf8(""));
+
+  // Test overloaded version with char*/len
+  CPPUNIT_ASSERT_EQUAL(std::string("abc"), util::iso8859p1ToUtf8("abc", 3));
+}
+
+void UtilTest2::testCharacterClassification()
+{
+  // isAlpha
+  CPPUNIT_ASSERT(util::isAlpha('a'));
+  CPPUNIT_ASSERT(util::isAlpha('z'));
+  CPPUNIT_ASSERT(util::isAlpha('A'));
+  CPPUNIT_ASSERT(util::isAlpha('Z'));
+  CPPUNIT_ASSERT(!util::isAlpha('0'));
+  CPPUNIT_ASSERT(!util::isAlpha(' '));
+
+  // isDigit
+  CPPUNIT_ASSERT(util::isDigit('0'));
+  CPPUNIT_ASSERT(util::isDigit('9'));
+  CPPUNIT_ASSERT(!util::isDigit('a'));
+
+  // isHexDigit(char)
+  CPPUNIT_ASSERT(util::isHexDigit('0'));
+  CPPUNIT_ASSERT(util::isHexDigit('9'));
+  CPPUNIT_ASSERT(util::isHexDigit('a'));
+  CPPUNIT_ASSERT(util::isHexDigit('f'));
+  CPPUNIT_ASSERT(util::isHexDigit('A'));
+  CPPUNIT_ASSERT(util::isHexDigit('F'));
+  CPPUNIT_ASSERT(!util::isHexDigit('g'));
+  CPPUNIT_ASSERT(!util::isHexDigit('G'));
+
+  // isHexDigit(string)
+  CPPUNIT_ASSERT(util::isHexDigit(std::string("0123456789abcdef")));
+  CPPUNIT_ASSERT(util::isHexDigit(std::string("ABCDEF")));
+  CPPUNIT_ASSERT(!util::isHexDigit(std::string("xyz")));
+  CPPUNIT_ASSERT(util::isHexDigit(std::string(""))); // empty is vacuously true
+
+  // RFC character tests
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('A'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('z'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('0'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('-'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('.'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('_'));
+  CPPUNIT_ASSERT(util::inRFC3986UnreservedChars('~'));
+  CPPUNIT_ASSERT(!util::inRFC3986UnreservedChars(' '));
+
+  CPPUNIT_ASSERT(util::inRFC3986ReservedChars(':'));
+  CPPUNIT_ASSERT(util::inRFC3986ReservedChars('/'));
+  CPPUNIT_ASSERT(util::inRFC3986ReservedChars('?'));
+  CPPUNIT_ASSERT(util::inRFC3986ReservedChars('#'));
+  CPPUNIT_ASSERT(!util::inRFC3986ReservedChars('a'));
+
+  CPPUNIT_ASSERT(util::inRFC2978MIMECharset('a'));
+  CPPUNIT_ASSERT(util::inRFC2978MIMECharset('0'));
+  CPPUNIT_ASSERT(util::inRFC2978MIMECharset('!'));
+  CPPUNIT_ASSERT(!util::inRFC2978MIMECharset(' '));
+
+  CPPUNIT_ASSERT(util::inRFC2616HttpToken('a'));
+  CPPUNIT_ASSERT(!util::inRFC2616HttpToken(' '));
+  CPPUNIT_ASSERT(!util::inRFC2616HttpToken('('));
+
+  CPPUNIT_ASSERT(util::inRFC5987AttrChar('a'));
+  CPPUNIT_ASSERT(util::inRFC5987AttrChar('0'));
+  CPPUNIT_ASSERT(!util::inRFC5987AttrChar(' '));
+
+  // isIso8859p1 (printable range: 0x20-0x7E and 0xA0+)
+  CPPUNIT_ASSERT(util::isIso8859p1(0x20));
+  CPPUNIT_ASSERT(util::isIso8859p1(0x7E));
+  CPPUNIT_ASSERT(util::isIso8859p1(0xA0));
+  CPPUNIT_ASSERT(util::isIso8859p1(0xFF));
+  CPPUNIT_ASSERT(!util::isIso8859p1(0x09)); // tab not in range
+  CPPUNIT_ASSERT(!util::isIso8859p1(0x00));
+  CPPUNIT_ASSERT(!util::isIso8859p1(0x7F)); // DEL not in range
+}
+
+void UtilTest2::testGetConfigFile()
+{
+  std::string configFile = util::getConfigFile();
+  CPPUNIT_ASSERT(!configFile.empty());
+  // Should end with aria2.conf or similar
+  CPPUNIT_ASSERT(configFile.find("aria2") != std::string::npos);
+}
+
+void UtilTest2::testCreateSafePath()
+{
+  // Single arg: just filename
+  std::string result = util::createSafePath("test.txt");
+  CPPUNIT_ASSERT_EQUAL(std::string("test.txt"), result);
+
+  // Two args: dir + filename
+  result = util::createSafePath("/tmp", "test.txt");
+  CPPUNIT_ASSERT_EQUAL(std::string("/tmp/test.txt"), result);
+
+  // Filename with path traversal should be sanitized
+  result = util::createSafePath("/tmp", "../etc/passwd");
+  CPPUNIT_ASSERT(result.find("..") == std::string::npos ||
+                 result.find("/etc/passwd") == std::string::npos);
+}
+
+void UtilTest2::testMakeString()
+{
+  // Non-null pointer
+  CPPUNIT_ASSERT_EQUAL(std::string("hello"), util::makeString("hello"));
+  // Null pointer should return empty string
+  CPPUNIT_ASSERT_EQUAL(std::string(""), util::makeString(nullptr));
+}
+
+void UtilTest2::testSafeStrerror()
+{
+  // Valid errno
+  std::string result = util::safeStrerror(ENOENT);
+  CPPUNIT_ASSERT(!result.empty());
+  // Invalid errno should not crash
+  result = util::safeStrerror(99999);
+  CPPUNIT_ASSERT(!result.empty());
 }
 
 } // namespace aria2

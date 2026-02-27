@@ -10,10 +10,13 @@
 #include "SocketCore.h"
 #include "Request.h"
 #include "Option.h"
+#include "prefs.h"
 #include "DlRetryEx.h"
 #include "DlAbortEx.h"
 #include "AuthConfigFactory.h"
 #include "AuthConfig.h"
+#include "Segment.h"
+#include "TestEngineHelper.h"
 
 namespace aria2 {
 
@@ -33,6 +36,16 @@ class FtpConnectionTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testReceiveSizeResponse);
   CPPUNIT_TEST(testSendRetr);
   CPPUNIT_TEST(testReceiveEpsvResponse);
+  CPPUNIT_TEST(testSendUser);
+  CPPUNIT_TEST(testSendPass);
+  CPPUNIT_TEST(testSendType);
+  CPPUNIT_TEST(testSendEpsv);
+  CPPUNIT_TEST(testSendPasv);
+  CPPUNIT_TEST(testReceivePasvResponse);
+  CPPUNIT_TEST(testSendRestNullSegment);
+  CPPUNIT_TEST(testBaseWorkingDir);
+  CPPUNIT_TEST(testGetUser);
+  CPPUNIT_TEST(testReceiveSizeResponse_negative);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -63,8 +76,7 @@ public:
     clientSocket_.reset(new SocketCore());
     clientSocket_->establishConnection("localhost", listenPort_);
 
-    while (!clientSocket_->isWritable(0))
-      ;
+    waitWrite(clientSocket_);
 
     serverSocket_ = listenSocket->acceptConnection();
     serverSocket_->setBlockingMode();
@@ -89,17 +101,21 @@ public:
   void testReceiveSizeResponse();
   void testSendRetr();
   void testReceiveEpsvResponse();
+  void testSendUser();
+  void testSendPass();
+  void testSendType();
+  void testSendEpsv();
+  void testSendPasv();
+  void testReceivePasvResponse();
+  void testSendRestNullSegment();
+  void testBaseWorkingDir();
+  void testGetUser();
+  void testReceiveSizeResponse_negative();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FtpConnectionTest);
 
-namespace {
-void waitRead(const std::shared_ptr<SocketCore>& socket)
-{
-  while (!socket->isReadable(0))
-    ;
-}
-} // namespace
+// waitRead/waitWrite provided by TestEngineHelper.h
 
 void FtpConnectionTest::testReceiveResponse()
 {
@@ -344,6 +360,127 @@ void FtpConnectionTest::testReceiveEpsvResponse()
   waitRead(clientSocket_);
   CPPUNIT_ASSERT_EQUAL(229, ftp_->receiveEpsvResponse(port));
   CPPUNIT_ASSERT_EQUAL((uint16_t)0, port);
+}
+
+void FtpConnectionTest::testSendUser()
+{
+  ftp_->sendUser();
+  char data[128];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  // Default user is "anonymous"
+  CPPUNIT_ASSERT_EQUAL(std::string("USER anonymous\r\n"), sent);
+}
+
+void FtpConnectionTest::testSendPass()
+{
+  ftp_->sendPass();
+  char data[128];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  // Default password for anonymous FTP
+  CPPUNIT_ASSERT(sent.find("PASS ") == 0);
+  CPPUNIT_ASSERT(sent.find("\r\n") != std::string::npos);
+}
+
+void FtpConnectionTest::testSendType()
+{
+  // Default FTP type is binary (I)
+  ftp_->sendType();
+  char data[32];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  CPPUNIT_ASSERT_EQUAL(std::string("TYPE I\r\n"), sent);
+}
+
+void FtpConnectionTest::testSendEpsv()
+{
+  ftp_->sendEpsv();
+  char data[32];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  CPPUNIT_ASSERT_EQUAL(std::string("EPSV\r\n"), sent);
+}
+
+void FtpConnectionTest::testSendPasv()
+{
+  ftp_->sendPasv();
+  char data[32];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  CPPUNIT_ASSERT_EQUAL(std::string("PASV\r\n"), sent);
+}
+
+void FtpConnectionTest::testReceivePasvResponse()
+{
+  // Valid PASV response
+  {
+    serverSocket_->writeData(
+        "227 Entering Passive Mode (192,168,0,1,4,1).\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    CPPUNIT_ASSERT_EQUAL(227, ftp_->receivePasvResponse(dest));
+    CPPUNIT_ASSERT_EQUAL(std::string("192.168.0.1"), dest.first);
+    // port = 256*4 + 1 = 1025
+    CPPUNIT_ASSERT_EQUAL((uint16_t)1025, dest.second);
+  }
+  // Non-227 response
+  {
+    serverSocket_->writeData("500 Command not understood\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    CPPUNIT_ASSERT_EQUAL(500, ftp_->receivePasvResponse(dest));
+  }
+}
+
+void FtpConnectionTest::testSendRestNullSegment()
+{
+  // sendRest with null segment sends REST 0
+  std::shared_ptr<Segment> nullSeg;
+  ftp_->sendRest(nullSeg);
+  char data[32];
+  size_t len = sizeof(data);
+  serverSocket_->readData(data, len);
+  std::string sent(data, len);
+  CPPUNIT_ASSERT_EQUAL(std::string("REST 0\r\n"), sent);
+}
+
+void FtpConnectionTest::testBaseWorkingDir()
+{
+  // Default base working dir is "/"
+  CPPUNIT_ASSERT_EQUAL(std::string("/"), ftp_->getBaseWorkingDir());
+
+  ftp_->setBaseWorkingDir("/home/ftp");
+  CPPUNIT_ASSERT_EQUAL(std::string("/home/ftp"), ftp_->getBaseWorkingDir());
+
+  ftp_->setBaseWorkingDir("/");
+  CPPUNIT_ASSERT_EQUAL(std::string("/"), ftp_->getBaseWorkingDir());
+}
+
+void FtpConnectionTest::testGetUser()
+{
+  // Default user for anonymous FTP
+  CPPUNIT_ASSERT_EQUAL(std::string("anonymous"), ftp_->getUser());
+}
+
+void FtpConnectionTest::testReceiveSizeResponse_negative()
+{
+  // Negative size should throw
+  serverSocket_->writeData("213 -1\r\n");
+  waitRead(clientSocket_);
+  int64_t size = 0;
+  try {
+    ftp_->receiveSizeResponse(size);
+    CPPUNIT_FAIL("exception must be thrown.");
+  }
+  catch (DlAbortEx& e) {
+    // success
+  }
 }
 
 } // namespace aria2

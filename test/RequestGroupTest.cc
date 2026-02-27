@@ -10,6 +10,8 @@
 #include "DownloadFailureException.h"
 #include "TimeA2.h"
 #include "prefs.h"
+#include "GroupId.h"
+#include "util.h"
 
 namespace aria2 {
 
@@ -25,6 +27,15 @@ class RequestGroupTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testIsDependencyResolved);
   CPPUNIT_TEST(testUpdateLastModifiedTime);
   CPPUNIT_TEST(testFileNotFoundCount);
+  CPPUNIT_TEST(testCommandCounter);
+  CPPUNIT_TEST(testTimeout);
+  CPPUNIT_TEST(testHaltRequested);
+  CPPUNIT_TEST(testGroupIdAndGID);
+  CPPUNIT_TEST(testFollowingBelongsTo);
+  CPPUNIT_TEST(testResumeFailureCount);
+  CPPUNIT_TEST(testState);
+  CPPUNIT_TEST(testSaveControlFile);
+  CPPUNIT_TEST(testLastErrorCode);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -42,6 +53,15 @@ public:
   void testIsDependencyResolved();
   void testUpdateLastModifiedTime();
   void testFileNotFoundCount();
+  void testCommandCounter();
+  void testTimeout();
+  void testHaltRequested();
+  void testGroupIdAndGID();
+  void testFollowingBelongsTo();
+  void testResumeFailureCount();
+  void testState();
+  void testSaveControlFile();
+  void testLastErrorCode();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RequestGroupTest);
@@ -186,16 +206,19 @@ void RequestGroupTest::testStreamCommandCounter()
   auto ctx = std::make_shared<DownloadContext>(1_k, 1_k, "dummy");
   group.setDownloadContext(ctx);
 
+  // numStreamCommand_ has no public getter — coverage-only exercise
   group.increaseStreamCommand();
   group.increaseStreamCommand();
   group.decreaseStreamCommand();
 
+  // numStreamConnection_ is observable via getNumConnection()
+  CPPUNIT_ASSERT_EQUAL(0, group.getNumConnection());
   group.increaseStreamConnection();
+  CPPUNIT_ASSERT_EQUAL(1, group.getNumConnection());
   group.increaseStreamConnection();
+  CPPUNIT_ASSERT_EQUAL(2, group.getNumConnection());
   group.decreaseStreamConnection();
-
-  // Should not crash or fail
-  CPPUNIT_ASSERT(true);
+  CPPUNIT_ASSERT_EQUAL(1, group.getNumConnection());
 }
 
 void RequestGroupTest::testNumConnectionCounter()
@@ -261,6 +284,100 @@ void RequestGroupTest::testFileNotFoundCount()
   catch (const DownloadFailureException& e) {
     // expected
   }
+}
+
+void RequestGroupTest::testCommandCounter()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT_EQUAL(0, group.getNumCommand());
+  group.increaseNumCommand();
+  CPPUNIT_ASSERT_EQUAL(1, group.getNumCommand());
+  group.increaseNumCommand();
+  CPPUNIT_ASSERT_EQUAL(2, group.getNumCommand());
+  group.decreaseNumCommand();
+  CPPUNIT_ASSERT_EQUAL(1, group.getNumCommand());
+}
+
+void RequestGroupTest::testTimeout()
+{
+  RequestGroup group(GroupId::create(), option_);
+  group.setTimeout(std::chrono::seconds(30));
+  CPPUNIT_ASSERT(std::chrono::seconds(30) == group.getTimeout());
+  group.setTimeout(std::chrono::seconds(120));
+  CPPUNIT_ASSERT(std::chrono::seconds(120) == group.getTimeout());
+}
+
+void RequestGroupTest::testHaltRequested()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT(!group.isHaltRequested());
+  CPPUNIT_ASSERT(!group.isForceHaltRequested());
+
+  group.setHaltRequested(true);
+  CPPUNIT_ASSERT(group.isHaltRequested());
+  CPPUNIT_ASSERT(!group.isForceHaltRequested());
+
+  group.setForceHaltRequested(true);
+  CPPUNIT_ASSERT(group.isForceHaltRequested());
+}
+
+void RequestGroupTest::testGroupIdAndGID()
+{
+  auto gid = GroupId::create();
+  RequestGroup group(gid, option_);
+  CPPUNIT_ASSERT_EQUAL(gid->getNumericId(), group.getGID());
+  CPPUNIT_ASSERT(gid == group.getGroupId());
+}
+
+void RequestGroupTest::testFollowingBelongsTo()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT_EQUAL((a2_gid_t)0, group.following());
+  CPPUNIT_ASSERT_EQUAL((a2_gid_t)0, group.belongsTo());
+
+  group.following(12345);
+  CPPUNIT_ASSERT_EQUAL((a2_gid_t)12345, group.following());
+
+  group.belongsTo(67890);
+  CPPUNIT_ASSERT_EQUAL((a2_gid_t)67890, group.belongsTo());
+
+  // followedBy
+  CPPUNIT_ASSERT(group.followedBy().empty());
+}
+
+void RequestGroupTest::testResumeFailureCount()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT_EQUAL(0, group.getResumeFailureCount());
+  group.increaseResumeFailureCount();
+  CPPUNIT_ASSERT_EQUAL(1, group.getResumeFailureCount());
+  group.increaseResumeFailureCount();
+  CPPUNIT_ASSERT_EQUAL(2, group.getResumeFailureCount());
+}
+
+void RequestGroupTest::testState()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT_EQUAL((int)RequestGroup::STATE_WAITING, group.getState());
+  group.setState(RequestGroup::STATE_ACTIVE);
+  CPPUNIT_ASSERT_EQUAL((int)RequestGroup::STATE_ACTIVE, group.getState());
+}
+
+void RequestGroupTest::testSaveControlFile()
+{
+  RequestGroup group(GroupId::create(), option_);
+  group.enableSaveControlFile();
+  group.disableSaveControlFile();
+  // Coverage-only: saveControlFile_ is private with no public getter.
+  // These methods set an internal bool; we verify they don't crash.
+}
+
+void RequestGroupTest::testLastErrorCode()
+{
+  RequestGroup group(GroupId::create(), option_);
+  CPPUNIT_ASSERT_EQUAL(error_code::UNDEFINED, group.getLastErrorCode());
+  group.setLastErrorCode(error_code::TIME_OUT);
+  CPPUNIT_ASSERT_EQUAL(error_code::TIME_OUT, group.getLastErrorCode());
 }
 
 } // namespace aria2

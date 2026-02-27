@@ -27,12 +27,6 @@ namespace aria2 {
 
 namespace {
 
-void waitRead(const std::shared_ptr<SocketCore>& socket)
-{
-  while (!socket->isReadable(0))
-    ;
-}
-
 struct BtPeerIntegrationContext {
   std::shared_ptr<Option> option;
   std::shared_ptr<DownloadContext> dctx;

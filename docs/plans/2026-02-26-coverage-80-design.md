@@ -101,7 +101,11 @@ All integration tests use the Phase 3 pattern:
 | Create | `scripts/coverage.sh` |
 | Modify | `.gitignore` |
 
-No production code changes.
+Production code changes: ISocketCore interface extraction (65 files in src/).
+SocketCore now implements the ISocketCore abstract interface. All Command classes
+use shared_ptr<ISocketCore> instead of shared_ptr<SocketCore>. This enables
+MockSocketCore in tests. Code needing concrete SocketCore (TLS, SSH, socket pool)
+uses static_pointer_cast.
 
 ## Exclusions
 

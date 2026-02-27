@@ -11,6 +11,12 @@
 namespace aria2 {
 
 class MockSocketCore : public ISocketCore {
+  static sock_t allocFd()
+  {
+    static sock_t next = 100;
+    return next++;
+  }
+
 public:
   // --- Controllable state ---
 
@@ -27,7 +33,7 @@ public:
   Endpoint addrInfo = {"127.0.0.1", AF_INET, 0};
   Endpoint peerInfo = {"127.0.0.1", AF_INET, 80};
 
-  sock_t sockfd = 100;
+  sock_t sockfd = allocFd();
   std::string socketError;
 
   // --- ISocketCore I/O ---

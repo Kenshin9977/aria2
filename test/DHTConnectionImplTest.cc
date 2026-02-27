@@ -6,6 +6,7 @@
 #include "Exception.h"
 #include "SocketCore.h"
 #include "A2STR.h"
+#include "TestEngineHelper.h"
 
 namespace aria2 {
 
@@ -45,8 +46,7 @@ void DHTConnectionImplTest::testWriteAndReadData()
     std::string remoteHost;
     uint16_t remotePort;
     {
-      while (!con2.getSocket()->isReadable(0))
-        ;
+      waitRead(con2.getSocket());
       ssize_t rlength = con2.receiveMessage(readbuffer, sizeof(readbuffer),
                                             remoteHost, remotePort);
       CPPUNIT_ASSERT_EQUAL((ssize_t)message1.size(), rlength);

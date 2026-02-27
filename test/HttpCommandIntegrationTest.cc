@@ -53,8 +53,7 @@ struct HttpIntegrationContext {
 
     clientSocket = std::make_shared<SocketCore>();
     clientSocket->establishConnection("localhost", port);
-    while (!clientSocket->isWritable(0))
-      ;
+    waitWrite(clientSocket);
     serverSocket = listenSock.acceptConnection();
     serverSocket->setBlockingMode();
 

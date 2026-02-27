@@ -22,6 +22,16 @@ class FileEntryTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testInsertUri);
   CPPUNIT_TEST(testRemoveUri);
   CPPUNIT_TEST(testPutBackRequest);
+  CPPUNIT_TEST(testBasicProperties);
+  CPPUNIT_TEST(testOperatorLess);
+  CPPUNIT_TEST(testGetBasename);
+  CPPUNIT_TEST(testGetDirname);
+  CPPUNIT_TEST(testGetLastOffset);
+  CPPUNIT_TEST(testEmptyRequestUri);
+  CPPUNIT_TEST(testOriginalName);
+  CPPUNIT_TEST(testSuffixPath);
+  CPPUNIT_TEST(testUniqueProtocol);
+  CPPUNIT_TEST(testCountRequests);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -39,6 +49,16 @@ public:
   void testInsertUri();
   void testRemoveUri();
   void testPutBackRequest();
+  void testBasicProperties();
+  void testOperatorLess();
+  void testGetBasename();
+  void testGetDirname();
+  void testGetLastOffset();
+  void testEmptyRequestUri();
+  void testOriginalName();
+  void testSuffixPath();
+  void testUniqueProtocol();
+  void testCountRequests();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FileEntryTest);
@@ -309,6 +329,91 @@ void FileEntryTest::testPutBackRequest()
   CPPUNIT_ASSERT_EQUAL(std::string("http://localhost/aria2.zip"), uris[0]);
   CPPUNIT_ASSERT_EQUAL(std::string("http://mirror/aria2.zip"), uris[1]);
   CPPUNIT_ASSERT_EQUAL(std::string("ftp://localhost/aria2.zip"), uris[2]);
+}
+
+void FileEntryTest::testBasicProperties()
+{
+  FileEntry fe("/path/to/file.txt", 1024, 2048);
+  CPPUNIT_ASSERT_EQUAL(std::string("/path/to/file.txt"), fe.getPath());
+  CPPUNIT_ASSERT_EQUAL((int64_t)1024, fe.getLength());
+  CPPUNIT_ASSERT_EQUAL((int64_t)2048, fe.getOffset());
+
+  fe.setLength(4096);
+  CPPUNIT_ASSERT_EQUAL((int64_t)4096, fe.getLength());
+  fe.setOffset(0);
+  CPPUNIT_ASSERT_EQUAL((int64_t)0, fe.getOffset());
+  fe.setRequested(true);
+  CPPUNIT_ASSERT(fe.isRequested());
+  fe.setRequested(false);
+  CPPUNIT_ASSERT(!fe.isRequested());
+}
+
+void FileEntryTest::testOperatorLess()
+{
+  FileEntry a("/a", 100, 0);
+  FileEntry b("/b", 100, 100);
+  CPPUNIT_ASSERT(a < b);
+  CPPUNIT_ASSERT(!(b < a));
+}
+
+void FileEntryTest::testGetBasename()
+{
+  FileEntry fe("/path/to/file.txt", 0, 0);
+  CPPUNIT_ASSERT_EQUAL(std::string("file.txt"), fe.getBasename());
+}
+
+void FileEntryTest::testGetDirname()
+{
+  FileEntry fe("/path/to/file.txt", 0, 0);
+  CPPUNIT_ASSERT_EQUAL(std::string("/path/to"), fe.getDirname());
+}
+
+void FileEntryTest::testGetLastOffset()
+{
+  FileEntry fe("/file", 100, 50);
+  CPPUNIT_ASSERT_EQUAL((int64_t)150, fe.getLastOffset());
+}
+
+void FileEntryTest::testEmptyRequestUri()
+{
+  FileEntry fe;
+  CPPUNIT_ASSERT(fe.emptyRequestUri());
+  fe.addUri("http://host/file");
+  CPPUNIT_ASSERT(!fe.emptyRequestUri());
+}
+
+void FileEntryTest::testOriginalName()
+{
+  FileEntry fe("/file", 0, 0);
+  CPPUNIT_ASSERT(fe.getOriginalName().empty());
+  fe.setOriginalName("original.txt");
+  CPPUNIT_ASSERT_EQUAL(std::string("original.txt"), fe.getOriginalName());
+}
+
+void FileEntryTest::testSuffixPath()
+{
+  FileEntry fe("/file", 0, 0);
+  CPPUNIT_ASSERT(fe.getSuffixPath().empty());
+  fe.setSuffixPath("subdir/file.txt");
+  CPPUNIT_ASSERT_EQUAL(std::string("subdir/file.txt"), fe.getSuffixPath());
+}
+
+void FileEntryTest::testUniqueProtocol()
+{
+  FileEntry fe;
+  CPPUNIT_ASSERT(!fe.isUniqueProtocol());
+  fe.setUniqueProtocol(true);
+  CPPUNIT_ASSERT(fe.isUniqueProtocol());
+  fe.setUniqueProtocol(false);
+  CPPUNIT_ASSERT(!fe.isUniqueProtocol());
+}
+
+void FileEntryTest::testCountRequests()
+{
+  FileEntry fe;
+  CPPUNIT_ASSERT_EQUAL((size_t)0, fe.countInFlightRequest());
+  CPPUNIT_ASSERT_EQUAL((size_t)0, fe.countPooledRequest());
+  CPPUNIT_ASSERT_EQUAL(1, fe.getMaxConnectionPerServer());
 }
 
 } // namespace aria2

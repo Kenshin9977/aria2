@@ -23,6 +23,11 @@ class SegmentManTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testCancelAllSegments);
   CPPUNIT_TEST(testGetPeerStat);
   CPPUNIT_TEST(testGetCleanSegmentIfOwnerIsIdle);
+  CPPUNIT_TEST(testGetTotalLength);
+  CPPUNIT_TEST(testDownloadFinished);
+  CPPUNIT_TEST(testGetInFlightSegment);
+  CPPUNIT_TEST(testIgnoreSegmentFor);
+  CPPUNIT_TEST(testAllSegmentsIgnored);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -49,6 +54,11 @@ public:
   void testCancelAllSegments();
   void testGetPeerStat();
   void testGetCleanSegmentIfOwnerIsIdle();
+  void testGetTotalLength();
+  void testDownloadFinished();
+  void testGetInFlightSegment();
+  void testIgnoreSegmentFor();
+  void testAllSegmentsIgnored();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SegmentManTest);
@@ -193,6 +203,127 @@ void SegmentManTest::testGetCleanSegmentIfOwnerIsIdle()
   CPPUNIT_ASSERT(!segmentMan_->getCleanSegmentIfOwnerIsIdle(5, 0));
   // Segment::updateWrittenLength != 0
   CPPUNIT_ASSERT(!segmentMan_->getCleanSegmentIfOwnerIsIdle(5, 1));
+}
+
+void SegmentManTest::testGetTotalLength()
+{
+  // totalLength delegates to PieceStorage
+  CPPUNIT_ASSERT_EQUAL((int64_t)64_m, segmentMan_->getTotalLength());
+
+  // With null PieceStorage, returns 0
+  Option op;
+  std::shared_ptr<DownloadContext> dctx(
+      new DownloadContext(0, 0, "aria2.tar.bz2"));
+  SegmentMan segman(dctx, nullptr);
+  CPPUNIT_ASSERT_EQUAL((int64_t)0, segman.getTotalLength());
+}
+
+void SegmentManTest::testDownloadFinished()
+{
+  // Initially not finished
+  CPPUNIT_ASSERT(!segmentMan_->downloadFinished());
+
+  // With null PieceStorage, returns false
+  Option op;
+  std::shared_ptr<DownloadContext> dctx(
+      new DownloadContext(0, 0, "aria2.tar.bz2"));
+  SegmentMan segman(dctx, nullptr);
+  CPPUNIT_ASSERT(!segman.downloadFinished());
+
+  // With UnknownLengthPieceStorage that has markAllPiecesDone,
+  // downloadFinished returns true
+  std::shared_ptr<UnknownLengthPieceStorage> ps(
+      new UnknownLengthPieceStorage(dctx));
+  SegmentMan segman2(dctx, ps);
+  CPPUNIT_ASSERT(!segman2.downloadFinished());
+  ps->markAllPiecesDone();
+  CPPUNIT_ASSERT(segman2.downloadFinished());
+}
+
+void SegmentManTest::testGetInFlightSegment()
+{
+  // Get segments for cuid 1
+  std::shared_ptr<Segment> seg0 = segmentMan_->getSegmentWithIndex(1, 0);
+  std::shared_ptr<Segment> seg1 = segmentMan_->getSegmentWithIndex(1, 1);
+  CPPUNIT_ASSERT(seg0);
+  CPPUNIT_ASSERT(seg1);
+
+  // Get a segment for a different cuid
+  segmentMan_->getSegmentWithIndex(2, 2);
+
+  // getInFlightSegment should return only segments for cuid 1
+  std::vector<std::shared_ptr<Segment>> segments;
+  segmentMan_->getInFlightSegment(segments, 1);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, segments.size());
+  CPPUNIT_ASSERT_EQUAL((size_t)0, segments[0]->getIndex());
+  CPPUNIT_ASSERT_EQUAL((size_t)1, segments[1]->getIndex());
+
+  // getInFlightSegment for cuid 2 should return 1 segment
+  std::vector<std::shared_ptr<Segment>> segments2;
+  segmentMan_->getInFlightSegment(segments2, 2);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, segments2.size());
+  CPPUNIT_ASSERT_EQUAL((size_t)2, segments2[0]->getIndex());
+
+  // getInFlightSegment for unknown cuid should return empty
+  std::vector<std::shared_ptr<Segment>> segments3;
+  segmentMan_->getInFlightSegment(segments3, 99);
+  CPPUNIT_ASSERT(segments3.empty());
+}
+
+void SegmentManTest::testIgnoreSegmentFor()
+{
+  Option op;
+  std::shared_ptr<DownloadContext> dctx(new DownloadContext());
+  dctx->setPieceLength(2);
+  std::shared_ptr<FileEntry> fileEntries[] = {
+      std::shared_ptr<FileEntry>(new FileEntry("file1", 4, 0)),
+      std::shared_ptr<FileEntry>(new FileEntry("file2", 4, 4))};
+  dctx->setFileEntries(&fileEntries[0], &fileEntries[2]);
+  std::shared_ptr<DefaultPieceStorage> ps(new DefaultPieceStorage(dctx, &op));
+  SegmentMan segman(dctx, ps);
+  size_t minSplitSize = dctx->getPieceLength();
+
+  // Before ignoring, we can get segments for file1
+  std::shared_ptr<Segment> seg = segman.getSegment(1, minSplitSize);
+  CPPUNIT_ASSERT(seg);
+  segman.cancelSegment(1);
+
+  // Ignore file1 segments
+  segman.ignoreSegmentFor(fileEntries[0]);
+
+  // Now getSegment should skip file1 and return a file2 segment
+  std::shared_ptr<Segment> seg2 = segman.getSegment(1, minSplitSize);
+  CPPUNIT_ASSERT(seg2);
+  // Segment index 2 or 3 (file2 covers offset 4, pieceLength 2)
+  CPPUNIT_ASSERT(seg2->getIndex() >= 2);
+}
+
+void SegmentManTest::testAllSegmentsIgnored()
+{
+  Option op;
+  std::shared_ptr<DownloadContext> dctx(new DownloadContext());
+  dctx->setPieceLength(2);
+  std::shared_ptr<FileEntry> fileEntries[] = {
+      std::shared_ptr<FileEntry>(new FileEntry("file1", 4, 0)),
+      std::shared_ptr<FileEntry>(new FileEntry("file2", 4, 4))};
+  dctx->setFileEntries(&fileEntries[0], &fileEntries[2]);
+  std::shared_ptr<DefaultPieceStorage> ps(new DefaultPieceStorage(dctx, &op));
+  SegmentMan segman(dctx, ps);
+
+  // Not all ignored initially
+  CPPUNIT_ASSERT(!segman.allSegmentsIgnored());
+
+  // Ignore just file1
+  segman.ignoreSegmentFor(fileEntries[0]);
+  CPPUNIT_ASSERT(!segman.allSegmentsIgnored());
+
+  // Ignore file2 as well — now all are ignored
+  segman.ignoreSegmentFor(fileEntries[1]);
+  CPPUNIT_ASSERT(segman.allSegmentsIgnored());
+
+  // Recognize file1 — no longer all ignored
+  segman.recognizeSegmentFor(fileEntries[0]);
+  CPPUNIT_ASSERT(!segman.allSegmentsIgnored());
 }
 
 } // namespace aria2
