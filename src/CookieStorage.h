@@ -180,8 +180,8 @@ public:
   template <typename OutputIterator>
   OutputIterator dumpCookie(OutputIterator out) const
   {
-    for (auto& i : lruTracker_) {
-      out = i.second->dumpCookie(out);
+    for (auto& [accessTime, node] : lruTracker_) {
+      out = node->dumpCookie(out);
     }
     return out;
   }

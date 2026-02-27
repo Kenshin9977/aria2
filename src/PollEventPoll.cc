@@ -116,8 +116,7 @@ void PollEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& r : nameResolverEntries_) {
-    auto& ent = r.second;
+  for (auto& [key, ent] : nameResolverEntries_) {
     ent.processTimeout();
     ent.removeSocketEvents(this);
     ent.addSocketEvents(this);

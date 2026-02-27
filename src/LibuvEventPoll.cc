@@ -101,8 +101,8 @@ LibuvEventPoll::LibuvEventPoll() { loop_ = uv_loop_new(); }
 
 LibuvEventPoll::~LibuvEventPoll()
 {
-  for (auto& p : polls_) {
-    p.second->close();
+  for (auto& [fd, poll] : polls_) {
+    poll->close();
   }
   // Actually kill the polls, and timers, if any.
   uv_run(loop_, (uv_run_mode)(UV_RUN_ONCE | UV_RUN_NOWAIT));
@@ -142,8 +142,7 @@ void LibuvEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& r : nameResolverEntries_) {
-    auto& ent = r.second;
+  for (auto& [key, ent] : nameResolverEntries_) {
     ent.processTimeout();
     ent.removeSocketEvents(this);
     ent.addSocketEvents(this);

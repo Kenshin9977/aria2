@@ -273,8 +273,9 @@ RpcMethod* getMethod(const std::string& methodName)
   if (itr == std::end(cache)) {
     auto m = createMethod(methodName);
     if (m) {
-      auto rv = cache.insert(std::make_pair(methodName, std::move(m)));
-      return (*rv.first).second.get();
+      auto [it, inserted] =
+          cache.insert(std::make_pair(methodName, std::move(m)));
+      return it->second.get();
     }
 
     if (!noSuchRpcMethod) {

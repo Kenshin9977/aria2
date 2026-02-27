@@ -378,8 +378,8 @@ void DefaultBtAnnounce::processUDPTrackerResponse(
   incomplete_ = reply->leechers;
   A2_LOG_DEBUG(fmt("Incomplete:%d", reply->leechers));
   if (!btRuntime_->isHalt() && btRuntime_->lessThanMinPeers()) {
-    for (auto& elem : reply->peers) {
-      peerStorage_->addPeer(std::make_shared<Peer>(elem.first, elem.second));
+    for (auto& [host, port] : reply->peers) {
+      peerStorage_->addPeer(std::make_shared<Peer>(host, port));
     }
   }
 }

@@ -201,9 +201,7 @@ void Metalink2RequestGroup::createRequestGroup(
   std::ranges::for_each(entries,
                         std::mem_fn(&MetalinkEntry::reorderMetaurlsByPriority));
   auto entryGroups = metalink::groupEntryByMetaurlName(entries);
-  for (auto& entryGroup : entryGroups) {
-    auto& metaurl = entryGroup.first;
-    auto& mes = entryGroup.second;
+  for (auto& [metaurl, mes] : entryGroups) {
     A2_LOG_INFO(fmt("Processing metaurl group metaurl=%s", metaurl.c_str()));
 #ifdef ENABLE_BITTORRENT
     std::shared_ptr<RequestGroup> torrentRg;

@@ -384,8 +384,8 @@ void print(Output& o, const std::shared_ptr<DownloadContext>& dctx)
   }
   if (!torrentAttrs->nodes.empty()) {
     o.write("Nodes:\n");
-    for (auto& p : torrentAttrs->nodes) {
-      o.printf(" %s:%u\n", p.first.c_str(), p.second);
+    for (auto& [host, port] : torrentAttrs->nodes) {
+      o.printf(" %s:%u\n", host.c_str(), port);
     }
   }
   o.printf("Name: %s\n", torrentAttrs->name.c_str());

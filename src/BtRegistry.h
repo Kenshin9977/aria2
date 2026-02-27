@@ -97,8 +97,8 @@ public:
   template <typename OutputIterator>
   OutputIterator getAllDownloadContext(OutputIterator dest)
   {
-    for (auto& kv : pool_) {
-      *dest++ = kv.second->downloadContext;
+    for (auto& [gid, obj] : pool_) {
+      *dest++ = obj->downloadContext;
     }
     return dest;
   }

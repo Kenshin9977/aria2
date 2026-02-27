@@ -710,26 +710,26 @@ void parsePrioritizePieceRange(
   std::vector<size_t> indexes;
   std::vector<Scip> parts;
   splitIter(src.begin(), src.end(), std::back_inserter(parts), ',', true);
-  for (const auto& i : parts) {
-    if (util::streq(i.first, i.second, "head")) {
+  for (const auto& [first, last] : parts) {
+    if (util::streq(first, last, "head")) {
       computeHeadPieces(indexes, fileEntries, pieceLength, defaultSize);
     }
-    else if (util::startsWith(i.first, i.second, "head=")) {
-      std::string sizestr(i.first + 5, i.second);
+    else if (util::startsWith(first, last, "head=")) {
+      std::string sizestr(first + 5, last);
       computeHeadPieces(indexes, fileEntries, pieceLength,
                         std::max((int64_t)0, getRealSize(sizestr)));
     }
-    else if (util::streq(i.first, i.second, "tail")) {
+    else if (util::streq(first, last, "tail")) {
       computeTailPieces(indexes, fileEntries, pieceLength, defaultSize);
     }
-    else if (util::startsWith(i.first, i.second, "tail=")) {
-      std::string sizestr(i.first + 5, i.second);
+    else if (util::startsWith(first, last, "tail=")) {
+      std::string sizestr(first + 5, last);
       computeTailPieces(indexes, fileEntries, pieceLength,
                         std::max((int64_t)0, getRealSize(sizestr)));
     }
     else {
       throw DL_ABORT_EX(
-          fmt("Unrecognized token %s", std::string(i.first, i.second).c_str()));
+          fmt("Unrecognized token %s", std::string(first, last).c_str()));
     }
   }
   std::ranges::sort(indexes);

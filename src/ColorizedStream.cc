@@ -62,9 +62,9 @@ const Color clear("0");
 std::string ColorizedStreamBuf::str(bool color) const
 {
   std::stringstream rv;
-  for (const auto& e : elems) {
-    if (color || e.first != eColor) {
-      rv << e.second;
+  for (const auto& [type, text] : elems) {
+    if (color || type != eColor) {
+      rv << text;
     }
   }
   if (color) {
@@ -76,19 +76,19 @@ std::string ColorizedStreamBuf::str(bool color) const
 std::string ColorizedStreamBuf::str(bool color, size_t max) const
 {
   std::stringstream rv;
-  for (const auto& e : elems) {
-    if (e.first == eColor) {
+  for (const auto& [type, text] : elems) {
+    if (type == eColor) {
       if (color) {
-        rv << e.second;
+        rv << text;
       }
       continue;
     }
-    auto size = e.second.size();
+    auto size = text.size();
     if (size > max) {
-      rv.write(e.second.c_str(), max);
+      rv.write(text.c_str(), max);
       break;
     }
-    rv << e.second;
+    rv << text;
     max -= size;
     if (!max) {
       break;

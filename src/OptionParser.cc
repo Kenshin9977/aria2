@@ -255,14 +255,14 @@ void OptionParser::parse(Option& option, std::istream& is) const
 
 void OptionParser::parse(Option& option, const KeyVals& options) const
 {
-  for (const auto& o : options) {
-    auto pref = option::k2p(o.first);
+  for (const auto& [key, value] : options) {
+    auto pref = option::k2p(key);
     const OptionHandler* handler = find(pref);
     if (handler) {
-      handler->parse(option, o.second);
+      handler->parse(option, value);
     }
     else {
-      A2_LOG_WARN(fmt("Unknown option: %s", o.first.c_str()));
+      A2_LOG_WARN(fmt("Unknown option: %s", key.c_str()));
     }
   }
 }

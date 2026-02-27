@@ -184,18 +184,18 @@ HandshakeExtensionMessage::create(const unsigned char* data, size_t length)
   }
   const Dict* extDict = downcast<Dict>(dict->get("m"));
   if (extDict) {
-    for (auto& elem : *extDict) {
-      const Integer* extId = downcast<Integer>(elem.second);
+    for (auto& [name, value] : *extDict) {
+      const Integer* extId = downcast<Integer>(value);
       if (extId) {
         if (extId->i() < 0 || extId->i() > 255) {
           A2_LOG_DEBUG(fmt("Extension ID=%" PRId64 " is invalid", extId->i()));
           continue;
         }
 
-        int key = keyBtExtension(elem.first.c_str());
+        int key = keyBtExtension(name.c_str());
         if (key == ExtensionMessageRegistry::MAX_EXTENSION) {
           A2_LOG_DEBUG(fmt("Unsupported BitTorrent extension %s=%" PRId64,
-                           elem.first.c_str(), extId->i()));
+                           name.c_str(), extId->i()));
         }
         else {
           msg->setExtension(key, extId->i());
