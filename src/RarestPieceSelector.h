@@ -50,8 +50,8 @@ private:
 public:
   RarestPieceSelector(const std::shared_ptr<PieceStatMan>& pieceStatMan);
 
-  bool select(size_t& index, const unsigned char* bitfield,
-              size_t nbits) const override;
+  std::optional<size_t> select(const unsigned char* bitfield,
+                               size_t nbits) const override;
 };
 
 } // namespace aria2

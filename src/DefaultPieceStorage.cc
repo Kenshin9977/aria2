@@ -235,10 +235,9 @@ void DefaultPieceStorage::getMissingPiece(
       return;
     }
     while (misBlock < minMissingBlocks) {
-      size_t index;
-      if (pieceSelector_->select(index, misbitfield.get(), blocks)) {
-        pieces.push_back(checkOutPiece(index, cuid));
-        bitfield::flipBit(misbitfield.get(), blocks, index);
+      if (auto index = pieceSelector_->select(misbitfield.get(), blocks)) {
+        pieces.push_back(checkOutPiece(*index, cuid));
+        bitfield::flipBit(misbitfield.get(), blocks, *index);
         misBlock += pieces.back()->countMissingBlock();
       }
       else {
@@ -379,8 +378,7 @@ std::shared_ptr<Piece> DefaultPieceStorage::getMissingFastPiece(
 
 bool DefaultPieceStorage::hasMissingUnusedPiece()
 {
-  size_t index;
-  return bitfieldMan_->getFirstMissingUnusedIndex(index);
+  return bitfieldMan_->getFirstMissingUnusedIndex().has_value();
 }
 
 std::shared_ptr<Piece>
@@ -388,10 +386,9 @@ DefaultPieceStorage::getMissingPiece(size_t minSplitSize,
                                      const unsigned char* ignoreBitfield,
                                      size_t length, cuid_t cuid)
 {
-  size_t index;
-  if (streamPieceSelector_->select(index, minSplitSize, ignoreBitfield,
-                                   length)) {
-    return checkOutPiece(index, cuid);
+  if (auto index =
+          streamPieceSelector_->select(minSplitSize, ignoreBitfield, length)) {
+    return checkOutPiece(*index, cuid);
   }
   else {
     return nullptr;

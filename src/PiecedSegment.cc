@@ -42,10 +42,9 @@ PiecedSegment::PiecedSegment(int32_t pieceLength,
                              const std::shared_ptr<Piece>& piece)
     : piece_(piece), pieceLength_(pieceLength)
 {
-  size_t index;
-  bool t = piece_->getFirstMissingBlockIndexWithoutLock(index);
-  assert(t);
-  writtenLength_ = index * piece_->getBlockLength();
+  auto index = piece_->getFirstMissingBlockIndexWithoutLock();
+  assert(index);
+  writtenLength_ = *index * piece_->getBlockLength();
 }
 
 PiecedSegment::~PiecedSegment() = default;

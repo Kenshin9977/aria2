@@ -46,8 +46,9 @@ public:
   InorderStreamPieceSelector(BitfieldMan* bitfieldMan);
   ~InorderStreamPieceSelector() override;
 
-  bool select(size_t& index, size_t minSplitSize,
-              const unsigned char* ignoreBitfield, size_t length) override;
+  std::optional<size_t> select(size_t minSplitSize,
+                               const unsigned char* ignoreBitfield,
+                               size_t length) override;
 
   void onBitfieldInit() override;
 

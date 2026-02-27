@@ -45,20 +45,17 @@ GeomStreamPieceSelector::GeomStreamPieceSelector(BitfieldMan* bitfieldMan,
 
 GeomStreamPieceSelector::~GeomStreamPieceSelector() = default;
 
-bool GeomStreamPieceSelector::select(size_t& index, size_t minSplitSize,
-                                     const unsigned char* ignoreBitfield,
-                                     size_t length)
+std::optional<size_t> GeomStreamPieceSelector::select(
+    size_t minSplitSize, const unsigned char* ignoreBitfield, size_t length)
 {
-  return bitfieldMan_->getGeomMissingUnusedIndex(
-      index, minSplitSize, ignoreBitfield, length, base_, offsetIndex_);
+  return bitfieldMan_->getGeomMissingUnusedIndex(minSplitSize, ignoreBitfield,
+                                                 length, base_, offsetIndex_);
 }
 
 void GeomStreamPieceSelector::onBitfieldInit()
 {
-  size_t index;
-  bool r = bitfieldMan_->getFirstMissingIndex(index);
-  if (r) {
-    offsetIndex_ = index;
+  if (auto index = bitfieldMan_->getFirstMissingIndex()) {
+    offsetIndex_ = *index;
   }
 }
 

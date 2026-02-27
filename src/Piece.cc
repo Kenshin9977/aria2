@@ -129,14 +129,14 @@ bool Piece::hasBlock(size_t blockIndex) const
   return bitfield_->isBitSet(blockIndex);
 }
 
-bool Piece::getMissingUnusedBlockIndex(size_t& index) const
+std::optional<size_t> Piece::getMissingUnusedBlockIndex() const
 {
-  if (bitfield_->getFirstMissingUnusedIndex(index)) {
-    bitfield_->setUseBit(index);
-    return true;
+  if (auto index = bitfield_->getFirstMissingUnusedIndex()) {
+    bitfield_->setUseBit(*index);
+    return index;
   }
   else {
-    return false;
+    return std::nullopt;
   }
 }
 
@@ -154,9 +154,9 @@ size_t Piece::getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
   return num;
 }
 
-bool Piece::getFirstMissingBlockIndexWithoutLock(size_t& index) const
+std::optional<size_t> Piece::getFirstMissingBlockIndexWithoutLock() const
 {
-  return bitfield_->getFirstMissingIndex(index);
+  return bitfield_->getFirstMissingIndex();
 }
 
 bool Piece::getAllMissingBlockIndexes(unsigned char* misbitfield,
