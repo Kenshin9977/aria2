@@ -39,6 +39,7 @@
 
 #include <utility>
 #include <string>
+#include <string_view>
 #include <memory>
 
 namespace aria2 {
@@ -58,7 +59,7 @@ public:
    * reached.
    */
   bool parse(const unsigned char* data, size_t length);
-  bool parse(const std::string& data);
+  bool parse(std::string_view data);
 
   /**
    * Returns the number of bytes processed in the last invocation of

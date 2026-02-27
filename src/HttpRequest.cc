@@ -328,7 +328,7 @@ void HttpRequest::enableContentEncoding() { contentEncodingEnabled_ = true; }
 
 void HttpRequest::disableContentEncoding() { contentEncodingEnabled_ = false; }
 
-void HttpRequest::addHeader(const std::string& headersString)
+void HttpRequest::addHeader(std::string_view headersString)
 {
   util::split(std::begin(headersString), std::end(headersString),
               std::back_inserter(headers_), '\n', true);

@@ -463,9 +463,9 @@ fin:
   return true;
 }
 
-bool HttpHeaderProcessor::parse(const std::string& data)
+bool HttpHeaderProcessor::parse(std::string_view data)
 {
-  return parse(reinterpret_cast<const unsigned char*>(data.c_str()),
+  return parse(reinterpret_cast<const unsigned char*>(data.data()),
                data.size());
 }
 

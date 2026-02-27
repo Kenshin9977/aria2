@@ -39,6 +39,7 @@
 
 #include <cassert>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -169,7 +170,7 @@ public:
   void setUserAgent(std::string userAgent);
 
   // accepts multiline headers, delimited by LF
-  void addHeader(const std::string& headers);
+  void addHeader(std::string_view headers);
 
   void clearHeader();
 
