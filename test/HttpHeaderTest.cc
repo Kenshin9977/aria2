@@ -158,11 +158,13 @@ void HttpHeaderTest::testClearField()
   h.setVersion("HTTP/1.1");
   h.put(HttpHeader::LINK, "Bar");
 
-  CPPUNIT_ASSERT_EQUAL(std::string("Bar"), h.find(HttpHeader::LINK));
+  CPPUNIT_ASSERT(h.find(HttpHeader::LINK).has_value());
+  CPPUNIT_ASSERT_EQUAL(std::string("Bar"),
+                       std::string(*h.find(HttpHeader::LINK)));
 
   h.clearField();
 
-  CPPUNIT_ASSERT_EQUAL(std::string(""), h.find(HttpHeader::LINK));
+  CPPUNIT_ASSERT(!h.find(HttpHeader::LINK).has_value());
   CPPUNIT_ASSERT_EQUAL(200, h.getStatusCode());
   CPPUNIT_ASSERT_EQUAL(std::string("HTTP/1.1"), h.getVersion());
 }

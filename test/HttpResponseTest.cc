@@ -193,7 +193,7 @@ void HttpResponseTest::testGetRedirectURI_without_Location()
 
   httpResponse.setHttpHeader(make_unique<HttpHeader>());
 
-  CPPUNIT_ASSERT_EQUAL(std::string(""), httpResponse.getRedirectURI());
+  CPPUNIT_ASSERT(!httpResponse.getRedirectURI());
 }
 
 void HttpResponseTest::testGetRedirectURI_with_Location()
@@ -204,9 +204,10 @@ void HttpResponseTest::testGetRedirectURI_with_Location()
                   "http://localhost/download/aria2-1.0.0.tar.bz2");
   httpResponse.setHttpHeader(std::move(httpHeader));
 
+  CPPUNIT_ASSERT(httpResponse.getRedirectURI().has_value());
   CPPUNIT_ASSERT_EQUAL(
       std::string("http://localhost/download/aria2-1.0.0.tar.bz2"),
-      httpResponse.getRedirectURI());
+      std::string(*httpResponse.getRedirectURI()));
 }
 
 void HttpResponseTest::testIsRedirect()
@@ -272,11 +273,12 @@ void HttpResponseTest::testGetTransferEncoding()
   HttpResponse httpResponse;
 
   httpResponse.setHttpHeader(make_unique<HttpHeader>());
-  CPPUNIT_ASSERT_EQUAL(std::string(""), httpResponse.getTransferEncoding());
+  CPPUNIT_ASSERT(!httpResponse.getTransferEncoding());
 
   httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING, "chunked");
+  CPPUNIT_ASSERT(httpResponse.getTransferEncoding().has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("chunked"),
-                       httpResponse.getTransferEncoding());
+                       std::string(*httpResponse.getTransferEncoding()));
 }
 
 void HttpResponseTest::testGetTransferEncodingStreamFilter()
@@ -306,10 +308,12 @@ void HttpResponseTest::testGetContentEncoding()
   HttpResponse httpResponse;
 
   httpResponse.setHttpHeader(make_unique<HttpHeader>());
-  CPPUNIT_ASSERT_EQUAL(A2STR::NIL, httpResponse.getContentEncoding());
+  CPPUNIT_ASSERT(!httpResponse.getContentEncoding());
 
   httpResponse.getHttpHeader()->put(HttpHeader::CONTENT_ENCODING, "gzip");
-  CPPUNIT_ASSERT_EQUAL(std::string("gzip"), httpResponse.getContentEncoding());
+  CPPUNIT_ASSERT(httpResponse.getContentEncoding().has_value());
+  CPPUNIT_ASSERT_EQUAL(std::string("gzip"),
+                       std::string(*httpResponse.getContentEncoding()));
 }
 
 void HttpResponseTest::testGetContentEncodingStreamFilter()

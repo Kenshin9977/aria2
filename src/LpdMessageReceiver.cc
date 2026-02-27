@@ -109,9 +109,14 @@ std::unique_ptr<LpdMessage> LpdMessageReceiver::receiveMessage()
       continue;
     }
     auto header = proc.getResult();
-    const std::string& infoHashString = header->find(HttpHeader::INFOHASH);
+    auto infoHashOpt = header->find(HttpHeader::INFOHASH);
+    if (!infoHashOpt) {
+      continue;
+    }
+    std::string infoHashString(*infoHashOpt);
+    auto portOpt = header->find(HttpHeader::PORT);
     uint32_t port = 0;
-    if (!util::parseUIntNoThrow(port, header->find(HttpHeader::PORT)) ||
+    if (!portOpt || !util::parseUIntNoThrow(port, std::string(*portOpt)) ||
         port > UINT16_MAX || port == 0) {
       A2_LOG_INFO(fmt("Bad LPD port=%u", port));
       continue;

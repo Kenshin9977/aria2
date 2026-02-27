@@ -92,8 +92,9 @@ std::unique_ptr<StreamFilter> getTransferEncodingStreamFilter(
   if (httpResponse->isTransferEncodingSpecified()) {
     auto filter = httpResponse->getTransferEncodingStreamFilter();
     if (!filter) {
+      auto te = httpResponse->getTransferEncoding();
       throw DL_ABORT_EX(fmt(EX_TRANSFER_ENCODING_NOT_SUPPORTED,
-                            httpResponse->getTransferEncoding().c_str()));
+                            te ? std::string(*te).c_str() : ""));
     }
     filter->init();
     filter->installDelegate(std::move(delegate));
@@ -110,11 +111,12 @@ getContentEncodingStreamFilter(HttpResponse* httpResponse,
   if (httpResponse->isContentEncodingSpecified()) {
     auto filter = httpResponse->getContentEncodingStreamFilter();
     if (!filter) {
+      auto ce = httpResponse->getContentEncoding();
       A2_LOG_INFO(fmt("Content-Encoding %s is specified, but the current "
                       "implementation doesn't support it. The decoding "
                       "process is skipped and the downloaded content will be "
                       "still encoded.",
-                      httpResponse->getContentEncoding().c_str()));
+                      ce ? std::string(*ce).c_str() : ""));
     }
     else {
       filter->init();
@@ -343,9 +345,9 @@ bool HttpResponseCommand::shouldInflateContentEncoding(
   // files.  I think those files should not be inflated by clients,
   // because it is the original format of those files. Current
   // implementation just inflates these files nonetheless.
-  const std::string& ce = httpResponse->getContentEncoding();
-  return httpResponse->getHttpRequest()->acceptGZip() &&
-         (ce == "gzip" || ce == "deflate");
+  auto ce = httpResponse->getContentEncoding();
+  return httpResponse->getHttpRequest()->acceptGZip() && ce &&
+         (*ce == "gzip" || *ce == "deflate");
 }
 
 bool HttpResponseCommand::handleDefaultEncoding(

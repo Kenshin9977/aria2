@@ -38,8 +38,10 @@
 #include "common.h"
 
 #include <map>
-#include <vector>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace aria2 {
 
@@ -101,7 +103,7 @@ public:
   // For all methods, use lowercased header field name.
   void put(int hdKey, const std::string& value);
   bool defined(int hdKey) const;
-  const std::string& find(int hdKey) const;
+  std::optional<std::string_view> find(int hdKey) const;
   std::vector<std::string> findAll(int hdKey) const;
   std::pair<std::multimap<int, std::string>::const_iterator,
             std::multimap<int, std::string>::const_iterator>

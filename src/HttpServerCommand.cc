@@ -137,7 +137,7 @@ namespace {
 int websocketHandshake(const HttpHeader* header)
 {
   if (header->getMethod() != "GET" ||
-      header->find(HttpHeader::SEC_WEBSOCKET_KEY).empty()) {
+      !header->find(HttpHeader::SEC_WEBSOCKET_KEY)) {
     return 400;
   }
   else if (header->find(HttpHeader::SEC_WEBSOCKET_VERSION) != "13") {
@@ -215,7 +215,7 @@ bool HttpServerCommand::execute()
         int status = websocketHandshake(header.get());
         if (status == 101) {
           std::string serverKey = createWebSocketServerKey(
-              header->find(HttpHeader::SEC_WEBSOCKET_KEY));
+              std::string(*header->find(HttpHeader::SEC_WEBSOCKET_KEY)));
           httpServer_->feedUpgradeResponse(
               "websocket",
               fmt("Sec-WebSocket-Accept: %s\r\n", serverKey.c_str()));

@@ -77,14 +77,19 @@ void HttpHeaderProcessorTest::testParse3()
                   "\r\n";
   CPPUNIT_ASSERT(proc.parse(s));
   auto h = proc.getResult();
-  CPPUNIT_ASSERT_EQUAL(std::string("close"), h->find(HttpHeader::CONNECTION));
+  CPPUNIT_ASSERT(h->find(HttpHeader::CONNECTION).has_value());
+  CPPUNIT_ASSERT_EQUAL(std::string("close"),
+                       std::string(*h->find(HttpHeader::CONNECTION)));
+  CPPUNIT_ASSERT(h->find(HttpHeader::ACCEPT_ENCODING).has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("text1 text2 text3"),
-                       h->find(HttpHeader::ACCEPT_ENCODING));
+                       std::string(*h->find(HttpHeader::ACCEPT_ENCODING)));
   CPPUNIT_ASSERT_EQUAL(std::string("foo"),
                        h->findAll(HttpHeader::AUTHORIZATION)[0]);
   CPPUNIT_ASSERT_EQUAL(std::string("bar"),
                        h->findAll(HttpHeader::AUTHORIZATION)[1]);
-  CPPUNIT_ASSERT_EQUAL(std::string(""), h->find(HttpHeader::CONTENT_TYPE));
+  CPPUNIT_ASSERT(h->find(HttpHeader::CONTENT_TYPE).has_value());
+  CPPUNIT_ASSERT_EQUAL(std::string(""),
+                       std::string(*h->find(HttpHeader::CONTENT_TYPE)));
   CPPUNIT_ASSERT(h->defined(HttpHeader::CONTENT_TYPE));
 }
 
@@ -136,10 +141,12 @@ void HttpHeaderProcessorTest::testGetHttpResponseHeader()
   CPPUNIT_ASSERT_EQUAL(404, header->getStatusCode());
   CPPUNIT_ASSERT_EQUAL(std::string("Not Found"), header->getReasonPhrase());
   CPPUNIT_ASSERT_EQUAL(std::string("HTTP/1.1"), header->getVersion());
+  CPPUNIT_ASSERT(header->find(HttpHeader::CONTENT_LENGTH).has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("9187"),
-                       header->find(HttpHeader::CONTENT_LENGTH));
+                       std::string(*header->find(HttpHeader::CONTENT_LENGTH)));
+  CPPUNIT_ASSERT(header->find(HttpHeader::CONTENT_TYPE).has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("text/html; charset=UTF-8"),
-                       header->find(HttpHeader::CONTENT_TYPE));
+                       std::string(*header->find(HttpHeader::CONTENT_TYPE)));
   CPPUNIT_ASSERT(!header->defined(HttpHeader::CONTENT_ENCODING));
 }
 
@@ -221,8 +228,10 @@ void HttpHeaderProcessorTest::testGetHttpResponseHeader_teAndCl()
   CPPUNIT_ASSERT(proc.parse(hd));
 
   auto httpHeader = proc.getResult();
-  CPPUNIT_ASSERT_EQUAL(std::string("chunked"),
-                       httpHeader->find(HttpHeader::TRANSFER_ENCODING));
+  CPPUNIT_ASSERT(httpHeader->find(HttpHeader::TRANSFER_ENCODING).has_value());
+  CPPUNIT_ASSERT_EQUAL(
+      std::string("chunked"),
+      std::string(*httpHeader->find(HttpHeader::TRANSFER_ENCODING)));
   CPPUNIT_ASSERT(!httpHeader->defined(HttpHeader::CONTENT_LENGTH));
   CPPUNIT_ASSERT(!httpHeader->defined(HttpHeader::CONTENT_RANGE));
 }
@@ -290,8 +299,9 @@ void HttpHeaderProcessorTest::testGetHttpRequestHeader()
   CPPUNIT_ASSERT_EQUAL(std::string("/index.html"),
                        httpHeader->getRequestPath());
   CPPUNIT_ASSERT_EQUAL(std::string("HTTP/1.1"), httpHeader->getVersion());
+  CPPUNIT_ASSERT(httpHeader->find(HttpHeader::CONNECTION).has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("close"),
-                       httpHeader->find(HttpHeader::CONNECTION));
+                       std::string(*httpHeader->find(HttpHeader::CONNECTION)));
   CPPUNIT_ASSERT(!httpHeader->defined(HttpHeader::CONTENT_ENCODING));
 }
 
