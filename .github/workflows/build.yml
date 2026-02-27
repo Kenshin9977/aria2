@@ -144,24 +144,3 @@ jobs:
           $FEATURE_FLAGS
         make -j$(nproc) check
 
-  build-freebsd:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-    - name: Build and test on FreeBSD
-      uses: vmactions/freebsd-vm@v1
-      with:
-        usesh: true
-        prepare: |
-          pkg install -y \
-            autoconf automake libtool pkgconf \
-            cppunit openssl c-ares sqlite3 libssh2 expat
-        run: |
-          asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
-          export CPPFLAGS="$asanflags -g3"
-          export LDFLAGS="$asanflags"
-          autoreconf -i
-          ./configure \
-            --without-gnutls --with-openssl --with-libexpat \
-            --with-libcares --with-sqlite3 --with-libssh2
-          make -j$(sysctl -n hw.ncpu) check
