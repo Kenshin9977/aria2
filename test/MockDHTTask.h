@@ -23,11 +23,11 @@ public:
   {
   }
 
-  virtual ~MockDHTTask() {}
+  ~MockDHTTask() override {}
 
-  virtual void startup() override {}
+  void startup() override {}
 
-  virtual bool finished() override { return finished_; }
+  bool finished() override { return finished_; }
 
   void setTargetID(const unsigned char* targetID)
   {

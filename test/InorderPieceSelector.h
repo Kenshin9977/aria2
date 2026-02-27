@@ -10,8 +10,8 @@ namespace aria2 {
 
 class InorderPieceSelector : public PieceSelector {
 public:
-  virtual std::optional<size_t> select(const unsigned char* bitfield,
-                                       size_t nbits) const override
+  std::optional<size_t> select(const unsigned char* bitfield,
+                               size_t nbits) const override
   {
     for (size_t i = 0; i < nbits; ++i) {
       if (bitfield::test(bitfield, nbits, i)) {

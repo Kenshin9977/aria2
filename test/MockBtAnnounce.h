@@ -13,15 +13,15 @@ private:
 
 public:
   MockBtAnnounce() {}
-  virtual ~MockBtAnnounce() {}
+  ~MockBtAnnounce() override {}
 
-  virtual bool isAnnounceReady() override { return announceReady; }
+  bool isAnnounceReady() override { return announceReady; }
 
   void setAnnounceReady(bool flag) { this->announceReady = flag; }
 
-  virtual std::string getAnnounceUrl() override { return announceUrl; }
+  std::string getAnnounceUrl() override { return announceUrl; }
 
-  virtual std::shared_ptr<UDPTrackerRequest>
+  std::shared_ptr<UDPTrackerRequest>
   createUDPTrackerRequest(const std::string& remoteAddr, uint16_t remotePort,
                           uint16_t localPort) override
   {
@@ -30,33 +30,33 @@ public:
 
   void setAnnounceUrl(const std::string& url) { this->announceUrl = url; }
 
-  virtual void announceStart() override {}
+  void announceStart() override {}
 
-  virtual void announceSuccess() override {}
+  void announceSuccess() override {}
 
-  virtual void announceFailure() override {}
+  void announceFailure() override {}
 
-  virtual bool isAllAnnounceFailed() override { return false; }
+  bool isAllAnnounceFailed() override { return false; }
 
-  virtual void resetAnnounce() override {}
+  void resetAnnounce() override {}
 
-  virtual void processAnnounceResponse(const unsigned char* trackerResponse,
-                                       size_t trackerResponseLength) override
+  void processAnnounceResponse(const unsigned char* trackerResponse,
+                               size_t trackerResponseLength) override
   {
   }
 
-  virtual void processUDPTrackerResponse(
+  void processUDPTrackerResponse(
       const std::shared_ptr<UDPTrackerRequest>& req) override
   {
   }
 
-  virtual bool noMoreAnnounce() override { return false; }
+  bool noMoreAnnounce() override { return false; }
 
-  virtual void shuffleAnnounce() override {}
+  void shuffleAnnounce() override {}
 
-  virtual void overrideMinInterval(std::chrono::seconds interval) override {}
+  void overrideMinInterval(std::chrono::seconds interval) override {}
 
-  virtual void setTcpPort(uint16_t port) override {}
+  void setTcpPort(uint16_t port) override {}
 
   void setPeerId(const std::string& peerId) { this->peerId = peerId; }
 };

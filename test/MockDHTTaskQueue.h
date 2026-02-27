@@ -15,21 +15,21 @@ public:
 
   MockDHTTaskQueue() {}
 
-  virtual ~MockDHTTaskQueue() {}
+  ~MockDHTTaskQueue() override {}
 
-  virtual void executeTask() override {}
+  void executeTask() override {}
 
-  virtual void addPeriodicTask1(const std::shared_ptr<DHTTask>& task) override
+  void addPeriodicTask1(const std::shared_ptr<DHTTask>& task) override
   {
     periodicTaskQueue1_.push_back(task);
   }
 
-  virtual void addPeriodicTask2(const std::shared_ptr<DHTTask>& task) override
+  void addPeriodicTask2(const std::shared_ptr<DHTTask>& task) override
   {
     periodicTaskQueue2_.push_back(task);
   }
 
-  virtual void addImmediateTask(const std::shared_ptr<DHTTask>& task) override
+  void addImmediateTask(const std::shared_ptr<DHTTask>& task) override
   {
     immediateTaskQueue_.push_back(task);
   }

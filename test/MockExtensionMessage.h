@@ -37,21 +37,18 @@ public:
   {
   }
 
-  virtual std::string getPayload() override { return data_; }
+  std::string getPayload() override { return data_; }
 
-  virtual uint8_t getExtensionMessageID() const override
-  {
-    return extensionMessageID_;
-  }
+  uint8_t getExtensionMessageID() const override { return extensionMessageID_; }
 
-  virtual const char* getExtensionName() const override
+  const char* getExtensionName() const override
   {
     return extensionName_.c_str();
   }
 
-  virtual std::string toString() const override { return extensionName_; }
+  std::string toString() const override { return extensionName_; }
 
-  virtual void doReceivedAction() override
+  void doReceivedAction() override
   {
     if (evcheck_) {
       evcheck_->doReceivedActionCalled = true;

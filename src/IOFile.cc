@@ -44,10 +44,6 @@
 
 namespace aria2 {
 
-const char IOFile::READ[] = "rb";
-const char IOFile::WRITE[] = "wb";
-const char IOFile::APPEND[] = "ab";
-
 IOFile::operator unspecified_bool_type() const
 {
   bool ok = isOpen() && !isError();

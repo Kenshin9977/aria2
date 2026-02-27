@@ -37,22 +37,19 @@ public:
   {
   }
 
-  virtual ~MockDHTMessage() {}
+  ~MockDHTMessage() override {}
 
-  virtual void doReceivedAction() override {}
+  void doReceivedAction() override {}
 
-  virtual bool send() override { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const override { return isReply_; }
+  bool isReply() const override { return isReply_; }
 
   void setReply(bool f) { isReply_ = f; }
 
-  virtual const std::string& getMessageType() const override
-  {
-    return messageType_;
-  }
+  const std::string& getMessageType() const override { return messageType_; }
 
-  virtual std::string toString() const override { return "MockDHTMessage"; }
+  std::string toString() const override { return "MockDHTMessage"; }
 };
 
 class MockDHTQueryMessage : public DHTQueryMessage {
@@ -75,22 +72,19 @@ public:
   {
   }
 
-  virtual ~MockDHTQueryMessage() {}
+  ~MockDHTQueryMessage() override {}
 
-  virtual void doReceivedAction() override {}
+  void doReceivedAction() override {}
 
-  virtual bool send() override { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const override { return false; }
+  bool isReply() const override { return false; }
 
-  virtual const std::string& getMessageType() const override
-  {
-    return messageType_;
-  }
+  const std::string& getMessageType() const override { return messageType_; }
 
-  virtual std::string toString() const override { return "MockDHTMessage"; }
+  std::string toString() const override { return "MockDHTMessage"; }
 
-  virtual std::unique_ptr<Dict> getArgument() override { return Dict::g(); }
+  std::unique_ptr<Dict> getArgument() override { return Dict::g(); }
 };
 
 class MockDHTResponseMessage : public DHTResponseMessage {
@@ -113,24 +107,21 @@ public:
   {
   }
 
-  virtual ~MockDHTResponseMessage() {}
+  ~MockDHTResponseMessage() override {}
 
-  virtual void doReceivedAction() override {}
+  void doReceivedAction() override {}
 
-  virtual bool send() override { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const override { return true; }
+  bool isReply() const override { return true; }
 
-  virtual const std::string& getMessageType() const override
-  {
-    return messageType_;
-  }
+  const std::string& getMessageType() const override { return messageType_; }
 
-  virtual std::string toString() const override { return "MockDHTMessage"; }
+  std::string toString() const override { return "MockDHTMessage"; }
 
-  virtual std::unique_ptr<Dict> getResponse() override { return Dict::g(); }
+  std::unique_ptr<Dict> getResponse() override { return Dict::g(); }
 
-  virtual void accept(DHTMessageCallback* callback) override {}
+  void accept(DHTMessageCallback* callback) override {}
 };
 
 } // namespace aria2

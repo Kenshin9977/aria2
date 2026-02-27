@@ -53,13 +53,13 @@ public:
   int setSNIHostname(const std::string& hostname) override;
   int closeConnection() override;
   int checkDirection() override;
-  virtual ssize_t writeData(const void* data, size_t len) override;
-  virtual ssize_t readData(void* data, size_t len) override;
+  ssize_t writeData(const void* data, size_t len) override;
+  ssize_t readData(void* data, size_t len) override;
   int tlsConnect(const std::string& hostname, TLSVersion& version,
                  std::string& handshakeErr) override;
   int tlsAccept(TLSVersion& version) override;
-  virtual std::string getLastErrorString() override;
-  virtual size_t getRecvBufferedLength() override { return 0; }
+  std::string getLastErrorString() override;
+  size_t getRecvBufferedLength() override { return 0; }
 
 private:
   gnutls_session_t sslSession_;

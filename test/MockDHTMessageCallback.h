@@ -9,17 +9,17 @@ class MockDHTMessageCallback : public DHTMessageCallback {
 public:
   MockDHTMessageCallback() {}
 
-  virtual ~MockDHTMessageCallback() {}
+  ~MockDHTMessageCallback() override {}
 
-  virtual void visit(const DHTAnnouncePeerReplyMessage* message) override {}
+  void visit(const DHTAnnouncePeerReplyMessage* message) override {}
 
-  virtual void visit(const DHTFindNodeReplyMessage* message) override {}
+  void visit(const DHTFindNodeReplyMessage* message) override {}
 
-  virtual void visit(const DHTGetPeersReplyMessage* message) override {}
+  void visit(const DHTGetPeersReplyMessage* message) override {}
 
-  virtual void visit(const DHTPingReplyMessage* message) override {}
+  void visit(const DHTPingReplyMessage* message) override {}
 
-  virtual void onTimeout(const std::shared_ptr<DHTNode>& remoteNode) override {}
+  void onTimeout(const std::shared_ptr<DHTNode>& remoteNode) override {}
 };
 
 } // namespace aria2

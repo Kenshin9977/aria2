@@ -49,37 +49,37 @@ public:
 
   MockBtMessage(uint8_t id) : BtMessage(id) {}
 
-  virtual ~MockBtMessage() {}
+  ~MockBtMessage() override {}
 
-  virtual bool isInvalidate() override { return invalidate; }
+  bool isInvalidate() override { return invalidate; }
 
   void setInvalidate(bool flag) { this->invalidate = flag; }
 
-  virtual bool isUploading() override { return uploading; }
+  bool isUploading() override { return uploading; }
 
   void setUploading(bool flag) { this->uploading = flag; }
 
-  virtual void doReceivedAction() override {}
+  void doReceivedAction() override {}
 
-  virtual void send() override {}
+  void send() override {}
 
-  virtual void validate() override {}
+  void validate() override {}
 
-  virtual void onAbortOutstandingRequestEvent(
+  void onAbortOutstandingRequestEvent(
       const BtAbortOutstandingRequestEvent& event) override
   {
   }
 
-  virtual void
+  void
   onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event) override
   {
   }
 
-  virtual void onChokingEvent(const BtChokingEvent& event) override {}
+  void onChokingEvent(const BtChokingEvent& event) override {}
 
-  virtual void onQueued() override {}
+  void onQueued() override {}
 
-  virtual std::string toString() const override { return "MockBtMessage"; }
+  std::string toString() const override { return "MockBtMessage"; }
 };
 
 template <typename T> class WrapBtMessage : public MockBtMessage {

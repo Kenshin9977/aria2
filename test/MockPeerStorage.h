@@ -19,15 +19,15 @@ private:
 
 public:
   MockPeerStorage() : numChokeExecuted_(0) {}
-  virtual ~MockPeerStorage() {}
+  ~MockPeerStorage() override {}
 
-  virtual bool addPeer(const std::shared_ptr<Peer>& peer) override
+  bool addPeer(const std::shared_ptr<Peer>& peer) override
   {
     unusedPeers.push_back(peer);
     return true;
   }
 
-  virtual void addPeer(const std::vector<std::shared_ptr<Peer>>& peers) override
+  void addPeer(const std::vector<std::shared_ptr<Peer>>& peers) override
   {
     unusedPeers.insert(unusedPeers.end(), peers.begin(), peers.end());
   }
@@ -37,19 +37,19 @@ public:
     return unusedPeers;
   }
 
-  virtual std::shared_ptr<Peer>
-  addAndCheckoutPeer(const std::shared_ptr<Peer>& peer, cuid_t cuid) override
+  std::shared_ptr<Peer> addAndCheckoutPeer(const std::shared_ptr<Peer>& peer,
+                                           cuid_t cuid) override
   {
     unusedPeers.push_back(peer);
     return nullptr;
   }
 
-  virtual size_t countAllPeer() const override
+  size_t countAllPeer() const override
   {
     return unusedPeers.size() + usedPeers.size();
   }
 
-  virtual const std::deque<std::shared_ptr<Peer>>& getDroppedPeers() override
+  const std::deque<std::shared_ptr<Peer>>& getDroppedPeers() override
   {
     return droppedPeers;
   }
@@ -59,7 +59,7 @@ public:
     droppedPeers.push_back(peer);
   }
 
-  virtual bool isPeerAvailable() override { return false; }
+  bool isPeerAvailable() override { return false; }
 
   void setActivePeers(const std::vector<std::shared_ptr<Peer>>& activePeers)
   {
@@ -71,22 +71,19 @@ public:
     peers.insert(peers.end(), activePeers.begin(), activePeers.end());
   }
 
-  virtual const PeerSet& getUsedPeers() override { return usedPeers; }
+  const PeerSet& getUsedPeers() override { return usedPeers; }
 
-  virtual bool isBadPeer(const std::string& ipaddr) override { return false; }
+  bool isBadPeer(const std::string& ipaddr) override { return false; }
 
-  virtual void addBadPeer(const std::string& ipaddr) override {}
+  void addBadPeer(const std::string& ipaddr) override {}
 
-  virtual std::shared_ptr<Peer> checkoutPeer(cuid_t cuid) override
-  {
-    return nullptr;
-  }
+  std::shared_ptr<Peer> checkoutPeer(cuid_t cuid) override { return nullptr; }
 
-  virtual void returnPeer(const std::shared_ptr<Peer>& peer) override {}
+  void returnPeer(const std::shared_ptr<Peer>& peer) override {}
 
-  virtual bool chokeRoundIntervalElapsed() override { return false; }
+  bool chokeRoundIntervalElapsed() override { return false; }
 
-  virtual void executeChoke() override { ++numChokeExecuted_; }
+  void executeChoke() override { ++numChokeExecuted_; }
 
   int getNumChokeExecuted() const { return numChokeExecuted_; }
 };

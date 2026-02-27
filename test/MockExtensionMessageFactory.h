@@ -8,10 +8,10 @@ namespace aria2 {
 
 class MockExtensionMessageFactory : public ExtensionMessageFactory {
 public:
-  virtual ~MockExtensionMessageFactory() {}
+  ~MockExtensionMessageFactory() override {}
 
-  virtual std::unique_ptr<ExtensionMessage>
-  createMessage(const unsigned char* data, size_t length) override
+  std::unique_ptr<ExtensionMessage> createMessage(const unsigned char* data,
+                                                  size_t length) override
   {
     return make_unique<MockExtensionMessage>("a2_mock", *data, data + 1,
                                              length - 1, nullptr);

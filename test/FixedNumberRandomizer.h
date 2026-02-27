@@ -13,9 +13,9 @@ private:
 public:
   FixedNumberRandomizer() : fixedNumber(0) {}
 
-  virtual ~FixedNumberRandomizer() {}
+  ~FixedNumberRandomizer() override {}
 
-  virtual long int getRandomNumber(long int to) override { return fixedNumber; }
+  long int getRandomNumber(long int to) override { return fixedNumber; }
 
   void setFixedNumber(int32_t num) { this->fixedNumber = num; }
 

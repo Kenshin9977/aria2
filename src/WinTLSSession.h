@@ -157,12 +157,12 @@ public:
   // Sends |data| with length |len|. This function returns the number
   // of bytes sent if it succeeds, or TLS_ERR_WOULDBLOCK if the
   // underlying transport blocks, or TLS_ERR_ERROR.
-  virtual ssize_t writeData(const void* data, size_t len) override;
+  ssize_t writeData(const void* data, size_t len) override;
 
   // Receives data into |data| with length |len|. This function returns
   // the number of bytes received if it succeeds, or TLS_ERR_WOULDBLOCK
   // if the underlying transport blocks, or TLS_ERR_ERROR.
-  virtual ssize_t readData(void* data, size_t len) override;
+  ssize_t readData(void* data, size_t len) override;
 
   // Performs client side handshake. The |hostname| is the hostname of
   // the remote endpoint and is used to verify its certificate. This
@@ -179,9 +179,9 @@ public:
   int tlsAccept(TLSVersion& version) override;
 
   // Returns last error string
-  virtual std::string getLastErrorString() override;
+  std::string getLastErrorString() override;
 
-  virtual size_t getRecvBufferedLength() override;
+  size_t getRecvBufferedLength() override;
 
 private:
   // Obtains TLS record size limits.  This function returns 0 if it

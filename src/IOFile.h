@@ -80,11 +80,11 @@ public:
   size_t transfer(std::ostream& out);
   int vprintf(const char* format, va_list va) override;
   // Mode for reading
-  static const char READ[];
+  static constexpr char READ[] = "rb";
   // Mode for writing
-  static const char WRITE[];
+  static constexpr char WRITE[] = "wb";
   // Mode for append
-  static const char APPEND[];
+  static constexpr char APPEND[] = "ab";
 
 protected:
   virtual size_t onRead(void* ptr, size_t count) = 0;
