@@ -49,7 +49,7 @@ public:
 
   static constexpr uint8_t ID = 6;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "request";
 
   size_t getBlockIndex() const { return blockIndex_; }
   void setBlockIndex(size_t blockIndex) { blockIndex_ = blockIndex; }

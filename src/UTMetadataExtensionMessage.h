@@ -52,7 +52,7 @@ public:
 
   const char* getExtensionName() const override { return EXTENSION_NAME; }
 
-  static const char EXTENSION_NAME[];
+  static constexpr char EXTENSION_NAME[] = "ut_metadata";
 
   void setIndex(size_t index) { index_ = index; }
 

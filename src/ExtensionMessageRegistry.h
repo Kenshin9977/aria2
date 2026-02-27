@@ -72,7 +72,7 @@ public:
   uint8_t getExtensionMessageID(int key) const;
 
   // Returns extension name corresponding to the given |id|. If no
-  // extension is defined for the given |id|, returns NULL.
+  // extension is defined for the given |id|, returns nullptr.
   const char* getExtensionName(uint8_t id) const;
 
   // Sets association of the |key| and |id|. The |key| must be one of

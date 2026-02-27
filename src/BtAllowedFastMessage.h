@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 17;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "allowed fast";
 
   static std::unique_ptr<BtAllowedFastMessage>
   create(std::span<const unsigned char> data);

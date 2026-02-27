@@ -40,8 +40,6 @@
 
 namespace aria2 {
 
-const char BtChokeMessage::NAME[] = "choke";
-
 BtChokeMessage::BtChokeMessage() : ZeroBtMessage{ID, NAME} {}
 
 std::unique_ptr<BtChokeMessage>

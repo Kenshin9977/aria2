@@ -76,7 +76,7 @@ public:
 
   static constexpr uint8_t ID = INT8_MAX;
 
-  const static char NAME[];
+  static constexpr char NAME[] = "handshake";
 
   void doReceivedAction() override {};
 

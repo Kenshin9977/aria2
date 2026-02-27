@@ -38,8 +38,6 @@
 
 namespace aria2 {
 
-const char BtUnchokeMessage::NAME[] = "unchoke";
-
 BtUnchokeMessage::BtUnchokeMessage() : ZeroBtMessage(ID, NAME) {}
 
 std::unique_ptr<BtUnchokeMessage>

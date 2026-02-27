@@ -44,7 +44,7 @@ namespace base64 {
 template <typename InputIterator>
 std::string encode(InputIterator first, InputIterator last)
 {
-  static const char CHAR_TABLE[] = {
+  static constexpr char CHAR_TABLE[] = {
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
       'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',

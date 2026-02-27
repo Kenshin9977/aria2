@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 13;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "suggest piece";
 
   static std::unique_ptr<BtSuggestPieceMessage>
   create(std::span<const unsigned char> data);

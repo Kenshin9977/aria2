@@ -52,7 +52,7 @@ public:
 
   static constexpr uint8_t ID = 2;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "interested";
 
   static std::unique_ptr<BtInterestedMessage>
   create(std::span<const unsigned char> data);

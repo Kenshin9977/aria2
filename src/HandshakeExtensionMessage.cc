@@ -49,8 +49,6 @@
 
 namespace aria2 {
 
-const char HandshakeExtensionMessage::EXTENSION_NAME[] = "handshake";
-
 HandshakeExtensionMessage::HandshakeExtensionMessage()
     : tcpPort_{0}, metadataSize_{0}, dctx_{nullptr}
 {

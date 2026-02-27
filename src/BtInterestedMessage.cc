@@ -39,8 +39,6 @@
 
 namespace aria2 {
 
-const char BtInterestedMessage::NAME[] = "interested";
-
 BtInterestedMessage::BtInterestedMessage()
     : ZeroBtMessage(ID, NAME), peerStorage_(nullptr)
 {

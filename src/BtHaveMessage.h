@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 4;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "have";
 
   static std::unique_ptr<BtHaveMessage>
   create(std::span<const unsigned char> data);

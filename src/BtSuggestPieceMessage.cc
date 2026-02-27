@@ -41,8 +41,6 @@ BtSuggestPieceMessage::BtSuggestPieceMessage(size_t index)
 {
 }
 
-const char BtSuggestPieceMessage::NAME[] = "suggest piece";
-
 std::unique_ptr<BtSuggestPieceMessage>
 BtSuggestPieceMessage::create(std::span<const unsigned char> data)
 {

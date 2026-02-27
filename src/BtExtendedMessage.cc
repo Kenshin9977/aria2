@@ -48,8 +48,6 @@
 
 namespace aria2 {
 
-const char BtExtendedMessage::NAME[] = "extended";
-
 BtExtendedMessage::BtExtendedMessage()
     : SimpleBtMessage(ID, NAME), msgLength_(0)
 {

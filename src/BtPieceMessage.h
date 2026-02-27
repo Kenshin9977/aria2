@@ -69,7 +69,7 @@ public:
 
   static constexpr uint8_t ID = 7;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "piece";
 
   size_t getIndex() const { return index_; }
 

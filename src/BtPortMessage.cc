@@ -50,8 +50,6 @@
 
 namespace aria2 {
 
-const char BtPortMessage::NAME[] = "port";
-
 BtPortMessage::BtPortMessage(uint16_t port)
     : SimpleBtMessage(ID, NAME),
       port_(port),

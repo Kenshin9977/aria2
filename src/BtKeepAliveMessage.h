@@ -48,7 +48,7 @@ public:
 
   static constexpr uint8_t ID = 99;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "keep alive";
 
   void doReceivedAction() override {}
 

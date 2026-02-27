@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 16;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "reject";
 
   static std::unique_ptr<BtRejectMessage>
   create(std::span<const unsigned char> data);

@@ -64,8 +64,6 @@
 
 namespace aria2 {
 
-const char BtPieceMessage::NAME[] = "piece";
-
 BtPieceMessage::BtPieceMessage(size_t index, int32_t begin, int32_t blockLength)
     : AbstractBtMessage(ID, NAME),
       index_(index),

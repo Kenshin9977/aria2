@@ -42,7 +42,6 @@
 namespace aria2 {
 
 const unsigned char BtHandshakeMessage::BT_PSTR[] = "BitTorrent protocol";
-const char BtHandshakeMessage::NAME[] = "handshake";
 
 BtHandshakeMessage::BtHandshakeMessage() : SimpleBtMessage(ID, NAME) { init(); }
 

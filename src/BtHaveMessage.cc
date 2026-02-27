@@ -40,8 +40,6 @@
 
 namespace aria2 {
 
-const char BtHaveMessage::NAME[] = "have";
-
 BtHaveMessage::BtHaveMessage(size_t index) : IndexBtMessage(ID, NAME, index) {}
 
 std::unique_ptr<BtHaveMessage>

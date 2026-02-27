@@ -54,7 +54,7 @@ public:
 
   static constexpr uint8_t ID = 5;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "bitfield";
 
   void setBitfield(std::span<const unsigned char> bitfield);
 

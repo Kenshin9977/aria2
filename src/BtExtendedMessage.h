@@ -57,7 +57,7 @@ public:
 
   static constexpr uint8_t ID = 20;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "extended";
 
   static std::unique_ptr<BtExtendedMessage>
   create(ExtensionMessageFactory* factory, const std::shared_ptr<Peer>& peer,

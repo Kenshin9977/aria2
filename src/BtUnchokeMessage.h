@@ -48,7 +48,7 @@ public:
 
   static constexpr uint8_t ID = 1;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "unchoke";
 
   static std::unique_ptr<BtUnchokeMessage>
   create(std::span<const unsigned char> data);

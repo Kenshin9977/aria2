@@ -39,8 +39,6 @@
 
 namespace aria2 {
 
-const char BtHaveNoneMessage::NAME[] = "have none";
-
 BtHaveNoneMessage::BtHaveNoneMessage() : ZeroBtMessage(ID, NAME) {}
 
 std::unique_ptr<BtHaveNoneMessage>

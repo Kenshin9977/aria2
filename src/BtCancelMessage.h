@@ -45,7 +45,7 @@ public:
 
   static constexpr int8_t ID = 8;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "cancel";
 
   static std::unique_ptr<BtCancelMessage>
   create(std::span<const unsigned char> data);

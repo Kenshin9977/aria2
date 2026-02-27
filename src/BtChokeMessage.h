@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 0;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "choke";
 
   void doReceivedAction() override;
 

@@ -45,7 +45,7 @@ public:
 
   static constexpr uint8_t ID = 15;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "have none";
 
   static std::unique_ptr<BtHaveNoneMessage>
   create(std::span<const unsigned char> data);
