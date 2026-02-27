@@ -535,7 +535,7 @@ void HttpRequestTest::testCreateRequest_query()
 void HttpRequestTest::testCreateRequest_head()
 {
   auto request = std::make_shared<Request>();
-  request->setMethod(Request::METHOD_HEAD);
+  request->setMethod(HttpMethod::HEAD);
   request->setUri("http://localhost/aria2-1.0.0.tar.bz2");
 
   HttpRequest httpRequest;

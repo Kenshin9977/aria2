@@ -144,10 +144,10 @@ std::string getHostText(const std::string& host, uint16_t port)
 std::string HttpRequest::createRequest()
 {
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
-  auto requestLine = request_->getMethod();
+  std::string requestLine(httpMethodToString(request_->getMethod()));
   requestLine += ' ';
   if (proxyRequest_) {
-    if (getProtocol() == "ftp" && request_->getUsername().empty() &&
+    if (getProtocol() == Protocol::FTP && request_->getUsername().empty() &&
         authConfig_) {
       // Insert user into URI, like ftp://USER@host/
       auto uri = getCurrentURI();
@@ -234,8 +234,9 @@ std::string HttpRequest::createRequest()
     std::string cookiesValue;
     auto path = getDir();
     path += getFile();
-    auto cookies = cookieStorage_->criteriaFind(
-        getHost(), path, Time().getTimeFromEpoch(), getProtocol() == "https");
+    auto cookies =
+        cookieStorage_->criteriaFind(getHost(), path, Time().getTimeFromEpoch(),
+                                     getProtocol() == Protocol::HTTPS);
     for (auto c : cookies) {
       cookiesValue += c->toString();
       cookiesValue += ';';
@@ -374,15 +375,9 @@ const std::string& HttpRequest::getHost() const { return request_->getHost(); }
 
 uint16_t HttpRequest::getPort() const { return request_->getPort(); }
 
-const std::string& HttpRequest::getMethod() const
-{
-  return request_->getMethod();
-}
+HttpMethod HttpRequest::getMethod() const { return request_->getMethod(); }
 
-const std::string& HttpRequest::getProtocol() const
-{
-  return request_->getProtocol();
-}
+Protocol HttpRequest::getProtocol() const { return request_->getProtocol(); }
 
 const std::string& HttpRequest::getCurrentURI() const
 {

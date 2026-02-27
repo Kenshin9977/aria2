@@ -280,7 +280,7 @@ bool HttpResponseCommand::executeInternal()
     if (totalLength == 0 || shouldInflateContentEncoding(httpResponse.get())) {
       // we ignore content-length when inflate is required
       fe->setLength(0);
-      if (req->getMethod() == Request::METHOD_GET &&
+      if (req->getMethod() == HttpMethod::GET &&
           (totalLength != 0 || !httpResponse->getHttpHeader()->defined(
                                    HttpHeader::CONTENT_LENGTH))) {
         // DownloadContext::knowsTotalLength() == true only when
@@ -378,7 +378,7 @@ bool HttpResponseCommand::handleDefaultEncoding(
   // we can't continue to use this socket because server sends all entity
   // body instead of a segment.
   // Therefore, we shutdown the socket here if pipelining is enabled.
-  if (getRequest()->getMethod() == Request::METHOD_GET && segment &&
+  if (getRequest()->getMethod() == HttpMethod::GET && segment &&
       segment->getPositionToWrite() == 0 &&
       !getRequest()->isPipeliningEnabled()) {
     auto teFilter = getTransferEncodingStreamFilter(httpResponse.get());
@@ -392,9 +392,9 @@ bool HttpResponseCommand::handleDefaultEncoding(
 
   prepareForNextAction(std::move(checkEntry));
 
-  if (getRequest()->getMethod() == Request::METHOD_HEAD) {
+  if (getRequest()->getMethod() == HttpMethod::HEAD) {
     poolConnection();
-    getRequest()->setMethod(Request::METHOD_GET);
+    getRequest()->setMethod(HttpMethod::GET);
   }
 
   return true;
@@ -410,9 +410,9 @@ bool HttpResponseCommand::handleOtherEncoding(
     return true;
   }
 
-  if (getRequest()->getMethod() == Request::METHOD_HEAD) {
+  if (getRequest()->getMethod() == HttpMethod::HEAD) {
     poolConnection();
-    getRequest()->setMethod(Request::METHOD_GET);
+    getRequest()->setMethod(HttpMethod::GET);
     return prepareForRetry(0);
   }
 
@@ -502,7 +502,7 @@ bool HttpResponseCommand::skipResponseBody(
 
   // If request method is HEAD or the response body is zero-length,
   // set command's status to real time so that avoid read check blocking
-  if (getRequest()->getMethod() == Request::METHOD_HEAD ||
+  if (getRequest()->getMethod() == HttpMethod::HEAD ||
       (httpResponsePtr->getEntityLength() == 0 &&
        !httpResponsePtr->isTransferEncodingSpecified())) {
     command->setStatusRealtime();

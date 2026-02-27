@@ -115,7 +115,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
                                          getDownloadEngine(), getSocket());
     if (proxyMethod == V_GET) {
       // Use GET for FTP via HTTP proxy.
-      getRequest()->setMethod(Request::METHOD_GET);
+      getRequest()->setMethod(HttpMethod::GET);
       c->setControlChain(std::make_shared<HttpRequestConnectChain>());
     }
     else if (proxyMethod == V_TUNNEL) {
@@ -133,7 +133,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
   setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
   if (proxyMethod == V_TUNNEL) {
 #ifdef HAVE_LIBSSH2
-    if (getRequest()->getProtocol() == "sftp") {
+    if (getRequest()->getProtocol() == Protocol::SFTP) {
       return make_unique<SftpNegotiationCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           getDownloadEngine(), pooledSocket,
@@ -148,7 +148,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
         FtpNegotiationCommand::SEQ_SEND_CWD_PREP, options);
   }
 
-  assert(getRequest()->getProtocol() == "ftp");
+  assert(getRequest()->getProtocol() == Protocol::FTP);
 
   if (proxyMethod != V_GET) {
     assert(0);
@@ -156,7 +156,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
   }
 
   // Use GET for FTP via HTTP proxy.
-  getRequest()->setMethod(Request::METHOD_GET);
+  getRequest()->setMethod(HttpMethod::GET);
   auto socketRecvBuffer = std::make_shared<SocketRecvBuffer>(pooledSocket);
   auto hc = std::make_shared<HttpConnection>(getCuid(), pooledSocket,
                                              socketRecvBuffer);
@@ -191,7 +191,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandPlain(
                                          getFileEntry(), getRequestGroup(),
                                          getDownloadEngine(), getSocket());
 
-    if (getRequest()->getProtocol() == "sftp") {
+    if (getRequest()->getProtocol() == Protocol::SFTP) {
 #ifdef HAVE_LIBSSH2
       c->setControlChain(std::make_shared<SftpNegotiationConnectChain>());
 #else  // !HAVE_LIBSSH2
@@ -208,7 +208,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandPlain(
   setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
 
 #ifdef HAVE_LIBSSH2
-  if (getRequest()->getProtocol() == "sftp") {
+  if (getRequest()->getProtocol() == Protocol::SFTP) {
     return make_unique<SftpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), pooledSocket,

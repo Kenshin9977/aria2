@@ -117,16 +117,16 @@ void FileEntryTest::testGetRequest()
   std::vector<std::pair<size_t, std::string>> usedHosts;
   auto req = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req->getProtocol());
+  CPPUNIT_ASSERT(req->getProtocol() == Protocol::HTTP);
   fileEntry->poolRequest(req);
 
   auto req2nd = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req2nd->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req2nd->getProtocol());
+  CPPUNIT_ASSERT(req2nd->getProtocol() == Protocol::HTTP);
 
   auto req3rd = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("mirror"), req3rd->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req3rd->getProtocol());
+  CPPUNIT_ASSERT(req3rd->getProtocol() == Protocol::HTTP);
 
   auto req4th = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT(!req4th);
@@ -135,11 +135,11 @@ void FileEntryTest::testGetRequest()
 
   auto req5th = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req5th->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("ftp"), req5th->getProtocol());
+  CPPUNIT_ASSERT(req5th->getProtocol() == Protocol::FTP);
 
   auto req6th = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("mirror"), req6th->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req6th->getProtocol());
+  CPPUNIT_ASSERT(req6th->getProtocol() == Protocol::HTTP);
 
   auto req7th = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT(!req7th);
@@ -153,15 +153,15 @@ void FileEntryTest::testGetRequest_withoutUriReuse()
   InorderURISelector selector{};
   auto req = fileEntry->getRequest(&selector, false, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req->getProtocol());
+  CPPUNIT_ASSERT(req->getProtocol() == Protocol::HTTP);
 
   auto req2nd = fileEntry->getRequest(&selector, false, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req2nd->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("ftp"), req2nd->getProtocol());
+  CPPUNIT_ASSERT(req2nd->getProtocol() == Protocol::FTP);
 
   auto req3rd = fileEntry->getRequest(&selector, false, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("mirror"), req3rd->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req3rd->getProtocol());
+  CPPUNIT_ASSERT(req3rd->getProtocol() == Protocol::HTTP);
 
   auto req4th = fileEntry->getRequest(&selector, false, usedHosts);
   CPPUNIT_ASSERT(!req4th);
@@ -175,11 +175,11 @@ void FileEntryTest::testGetRequest_withUniqueProtocol()
   InorderURISelector selector{};
   auto req = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("localhost"), req->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req->getProtocol());
+  CPPUNIT_ASSERT(req->getProtocol() == Protocol::HTTP);
 
   auto req2nd = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT_EQUAL(std::string("mirror"), req2nd->getHost());
-  CPPUNIT_ASSERT_EQUAL(std::string("http"), req2nd->getProtocol());
+  CPPUNIT_ASSERT(req2nd->getProtocol() == Protocol::HTTP);
 
   auto req3rd = fileEntry->getRequest(&selector, true, usedHosts);
   CPPUNIT_ASSERT(!req3rd);

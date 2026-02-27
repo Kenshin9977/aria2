@@ -33,6 +33,7 @@
  */
 /* copyright --> */
 #include "InitiateConnectionCommandFactory.h"
+#include "uri.h"
 #include "HttpInitiateConnectionCommand.h"
 #include "FtpInitiateConnectionCommand.h"
 #include "Request.h"
@@ -53,10 +54,10 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     DownloadEngine* e)
 {
-  if (req->getProtocol() == "http"
+  if (req->getProtocol() == Protocol::HTTP
 #ifdef ENABLE_SSL
       // for SSL
-      || req->getProtocol() == "https"
+      || req->getProtocol() == Protocol::HTTPS
 #endif // ENABLE_SSL
   ) {
 
@@ -70,9 +71,9 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     return make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                       requestGroup, e);
   }
-  else if (req->getProtocol() == "ftp"
+  else if (req->getProtocol() == Protocol::FTP
 #ifdef HAVE_LIBSSH2
-           || req->getProtocol() == "sftp"
+           || req->getProtocol() == Protocol::SFTP
 #endif // HAVE_LIBSSH2
   ) {
     if (req->getFile().empty()) {
@@ -85,7 +86,8 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
   else {
     // these protocols are not supported yet
     throw DL_ABORT_EX(
-        fmt("%s is not supported yet.", req->getProtocol().c_str()));
+        fmt("%s is not supported yet.",
+            std::string(protocolToString(req->getProtocol())).c_str()));
   }
 }
 

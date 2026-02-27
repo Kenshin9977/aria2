@@ -74,21 +74,18 @@
 
 namespace aria2 {
 
-uint16_t getDefaultPort(const std::string& protocol)
+uint16_t getDefaultPort(Protocol protocol)
 {
-  if (protocol == "http") {
+  switch (protocol) {
+  case Protocol::HTTP:
     return 80;
-  }
-  else if (protocol == "https") {
+  case Protocol::HTTPS:
     return 443;
-  }
-  else if (protocol == "ftp") {
+  case Protocol::FTP:
     return 21;
-  }
-  else if (protocol == "sftp") {
+  case Protocol::SFTP:
     return 22;
-  }
-  else {
+  default:
     return 0;
   }
 }

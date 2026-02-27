@@ -89,8 +89,8 @@ bool CreateRequestCommand::executeInternal()
                                  (getFileEntry()->getLength() == 0 &&
                                   getOption()->getAsBool(PREF_USE_HEAD)) ||
                                          getOption()->getAsBool(PREF_DRY_RUN)
-                                     ? Request::METHOD_HEAD
-                                     : Request::METHOD_GET));
+                                     ? HttpMethod::HEAD
+                                     : HttpMethod::GET));
   if (!getRequest()) {
     if (getSegmentMan()) {
       getSegmentMan()->ignoreSegmentFor(getFileEntry());

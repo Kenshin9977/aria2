@@ -100,7 +100,7 @@ private:
   std::shared_ptr<Request> getRequestWithInFlightHosts(
       URISelector* selector, bool uriReuse,
       const std::vector<std::pair<size_t, std::string>>& usedHosts,
-      const std::string& referer, const std::string& method,
+      const std::string& referer, HttpMethod method,
       const std::vector<std::string>& inFlightHosts);
 
 public:
@@ -182,7 +182,7 @@ public:
   getRequest(URISelector* selector, bool uriReuse,
              const std::vector<std::pair<size_t, std::string>>& usedHosts,
              const std::string& referer = A2STR::NIL,
-             const std::string& method = Request::METHOD_GET);
+             HttpMethod method = HttpMethod::GET);
 
   // Finds pooled Request object which is faster than passed one,
   // comparing their PeerStat objects. If such Request is found, it is

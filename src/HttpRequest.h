@@ -120,9 +120,9 @@ public:
 
   uint16_t getPort() const;
 
-  const std::string& getMethod() const;
+  HttpMethod getMethod() const;
 
-  const std::string& getProtocol() const;
+  Protocol getProtocol() const;
 
   const std::string& getCurrentURI() const;
 

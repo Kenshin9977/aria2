@@ -46,14 +46,22 @@
 
 namespace aria2 {
 
-const std::string Request::METHOD_GET = "GET";
-
-const std::string Request::METHOD_HEAD = "HEAD";
+const char* httpMethodToString(HttpMethod m)
+{
+  switch (m) {
+  case HttpMethod::GET:
+    return "GET";
+  case HttpMethod::HEAD:
+    return "HEAD";
+  default:
+    return "GET";
+  }
+}
 
 const std::string Request::DEFAULT_FILE = "index.html";
 
 Request::Request()
-    : method_(METHOD_GET),
+    : method_(HttpMethod::GET),
       tryCount_(0),
       redirectCount_(0),
       supportsPersistentConnection_(true),
@@ -111,7 +119,7 @@ bool Request::redirectUri(const std::string& uri)
   if (util::startsWith(uri, "//")) {
     // Network-path reference (according to RFC 3986, Section 4.2)
     // Just complement current protocol.
-    redirectedUri = getProtocol();
+    redirectedUri = std::string(protocolToString(getProtocol()));
     redirectedUri += ":";
     redirectedUri += uri;
   }
@@ -189,7 +197,7 @@ std::string Request::getURIHost() const
   }
 }
 
-void Request::setMethod(const std::string& method) { method_ = method; }
+void Request::setMethod(HttpMethod method) { method_ = method; }
 
 void Request::setConnectedAddrInfo(const std::string& hostname,
                                    const std::string& addr, uint16_t port)

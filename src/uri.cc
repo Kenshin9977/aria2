@@ -39,9 +39,42 @@
 
 namespace aria2 {
 
+Protocol toProtocol(const std::string& s)
+{
+  if (s == "http")
+    return Protocol::HTTP;
+  if (s == "https")
+    return Protocol::HTTPS;
+  if (s == "ftp")
+    return Protocol::FTP;
+  if (s == "sftp")
+    return Protocol::SFTP;
+  return Protocol::UNKNOWN;
+}
+
+std::string_view protocolToString(Protocol p)
+{
+  switch (p) {
+  case Protocol::HTTP:
+    return "http";
+  case Protocol::HTTPS:
+    return "https";
+  case Protocol::FTP:
+    return "ftp";
+  case Protocol::SFTP:
+    return "sftp";
+  default:
+    return "";
+  }
+}
+
 namespace uri {
 
-UriStruct::UriStruct() : port(0), hasPassword(false), ipv6LiteralAddress(false)
+UriStruct::UriStruct()
+    : protocol(Protocol::UNKNOWN),
+      port(0),
+      hasPassword(false),
+      ipv6LiteralAddress(false)
 {
 }
 
@@ -96,13 +129,14 @@ std::expected<UriStruct, std::string> parse(const std::string& uri)
   }
 
   UriStruct result;
-  result.protocol.assign(p + res.fields[USR_SCHEME].off,
-                         res.fields[USR_SCHEME].len);
+  std::string scheme(p + res.fields[USR_SCHEME].off,
+                     res.fields[USR_SCHEME].len);
+  result.protocol = toProtocol(scheme);
   result.host.assign(p + res.fields[USR_HOST].off, res.fields[USR_HOST].len);
   if (res.port == 0) {
     uint16_t defPort;
     if ((defPort = getDefaultPort(result.protocol)) == 0) {
-      return std::unexpected("unknown protocol: " + result.protocol);
+      return std::unexpected("unknown protocol: " + scheme);
     }
     result.port = defPort;
   }
@@ -175,7 +209,7 @@ std::string getFieldString(const uri_split_result& res, int field,
 std::string construct(const UriStruct& us)
 {
   std::string res;
-  res += us.protocol;
+  res += protocolToString(us.protocol);
   res += "://";
   if (!us.username.empty()) {
     res += util::percentEncode(us.username);

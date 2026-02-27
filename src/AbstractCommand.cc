@@ -308,7 +308,7 @@ bool AbstractCommand::execute()
     if (errorEventEnabled()) {
       // older kernel may report "connection refused" here.
       auto ss = e_->getRequestGroupMan()->getOrCreateServerStat(
-          req_->getHost(), req_->getProtocol());
+          req_->getHost(), std::string(protocolToString(req_->getProtocol())));
       ss->setError();
 
       throw DL_RETRY_EX(
@@ -318,7 +318,7 @@ bool AbstractCommand::execute()
     if (checkPoint_.difference(global::wallclock()) >= timeout_) {
       // timeout triggers ServerStat error state.
       auto ss = e_->getRequestGroupMan()->getOrCreateServerStat(
-          req_->getHost(), req_->getProtocol());
+          req_->getHost(), std::string(protocolToString(req_->getProtocol())));
       ss->setError();
       // When DNS query was timeout, req_->getConnectedAddr() is
       // empty.
@@ -662,19 +662,19 @@ std::string getProxyOptionFor(PrefPtr proxyPref, PrefPtr proxyUser,
 
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
-std::string getProxyUri(const std::string& protocol, const Option* option)
+std::string getProxyUri(Protocol protocol, const Option* option)
 {
-  if (protocol == "http") {
+  if (protocol == Protocol::HTTP) {
     return getProxyOptionFor(PREF_HTTP_PROXY, PREF_HTTP_PROXY_USER,
                              PREF_HTTP_PROXY_PASSWD, option);
   }
 
-  if (protocol == "https") {
+  if (protocol == Protocol::HTTPS) {
     return getProxyOptionFor(PREF_HTTPS_PROXY, PREF_HTTPS_PROXY_USER,
                              PREF_HTTPS_PROXY_PASSWD, option);
   }
 
-  if (protocol == "ftp" || protocol == "sftp") {
+  if (protocol == Protocol::FTP || protocol == Protocol::SFTP) {
     return getProxyOptionFor(PREF_FTP_PROXY, PREF_FTP_PROXY_USER,
                              PREF_FTP_PROXY_PASSWD, option);
   }
@@ -685,8 +685,7 @@ std::string getProxyUri(const std::string& protocol, const Option* option)
 namespace {
 // Returns true if proxy is defined for the given protocol. Otherwise
 // returns false.
-bool isProxyRequest(const std::string& protocol,
-                    const std::shared_ptr<Option>& option)
+bool isProxyRequest(Protocol protocol, const std::shared_ptr<Option>& option)
 {
   std::string proxyUri = getProxyUri(protocol, option.get());
   return !proxyUri.empty();
@@ -784,7 +783,9 @@ std::string AbstractCommand::resolveHostname(std::vector<std::string>& addrs,
     case -1:
       if (!isProxyRequest(req_->getProtocol(), getOption())) {
         e_->getRequestGroupMan()
-            ->getOrCreateServerStat(req_->getHost(), req_->getProtocol())
+            ->getOrCreateServerStat(
+                req_->getHost(),
+                std::string(protocolToString(req_->getProtocol())))
             ->setError();
       }
       throw DL_ABORT_EX2(fmt(MSG_NAME_RESOLUTION_FAILED, getCuid(),
@@ -851,7 +852,8 @@ bool AbstractCommand::checkIfConnectionEstablished(
     if (resolveProxyMethod(req_->getProtocol()) != V_GET ||
         !isProxyRequest(req_->getProtocol(), getOption())) {
       e_->getRequestGroupMan()
-          ->getOrCreateServerStat(req_->getHost(), req_->getProtocol())
+          ->getOrCreateServerStat(req_->getHost(), std::string(protocolToString(
+                                                       req_->getProtocol())))
           ->setError();
     }
     throw DL_RETRY_EX(fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()));
@@ -866,11 +868,10 @@ bool AbstractCommand::checkIfConnectionEstablished(
   return false;
 }
 
-const std::string&
-AbstractCommand::resolveProxyMethod(const std::string& protocol) const
+const std::string& AbstractCommand::resolveProxyMethod(Protocol protocol) const
 {
-  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL || protocol == "https" ||
-      protocol == "sftp") {
+  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL ||
+      protocol == Protocol::HTTPS || protocol == Protocol::SFTP) {
     return V_TUNNEL;
   }
   return V_GET;

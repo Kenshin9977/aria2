@@ -39,10 +39,12 @@
 
 #include <string>
 
+#include "uri.h"
+
 namespace aria2 {
 
 // Returns default port for the given |protocol|.
-uint16_t getDefaultPort(const std::string& protocol);
+uint16_t getDefaultPort(Protocol protocol);
 
 enum FeatureType {
   FEATURE_ASYNC_DNS,

@@ -519,7 +519,7 @@ void HttpProxyOptionHandler::parseArg(Option& option,
     if (!us) {
       throw DL_ABORT_EX(_("unrecognized proxy format"));
     }
-    us->protocol = "http";
+    us->protocol = Protocol::HTTP;
     option.put(pref_, uri::construct(*us));
   }
 }

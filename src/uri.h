@@ -39,15 +39,21 @@
 
 #include <expected>
 #include <string>
+#include <string_view>
 
 #include "uri_split.h"
 
 namespace aria2 {
 
+enum class Protocol { HTTP, HTTPS, FTP, SFTP, UNKNOWN };
+
+Protocol toProtocol(const std::string& s);
+std::string_view protocolToString(Protocol p);
+
 namespace uri {
 
 struct UriStruct {
-  std::string protocol;
+  Protocol protocol;
   std::string host;
   std::string dir;
   std::string file;

@@ -103,41 +103,41 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AbstractCommandTest);
 void AbstractCommandTest::testGetProxyUri()
 {
   Option op;
-  CPPUNIT_ASSERT_EQUAL(std::string(), getProxyUri("http", &op));
+  CPPUNIT_ASSERT_EQUAL(std::string(), getProxyUri(Protocol::HTTP, &op));
 
   op.put(PREF_HTTP_PROXY, "http://hu:hp@httpproxy/");
   op.put(PREF_FTP_PROXY, "ftp://fu:fp@ftpproxy/");
   CPPUNIT_ASSERT_EQUAL(std::string("http://hu:hp@httpproxy/"),
-                       getProxyUri("http", &op));
+                       getProxyUri(Protocol::HTTP, &op));
   CPPUNIT_ASSERT_EQUAL(std::string("ftp://fu:fp@ftpproxy/"),
-                       getProxyUri("ftp", &op));
+                       getProxyUri(Protocol::FTP, &op));
 
   op.put(PREF_ALL_PROXY, "http://au:ap@allproxy/");
   CPPUNIT_ASSERT_EQUAL(std::string("http://au:ap@allproxy/"),
-                       getProxyUri("https", &op));
+                       getProxyUri(Protocol::HTTPS, &op));
 
   op.put(PREF_ALL_PROXY_USER, "aunew");
   op.put(PREF_ALL_PROXY_PASSWD, "apnew");
   CPPUNIT_ASSERT_EQUAL(std::string("http://aunew:apnew@allproxy/"),
-                       getProxyUri("https", &op));
+                       getProxyUri(Protocol::HTTPS, &op));
 
   op.put(PREF_HTTPS_PROXY, "http://hsu:hsp@httpsproxy/");
   CPPUNIT_ASSERT_EQUAL(std::string("http://hsu:hsp@httpsproxy/"),
-                       getProxyUri("https", &op));
+                       getProxyUri(Protocol::HTTPS, &op));
 
-  CPPUNIT_ASSERT_EQUAL(std::string(), getProxyUri("unknown", &op));
+  CPPUNIT_ASSERT_EQUAL(std::string(), getProxyUri(Protocol::UNKNOWN, &op));
 
   op.put(PREF_HTTP_PROXY_USER, "hunew");
   CPPUNIT_ASSERT_EQUAL(std::string("http://hunew:hp@httpproxy/"),
-                       getProxyUri("http", &op));
+                       getProxyUri(Protocol::HTTP, &op));
 
   op.put(PREF_HTTP_PROXY_PASSWD, "hpnew");
   CPPUNIT_ASSERT_EQUAL(std::string("http://hunew:hpnew@httpproxy/"),
-                       getProxyUri("http", &op));
+                       getProxyUri(Protocol::HTTP, &op));
 
   op.put(PREF_HTTP_PROXY_USER, "");
   CPPUNIT_ASSERT_EQUAL(std::string("http://httpproxy/"),
-                       getProxyUri("http", &op));
+                       getProxyUri(Protocol::HTTP, &op));
 }
 
 void AbstractCommandTest::testExecute_haltReturnsTrue()
@@ -224,13 +224,13 @@ void AbstractCommandTest::testGetProxyUri_sftp()
   // sftp should use FTP proxy settings
   op.put(PREF_FTP_PROXY, "http://ftpproxy:8080/");
   CPPUNIT_ASSERT_EQUAL(std::string("http://ftpproxy:8080/"),
-                       getProxyUri("sftp", &op));
+                       getProxyUri(Protocol::SFTP, &op));
 
   // Falls back to ALL_PROXY when no FTP proxy
   Option op2;
   op2.put(PREF_ALL_PROXY, "http://allproxy:3128/");
   CPPUNIT_ASSERT_EQUAL(std::string("http://allproxy:3128/"),
-                       getProxyUri("sftp", &op2));
+                       getProxyUri(Protocol::SFTP, &op2));
 }
 
 void AbstractCommandTest::testExecute_downloadFinishedReturnsTrue()
@@ -257,17 +257,21 @@ void AbstractCommandTest::testResolveProxyMethod()
                                ctx_.rg.get(), ctx_.engine.get());
 
   // Default: GET for HTTP
-  CPPUNIT_ASSERT_EQUAL(std::string("get"), cmd->resolveProxyMethod("http"));
+  CPPUNIT_ASSERT_EQUAL(std::string("get"),
+                       cmd->resolveProxyMethod(Protocol::HTTP));
 
   // HTTPS always uses tunnel
-  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("https"));
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"),
+                       cmd->resolveProxyMethod(Protocol::HTTPS));
 
   // SFTP always uses tunnel
-  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("sftp"));
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"),
+                       cmd->resolveProxyMethod(Protocol::SFTP));
 
   // When PREF_PROXY_METHOD is tunnel, HTTP also uses tunnel
   ctx_.option->put(PREF_PROXY_METHOD, "tunnel");
-  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("http"));
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"),
+                       cmd->resolveProxyMethod(Protocol::HTTP));
 }
 
 void AbstractCommandTest::testCreateProxyRequest()

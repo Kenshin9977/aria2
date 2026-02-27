@@ -778,7 +778,7 @@ bool FtpNegotiationCommand::sendTunnelRequest()
     // Construct fake URI in order to use HttpRequest
     std::pair<std::string, uint16_t> dataAddr;
     uri::UriStruct us;
-    us.protocol = "ftp";
+    us.protocol = Protocol::FTP;
     us.host = getRequest()->getHost();
     us.port = pasvPort_;
     us.ipv6LiteralAddress = getRequest()->isIPv6LiteralAddress();

@@ -97,13 +97,13 @@ void HttpSkipResponseCommand::installStreamFilter(
 
 bool HttpSkipResponseCommand::executeInternal()
 {
-  if (getRequest()->getMethod() == Request::METHOD_HEAD ||
+  if (getRequest()->getMethod() == HttpMethod::HEAD ||
       (totalLength_ == 0 && sinkFilterOnly_)) {
     // If request method is HEAD or content-length header is present and
     // it's value is 0, then pool socket for reuse.
     // If content-length header is not present, then EOF is expected in the end.
     // In this case, the content is thrown away and socket cannot be pooled.
-    if (getRequest()->getMethod() == Request::METHOD_HEAD ||
+    if (getRequest()->getMethod() == HttpMethod::HEAD ||
         httpResponse_->getHttpHeader()->defined(HttpHeader::CONTENT_LENGTH)) {
       poolConnection();
     }

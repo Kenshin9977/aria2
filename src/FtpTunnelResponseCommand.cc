@@ -61,7 +61,7 @@ FtpTunnelResponseCommand::~FtpTunnelResponseCommand() = default;
 std::unique_ptr<Command> FtpTunnelResponseCommand::getNextCommand()
 {
 #ifdef HAVE_LIBSSH2
-  if (getRequest()->getProtocol() == "sftp") {
+  if (getRequest()->getProtocol() == Protocol::SFTP) {
     return make_unique<SftpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket());

@@ -129,7 +129,7 @@ OutputIterator enumerateInFlightHosts(InputIterator first, InputIterator last,
 std::shared_ptr<Request> FileEntry::getRequestWithInFlightHosts(
     URISelector* selector, bool uriReuse,
     const std::vector<std::pair<size_t, std::string>>& usedHosts,
-    const std::string& referer, const std::string& method,
+    const std::string& referer, HttpMethod method,
     const std::vector<std::string>& inFlightHosts)
 {
   std::shared_ptr<Request> req;
@@ -182,7 +182,7 @@ std::shared_ptr<Request> FileEntry::getRequestWithInFlightHosts(
 std::shared_ptr<Request> FileEntry::getRequest(
     URISelector* selector, bool uriReuse,
     const std::vector<std::pair<size_t, std::string>>& usedHosts,
-    const std::string& referer, const std::string& method)
+    const std::string& referer, HttpMethod method)
 {
   std::shared_ptr<Request> req;
   if (requestPool_.empty()) {

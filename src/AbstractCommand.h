@@ -41,6 +41,8 @@
 #include <string>
 #include <memory>
 
+#include "uri.h"
+
 #include "TimerA2.h"
 
 namespace aria2 {
@@ -199,7 +201,7 @@ public:
 
   // Returns proxy method for given protocol. Either V_GET or V_TUNNEL
   // is returned.  For HTTPS, always returns V_TUNNEL.
-  const std::string& resolveProxyMethod(const std::string& protocol) const;
+  const std::string& resolveProxyMethod(Protocol protocol) const;
 
   const std::shared_ptr<Option>& getOption() const;
 
@@ -239,7 +241,7 @@ public:
 
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
-std::string getProxyUri(const std::string& protocol, const Option* option);
+std::string getProxyUri(Protocol protocol, const Option* option);
 
 } // namespace aria2
 
