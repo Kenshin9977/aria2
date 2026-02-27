@@ -160,13 +160,13 @@ public:
                           Command* command) override;
 #endif // ENABLE_ASYNC_DNS
 
-  static const int IEV_READ = UV_READABLE;
-  static const int IEV_WRITE = UV_WRITABLE;
-  static const int IEV_RW = UV_READABLE | UV_WRITABLE;
+  static constexpr int IEV_READ = UV_READABLE;
+  static constexpr int IEV_WRITE = UV_WRITABLE;
+  static constexpr int IEV_RW = UV_READABLE | UV_WRITABLE;
 
   // Make sure these do not interfere with the uv_poll API later.
-  static const int IEV_ERROR = 128;
-  static const int IEV_HUP = 255;
+  static constexpr int IEV_ERROR = 128;
+  static constexpr int IEV_HUP = 255;
 };
 
 } // namespace aria2

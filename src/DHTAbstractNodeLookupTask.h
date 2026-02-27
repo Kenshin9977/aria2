@@ -142,7 +142,7 @@ public:
     memcpy(targetID_, targetID, DHT_ID_LENGTH);
   }
 
-  static const size_t ALPHA = 3;
+  static constexpr size_t ALPHA = 3;
 
   void startup() override
   {

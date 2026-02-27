@@ -93,7 +93,7 @@ private:
 
   port_event_t* portEvents_;
 
-  static const size_t PORT_EVENTS_SIZE = 1024;
+  static constexpr size_t PORT_EVENTS_SIZE = 1024;
 
   bool addEvents(sock_t socket, const KEvent& event);
 
@@ -127,10 +127,10 @@ public:
                           Command* command) override;
 #endif // ENABLE_ASYNC_DNS
 
-  static const int IEV_READ = POLLIN;
-  static const int IEV_WRITE = POLLOUT;
-  static const int IEV_ERROR = POLLERR;
-  static const int IEV_HUP = POLLHUP;
+  static constexpr int IEV_READ = POLLIN;
+  static constexpr int IEV_WRITE = POLLOUT;
+  static constexpr int IEV_ERROR = POLLERR;
+  static constexpr int IEV_HUP = POLLHUP;
 };
 
 } // namespace aria2

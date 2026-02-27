@@ -103,7 +103,7 @@ InputIterator getNext(InputIterator first, InputIterator last, const int* tbl)
 template <typename InputIterator>
 std::string decode(InputIterator first, InputIterator last)
 {
-  static const int INDEX_TABLE[] = {
+  static constexpr int INDEX_TABLE[] = {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57,

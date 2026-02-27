@@ -73,7 +73,7 @@ public:
 
   ~BtHandshakeMessage() override;
 
-  static const uint8_t ID = INT8_MAX;
+  static constexpr uint8_t ID = INT8_MAX;
 
   const static char NAME[];
 

@@ -50,7 +50,7 @@ public:
   BtNotInterestedMessage();
   ~BtNotInterestedMessage() override;
 
-  static const uint8_t ID = 3;
+  static constexpr uint8_t ID = 3;
 
   static const char NAME[];
 
