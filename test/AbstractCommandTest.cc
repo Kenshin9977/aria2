@@ -12,6 +12,7 @@
 #include "RequestGroup.h"
 #include "SocketRecvBuffer.h"
 #include "TestEngineHelper.h"
+#include "MockPieceStorage.h"
 #include "prefs.h"
 
 namespace aria2 {
@@ -64,10 +65,17 @@ class AbstractCommandTest : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE(AbstractCommandTest);
   CPPUNIT_TEST(testGetProxyUri);
+  CPPUNIT_TEST(testGetProxyUri_sftp);
   CPPUNIT_TEST(testExecute_haltReturnsTrue);
+  CPPUNIT_TEST(testExecute_downloadFinishedReturnsTrue);
   CPPUNIT_TEST(testExecute_noSocketCallsInternal);
   CPPUNIT_TEST(testExecute_noCheckFallthrough);
   CPPUNIT_TEST(testExecute_mockSocketPassedToInternal);
+  CPPUNIT_TEST(testResolveProxyMethod);
+  CPPUNIT_TEST(testCreateProxyRequest);
+  CPPUNIT_TEST(testIsProxyDefined);
+  CPPUNIT_TEST(testWriteCheckSocket);
+  CPPUNIT_TEST(testSwapSocket);
   CPPUNIT_TEST_SUITE_END();
 
   CommandTestContext ctx_;
@@ -77,10 +85,17 @@ public:
   void tearDown() {}
 
   void testGetProxyUri();
+  void testGetProxyUri_sftp();
   void testExecute_haltReturnsTrue();
+  void testExecute_downloadFinishedReturnsTrue();
   void testExecute_noSocketCallsInternal();
   void testExecute_noCheckFallthrough();
   void testExecute_mockSocketPassedToInternal();
+  void testResolveProxyMethod();
+  void testCreateProxyRequest();
+  void testIsProxyDefined();
+  void testWriteCheckSocket();
+  void testSwapSocket();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(AbstractCommandTest);
@@ -201,6 +216,151 @@ void AbstractCommandTest::testExecute_mockSocketPassedToInternal()
   cmd->disableReadCheckSocket();
   CPPUNIT_ASSERT(cmd->execute());
   CPPUNIT_ASSERT_EQUAL(1, cmd->executeInternalCount);
+}
+
+void AbstractCommandTest::testGetProxyUri_sftp()
+{
+  Option op;
+  // sftp should use FTP proxy settings
+  op.put(PREF_FTP_PROXY, "http://ftpproxy:8080/");
+  CPPUNIT_ASSERT_EQUAL(std::string("http://ftpproxy:8080/"),
+                       getProxyUri("sftp", &op));
+
+  // Falls back to ALL_PROXY when no FTP proxy
+  Option op2;
+  op2.put(PREF_ALL_PROXY, "http://allproxy:3128/");
+  CPPUNIT_ASSERT_EQUAL(std::string("http://allproxy:3128/"),
+                       getProxyUri("sftp", &op2));
+}
+
+void AbstractCommandTest::testExecute_downloadFinishedReturnsTrue()
+{
+  auto ps = std::make_shared<MockPieceStorage>();
+  ps->setDownloadFinished(true);
+  ctx_.rg->setPieceStorage(ps);
+
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get());
+  // downloadFinished() returns true → execute() returns true early
+  CPPUNIT_ASSERT(cmd->execute());
+  CPPUNIT_ASSERT_EQUAL(0, cmd->executeInternalCount);
+}
+
+void AbstractCommandTest::testResolveProxyMethod()
+{
+  // Create a command with a request so resolveProxyMethod() works
+  auto req = std::make_shared<Request>();
+  req->setUri("http://example.com/file");
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get());
+
+  // Default: GET for HTTP
+  CPPUNIT_ASSERT_EQUAL(std::string("get"), cmd->resolveProxyMethod("http"));
+
+  // HTTPS always uses tunnel
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("https"));
+
+  // SFTP always uses tunnel
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("sftp"));
+
+  // When PREF_PROXY_METHOD is tunnel, HTTP also uses tunnel
+  ctx_.option->put(PREF_PROXY_METHOD, "tunnel");
+  CPPUNIT_ASSERT_EQUAL(std::string("tunnel"), cmd->resolveProxyMethod("http"));
+}
+
+void AbstractCommandTest::testCreateProxyRequest()
+{
+  auto req = std::make_shared<Request>();
+  req->setUri("http://example.com/file");
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get());
+
+  // No proxy defined — returns null
+  auto proxyReq = cmd->createProxyRequest();
+  CPPUNIT_ASSERT(!proxyReq);
+
+  // Set HTTP proxy
+  ctx_.option->put(PREF_HTTP_PROXY, "http://proxy:8080/");
+  proxyReq = cmd->createProxyRequest();
+  CPPUNIT_ASSERT(proxyReq);
+  CPPUNIT_ASSERT_EQUAL(std::string("proxy"), proxyReq->getHost());
+  CPPUNIT_ASSERT_EQUAL(static_cast<uint16_t>(8080), proxyReq->getPort());
+
+  // Set no-proxy for this host
+  ctx_.option->put(PREF_NO_PROXY, "example.com");
+  proxyReq = cmd->createProxyRequest();
+  CPPUNIT_ASSERT(!proxyReq);
+}
+
+void AbstractCommandTest::testIsProxyDefined()
+{
+  auto req = std::make_shared<Request>();
+  req->setUri("http://example.com/file");
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get());
+
+  // No proxy — not defined
+  CPPUNIT_ASSERT(!cmd->isProxyDefined());
+
+  // Set HTTP proxy — defined
+  ctx_.option->put(PREF_HTTP_PROXY, "http://proxy:8080/");
+  CPPUNIT_ASSERT(cmd->isProxyDefined());
+
+  // Set no-proxy matching the host — not defined
+  ctx_.option->put(PREF_NO_PROXY, "example.com");
+  CPPUNIT_ASSERT(!cmd->isProxyDefined());
+}
+
+void AbstractCommandTest::testWriteCheckSocket()
+{
+  auto mockSocket = std::make_shared<MockSocketCore>();
+
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get(), mockSocket);
+
+  // Disable the read check that constructor registered
+  cmd->disableReadCheckSocket();
+
+  // Set write check — should not throw
+  cmd->setWriteCheckSocket(mockSocket);
+
+  // setWriteCheckSocketIf with false — disables write check
+  cmd->setWriteCheckSocketIf(mockSocket, false);
+
+  // setWriteCheckSocketIf with true — enables write check
+  cmd->setWriteCheckSocketIf(mockSocket, true);
+
+  // Disable explicitly
+  cmd->disableWriteCheckSocket();
+}
+
+void AbstractCommandTest::testSwapSocket()
+{
+  auto mockSocket1 = std::make_shared<MockSocketCore>();
+  auto mockSocket2 = std::make_shared<MockSocketCore>();
+  mockSocket2->readBuffer = "swapped";
+
+  auto cmd =
+      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+                               ctx_.rg.get(), ctx_.engine.get(), mockSocket1);
+
+  // Disable read check so destructor doesn't crash
+  cmd->disableReadCheckSocket();
+
+  // Swap to a new socket — swapSocket takes shared_ptr<ISocketCore>&
+  std::shared_ptr<ISocketCore> newSocket = mockSocket2;
+  cmd->swapSocket(newSocket);
+
+  // After swap, getSocket() should return the new socket
+  char buf[16] = {};
+  size_t len = sizeof(buf);
+  cmd->getSocket()->readData(buf, len);
+  CPPUNIT_ASSERT_EQUAL(std::string("swapped"), std::string(buf, len));
 }
 
 } // namespace aria2
