@@ -26,6 +26,7 @@ LCOV_IGNORE=(
   --ignore-errors format
   --ignore-errors count
   --ignore-errors unsupported
+  --ignore-errors empty
 )
 
 echo "==> Cleaning previous build..."
