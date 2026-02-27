@@ -85,9 +85,9 @@ HttpHeader::equalRange(int hdKey) const
 Range HttpHeader::getRange() const
 {
   auto rangeStr = find(CONTENT_RANGE);
-  if (!rangeStr) {
+  if (!rangeStr || rangeStr->empty()) {
     auto clenStr = find(CONTENT_LENGTH);
-    if (!clenStr) {
+    if (!clenStr || clenStr->empty()) {
       return Range();
     }
     else {
@@ -201,8 +201,8 @@ bool HttpHeader::fieldContains(int hdKey, const char* value)
                     std::back_inserter(values), ',',
                     true // doStrip
     );
-    for (const auto& [begin, end] : values) {
-      if (util::strieq(begin, end, value)) {
+    for (const auto& [first, last] : values) {
+      if (util::strieq(first, last, value)) {
         return true;
       }
     }

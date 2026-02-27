@@ -197,15 +197,16 @@ bool HttpServerBodyCommand::execute()
           // See http://www.w3.org/TR/cors/
           auto& header = httpServer_->getRequestHeader();
           std::string accessControlHeaders;
-          if (header->find(HttpHeader::ORIGIN) &&
-              header->find(HttpHeader::ACCESS_CONTROL_REQUEST_METHOD) &&
+          auto origin = header->find(HttpHeader::ORIGIN);
+          auto acrm = header->find(HttpHeader::ACCESS_CONTROL_REQUEST_METHOD);
+          if (origin && !origin->empty() && acrm && !acrm->empty() &&
               !httpServer_->getAllowOrigin().empty()) {
             accessControlHeaders +=
                 "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n"
                 "Access-Control-Max-Age: 1728000\r\n";
             auto accReqHeaders =
                 header->find(HttpHeader::ACCESS_CONTROL_REQUEST_HEADERS);
-            if (accReqHeaders) {
+            if (accReqHeaders && !accReqHeaders->empty()) {
               // We allow all headers requested.
               accessControlHeaders += "Access-Control-Allow-Headers: ";
               accessControlHeaders.append(accReqHeaders->data(),

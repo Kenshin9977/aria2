@@ -136,8 +136,8 @@ std::string createWebSocketServerKey(const std::string& clientKey)
 namespace {
 int websocketHandshake(const HttpHeader* header)
 {
-  if (header->getMethod() != "GET" ||
-      !header->find(HttpHeader::SEC_WEBSOCKET_KEY)) {
+  auto wsKey = header->find(HttpHeader::SEC_WEBSOCKET_KEY);
+  if (header->getMethod() != "GET" || !wsKey || wsKey->empty()) {
     return 400;
   }
   else if (header->find(HttpHeader::SEC_WEBSOCKET_VERSION) != "13") {
