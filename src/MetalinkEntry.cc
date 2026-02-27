@@ -35,6 +35,7 @@
 #include "MetalinkEntry.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include "MetalinkResource.h"
 #include "MetalinkMetaurl.h"
@@ -163,12 +164,12 @@ void MetalinkEntry::setSignature(std::unique_ptr<Signature> signature)
 
 bool MetalinkEntry::containsLanguage(const std::string& lang) const
 {
-  return std::find(languages.begin(), languages.end(), lang) != languages.end();
+  return std::ranges::find(languages, lang) != languages.end();
 }
 
 bool MetalinkEntry::containsOS(const std::string& os) const
 {
-  return std::find(oses.begin(), oses.end(), os) != oses.end();
+  return std::ranges::find(oses, os) != oses.end();
 }
 
 std::unique_ptr<Signature> MetalinkEntry::popSignature()

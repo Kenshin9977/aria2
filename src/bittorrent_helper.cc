@@ -37,6 +37,7 @@
 #include <cassert>
 #include <cstring>
 #include <algorithm>
+#include <ranges>
 
 #include "DownloadContext.h"
 #include "Randomizer.h"
@@ -489,8 +490,8 @@ void processRootDictionary(const std::shared_ptr<DownloadContext>& ctx,
   std::vector<std::string> urlList;
   extractUrlList(torrent.get(), urlList, rootDict->get(C_URL_LIST));
   urlList.insert(urlList.end(), uris.begin(), uris.end());
-  std::sort(urlList.begin(), urlList.end());
-  urlList.erase(std::unique(urlList.begin(), urlList.end()), urlList.end());
+  std::ranges::sort(urlList);
+  urlList.erase(std::ranges::unique(urlList).begin(), urlList.end());
 
   // retrieve file entries
   extractFileEntries(ctx, torrent.get(), infoDict, option, defaultName,
@@ -1032,11 +1033,11 @@ void removeAnnounceUri(TorrentAttribute* attrs,
   if (uris.empty()) {
     return;
   }
-  if (std::find(uris.begin(), uris.end(), "*") == uris.end()) {
+  if (std::ranges::find(uris, "*") == uris.end()) {
     for (auto i = attrs->announceList.begin();
          i != attrs->announceList.end();) {
       for (auto j = (*i).begin(); j != (*i).end();) {
-        if (std::find(uris.begin(), uris.end(), *j) == uris.end()) {
+        if (std::ranges::find(uris, *j) == uris.end()) {
           ++j;
         }
         else {

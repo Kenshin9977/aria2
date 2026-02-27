@@ -33,6 +33,7 @@
  */
 /* copyright --> */
 #include "HttpServerBodyCommand.h"
+#include <ranges>
 #include "SocketCore.h"
 #include "DownloadEngine.h"
 #include "HttpServer.h"
@@ -186,10 +187,8 @@ bool HttpServerBodyCommand::execute()
 
       if (httpServer_->receiveBody()) {
         std::string reqPath = httpServer_->getRequestPath();
-        reqPath.erase(std::find(reqPath.begin(), reqPath.end(), '#'),
-                      reqPath.end());
-        std::string query(std::find(reqPath.begin(), reqPath.end(), '?'),
-                          reqPath.end());
+        reqPath.erase(std::ranges::find(reqPath, '#'), reqPath.end());
+        std::string query(std::ranges::find(reqPath, '?'), reqPath.end());
         reqPath.erase(reqPath.size() - query.size(), query.size());
 
         if (httpServer_->getMethod() == "OPTIONS") {

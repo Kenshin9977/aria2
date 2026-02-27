@@ -34,6 +34,7 @@
 /* copyright --> */
 
 #include "HttpResponse.h"
+#include <ranges>
 #include "Request.h"
 #include "Segment.h"
 #include "HttpRequest.h"
@@ -289,7 +290,7 @@ namespace {
 
 bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
 {
-  const auto first = std::find(s.begin(), s.end(), '<');
+  const auto first = std::ranges::find(s, '<');
   if (first == s.end()) {
     return false;
   }
@@ -379,13 +380,13 @@ void HttpResponse::getMetalinKHttpEntries(
       }
     }
     for (auto& r : result) {
-      if (std::find(locs.begin(), locs.end(), r.geo) != locs.end()) {
+      if (std::ranges::find(locs, r.geo) != locs.end()) {
         r.pri -= 999999;
       }
     }
   }
 
-  std::sort(result.begin(), result.end());
+  std::ranges::sort(result, std::less<>{});
 }
 
 // Digest header field is defined by
@@ -415,7 +416,7 @@ void HttpResponse::getDigest(std::vector<Checksum>& result) const
     }
   }
 
-  std::sort(result.begin(), result.end(), HashTypeStronger());
+  std::ranges::sort(result, HashTypeStronger());
   std::vector<Checksum> temp;
   for (auto i = result.begin(), eoi = result.end(); i != eoi;) {
     bool ok = true;

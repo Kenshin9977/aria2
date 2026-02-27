@@ -36,6 +36,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 
 #include "ServerStatMan.h"
 #include "ServerStat.h"
@@ -79,7 +80,7 @@ std::string FeedbackURISelector::select(
   }
   if (!uri.empty()) {
     std::deque<std::string>& uris = fileEntry->getRemainingUris();
-    uris.erase(std::find(uris.begin(), uris.end(), uri));
+    uris.erase(std::ranges::find(uris, uri));
   }
   A2_LOG_DEBUG(fmt("FeedbackURISelector selected %s", uri.c_str()));
   return uri;
@@ -165,7 +166,7 @@ std::string FeedbackURISelector::selectFaster(
   }
   else {
     A2_LOG_DEBUG("Selected from fastCands");
-    std::sort(fastCands.begin(), fastCands.end(), ServerStatFaster());
+    std::ranges::sort(fastCands, ServerStatFaster());
     return fastCands.front().second;
   }
 }

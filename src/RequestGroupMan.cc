@@ -40,6 +40,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
+#include <ranges>
 #include <utility>
 
 #include "BtProgressInfoFile.h"
@@ -872,11 +873,11 @@ bool RequestGroupMan::isSameFileBeingDownloaded(
     if (rg.get() != requestGroup) {
       const std::vector<std::shared_ptr<FileEntry>>& entries =
           rg->getDownloadContext()->getFileEntries();
-      std::transform(entries.begin(), entries.end(), std::back_inserter(files),
-                     std::mem_fn(&FileEntry::getPath));
+      std::ranges::transform(entries, std::back_inserter(files),
+                             std::mem_fn(&FileEntry::getPath));
     }
   }
-  std::sort(files.begin(), files.end());
+  std::ranges::sort(files);
   const std::vector<std::shared_ptr<FileEntry>>& entries =
       requestGroup->getDownloadContext()->getFileEntries();
   return sameFilePathExists(files.begin(), files.end(), entries.begin(),
@@ -1031,12 +1032,12 @@ void RequestGroupMan::getUsedHosts(
       }
     }
   }
-  std::sort(tempHosts.begin(), tempHosts.end());
-  std::transform(tempHosts.begin(), tempHosts.end(),
-                 std::back_inserter(usedHosts),
-                 [](const std::tuple<size_t, int, std::string>& x) {
-                   return std::make_pair(std::get<0>(x), std::get<2>(x));
-                 });
+  std::ranges::sort(tempHosts);
+  std::ranges::transform(tempHosts, std::back_inserter(usedHosts),
+                         [](const std::tuple<size_t, int, std::string>& x) {
+                           return std::make_pair(std::get<0>(x),
+                                                 std::get<2>(x));
+                         });
 }
 
 void RequestGroupMan::setUriListParser(

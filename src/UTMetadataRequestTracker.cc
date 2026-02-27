@@ -35,6 +35,7 @@
 #include "UTMetadataRequestTracker.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include "Logger.h"
 #include "LogFactory.h"
@@ -51,14 +52,13 @@ void UTMetadataRequestTracker::add(size_t index)
 
 bool UTMetadataRequestTracker::tracks(size_t index)
 {
-  return std::find(trackedRequests_.begin(), trackedRequests_.end(),
-                   RequestEntry(index)) != trackedRequests_.end();
+  return std::ranges::find(trackedRequests_, RequestEntry(index)) !=
+         trackedRequests_.end();
 }
 
 void UTMetadataRequestTracker::remove(size_t index)
 {
-  auto i = std::find(trackedRequests_.begin(), trackedRequests_.end(),
-                     RequestEntry(index));
+  auto i = std::ranges::find(trackedRequests_, RequestEntry(index));
   if (i != trackedRequests_.end()) {
     trackedRequests_.erase(i);
   }

@@ -34,8 +34,10 @@
 /* copyright --> */
 #include "common.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <ranges>
 #include <sstream>
 
 #include <aria2/aria2.h>
@@ -154,7 +156,7 @@ void showCandidates(const std::string& unknownOption,
   if (cands.empty()) {
     return;
   }
-  std::sort(cands.begin(), cands.end());
+  std::ranges::sort(cands);
   int threshold = cands[0].first;
   // threshold value 12 is a magic value.
   if (threshold > 12) {

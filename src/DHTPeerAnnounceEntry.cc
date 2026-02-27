@@ -36,6 +36,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <ranges>
 
 #include "Peer.h"
 #include "wallclock.h"
@@ -51,7 +52,7 @@ DHTPeerAnnounceEntry::~DHTPeerAnnounceEntry() = default;
 
 void DHTPeerAnnounceEntry::addPeerAddrEntry(const PeerAddrEntry& entry)
 {
-  auto i = std::find(peerAddrEntries_.begin(), peerAddrEntries_.end(), entry);
+  auto i = std::ranges::find(peerAddrEntries_, entry);
   if (i == peerAddrEntries_.end()) {
     peerAddrEntries_.push_back(entry);
   }

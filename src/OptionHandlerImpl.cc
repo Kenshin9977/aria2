@@ -40,6 +40,7 @@
 #include <utility>
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <iterator>
 #include <vector>
@@ -416,8 +417,7 @@ ParameterOptionHandler::~ParameterOptionHandler() = default;
 void ParameterOptionHandler::parseArg(Option& option,
                                       const std::string& optarg) const
 {
-  auto itr =
-      std::find(validParamValues_.begin(), validParamValues_.end(), optarg);
+  auto itr = std::ranges::find(validParamValues_, optarg);
   if (itr == validParamValues_.end()) {
     std::string msg = pref_->k;
     msg += " ";

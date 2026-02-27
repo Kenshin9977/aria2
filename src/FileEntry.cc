@@ -36,6 +36,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 
 #include "util.h"
 #include "URISelector.h"
@@ -143,8 +144,8 @@ std::shared_ptr<Request> FileEntry::getRequestWithInFlightHosts(
       }
       req = std::make_shared<Request>();
       if (req->setUri(uri)) {
-        if (std::count(std::begin(inFlightHosts), std::end(inFlightHosts),
-                       req->getHost()) >= maxConnectionPerServer_) {
+        if (std::ranges::count(inFlightHosts, req->getHost()) >=
+            maxConnectionPerServer_) {
           pending.push_back(uri);
           ignoreHost.push_back(req->getHost());
           req.reset();
@@ -289,8 +290,7 @@ std::shared_ptr<Request> FileEntry::findFasterRequest(
     }
     std::string host = uri::getFieldString(us, USR_HOST, (*i).c_str());
     std::string protocol = uri::getFieldString(us, USR_SCHEME, (*i).c_str());
-    if (std::count(inFlightHosts.begin(), inFlightHosts.end(), host) >=
-        maxConnectionPerServer_) {
+    if (std::ranges::count(inFlightHosts, host) >= maxConnectionPerServer_) {
       A2_LOG_DEBUG(fmt("%s has already used %d times, not considered.",
                        (*i).c_str(), maxConnectionPerServer_));
       continue;
@@ -310,14 +310,14 @@ std::shared_ptr<Request> FileEntry::findFasterRequest(
     }
   }
   if (!fastCands.empty()) {
-    std::sort(fastCands.begin(), fastCands.end(), ServerStatFaster());
+    std::ranges::sort(fastCands, ServerStatFaster());
     auto fastestRequest = std::make_shared<Request>();
     const std::string& uri = fastCands.front().second;
     A2_LOG_DEBUG(fmt("Selected %s from fastCands", uri.c_str()));
     // Candidate URIs where already parsed when populating fastCands.
     (void)fastestRequest->setUri(uri);
     fastestRequest->setReferer(base->getReferer());
-    uris_.erase(std::find(uris_.begin(), uris_.end(), uri));
+    uris_.erase(std::ranges::find(uris_, uri));
     spentUris_.push_back(uri);
     inFlightRequests_.insert(fastestRequest);
     lastFasterReplace_ = global::wallclock();
@@ -415,15 +415,14 @@ void FileEntry::reuseUri(const std::vector<std::string>& ignore)
     }
   }
   std::deque<std::string> uris = spentUris_;
-  std::sort(uris.begin(), uris.end());
-  uris.erase(std::unique(uris.begin(), uris.end()), uris.end());
+  std::ranges::sort(uris);
+  uris.erase(std::ranges::unique(uris).begin(), uris.end());
 
   std::vector<std::string> errorUris(uriResults_.size());
-  std::transform(uriResults_.begin(), uriResults_.end(), errorUris.begin(),
-                 std::mem_fn(&URIResult::getURI));
-  std::sort(errorUris.begin(), errorUris.end());
-  errorUris.erase(std::unique(errorUris.begin(), errorUris.end()),
-                  errorUris.end());
+  std::ranges::transform(uriResults_, errorUris.begin(),
+                         std::mem_fn(&URIResult::getURI));
+  std::ranges::sort(errorUris);
+  errorUris.erase(std::ranges::unique(errorUris).begin(), errorUris.end());
   if (A2_LOG_DEBUG_ENABLED) {
     for (std::vector<std::string>::const_iterator i = errorUris.begin(),
                                                   eoi = errorUris.end();
@@ -438,8 +437,8 @@ void FileEntry::reuseUri(const std::vector<std::string>& ignore)
   for (auto i = reusableURIs.begin(), eoi = reusableURIs.end(); i != eoi; ++i) {
     uri_split_result us;
     if (uri_split(&us, (*i).c_str()) == 0 &&
-        std::find(ignore.begin(), ignore.end(),
-                  uri::getFieldString(us, USR_HOST, (*i).c_str())) ==
+        std::ranges::find(ignore,
+                          uri::getFieldString(us, USR_HOST, (*i).c_str())) ==
             ignore.end()) {
       if (i != insertionPoint) {
         *insertionPoint = *i;
@@ -500,9 +499,9 @@ InputIterator findRequestByUri(InputIterator first, InputIterator last,
 
 bool FileEntry::removeUri(const std::string& uri)
 {
-  auto itr = std::find(spentUris_.begin(), spentUris_.end(), uri);
+  auto itr = std::ranges::find(spentUris_, uri);
   if (itr == spentUris_.end()) {
-    itr = std::find(uris_.begin(), uris_.end(), uri);
+    itr = std::ranges::find(uris_, uri);
     if (itr == uris_.end()) {
       return false;
     }

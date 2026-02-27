@@ -40,6 +40,7 @@
 #include <cstring>
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 
 #include "Command.h"
 #include "LogFactory.h"
@@ -80,7 +81,7 @@ SelectEventPoll::SocketEntry::SocketEntry(sock_t socket) : socket_(socket) {}
 void SelectEventPoll::SocketEntry::addCommandEvent(Command* command, int events)
 {
   CommandEvent cev(command, events);
-  auto i = std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+  auto i = std::ranges::find(commandEvents_, cev);
   if (i == commandEvents_.end()) {
     commandEvents_.push_back(cev);
   }
@@ -92,7 +93,7 @@ void SelectEventPoll::SocketEntry::removeCommandEvent(Command* command,
                                                       int events)
 {
   CommandEvent cev(command, events);
-  auto i = std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+  auto i = std::ranges::find(commandEvents_, cev);
   if (i == commandEvents_.end()) {
     // not found
   }
@@ -105,9 +106,8 @@ void SelectEventPoll::SocketEntry::removeCommandEvent(Command* command,
 }
 void SelectEventPoll::SocketEntry::processEvents(int events)
 {
-  using namespace std::placeholders;
-  std::for_each(commandEvents_.begin(), commandEvents_.end(),
-                std::bind(&CommandEvent::processEvents, _1, events));
+  std::ranges::for_each(
+      commandEvents_, [events](CommandEvent& ce) { ce.processEvents(events); });
 }
 
 int accumulateEvent(int events, const SelectEventPoll::CommandEvent& event)

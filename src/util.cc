@@ -63,6 +63,7 @@
 #include <ostream>
 #include <algorithm>
 #include <fstream>
+#include <ranges>
 #include <iomanip>
 
 #include "SimpleRandomizer.h"
@@ -395,8 +396,8 @@ std::string percentEncode(const unsigned char* target, size_t len)
 
 std::string percentEncode(const std::string& target)
 {
-  if (std::find_if_not(target.begin(), target.end(),
-                       inRFC3986UnreservedChars) == target.end()) {
+  if (std::ranges::find_if_not(target, inRFC3986UnreservedChars) ==
+      target.end()) {
     return target;
   }
   return percentEncode(reinterpret_cast<const unsigned char*>(target.c_str()),
@@ -405,8 +406,7 @@ std::string percentEncode(const std::string& target)
 
 std::string percentEncodeMini(const std::string& src)
 {
-  if (std::find_if_not(src.begin(), src.end(), inPercentEncodeMini) ==
-      src.end()) {
+  if (std::ranges::find_if_not(src, inPercentEncodeMini) == src.end()) {
     return src;
   }
   std::string result;
@@ -734,8 +734,9 @@ void parsePrioritizePieceRange(
           fmt("Unrecognized token %s", std::string(i.first, i.second).c_str()));
     }
   }
-  std::sort(indexes.begin(), indexes.end());
-  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
+  std::ranges::sort(indexes);
+  indexes.erase(std::ranges::begin(std::ranges::unique(indexes)),
+                indexes.end());
   result.insert(result.end(), indexes.begin(), indexes.end());
 }
 
@@ -1602,12 +1603,12 @@ std::string toLower(std::string src)
 
 void uppercase(std::string& s)
 {
-  std::transform(s.begin(), s.end(), s.begin(), toUpperChar);
+  std::ranges::transform(s, s.begin(), toUpperChar);
 }
 
 void lowercase(std::string& s)
 {
-  std::transform(s.begin(), s.end(), s.begin(), toLowerChar);
+  std::ranges::transform(s, s.begin(), toLowerChar);
 }
 
 char toUpperChar(char c)
@@ -2372,14 +2373,12 @@ bool noProxyDomainMatch(const std::string& hostname, const std::string& domain)
 
 bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
 {
-  std::string::const_iterator ptWildcard =
-      std::find(pattern.begin(), pattern.end(), '*');
+  std::string::const_iterator ptWildcard = std::ranges::find(pattern, '*');
   if (ptWildcard == pattern.end()) {
     return strieq(pattern.begin(), pattern.end(), hostname.begin(),
                   hostname.end());
   }
-  std::string::const_iterator ptLeftLabelEnd =
-      std::find(pattern.begin(), pattern.end(), '.');
+  std::string::const_iterator ptLeftLabelEnd = std::ranges::find(pattern, '.');
   bool wildcardEnabled = true;
   // Do case-insensitive match. At least 2 dots are required to enable
   // wildcard match. Also wildcard must be in the left-most label.
@@ -2394,8 +2393,7 @@ bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
     return strieq(pattern.begin(), pattern.end(), hostname.begin(),
                   hostname.end());
   }
-  std::string::const_iterator hnLeftLabelEnd =
-      std::find(hostname.begin(), hostname.end(), '.');
+  std::string::const_iterator hnLeftLabelEnd = std::ranges::find(hostname, '.');
   if (!strieq(ptLeftLabelEnd, pattern.end(), hnLeftLabelEnd, hostname.end())) {
     return false;
   }

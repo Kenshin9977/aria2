@@ -34,8 +34,10 @@
 /* copyright --> */
 #include "Piece.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <ranges>
 
 #include "util.h"
 #include "BitfieldMan.h"
@@ -282,12 +284,12 @@ void Piece::destroyHashContext()
 
 bool Piece::usedBy(cuid_t cuid) const
 {
-  return std::find(users_.begin(), users_.end(), cuid) != users_.end();
+  return std::ranges::find(users_, cuid) != users_.end();
 }
 
 void Piece::addUser(cuid_t cuid)
 {
-  if (std::find(users_.begin(), users_.end(), cuid) == users_.end()) {
+  if (std::ranges::find(users_, cuid) == users_.end()) {
     users_.push_back(cuid);
   }
 }

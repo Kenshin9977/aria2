@@ -47,6 +47,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include <ranges>
 #include <sstream>
 #include <iterator>
 
@@ -259,8 +260,7 @@ void printProgressSummary(const RequestGroupList& groups, size_t cols,
   o << " *** \n"
     << std::setfill(SEP_CHAR) << std::setw(cols) << SEP_CHAR << "\n";
   global::cout()->write(o.str().c_str());
-  std::for_each(groups.begin(), groups.end(),
-                PrintSummary(cols, e, sizeFormatter));
+  std::ranges::for_each(groups, PrintSummary(cols, e, sizeFormatter));
 }
 } // namespace
 

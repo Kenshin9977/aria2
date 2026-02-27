@@ -36,6 +36,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 #include <sstream>
 
 #include "Logger.h"
@@ -609,7 +610,7 @@ void createFileEntry(List* files, InputIterator first, InputIterator last,
 namespace {
 bool requested_key(const std::vector<std::string>& keys, const std::string& k)
 {
-  return keys.empty() || std::find(keys.begin(), keys.end(), k) != keys.end();
+  return keys.empty() || std::ranges::find(keys, k) != keys.end();
 }
 } // namespace
 
