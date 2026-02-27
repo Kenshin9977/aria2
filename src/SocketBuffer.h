@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <span>
 #include <string>
 #include <deque>
 #include <memory>
@@ -129,6 +130,12 @@ public:
   // can be null.
   void pushBytes(std::vector<unsigned char> bytes,
                  std::unique_ptr<ProgressUpdate> progressUpdate = nullptr);
+  void pushBytes(std::span<const unsigned char> data,
+                 std::unique_ptr<ProgressUpdate> progressUpdate = nullptr)
+  {
+    pushBytes(std::vector<unsigned char>(data.begin(), data.end()),
+              std::move(progressUpdate));
+  }
 
   // Feeds data into queue. This function doesn't send data.  If
   // progressUpdate is not null, its update() function will be called

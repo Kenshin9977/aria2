@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <span>
 #include <string>
 
 #include "a2netcompat.h"
@@ -59,6 +60,23 @@ public:
   virtual void readData(void* data, size_t& len) = 0;
   virtual ssize_t readDataFrom(void* data, size_t len, Endpoint& sender) = 0;
   virtual ssize_t writeVector(a2iovec* iov, size_t iovcnt) = 0;
+
+  // span-based overloads (delegate to void* versions by default)
+  virtual ssize_t writeData(std::span<const unsigned char> data)
+  {
+    return writeData(data.data(), data.size());
+  }
+  virtual ssize_t writeData(std::span<const unsigned char> data,
+                            const std::string& host, uint16_t port)
+  {
+    return writeData(data.data(), data.size(), host, port);
+  }
+  virtual size_t readData(std::span<unsigned char> buf)
+  {
+    size_t len = buf.size();
+    readData(buf.data(), len);
+    return len;
+  }
 
   // I/O readiness
   virtual bool isReadable(time_t timeout) = 0;
