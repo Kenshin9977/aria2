@@ -139,7 +139,7 @@ size_t WinConsoleFile::write(const char* str)
 
 int WinConsoleFile::vprintf(const char* format, va_list va)
 {
-  ssize_t r = vsnprintf(NULL, 0, format, va);
+  ssize_t r = vsnprintf(nullptr, 0, format, va);
   if (r <= 0) {
     return 0;
   }

@@ -2547,7 +2547,7 @@ bool gainPrivilege(LPCTSTR privName)
 
   auto tokenCloser = defer(token, CloseHandle);
 
-  if (!AdjustTokenPrivileges(token, FALSE, &tp, 0, NULL, NULL)) {
+  if (!AdjustTokenPrivileges(token, FALSE, &tp, 0, nullptr, nullptr)) {
     auto errNum = GetLastError();
     A2_LOG_WARN(fmt("Gaining privilege %s failed. cause: %s", privName,
                     util::formatLastError(errNum).c_str()));

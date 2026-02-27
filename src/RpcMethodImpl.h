@@ -61,9 +61,9 @@ namespace rpc {
 template <typename T>
 const T* checkParam(const RpcRequest& req, size_t index, bool required = false)
 {
-  const T* p = 0;
+  const T* p = nullptr;
   if (req.params->size() > index) {
-    if ((p = downcast<T>(req.params->get(index))) == 0) {
+    if ((p = downcast<T>(req.params->get(index))) == nullptr) {
       throw DL_ABORT_EX(fmt("The parameter at %lu has wrong type.",
                             static_cast<unsigned long>(index)));
     }
