@@ -287,18 +287,17 @@ public:
 
   // This function also calls
   // downloadContext->setOwnerRequestGroup(this).
-  void
-  setDownloadContext(const std::shared_ptr<DownloadContext>& downloadContext);
+  void setDownloadContext(std::shared_ptr<DownloadContext> downloadContext);
 
   const std::shared_ptr<PieceStorage>& getPieceStorage() const
   {
     return pieceStorage_;
   }
 
-  void setPieceStorage(const std::shared_ptr<PieceStorage>& pieceStorage);
+  void setPieceStorage(std::shared_ptr<PieceStorage> pieceStorage);
 
-  void setProgressInfoFile(
-      const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void
+  setProgressInfoFile(std::shared_ptr<BtProgressInfoFile> progressInfoFile);
 
   void increaseStreamCommand();
 
@@ -318,8 +317,8 @@ public:
 
   // TODO is it better to move the following 2 methods to
   // SingleFileDownloadContext?
-  void setDiskWriterFactory(
-      const std::shared_ptr<DiskWriterFactory>& diskWriterFactory);
+  void
+  setDiskWriterFactory(std::shared_ptr<DiskWriterFactory> diskWriterFactory);
 
   const std::shared_ptr<DiskWriterFactory>& getDiskWriterFactory() const
   {

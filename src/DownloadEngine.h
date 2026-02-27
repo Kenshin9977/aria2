@@ -106,7 +106,7 @@ private:
 
   public:
     SocketPoolEntry(const std::shared_ptr<SocketCore>& socket,
-                    const std::string& option, std::chrono::seconds timeout);
+                    std::string option, std::chrono::seconds timeout);
 
     SocketPoolEntry(const std::shared_ptr<SocketCore>& socket,
                     std::chrono::seconds timeout);
@@ -155,7 +155,7 @@ private:
 
   void afterEachIteration();
 
-  void poolSocket(const std::string& key, const SocketPoolEntry& entry);
+  void poolSocket(const std::string& key, SocketPoolEntry entry);
 
   std::multimap<std::string, SocketPoolEntry>::iterator
   findSocketPoolEntry(const std::string& key);

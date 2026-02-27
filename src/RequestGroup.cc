@@ -1129,9 +1129,9 @@ void RequestGroup::dependsOn(const std::shared_ptr<Dependency>& dep)
 }
 
 void RequestGroup::setDiskWriterFactory(
-    const std::shared_ptr<DiskWriterFactory>& diskWriterFactory)
+    std::shared_ptr<DiskWriterFactory> diskWriterFactory)
 {
-  diskWriterFactory_ = diskWriterFactory;
+  diskWriterFactory_ = std::move(diskWriterFactory);
 }
 
 void RequestGroup::addPostDownloadHandler(const PostDownloadHandler* handler)
@@ -1148,16 +1148,15 @@ void RequestGroup::clearPostDownloadHandler() { postDownloadHandlers_.clear(); }
 
 void RequestGroup::clearPreDownloadHandler() { preDownloadHandlers_.clear(); }
 
-void RequestGroup::setPieceStorage(
-    const std::shared_ptr<PieceStorage>& pieceStorage)
+void RequestGroup::setPieceStorage(std::shared_ptr<PieceStorage> pieceStorage)
 {
-  pieceStorage_ = pieceStorage;
+  pieceStorage_ = std::move(pieceStorage);
 }
 
 void RequestGroup::setProgressInfoFile(
-    const std::shared_ptr<BtProgressInfoFile>& progressInfoFile)
+    std::shared_ptr<BtProgressInfoFile> progressInfoFile)
 {
-  progressInfoFile_ = progressInfoFile;
+  progressInfoFile_ = std::move(progressInfoFile);
 }
 
 bool RequestGroup::needsFileAllocation() const
@@ -1305,9 +1304,9 @@ void RequestGroup::removeControlFile() const
 }
 
 void RequestGroup::setDownloadContext(
-    const std::shared_ptr<DownloadContext>& downloadContext)
+    std::shared_ptr<DownloadContext> downloadContext)
 {
-  downloadContext_ = downloadContext;
+  downloadContext_ = std::move(downloadContext);
   if (downloadContext_) {
     downloadContext_->setOwnerRequestGroup(this);
   }

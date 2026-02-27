@@ -895,9 +895,9 @@ int32_t AbstractCommand::calculateMinSplitSize() const
   return getOption()->getAsInt(PREF_MIN_SPLIT_SIZE);
 }
 
-void AbstractCommand::setRequest(const std::shared_ptr<Request>& request)
+void AbstractCommand::setRequest(std::shared_ptr<Request> request)
 {
-  req_ = request;
+  req_ = std::move(request);
 }
 
 void AbstractCommand::resetRequest() { req_.reset(); }
@@ -907,9 +907,9 @@ void AbstractCommand::setFileEntry(const std::shared_ptr<FileEntry>& fileEntry)
   fileEntry_ = fileEntry;
 }
 
-void AbstractCommand::setSocket(const std::shared_ptr<ISocketCore>& s)
+void AbstractCommand::setSocket(std::shared_ptr<ISocketCore> s)
 {
-  socket_ = s;
+  socket_ = std::move(s);
 }
 
 const std::shared_ptr<DownloadContext>&

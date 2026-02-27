@@ -302,12 +302,10 @@ void DownloadEngine::addRoutineCommand(std::unique_ptr<Command> command)
   routineCommands_.push_back(std::move(command));
 }
 
-void DownloadEngine::poolSocket(const std::string& key,
-                                const SocketPoolEntry& entry)
+void DownloadEngine::poolSocket(const std::string& key, SocketPoolEntry entry)
 {
   A2_LOG_INFO(A2_FMT("Pool socket for {}", key));
-  std::multimap<std::string, SocketPoolEntry>::value_type p(key, entry);
-  socketPool_.insert(p);
+  socketPool_.emplace(key, std::move(entry));
 }
 
 void DownloadEngine::evictSocketPool()
@@ -505,9 +503,11 @@ DownloadEngine::popPooledSocket(std::string& options,
 }
 
 DownloadEngine::SocketPoolEntry::SocketPoolEntry(
-    const std::shared_ptr<SocketCore>& socket, const std::string& options,
+    const std::shared_ptr<SocketCore>& socket, std::string options,
     std::chrono::seconds timeout)
-    : socket_(socket), options_(options), timeout_(std::move(timeout))
+    : socket_(socket),
+      options_(std::move(options)),
+      timeout_(std::move(timeout))
 {
 }
 

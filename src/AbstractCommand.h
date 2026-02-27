@@ -101,7 +101,7 @@ public:
 
   const std::shared_ptr<Request>& getRequest() const { return req_; }
 
-  void setRequest(const std::shared_ptr<Request>& request);
+  void setRequest(std::shared_ptr<Request> request);
 
   // Resets request_. This method is more efficient than
   // setRequest(std::shared_ptr<Request>());
@@ -117,7 +117,7 @@ public:
 
   std::shared_ptr<ISocketCore>& getSocket() { return socket_; }
 
-  void setSocket(const std::shared_ptr<ISocketCore>& s);
+  void setSocket(std::shared_ptr<ISocketCore> s);
 
   void createSocket();
 
