@@ -65,7 +65,8 @@ void DHTFindNodeMessage::doReceivedAction()
   getRoutingTable()->getClosestKNodes(nodes, targetNodeID_);
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createFindNodeReplyMessage(
-          getRemoteNode(), std::move(nodes), getTransactionID()));
+          getRemoteNode(), std::move(nodes), getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTFindNodeMessage::getArgument()

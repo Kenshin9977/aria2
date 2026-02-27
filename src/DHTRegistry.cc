@@ -46,6 +46,10 @@
 
 namespace aria2 {
 
+DHTRegistry::Data::Data() : initialized(false) {}
+
+DHTRegistry::Data::~Data() = default;
+
 DHTRegistry::Data DHTRegistry::data_;
 
 DHTRegistry::Data DHTRegistry::data6_;

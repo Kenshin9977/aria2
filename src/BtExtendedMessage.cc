@@ -50,6 +50,11 @@ namespace aria2 {
 
 const char BtExtendedMessage::NAME[] = "extended";
 
+BtExtendedMessage::BtExtendedMessage()
+    : SimpleBtMessage(ID, NAME), msgLength_(0)
+{
+}
+
 BtExtendedMessage::BtExtendedMessage(
     std::unique_ptr<ExtensionMessage> extensionMessage)
     : SimpleBtMessage(ID, NAME),
@@ -57,6 +62,8 @@ BtExtendedMessage::BtExtendedMessage(
       msgLength_(0)
 {
 }
+
+BtExtendedMessage::~BtExtendedMessage() = default;
 
 std::vector<unsigned char> BtExtendedMessage::createMessage()
 {

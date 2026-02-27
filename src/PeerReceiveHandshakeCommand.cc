@@ -63,6 +63,14 @@ namespace aria2 {
 
 PeerReceiveHandshakeCommand::PeerReceiveHandshakeCommand(
     cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
+    const std::shared_ptr<ISocketCore>& s)
+    : PeerAbstractCommand{cuid, peer, e, s}
+{
+  peerConnection_ = make_unique<PeerConnection>(cuid, getPeer(), getSocket());
+}
+
+PeerReceiveHandshakeCommand::PeerReceiveHandshakeCommand(
+    cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
     const std::shared_ptr<ISocketCore>& s,
     std::unique_ptr<PeerConnection> peerConnection)
     : PeerAbstractCommand{cuid, peer, e, s},

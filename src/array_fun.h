@@ -39,6 +39,7 @@
 
 #include <cstdlib>
 #include <functional>
+#include <type_traits>
 
 namespace aria2 {
 
@@ -66,7 +67,8 @@ public:
 namespace expr {
 
 template <typename L, typename R, typename Op> struct BinExpr {
-  typedef typename Op::result_type value_type;
+  using value_type =
+      std::invoke_result_t<Op, typename L::value_type, typename R::value_type>;
 
   BinExpr(L lhs, R rhs, Op op)
       : lhs(std::move(lhs)), rhs(std::move(rhs)), op(std::move(op))
@@ -95,7 +97,7 @@ BinExpr<L, R, Op> operator|(L lhs, R rhs)
 }
 
 template <typename Arg, typename Op> struct UnExpr {
-  typedef typename Op::result_type value_type;
+  using value_type = std::invoke_result_t<Op, typename Arg::value_type>;
 
   UnExpr(Arg arg, Op op) : arg(std::move(arg)), op(std::move(op)) {}
 
@@ -105,7 +107,7 @@ template <typename Arg, typename Op> struct UnExpr {
   Op op;
 };
 
-template <typename T> struct bit_neg : std::function<T(T)> {
+template <typename T> struct bit_neg {
   T operator()(T t) const { return ~t; }
 };
 

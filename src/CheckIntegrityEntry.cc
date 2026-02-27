@@ -44,6 +44,11 @@
 
 namespace aria2 {
 
+CheckIntegrityEntry::CheckIntegrityEntry(RequestGroup* requestGroup)
+    : RequestGroupEntry{requestGroup}
+{
+}
+
 CheckIntegrityEntry::CheckIntegrityEntry(RequestGroup* requestGroup,
                                          std::unique_ptr<Command> nextCommand)
     : RequestGroupEntry{requestGroup, std::move(nextCommand)}

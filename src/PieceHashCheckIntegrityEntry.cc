@@ -42,6 +42,12 @@
 namespace aria2 {
 
 PieceHashCheckIntegrityEntry::PieceHashCheckIntegrityEntry(
+    RequestGroup* requestGroup)
+    : CheckIntegrityEntry{requestGroup}
+{
+}
+
+PieceHashCheckIntegrityEntry::PieceHashCheckIntegrityEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : CheckIntegrityEntry{requestGroup, std::move(nextCommand)}
 {

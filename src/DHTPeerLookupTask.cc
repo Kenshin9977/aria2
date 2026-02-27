@@ -115,7 +115,8 @@ void DHTPeerLookupTask::onFinish()
         getMessageFactory()->createAnnouncePeerMessage(
             node,
             getTargetID(), // this is infoHash
-            tcpPort_, token));
+            tcpPort_, token),
+        nullptr);
     --num;
   }
 }

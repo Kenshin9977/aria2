@@ -42,7 +42,7 @@ void DHTMessageTrackerEntryTest::testMatch()
 
     DHTMessageTrackerEntry entry(msg1->getRemoteNode(),
                                  msg1->getTransactionID(),
-                                 msg1->getMessageType(), 30_s);
+                                 msg1->getMessageType(), 30_s, nullptr);
 
     CPPUNIT_ASSERT(entry.match(msg1->getTransactionID(),
                                msg1->getRemoteNode()->getIPAddress(),

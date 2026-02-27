@@ -64,9 +64,10 @@ private:
 public:
   DHTMessageTracker();
 
+  ~DHTMessageTracker();
+
   void addMessage(DHTMessage* message, std::chrono::seconds timeout,
-                  std::unique_ptr<DHTMessageCallback> callback =
-                      std::unique_ptr<DHTMessageCallback>{});
+                  std::unique_ptr<DHTMessageCallback> callback);
 
   std::pair<std::unique_ptr<DHTResponseMessage>,
             std::unique_ptr<DHTMessageCallback>>

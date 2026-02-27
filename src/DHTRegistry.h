@@ -74,7 +74,8 @@ private:
 
     std::unique_ptr<DHTMessageFactory> messageFactory;
 
-    Data() : initialized(false) {}
+    Data();
+    ~Data();
   };
 
   static Data data_;

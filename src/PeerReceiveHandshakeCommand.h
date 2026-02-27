@@ -52,10 +52,14 @@ protected:
   virtual bool exitBeforeExecute() CXX11_OVERRIDE;
 
 public:
-  PeerReceiveHandshakeCommand(
-      cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-      const std::shared_ptr<ISocketCore>& s,
-      std::unique_ptr<PeerConnection> peerConnection = nullptr);
+  PeerReceiveHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
+                              DownloadEngine* e,
+                              const std::shared_ptr<ISocketCore>& s);
+
+  PeerReceiveHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
+                              DownloadEngine* e,
+                              const std::shared_ptr<ISocketCore>& s,
+                              std::unique_ptr<PeerConnection> peerConnection);
 
   virtual ~PeerReceiveHandshakeCommand();
 };

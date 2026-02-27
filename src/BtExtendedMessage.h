@@ -48,8 +48,10 @@ private:
   size_t msgLength_;
 
 public:
-  BtExtendedMessage(std::unique_ptr<ExtensionMessage> extensionMessage =
-                        std::unique_ptr<ExtensionMessage>{});
+  BtExtendedMessage();
+  BtExtendedMessage(std::unique_ptr<ExtensionMessage> extensionMessage);
+
+  ~BtExtendedMessage();
 
   static const uint8_t ID = 20;
 

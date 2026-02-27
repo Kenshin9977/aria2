@@ -41,9 +41,9 @@ namespace aria2 {
 
 class StreamCheckIntegrityEntry : public PieceHashCheckIntegrityEntry {
 public:
-  StreamCheckIntegrityEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  StreamCheckIntegrityEntry(RequestGroup* requestGroup);
+  StreamCheckIntegrityEntry(RequestGroup* requestGroup,
+                            std::unique_ptr<Command> nextCommand);
 
   virtual ~StreamCheckIntegrityEntry();
 

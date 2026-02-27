@@ -45,6 +45,12 @@
 namespace aria2 {
 
 ChecksumCheckIntegrityEntry::ChecksumCheckIntegrityEntry(
+    RequestGroup* requestGroup)
+    : CheckIntegrityEntry{requestGroup}, redownload_{false}
+{
+}
+
+ChecksumCheckIntegrityEntry::ChecksumCheckIntegrityEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : CheckIntegrityEntry{requestGroup, std::move(nextCommand)},
       redownload_{false}

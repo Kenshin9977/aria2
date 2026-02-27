@@ -56,7 +56,8 @@ void DHTPingMessage::doReceivedAction()
   // send back ping reply
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createPingReplyMessage(
-          getRemoteNode(), getLocalNode()->getID(), getTransactionID()));
+          getRemoteNode(), getLocalNode()->getID(), getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTPingMessage::getArgument()

@@ -56,9 +56,9 @@ void DHTMessageTrackerTest::testMessageArrived()
   DHTMessageTracker tracker;
   tracker.setRoutingTable(routingTable.get());
   tracker.setMessageFactory(factory.get());
-  tracker.addMessage(m1.get(), DHT_MESSAGE_TIMEOUT);
-  tracker.addMessage(m2.get(), DHT_MESSAGE_TIMEOUT);
-  tracker.addMessage(m3.get(), DHT_MESSAGE_TIMEOUT);
+  tracker.addMessage(m1.get(), DHT_MESSAGE_TIMEOUT, nullptr);
+  tracker.addMessage(m2.get(), DHT_MESSAGE_TIMEOUT, nullptr);
+  tracker.addMessage(m3.get(), DHT_MESSAGE_TIMEOUT, nullptr);
 
   {
     Dict resDict;

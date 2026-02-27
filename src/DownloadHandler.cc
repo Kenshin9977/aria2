@@ -39,6 +39,8 @@
 
 namespace aria2 {
 
+DownloadHandler::~DownloadHandler() = default;
+
 bool DownloadHandler::canHandle(const RequestGroup* requestGroup) const
 {
   return !criteria_ || criteria_->match(requestGroup);

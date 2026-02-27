@@ -81,7 +81,8 @@ void DHTAnnouncePeerMessage::doReceivedAction()
 
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createAnnouncePeerReplyMessage(getRemoteNode(),
-                                                          getTransactionID()));
+                                                          getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTAnnouncePeerMessage::getArgument()

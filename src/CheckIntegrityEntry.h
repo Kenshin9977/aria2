@@ -61,9 +61,9 @@ protected:
                              DownloadEngine* e);
 
 public:
-  CheckIntegrityEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  CheckIntegrityEntry(RequestGroup* requestGroup);
+  CheckIntegrityEntry(RequestGroup* requestGroup,
+                      std::unique_ptr<Command> nextCommand);
 
   virtual ~CheckIntegrityEntry();
 

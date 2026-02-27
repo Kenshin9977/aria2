@@ -55,6 +55,8 @@ DHTMessageTrackerEntry::DHTMessageTrackerEntry(
 {
 }
 
+DHTMessageTrackerEntry::~DHTMessageTrackerEntry() = default;
+
 bool DHTMessageTrackerEntry::isTimeout() const
 {
   return dispatchedTime_.difference(global::wallclock()) >= timeout_;

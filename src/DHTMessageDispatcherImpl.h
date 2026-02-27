@@ -56,16 +56,13 @@ private:
 public:
   DHTMessageDispatcherImpl(const std::shared_ptr<DHTMessageTracker>& tracker);
 
-  virtual void
-  addMessageToQueue(std::unique_ptr<DHTMessage> message,
-                    std::chrono::seconds timeout,
-                    std::unique_ptr<DHTMessageCallback> callback =
-                        std::unique_ptr<DHTMessageCallback>{}) CXX11_OVERRIDE;
+  virtual void addMessageToQueue(
+      std::unique_ptr<DHTMessage> message, std::chrono::seconds timeout,
+      std::unique_ptr<DHTMessageCallback> callback) CXX11_OVERRIDE;
 
-  virtual void
-  addMessageToQueue(std::unique_ptr<DHTMessage> message,
-                    std::unique_ptr<DHTMessageCallback> callback =
-                        std::unique_ptr<DHTMessageCallback>{}) CXX11_OVERRIDE;
+  virtual void addMessageToQueue(std::unique_ptr<DHTMessage> message,
+                                 std::unique_ptr<DHTMessageCallback> callback)
+      CXX11_OVERRIDE;
 
   virtual void sendMessages() CXX11_OVERRIDE;
 

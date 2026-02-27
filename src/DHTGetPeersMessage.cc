@@ -124,7 +124,8 @@ void DHTGetPeersMessage::doReceivedAction()
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createGetPeersReplyMessage(
           getRemoteNode(), std::move(nodes), std::move(peers), token,
-          getTransactionID()));
+          getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTGetPeersMessage::getArgument()

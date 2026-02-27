@@ -50,6 +50,11 @@
 
 namespace aria2 {
 
+StreamFileAllocationEntry::StreamFileAllocationEntry(RequestGroup* requestGroup)
+    : FileAllocationEntry(requestGroup)
+{
+}
+
 StreamFileAllocationEntry::StreamFileAllocationEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : FileAllocationEntry(requestGroup, std::move(nextCommand))

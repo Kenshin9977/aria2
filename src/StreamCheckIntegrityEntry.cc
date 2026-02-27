@@ -42,6 +42,11 @@
 
 namespace aria2 {
 
+StreamCheckIntegrityEntry::StreamCheckIntegrityEntry(RequestGroup* requestGroup)
+    : PieceHashCheckIntegrityEntry(requestGroup)
+{
+}
+
 StreamCheckIntegrityEntry::StreamCheckIntegrityEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : PieceHashCheckIntegrityEntry(requestGroup, std::move(nextCommand))

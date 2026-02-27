@@ -44,9 +44,9 @@ private:
   bool redownload_;
 
 public:
-  ChecksumCheckIntegrityEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  ChecksumCheckIntegrityEntry(RequestGroup* requestGroup);
+  ChecksumCheckIntegrityEntry(RequestGroup* requestGroup,
+                              std::unique_ptr<Command> nextCommand);
 
   virtual ~ChecksumCheckIntegrityEntry();
 

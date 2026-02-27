@@ -43,7 +43,8 @@ public:
                          dispatcher.countMessageInQueue());
 
     auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
-    dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10));
+    dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
+                                 nullptr);
 
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1),
                          dispatcher.countMessageInQueue());
@@ -54,7 +55,7 @@ public:
     DHTMessageDispatcherImpl dispatcher(tracker_);
 
     auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
-    dispatcher.addMessageToQueue(std::move(msg));
+    dispatcher.addMessageToQueue(std::move(msg), nullptr);
 
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1),
                          dispatcher.countMessageInQueue());
@@ -67,8 +68,10 @@ public:
     // Add two non-reply messages
     auto msg1 = make_unique<MockDHTMessage>(localNode_, remoteNode_);
     auto msg2 = make_unique<MockDHTMessage>(localNode_, remoteNode_);
-    dispatcher.addMessageToQueue(std::move(msg1), std::chrono::seconds(10));
-    dispatcher.addMessageToQueue(std::move(msg2), std::chrono::seconds(10));
+    dispatcher.addMessageToQueue(std::move(msg1), std::chrono::seconds(10),
+                                 nullptr);
+    dispatcher.addMessageToQueue(std::move(msg2), std::chrono::seconds(10),
+                                 nullptr);
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(2),
                          dispatcher.countMessageInQueue());
 
@@ -88,7 +91,8 @@ public:
     // Add a reply message
     auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
     msg->setReply(true);
-    dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10));
+    dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
+                                 nullptr);
 
     dispatcher.sendMessages();
 
@@ -107,7 +111,8 @@ public:
 
     for (int i = 0; i < 5; ++i) {
       auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
-      dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10));
+      dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
+                                   nullptr);
     }
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(5),
                          dispatcher.countMessageInQueue());

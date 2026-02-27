@@ -78,14 +78,20 @@ protected:
   virtual bool exitBeforeExecute() CXX11_OVERRIDE;
 
 public:
-  PeerInteractionCommand(
-      cuid_t cuid, RequestGroup* requestGroup,
-      const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-      const std::shared_ptr<BtRuntime>& btRuntime,
-      const std::shared_ptr<PieceStorage>& pieceStorage,
-      const std::shared_ptr<PeerStorage>& peerStorage,
-      const std::shared_ptr<ISocketCore>& s, Seq sequence,
-      std::unique_ptr<PeerConnection> peerConnection = nullptr);
+  PeerInteractionCommand(cuid_t cuid, RequestGroup* requestGroup,
+                         const std::shared_ptr<Peer>& peer, DownloadEngine* e,
+                         const std::shared_ptr<BtRuntime>& btRuntime,
+                         const std::shared_ptr<PieceStorage>& pieceStorage,
+                         const std::shared_ptr<PeerStorage>& peerStorage,
+                         const std::shared_ptr<ISocketCore>& s, Seq sequence);
+
+  PeerInteractionCommand(cuid_t cuid, RequestGroup* requestGroup,
+                         const std::shared_ptr<Peer>& peer, DownloadEngine* e,
+                         const std::shared_ptr<BtRuntime>& btRuntime,
+                         const std::shared_ptr<PieceStorage>& pieceStorage,
+                         const std::shared_ptr<PeerStorage>& peerStorage,
+                         const std::shared_ptr<ISocketCore>& s, Seq sequence,
+                         std::unique_ptr<PeerConnection> peerConnection);
 
   virtual ~PeerInteractionCommand();
 };

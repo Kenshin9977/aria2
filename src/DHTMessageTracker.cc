@@ -56,6 +56,8 @@ DHTMessageTracker::DHTMessageTracker()
 {
 }
 
+DHTMessageTracker::~DHTMessageTracker() = default;
+
 void DHTMessageTracker::addMessage(DHTMessage* message,
                                    std::chrono::seconds timeout,
                                    std::unique_ptr<DHTMessageCallback> callback)

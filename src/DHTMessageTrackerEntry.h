@@ -67,8 +67,9 @@ public:
   DHTMessageTrackerEntry(std::shared_ptr<DHTNode> targetNode,
                          std::string transactionID, std::string messageType,
                          std::chrono::seconds timeout,
-                         std::unique_ptr<DHTMessageCallback> callback =
-                             std::unique_ptr<DHTMessageCallback>{});
+                         std::unique_ptr<DHTMessageCallback> callback);
+
+  ~DHTMessageTrackerEntry();
 
   bool isTimeout() const;
 

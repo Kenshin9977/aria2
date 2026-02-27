@@ -41,9 +41,9 @@ namespace aria2 {
 
 class StreamFileAllocationEntry : public FileAllocationEntry {
 public:
-  StreamFileAllocationEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  StreamFileAllocationEntry(RequestGroup* requestGroup);
+  StreamFileAllocationEntry(RequestGroup* requestGroup,
+                            std::unique_ptr<Command> nextCommand);
 
   virtual ~StreamFileAllocationEntry();
 
