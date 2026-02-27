@@ -63,7 +63,7 @@ enum FeatureType {
 std::string featureSummary();
 
 // Returns the string representation of the given |feature| if it is
-// available in the build. If it is not available, returns NULL.
+// available in the build. If it is not available, returns nullptr.
 const char* strSupportedFeature(int feature);
 
 // Returns summary string of 3rd party libraries directly used by

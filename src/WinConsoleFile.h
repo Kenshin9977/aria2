@@ -48,7 +48,7 @@ public:
   WinConsoleFile(DWORD stdHandle);
   ~WinConsoleFile() override {}
 
-  virtual size_t write(const char* str) override;
+  size_t write(const char* str) override;
   int vprintf(const char* format, va_list va) override;
   bool supportsColor() override;
   int flush() override { return 0; }

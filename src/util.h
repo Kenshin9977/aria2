@@ -315,7 +315,7 @@ std::string iso8859p1ToUtf8(std::string_view src);
 // NUL character after filename in |dest|. This function does not
 // support RFC 2231 Continuation. If the function sees RFC 2231/5987
 // encoding and charset, it stores its first pointer to |*charsetp|
-// and its length in |*charsetlenp|. Otherwise, they are NULL and 0
+// and its length in |*charsetlenp|. Otherwise, they are nullptr and 0
 // respectively.  In RFC 2231/5987 encoding, percent-encoded string
 // will be decoded to original form and stored in |dest|.
 //
@@ -774,12 +774,12 @@ std::string createSafePath(const std::string& filename);
 
 std::string encodeNonUtf8(std::string_view s);
 
-// Create string safely. If str is NULL, returns empty string.
+// Create string safely. If str is nullptr, returns empty string.
 // Otherwise, returns std::string(str).
 std::string makeString(const char* str);
 
 // This function is basically the same with strerror(errNum) but when
-// strerror returns NULL, this function returns empty string.
+// strerror returns nullptr, this function returns empty string.
 std::string safeStrerror(int errNum);
 
 // Parses sequence [first, last) and find name=value pair delimited by

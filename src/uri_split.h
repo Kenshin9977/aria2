@@ -75,7 +75,7 @@ typedef struct {
 /* Splits URI |uri| and stores the results in the |res|. To check
  * particular URI component is available, evaluate |res->field_set|
  * with 1 shifted by the field defined in uri_split_field. If the
- * |res| is NULL, processing is done but the result will not stored.
+ * |res| is nullptr, processing is done but the result will not stored.
  * If the host component of the |uri| is IPv6 numeric address, then
  * USF_IPV6ADDR & res->flags will be nonzero.
  *

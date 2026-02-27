@@ -62,7 +62,7 @@ public:
   // Returns true if name is defined. Otherwise returns false.  Note
   // that even if the value is a empty string, this method returns
   // true.  If option is not defined in this object and parent_ is not
-  // NULL, lookup parent_ to check |pref| is defined.
+  // nullptr, lookup parent_ to check |pref| is defined.
   bool defined(PrefPtr pref) const;
   // Just like defined(), but this function does not lookup parent_.
   bool definedLocal(PrefPtr pref) const;

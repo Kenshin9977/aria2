@@ -243,7 +243,7 @@ namespace {
 void notifyDownloadEvent(DownloadEvent event,
                          const std::shared_ptr<RequestGroup>& group)
 {
-  // Check NULL to make unit test easier.
+  // Check nullptr to make unit test easier.
   if (SingletonHolder<Notifier>::instance()) {
     SingletonHolder<Notifier>::instance()->notifyDownloadEvent(event, group);
   }
