@@ -57,11 +57,11 @@ public:
   DHTBucketRefreshCommand(cuid_t cuid, DownloadEngine* e,
                           std::chrono::seconds interval);
 
-  virtual ~DHTBucketRefreshCommand();
+  ~DHTBucketRefreshCommand() override;
 
-  virtual void preProcess() CXX11_OVERRIDE;
+  void preProcess() override;
 
-  virtual void process() CXX11_OVERRIDE;
+  void process() override;
 
   void setRoutingTable(DHTRoutingTable* routingTable);
 

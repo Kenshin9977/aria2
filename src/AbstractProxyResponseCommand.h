@@ -47,7 +47,7 @@ private:
   std::shared_ptr<HttpConnection> httpConnection_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
   const std::shared_ptr<HttpConnection>& getHttpConnection() const
   {
@@ -61,7 +61,7 @@ public:
       const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
       const std::shared_ptr<ISocketCore>& s);
 
-  virtual ~AbstractProxyResponseCommand();
+  ~AbstractProxyResponseCommand() override;
 
   virtual std::unique_ptr<Command> getNextCommand() = 0;
 };

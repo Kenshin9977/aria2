@@ -70,9 +70,9 @@ private:
   void completeSegment(cuid_t cuid, const std::shared_ptr<Segment>& segment);
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
-  virtual bool noCheck() const CXX11_OVERRIDE;
+  bool noCheck() const override;
 
   virtual bool prepareForNextSegment();
 
@@ -90,7 +90,7 @@ public:
                   RequestGroup* requestGroup, DownloadEngine* e,
                   const std::shared_ptr<ISocketCore>& s,
                   const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer);
-  virtual ~DownloadCommand();
+  ~DownloadCommand() override;
 
   const std::unique_ptr<StreamFilter>& getStreamFilter() const
   {

@@ -30,7 +30,7 @@ namespace {
 class TestDownloadEventListener : public DownloadEventListener {
 public:
   std::vector<DownloadEvent> events;
-  void onEvent(DownloadEvent event, const RequestGroup* group) CXX11_OVERRIDE
+  void onEvent(DownloadEvent event, const RequestGroup* group) override
   {
     events.push_back(event);
   }

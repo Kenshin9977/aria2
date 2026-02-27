@@ -49,9 +49,9 @@ private:
 public:
   IndexBtMessageValidator(const IndexBtMessage* message, size_t numPiece);
 
-  ~IndexBtMessageValidator();
+  ~IndexBtMessageValidator() override;
 
-  virtual void validate() CXX11_OVERRIDE;
+  void validate() override;
 };
 
 } // namespace aria2

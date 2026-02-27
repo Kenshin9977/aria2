@@ -41,9 +41,9 @@ namespace aria2 {
 
 class NullStatCalc : public StatCalc {
 public:
-  virtual ~NullStatCalc() = default;
+  ~NullStatCalc() override = default;
 
-  virtual void calculateStat(const DownloadEngine* e) CXX11_OVERRIDE {}
+  void calculateStat(const DownloadEngine* e) override {}
 };
 
 } // namespace aria2

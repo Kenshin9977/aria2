@@ -61,7 +61,7 @@ struct TorrentAttribute : public ContextAttribute {
   std::vector<std::string> urlList;
 
   TorrentAttribute();
-  ~TorrentAttribute();
+  ~TorrentAttribute() override;
 
   // Don't allow copying
   TorrentAttribute(const TorrentAttribute&) = delete;

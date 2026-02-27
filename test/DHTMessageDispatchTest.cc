@@ -135,9 +135,9 @@ public:
 
   TrackingMockDHTTask() : startupCalled_(false), finished_(false) {}
 
-  virtual void startup() CXX11_OVERRIDE { startupCalled_ = true; }
+  virtual void startup() override { startupCalled_ = true; }
 
-  virtual bool finished() CXX11_OVERRIDE { return finished_; }
+  virtual bool finished() override { return finished_; }
 };
 
 } // namespace

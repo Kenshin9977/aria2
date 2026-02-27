@@ -43,11 +43,10 @@ class BtFileAllocationEntry : public FileAllocationEntry {
 public:
   BtFileAllocationEntry(RequestGroup* requestGroup);
 
-  virtual ~BtFileAllocationEntry();
+  ~BtFileAllocationEntry() override;
 
-  virtual void
-  prepareForNextAction(std::vector<std::unique_ptr<Command>>& commands,
-                       DownloadEngine* e) CXX11_OVERRIDE;
+  void prepareForNextAction(std::vector<std::unique_ptr<Command>>& commands,
+                            DownloadEngine* e) override;
 };
 
 } // namespace aria2

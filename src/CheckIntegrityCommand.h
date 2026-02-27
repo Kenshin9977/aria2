@@ -51,11 +51,11 @@ public:
   CheckIntegrityCommand(cuid_t cuid, RequestGroup* requestGroup,
                         DownloadEngine* e, CheckIntegrityEntry* entry);
 
-  virtual ~CheckIntegrityCommand();
+  ~CheckIntegrityCommand() override;
 
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
-  virtual bool handleException(Exception& e) CXX11_OVERRIDE;
+  bool handleException(Exception& e) override;
 };
 
 } // namespace aria2

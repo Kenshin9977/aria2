@@ -97,9 +97,9 @@ public:
       cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
       const std::shared_ptr<ISocketCore>& s = std::shared_ptr<ISocketCore>());
 
-  virtual ~PeerAbstractCommand();
+  ~PeerAbstractCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

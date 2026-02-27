@@ -48,8 +48,8 @@ private:
   std::unique_ptr<PeerConnection> peerConnection_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool exitBeforeExecute() CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool exitBeforeExecute() override;
 
 public:
   PeerReceiveHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
@@ -61,7 +61,7 @@ public:
                               const std::shared_ptr<ISocketCore>& s,
                               std::unique_ptr<PeerConnection> peerConnection);
 
-  virtual ~PeerReceiveHandshakeCommand();
+  ~PeerReceiveHandshakeCommand() override;
 };
 
 } // namespace aria2

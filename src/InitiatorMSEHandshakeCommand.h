@@ -75,10 +75,10 @@ private:
   void tryNewPeer();
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool prepareForNextPeer(time_t wait) CXX11_OVERRIDE;
-  virtual void onAbort() CXX11_OVERRIDE;
-  virtual bool exitBeforeExecute() CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool prepareForNextPeer(time_t wait) override;
+  void onAbort() override;
+  bool exitBeforeExecute() override;
 
 public:
   InitiatorMSEHandshakeCommand(cuid_t cuid, RequestGroup* requestGroup,
@@ -87,7 +87,7 @@ public:
                                const std::shared_ptr<BtRuntime>& btRuntime,
                                const std::shared_ptr<ISocketCore>& s);
 
-  virtual ~InitiatorMSEHandshakeCommand();
+  ~InitiatorMSEHandshakeCommand() override;
 
   void setPeerStorage(const std::shared_ptr<PeerStorage>& peerStorage);
 

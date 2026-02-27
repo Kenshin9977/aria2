@@ -48,9 +48,9 @@ public:
       const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
       const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
       const std::shared_ptr<ISocketCore>& s);
-  virtual ~FtpTunnelResponseCommand();
+  ~FtpTunnelResponseCommand() override;
 
-  virtual std::unique_ptr<Command> getNextCommand() CXX11_OVERRIDE;
+  std::unique_ptr<Command> getNextCommand() override;
 };
 
 } // namespace aria2

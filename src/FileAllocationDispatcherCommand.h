@@ -49,8 +49,7 @@ public:
                                   DownloadEngine* e);
 
 protected:
-  virtual std::unique_ptr<Command>
-  createCommand(FileAllocationEntry* entry) CXX11_OVERRIDE;
+  std::unique_ptr<Command> createCommand(FileAllocationEntry* entry) override;
 };
 
 } // namespace aria2

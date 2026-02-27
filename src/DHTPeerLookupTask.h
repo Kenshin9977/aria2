@@ -57,19 +57,17 @@ public:
   DHTPeerLookupTask(const std::shared_ptr<DownloadContext>& downloadContext,
                     uint16_t tcpPort);
 
-  virtual void
-  getNodesFromMessage(std::vector<std::shared_ptr<DHTNode>>& nodes,
-                      const DHTGetPeersReplyMessage* message) CXX11_OVERRIDE;
+  void getNodesFromMessage(std::vector<std::shared_ptr<DHTNode>>& nodes,
+                           const DHTGetPeersReplyMessage* message) override;
 
-  virtual void
-  onReceivedInternal(const DHTGetPeersReplyMessage* message) CXX11_OVERRIDE;
+  void onReceivedInternal(const DHTGetPeersReplyMessage* message) override;
 
-  virtual std::unique_ptr<DHTMessage>
-  createMessage(const std::shared_ptr<DHTNode>& remoteNode) CXX11_OVERRIDE;
+  std::unique_ptr<DHTMessage>
+  createMessage(const std::shared_ptr<DHTNode>& remoteNode) override;
 
-  virtual std::unique_ptr<DHTMessageCallback> createCallback() CXX11_OVERRIDE;
+  std::unique_ptr<DHTMessageCallback> createCallback() override;
 
-  virtual void onFinish() CXX11_OVERRIDE;
+  void onFinish() override;
 
   void setPeerStorage(const std::shared_ptr<PeerStorage>& peerStorage);
 };

@@ -49,15 +49,12 @@ public:
   {
     reset();
   }
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return hash->digest_size; }
-  virtual size_t getDigestLength() const CXX11_OVERRIDE
-  {
-    return hash->digest_size;
-  }
-  virtual void reset() CXX11_OVERRIDE { hash->init(ctx_.get()); }
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  virtual size_t getDigestLength() const override { return hash->digest_size; }
+  void reset() override { hash->init(ctx_.get()); }
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const uint8_t*>(data);
     while (length) {
@@ -67,7 +64,7 @@ public:
       bytes += l;
     }
   }
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     hash->digest(ctx_.get(), getDigestLength(), md);
   }

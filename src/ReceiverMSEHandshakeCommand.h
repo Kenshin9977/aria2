@@ -65,15 +65,15 @@ private:
   void createCommand();
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool exitBeforeExecute() CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool exitBeforeExecute() override;
 
 public:
   ReceiverMSEHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
                               DownloadEngine* e,
                               const std::shared_ptr<ISocketCore>& s);
 
-  virtual ~ReceiverMSEHandshakeCommand();
+  ~ReceiverMSEHandshakeCommand() override;
 };
 
 } // namespace aria2

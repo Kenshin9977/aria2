@@ -56,15 +56,15 @@ private:
 public:
   MultiFileAllocationIterator(MultiDiskAdaptor* diskAdaptor);
 
-  virtual ~MultiFileAllocationIterator();
+  ~MultiFileAllocationIterator() override;
 
-  virtual void allocateChunk() CXX11_OVERRIDE;
+  void allocateChunk() override;
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
-  virtual int64_t getCurrentLength() CXX11_OVERRIDE;
+  int64_t getCurrentLength() override;
 
-  virtual int64_t getTotalLength() CXX11_OVERRIDE;
+  int64_t getTotalLength() override;
 
   const DiskWriterEntries& getDiskWriterEntries() const;
 };

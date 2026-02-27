@@ -59,9 +59,9 @@ public:
   DHTReplaceNodeTask(const std::shared_ptr<DHTBucket>& bucket,
                      const std::shared_ptr<DHTNode>& newNode);
 
-  virtual ~DHTReplaceNodeTask();
+  ~DHTReplaceNodeTask() override;
 
-  virtual void startup() CXX11_OVERRIDE;
+  void startup() override;
 
   void onReceived(const DHTPingReplyMessage* message);
 

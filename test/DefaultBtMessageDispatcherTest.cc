@@ -80,22 +80,22 @@ public:
     std::string type;
     MockBtMessage2(EventCheck* evcheck = nullptr) : evcheck{evcheck} {}
 
-    virtual void onQueued() CXX11_OVERRIDE
+    virtual void onQueued() override
     {
       if (evcheck) {
         evcheck->onQueuedCalled = true;
       }
     }
 
-    virtual void send() CXX11_OVERRIDE
+    virtual void send() override
     {
       if (evcheck) {
         evcheck->sendCalled = true;
       }
     }
 
-    virtual void onCancelSendingPieceEvent(
-        const BtCancelSendingPieceEvent& event) CXX11_OVERRIDE
+    virtual void
+    onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event) override
     {
       if (evcheck) {
         evcheck->doCancelActionCalled = true;
@@ -106,8 +106,7 @@ public:
   class MockBtMessageFactory2 : public MockBtMessageFactory {
   public:
     virtual std::unique_ptr<BtCancelMessage>
-    createCancelMessage(size_t index, int32_t begin,
-                        int32_t length) CXX11_OVERRIDE
+    createCancelMessage(size_t index, int32_t begin, int32_t length) override
     {
       return make_unique<BtCancelMessage>(index, begin, length);
     }

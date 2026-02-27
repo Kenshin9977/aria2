@@ -46,9 +46,9 @@ private:
 public:
   DHTBucketRefreshTask();
 
-  virtual ~DHTBucketRefreshTask();
+  ~DHTBucketRefreshTask() override;
 
-  virtual void startup() CXX11_OVERRIDE;
+  void startup() override;
 
   void setForceRefresh(bool forceRefresh);
 };

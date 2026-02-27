@@ -74,17 +74,16 @@ public:
   AdaptiveURISelector(std::shared_ptr<ServerStatMan> serverStatMan,
                       RequestGroup* requestGroup);
 
-  virtual ~AdaptiveURISelector();
+  ~AdaptiveURISelector() override;
 
-  virtual std::string
+  std::string
   select(FileEntry* fileEntry,
-         const std::vector<std::pair<size_t, std::string>>& usedHosts)
-      CXX11_OVERRIDE;
+         const std::vector<std::pair<size_t, std::string>>& usedHosts) override;
 
-  virtual void tuneDownloadCommand(const std::deque<std::string>& uris,
-                                   DownloadCommand* command) CXX11_OVERRIDE;
+  void tuneDownloadCommand(const std::deque<std::string>& uris,
+                           DownloadCommand* command) override;
 
-  virtual void resetCounters() CXX11_OVERRIDE;
+  void resetCounters() override;
 };
 
 } // namespace aria2

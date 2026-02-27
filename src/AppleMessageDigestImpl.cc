@@ -48,12 +48,12 @@ template <size_t dlen, typename ctx_t, int (*init_fn)(ctx_t*),
 class MessageDigestBase : public MessageDigestImpl {
 public:
   MessageDigestBase() { reset(); }
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return dlen; }
-  virtual size_t getDigestLength() const CXX11_OVERRIDE { return dlen; }
-  virtual void reset() CXX11_OVERRIDE { init_fn(&ctx_); }
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  size_t getDigestLength() const override { return dlen; }
+  void reset() override { init_fn(&ctx_); }
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const char*>(data);
     while (length) {
@@ -64,7 +64,7 @@ public:
       bytes += l;
     }
   }
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE { final_fn(md, &ctx_); }
+  void digest(unsigned char* md) override { final_fn(md, &ctx_); }
 
 private:
   ctx_t ctx_;

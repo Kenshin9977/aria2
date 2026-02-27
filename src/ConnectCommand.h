@@ -49,15 +49,15 @@ public:
                  const std::shared_ptr<FileEntry>& fileEntry,
                  RequestGroup* requestGroup, DownloadEngine* e,
                  const std::shared_ptr<ISocketCore>& s);
-  virtual ~ConnectCommand();
+  ~ConnectCommand() override;
   void
   setControlChain(const std::shared_ptr<ControlChain<ConnectCommand*>>& chain);
   void setBackupConnectInfo(const std::shared_ptr<BackupConnectInfo>& info);
   const std::shared_ptr<Request>& getProxyRequest() const;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool noCheck() const CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool noCheck() const override;
 
 private:
   std::shared_ptr<Request> proxyRequest_;

@@ -157,7 +157,7 @@ private:
   std::deque<std::string> cwdDirs_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   FtpNegotiationCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -166,7 +166,7 @@ public:
                         const std::shared_ptr<ISocketCore>& s,
                         Seq seq = SEQ_RECV_GREETING,
                         const std::string& baseWorkingDir = "/");
-  virtual ~FtpNegotiationCommand();
+  ~FtpNegotiationCommand() override;
 };
 
 } // namespace aria2

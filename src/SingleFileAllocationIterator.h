@@ -55,15 +55,15 @@ public:
   SingleFileAllocationIterator(BinaryStream* stream, int64_t offset,
                                int64_t totalLength);
 
-  virtual ~SingleFileAllocationIterator();
+  ~SingleFileAllocationIterator() override;
 
-  virtual void allocateChunk() CXX11_OVERRIDE;
+  void allocateChunk() override;
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
-  virtual int64_t getCurrentLength() CXX11_OVERRIDE { return offset_; }
+  int64_t getCurrentLength() override { return offset_; }
 
-  virtual int64_t getTotalLength() CXX11_OVERRIDE { return totalLength_; }
+  int64_t getTotalLength() override { return totalLength_; }
 
   /**
    * Must be called only once, before calling allocateChunk()

@@ -72,7 +72,7 @@ private:
 public:
   DefaultBtAnnounce(DownloadContext* downloadContext, const Option* option);
 
-  virtual ~DefaultBtAnnounce();
+  ~DefaultBtAnnounce() override;
 
   void setBtRuntime(const std::shared_ptr<BtRuntime>& btRuntime);
 
@@ -98,39 +98,37 @@ public:
 
   bool isCompletedAnnounceReady();
 
-  virtual bool isAnnounceReady() CXX11_OVERRIDE;
+  bool isAnnounceReady() override;
 
-  virtual std::string getAnnounceUrl() CXX11_OVERRIDE;
+  std::string getAnnounceUrl() override;
 
-  virtual std::shared_ptr<UDPTrackerRequest>
+  std::shared_ptr<UDPTrackerRequest>
   createUDPTrackerRequest(const std::string& remoteAddr, uint16_t remotePort,
-                          uint16_t localPort) CXX11_OVERRIDE;
+                          uint16_t localPort) override;
 
-  virtual void announceStart() CXX11_OVERRIDE;
+  void announceStart() override;
 
-  virtual void announceSuccess() CXX11_OVERRIDE;
+  void announceSuccess() override;
 
-  virtual void announceFailure() CXX11_OVERRIDE;
+  void announceFailure() override;
 
-  virtual bool isAllAnnounceFailed() CXX11_OVERRIDE;
+  bool isAllAnnounceFailed() override;
 
-  virtual void resetAnnounce() CXX11_OVERRIDE;
+  void resetAnnounce() override;
 
-  virtual void
-  processAnnounceResponse(const unsigned char* trackerResponse,
-                          size_t trackerResponseLength) CXX11_OVERRIDE;
+  void processAnnounceResponse(const unsigned char* trackerResponse,
+                               size_t trackerResponseLength) override;
 
-  virtual void processUDPTrackerResponse(
-      const std::shared_ptr<UDPTrackerRequest>& req) CXX11_OVERRIDE;
+  void processUDPTrackerResponse(
+      const std::shared_ptr<UDPTrackerRequest>& req) override;
 
-  virtual bool noMoreAnnounce() CXX11_OVERRIDE;
+  bool noMoreAnnounce() override;
 
-  virtual void shuffleAnnounce() CXX11_OVERRIDE;
+  void shuffleAnnounce() override;
 
-  virtual void
-  overrideMinInterval(std::chrono::seconds interval) CXX11_OVERRIDE;
+  void overrideMinInterval(std::chrono::seconds interval) override;
 
-  virtual void setTcpPort(uint16_t port) CXX11_OVERRIDE { tcpPort_ = port; }
+  void setTcpPort(uint16_t port) override { tcpPort_ = port; }
 
   void setRandomizer(Randomizer* randomizer);
 

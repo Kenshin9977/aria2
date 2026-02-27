@@ -69,9 +69,9 @@ public:
       cuid_t cuid, const std::shared_ptr<HttpServer>& httpServer,
       DownloadEngine* e, const std::shared_ptr<SocketCore>& socket);
 
-  virtual ~AbstractHttpServerResponseCommand();
+  ~AbstractHttpServerResponseCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

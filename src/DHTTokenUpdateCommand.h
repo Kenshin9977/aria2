@@ -51,11 +51,11 @@ public:
   DHTTokenUpdateCommand(cuid_t cuid, DownloadEngine* e,
                         std::chrono::seconds interval);
 
-  virtual ~DHTTokenUpdateCommand();
+  ~DHTTokenUpdateCommand() override;
 
-  virtual void preProcess() CXX11_OVERRIDE;
+  void preProcess() override;
 
-  virtual void process() CXX11_OVERRIDE;
+  void process() override;
 
   void setTokenTracker(DHTTokenTracker* tokenTracker);
 };

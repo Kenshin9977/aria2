@@ -67,24 +67,24 @@ class WinTLSContext : public TLSContext {
 public:
   WinTLSContext(TLSSessionSide side, TLSVersion ver);
 
-  virtual ~WinTLSContext();
+  ~WinTLSContext() override;
 
   // private key `keyfile' must be decrypted.
-  virtual bool addCredentialFile(const std::string& certfile,
-                                 const std::string& keyfile) CXX11_OVERRIDE;
+  bool addCredentialFile(const std::string& certfile,
+                         const std::string& keyfile) override;
 
-  virtual bool addSystemTrustedCACerts() CXX11_OVERRIDE { return true; }
+  bool addSystemTrustedCACerts() override { return true; }
 
   // certfile can contain multiple certificates.
-  virtual bool addTrustedCACertFile(const std::string& certfile) CXX11_OVERRIDE;
+  bool addTrustedCACertFile(const std::string& certfile) override;
 
-  virtual bool good() const CXX11_OVERRIDE { return true; }
+  bool good() const override { return true; }
 
-  virtual TLSSessionSide getSide() const CXX11_OVERRIDE { return side_; }
+  TLSSessionSide getSide() const override { return side_; }
 
-  virtual bool getVerifyPeer() const CXX11_OVERRIDE;
+  bool getVerifyPeer() const override;
 
-  virtual void setVerifyPeer(bool verify) CXX11_OVERRIDE;
+  void setVerifyPeer(bool verify) override;
 
   CredHandle* getCredHandle();
 

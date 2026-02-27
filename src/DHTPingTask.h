@@ -59,9 +59,9 @@ private:
 public:
   DHTPingTask(const std::shared_ptr<DHTNode>& remoteNode, int numMaxRetry = 0);
 
-  virtual ~DHTPingTask();
+  ~DHTPingTask() override;
 
-  virtual void startup() CXX11_OVERRIDE;
+  void startup() override;
 
   void onReceived(const DHTPingReplyMessage* message);
 

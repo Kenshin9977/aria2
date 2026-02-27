@@ -52,9 +52,9 @@ private:
 public:
   FillRequestGroupCommand(cuid_t cuid, DownloadEngine* e);
 
-  virtual ~FillRequestGroupCommand();
+  ~FillRequestGroupCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

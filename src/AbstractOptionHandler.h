@@ -61,65 +61,55 @@ public:
                         const std::string& defaultValue = NO_DEFAULT_VALUE,
                         ARG_TYPE argType = REQ_ARG, char shortName = 0);
 
-  virtual ~AbstractOptionHandler();
+  ~AbstractOptionHandler() override;
 
-  virtual void parse(Option& option,
-                     const std::string& arg) const CXX11_OVERRIDE;
+  void parse(Option& option, const std::string& arg) const override;
 
-  virtual bool hasTag(uint32_t tag) const CXX11_OVERRIDE;
+  bool hasTag(uint32_t tag) const override;
 
-  virtual void addTag(uint32_t tag) CXX11_OVERRIDE;
+  void addTag(uint32_t tag) override;
 
-  virtual std::string toTagString() const CXX11_OVERRIDE;
+  std::string toTagString() const override;
 
-  virtual const char* getName() const CXX11_OVERRIDE;
+  const char* getName() const override;
 
-  virtual const char* getDescription() const CXX11_OVERRIDE
-  {
-    return description_;
-  }
+  const char* getDescription() const override { return description_; }
 
-  virtual const std::string& getDefaultValue() const CXX11_OVERRIDE
-  {
-    return defaultValue_;
-  }
+  const std::string& getDefaultValue() const override { return defaultValue_; }
 
-  virtual PrefPtr getPref() const CXX11_OVERRIDE { return pref_; }
+  PrefPtr getPref() const override { return pref_; }
 
-  virtual char getShortName() const CXX11_OVERRIDE { return shortName_; }
+  char getShortName() const override { return shortName_; }
 
-  virtual OptionHandler::ARG_TYPE getArgType() const CXX11_OVERRIDE
-  {
-    return argType_;
-  }
+  OptionHandler::ARG_TYPE getArgType() const override { return argType_; }
 
-  virtual bool isHidden() const CXX11_OVERRIDE;
+  bool isHidden() const override;
 
-  virtual void hide() CXX11_OVERRIDE;
+  void hide() override;
 
-  virtual bool getEraseAfterParse() const CXX11_OVERRIDE;
+  bool getEraseAfterParse() const override;
 
-  virtual void setEraseAfterParse(bool f) CXX11_OVERRIDE;
+  void setEraseAfterParse(bool f) override;
 
-  virtual bool getInitialOption() const CXX11_OVERRIDE;
+  bool getInitialOption() const override;
 
-  virtual void setInitialOption(bool f) CXX11_OVERRIDE;
+  void setInitialOption(bool f) override;
 
-  virtual bool getChangeOption() const CXX11_OVERRIDE;
+  bool getChangeOption() const override;
 
-  virtual void setChangeOption(bool f) CXX11_OVERRIDE;
+  void setChangeOption(bool f) override;
 
-  virtual bool getChangeOptionForReserved() const CXX11_OVERRIDE;
+  bool getChangeOptionForReserved() const override;
 
-  virtual void setChangeOptionForReserved(bool f) CXX11_OVERRIDE;
+  void setChangeOptionForReserved(bool f) override;
 
-  virtual bool getChangeGlobalOption() const CXX11_OVERRIDE;
+  bool getChangeGlobalOption() const override;
 
-  virtual void setChangeGlobalOption(bool f) CXX11_OVERRIDE;
+  void setChangeGlobalOption(bool f) override;
 
-  virtual bool getCumulative() const CXX11_OVERRIDE;
+  bool getCumulative() const override;
 
-  virtual void setCumulative(bool f) CXX11_OVERRIDE;
+  void setCumulative(bool f) override;
 
   enum Flag {
     FLAG_HIDDEN = 1,

@@ -44,8 +44,8 @@ namespace aria2 {
 
 struct HttpProxyRequestConnectChain : public ControlChain<ConnectCommand*> {
   HttpProxyRequestConnectChain() {}
-  virtual ~HttpProxyRequestConnectChain() {}
-  virtual int run(ConnectCommand* t, DownloadEngine* e) CXX11_OVERRIDE
+  ~HttpProxyRequestConnectChain() override {}
+  int run(ConnectCommand* t, DownloadEngine* e) override
   {
     auto c = make_unique<HttpProxyRequestCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),

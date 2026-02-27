@@ -52,8 +52,7 @@ public:
   class MockBtMessageFactory2 : public MockBtMessageFactory {
   public:
     virtual std::unique_ptr<BtRejectMessage>
-    createRejectMessage(size_t index, int32_t begin,
-                        int32_t length) CXX11_OVERRIDE
+    createRejectMessage(size_t index, int32_t begin, int32_t length) override
     {
       return make_unique<BtRejectMessage>(index, begin, length);
     }

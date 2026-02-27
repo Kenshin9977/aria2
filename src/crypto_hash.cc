@@ -742,16 +742,16 @@ protected:
 public:
   SHA224() { reset(); }
 
-  virtual ~SHA224() { reset(); }
+  ~SHA224() override { reset(); }
 
-  virtual void reset()
+  void reset() override
   {
     memset(buffer_.bytes, 0, sizeof(buffer_));
     memcpy(state_.bytes, initvec, sizeof(state_));
     count_ = offset_ = 0;
   }
 
-  virtual inline uint_fast16_t length() const { return 28; }
+  inline uint_fast16_t length() const override { return 28; }
 };
 
 const SHA224::word_t SHA224::initvec[] = {0xc1059ed8, 0x367cd507, 0x3070dd17,
@@ -1007,16 +1007,16 @@ protected:
 public:
   SHA384() { reset(); }
 
-  virtual ~SHA384() { reset(); }
+  ~SHA384() override { reset(); }
 
-  virtual void reset()
+  void reset() override
   {
     memset(buffer_.bytes, 0, sizeof(buffer_));
     memcpy(state_.bytes, initvec, sizeof(state_));
     count_ = offset_ = 0;
   }
 
-  virtual inline uint_fast16_t length() const { return 48; }
+  inline uint_fast16_t length() const override { return 48; }
 };
 
 const SHA384::word_t SHA384::initvec[] = {

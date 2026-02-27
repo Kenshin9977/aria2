@@ -46,10 +46,10 @@ template <class DiskWriterType>
 class AnonDiskWriterFactory : public DiskWriterFactory {
 public:
   AnonDiskWriterFactory() = default;
-  virtual ~AnonDiskWriterFactory() = default;
+  ~AnonDiskWriterFactory() override = default;
 
-  virtual std::unique_ptr<DiskWriter>
-  newDiskWriter(const std::string& filename) CXX11_OVERRIDE
+  std::unique_ptr<DiskWriter>
+  newDiskWriter(const std::string& filename) override
   {
     return make_unique<DiskWriterType>();
   }

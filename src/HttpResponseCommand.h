@@ -81,7 +81,7 @@ private:
                      const Checksum& checksum);
 
 protected:
-  bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
   bool shouldInflateContentEncoding(HttpResponse* httpResponse);
 
@@ -91,7 +91,7 @@ public:
                       RequestGroup* requestGroup,
                       const std::shared_ptr<HttpConnection>& httpConnection,
                       DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
-  ~HttpResponseCommand();
+  ~HttpResponseCommand() override;
 };
 
 } // namespace aria2

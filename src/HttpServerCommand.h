@@ -66,9 +66,9 @@ public:
                     DownloadEngine* e,
                     const std::shared_ptr<SocketCore>& socket);
 
-  virtual ~HttpServerCommand();
+  ~HttpServerCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

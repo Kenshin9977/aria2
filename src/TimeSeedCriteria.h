@@ -51,11 +51,11 @@ private:
 
 public:
   TimeSeedCriteria(std::chrono::seconds duration);
-  virtual ~TimeSeedCriteria();
+  ~TimeSeedCriteria() override;
 
-  virtual void reset() CXX11_OVERRIDE;
+  void reset() override;
 
-  virtual bool evaluate() CXX11_OVERRIDE;
+  bool evaluate() override;
 
   void setDuration(std::chrono::seconds duration)
   {

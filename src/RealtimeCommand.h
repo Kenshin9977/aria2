@@ -56,9 +56,9 @@ protected:
 public:
   RealtimeCommand(cuid_t cuid, RequestGroup* requestGroup, DownloadEngine* e);
 
-  virtual ~RealtimeCommand();
+  ~RealtimeCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   virtual bool executeInternal() = 0;
 

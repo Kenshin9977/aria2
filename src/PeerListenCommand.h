@@ -55,9 +55,9 @@ private:
 public:
   PeerListenCommand(cuid_t cuid, DownloadEngine* e, int family);
 
-  virtual ~PeerListenCommand();
+  ~PeerListenCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   /**
    * Binds port. If successful, the bound port number is assigned to port and

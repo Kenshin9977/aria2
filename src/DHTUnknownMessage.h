@@ -52,22 +52,22 @@ public:
                     const unsigned char* data, size_t length,
                     const std::string& ipaddr, uint16_t port);
 
-  virtual ~DHTUnknownMessage();
+  ~DHTUnknownMessage() override;
 
   // do nothing
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
   // do nothing; we don't use this message as outgoing message.
-  virtual bool send() CXX11_OVERRIDE;
+  bool send() override;
 
   // always return false
-  virtual bool isReply() const CXX11_OVERRIDE;
+  bool isReply() const override;
 
   // returns "unknown"
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const std::string& getMessageType() const override;
 
   // show some sample bytes
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   static const std::string E;
 

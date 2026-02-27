@@ -23,7 +23,7 @@ class PingTestFactory : public MockDHTMessageFactory {
 public:
   virtual std::unique_ptr<DHTPingMessage>
   createPingMessage(const std::shared_ptr<DHTNode>& remoteNode,
-                    const std::string& transactionID = "") CXX11_OVERRIDE
+                    const std::string& transactionID = "") override
   {
     // DHTPingMessage constructor needs localNode, remoteNode, transactionID
     return make_unique<DHTPingMessage>(localNode_, remoteNode, transactionID);

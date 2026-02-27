@@ -62,18 +62,18 @@ public:
     reset();
   }
 
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return ::gcry_md_get_algo_dlen(hash); }
 
-  virtual size_t getDigestLength() const CXX11_OVERRIDE
+  virtual size_t getDigestLength() const override
   {
     return ::gcry_md_get_algo_dlen(hash);
   }
 
-  virtual void reset() CXX11_OVERRIDE { ::gcry_md_reset(ctx_.get()); }
+  void reset() override { ::gcry_md_reset(ctx_.get()); }
 
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const uint8_t*>(data);
     while (length) {
@@ -84,7 +84,7 @@ public:
     }
   }
 
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     ::memcpy(md, gcry_md_read(ctx_.get(), 0), getDigestLength());
   }

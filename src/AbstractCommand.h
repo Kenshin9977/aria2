@@ -232,9 +232,9 @@ public:
       const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer = nullptr,
       bool incNumConnection = true);
 
-  virtual ~AbstractCommand();
+  ~AbstractCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 // Returns proxy URI for given protocol.  If no proxy URI is defined,

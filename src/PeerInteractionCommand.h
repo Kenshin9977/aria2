@@ -71,11 +71,11 @@ private:
   const std::shared_ptr<Option>& getOption() const;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool prepareForNextPeer(time_t wait) CXX11_OVERRIDE;
-  virtual void onAbort() CXX11_OVERRIDE;
-  virtual void onFailure(const Exception& err) CXX11_OVERRIDE;
-  virtual bool exitBeforeExecute() CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool prepareForNextPeer(time_t wait) override;
+  void onAbort() override;
+  void onFailure(const Exception& err) override;
+  bool exitBeforeExecute() override;
 
 public:
   PeerInteractionCommand(cuid_t cuid, RequestGroup* requestGroup,
@@ -93,7 +93,7 @@ public:
                          const std::shared_ptr<ISocketCore>& s, Seq sequence,
                          std::unique_ptr<PeerConnection> peerConnection);
 
-  virtual ~PeerInteractionCommand();
+  ~PeerInteractionCommand() override;
 };
 
 } // namespace aria2

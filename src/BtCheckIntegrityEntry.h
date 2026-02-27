@@ -43,15 +43,13 @@ class BtCheckIntegrityEntry : public PieceHashCheckIntegrityEntry {
 public:
   BtCheckIntegrityEntry(RequestGroup* requestGroup);
 
-  virtual ~BtCheckIntegrityEntry();
+  ~BtCheckIntegrityEntry() override;
 
-  virtual void
-  onDownloadFinished(std::vector<std::unique_ptr<Command>>& commands,
-                     DownloadEngine* e) CXX11_OVERRIDE;
+  void onDownloadFinished(std::vector<std::unique_ptr<Command>>& commands,
+                          DownloadEngine* e) override;
 
-  virtual void
-  onDownloadIncomplete(std::vector<std::unique_ptr<Command>>& commands,
-                       DownloadEngine* e) CXX11_OVERRIDE;
+  void onDownloadIncomplete(std::vector<std::unique_ptr<Command>>& commands,
+                            DownloadEngine* e) override;
 };
 
 } // namespace aria2

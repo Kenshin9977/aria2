@@ -46,12 +46,12 @@ namespace aria2 {
 class WinConsoleFile : public OutputFile {
 public:
   WinConsoleFile(DWORD stdHandle);
-  virtual ~WinConsoleFile() {}
+  ~WinConsoleFile() override {}
 
-  virtual size_t write(const char* str) CXX11_OVERRIDE;
-  virtual int vprintf(const char* format, va_list va) CXX11_OVERRIDE;
-  virtual bool supportsColor() CXX11_OVERRIDE;
-  virtual int flush() CXX11_OVERRIDE { return 0; }
+  virtual size_t write(const char* str) override;
+  int vprintf(const char* format, va_list va) override;
+  bool supportsColor() override;
+  int flush() override { return 0; }
 
 private:
   DWORD stdHandle_;

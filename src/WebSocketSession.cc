@@ -271,7 +271,7 @@ public:
       : Command(cuid), session_{std::move(session)}, msg_{msg}
   {
   }
-  virtual bool execute() CXX11_OVERRIDE
+  bool execute() override
   {
     session_->addTextMessage(msg_, false);
     return true;

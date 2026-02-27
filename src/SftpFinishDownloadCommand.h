@@ -41,16 +41,16 @@ namespace aria2 {
 
 class SftpFinishDownloadCommand : public AbstractCommand {
 protected:
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   SftpFinishDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                             const std::shared_ptr<FileEntry>& fileEntry,
                             RequestGroup* requestGroup, DownloadEngine* e,
                             const std::shared_ptr<ISocketCore>& socket);
-  virtual ~SftpFinishDownloadCommand();
+  ~SftpFinishDownloadCommand() override;
 };
 
 } // namespace aria2

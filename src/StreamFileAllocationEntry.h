@@ -45,11 +45,10 @@ public:
   StreamFileAllocationEntry(RequestGroup* requestGroup,
                             std::unique_ptr<Command> nextCommand);
 
-  virtual ~StreamFileAllocationEntry();
+  ~StreamFileAllocationEntry() override;
 
-  virtual void
-  prepareForNextAction(std::vector<std::unique_ptr<Command>>& commands,
-                       DownloadEngine* e) CXX11_OVERRIDE;
+  void prepareForNextAction(std::vector<std::unique_ptr<Command>>& commands,
+                            DownloadEngine* e) override;
 };
 
 } // namespace aria2

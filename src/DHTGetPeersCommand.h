@@ -76,9 +76,9 @@ public:
   DHTGetPeersCommand(cuid_t cuid, RequestGroup* requestGroup,
                      DownloadEngine* e);
 
-  virtual ~DHTGetPeersCommand();
+  ~DHTGetPeersCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setTaskQueue(DHTTaskQueue* taskQueue);
 

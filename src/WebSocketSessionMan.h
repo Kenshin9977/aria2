@@ -56,12 +56,11 @@ public:
   typedef std::set<std::shared_ptr<WebSocketSession>, RefLess<WebSocketSession>>
       WebSocketSessions;
   WebSocketSessionMan();
-  ~WebSocketSessionMan();
+  ~WebSocketSessionMan() override;
   void addSession(const std::shared_ptr<WebSocketSession>& wsSession);
   void removeSession(const std::shared_ptr<WebSocketSession>& wsSession);
   void addNotification(const std::string& method, const RequestGroup* group);
-  virtual void onEvent(DownloadEvent event,
-                       const RequestGroup* group) CXX11_OVERRIDE;
+  void onEvent(DownloadEvent event, const RequestGroup* group) override;
 
 private:
   WebSocketSessions sessions_;

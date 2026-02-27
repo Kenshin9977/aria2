@@ -47,43 +47,37 @@ private:
 public:
   GrowSegment(const std::shared_ptr<Piece>& piece);
 
-  virtual ~GrowSegment();
+  ~GrowSegment() override;
 
-  virtual bool complete() const CXX11_OVERRIDE { return false; }
+  bool complete() const override { return false; }
 
-  virtual size_t getIndex() const CXX11_OVERRIDE { return 0; }
+  size_t getIndex() const override { return 0; }
 
-  virtual int64_t getPosition() const CXX11_OVERRIDE { return 0; }
+  int64_t getPosition() const override { return 0; }
 
-  virtual int64_t getPositionToWrite() const CXX11_OVERRIDE
-  {
-    return writtenLength_;
-  }
+  int64_t getPositionToWrite() const override { return writtenLength_; }
 
-  virtual int64_t getLength() const CXX11_OVERRIDE { return 0; }
+  int64_t getLength() const override { return 0; }
 
-  virtual int64_t getSegmentLength() const CXX11_OVERRIDE { return 0; }
+  int64_t getSegmentLength() const override { return 0; }
 
-  virtual int64_t getWrittenLength() const CXX11_OVERRIDE
-  {
-    return writtenLength_;
-  }
+  int64_t getWrittenLength() const override { return writtenLength_; }
 
-  virtual void updateWrittenLength(int64_t bytes) CXX11_OVERRIDE;
+  void updateWrittenLength(int64_t bytes) override;
 
-  virtual bool updateHash(int64_t begin, const unsigned char* data,
-                          size_t dataLength) CXX11_OVERRIDE
+  bool updateHash(int64_t begin, const unsigned char* data,
+                  size_t dataLength) override
   {
     return false;
   }
 
-  virtual bool isHashCalculated() const CXX11_OVERRIDE { return false; }
+  bool isHashCalculated() const override { return false; }
 
-  virtual std::string getDigest() CXX11_OVERRIDE;
+  std::string getDigest() override;
 
-  virtual void clear(WrDiskCache* diskCache) CXX11_OVERRIDE;
+  void clear(WrDiskCache* diskCache) override;
 
-  virtual std::shared_ptr<Piece> getPiece() const CXX11_OVERRIDE;
+  std::shared_ptr<Piece> getPiece() const override;
 };
 
 } // namespace aria2

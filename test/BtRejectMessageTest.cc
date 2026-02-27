@@ -38,8 +38,7 @@ public:
     void setRequestSlot(std::unique_ptr<RequestSlot> s) { slot = std::move(s); }
 
     virtual const RequestSlot*
-    getOutstandingRequest(size_t index, int32_t begin,
-                          int32_t length) CXX11_OVERRIDE
+    getOutstandingRequest(size_t index, int32_t begin, int32_t length) override
     {
       if (slot && slot->getIndex() == index && slot->getBegin() == begin &&
           slot->getLength() == length) {
@@ -50,7 +49,7 @@ public:
       }
     }
 
-    virtual void removeOutstandingRequest(const RequestSlot* s) CXX11_OVERRIDE
+    virtual void removeOutstandingRequest(const RequestSlot* s) override
     {
       if (slot->getIndex() == s->getIndex() &&
           slot->getBegin() == s->getBegin() &&

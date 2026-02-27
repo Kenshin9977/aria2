@@ -50,9 +50,9 @@ public:
   ContentTypeRequestGroupCriteria(const char* const* contentTypes,
                                   const char* const* extensions);
 
-  virtual ~ContentTypeRequestGroupCriteria();
+  ~ContentTypeRequestGroupCriteria() override;
 
-  virtual bool match(const RequestGroup* requestGroup) const CXX11_OVERRIDE;
+  bool match(const RequestGroup* requestGroup) const override;
 };
 
 } // namespace aria2

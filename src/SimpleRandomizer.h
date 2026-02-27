@@ -63,12 +63,12 @@ public:
 
   static const std::unique_ptr<SimpleRandomizer>& getInstance();
 
-  virtual ~SimpleRandomizer();
+  ~SimpleRandomizer() override;
 
   /**
    * Returns random number in [0, to).
    */
-  virtual long int getRandomNumber(long int to) CXX11_OVERRIDE;
+  long int getRandomNumber(long int to) override;
 
   void getRandomBytes(unsigned char* buf, size_t len);
 

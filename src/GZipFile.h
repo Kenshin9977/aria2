@@ -45,19 +45,19 @@ namespace aria2 {
 class GZipFile : public IOFile {
 public:
   GZipFile(const char* filename, const char* mode);
-  virtual ~GZipFile();
+  ~GZipFile() override;
 
 protected:
-  virtual size_t onRead(void* ptr, size_t count) CXX11_OVERRIDE;
-  virtual size_t onWrite(const void* ptr, size_t count) CXX11_OVERRIDE;
-  virtual char* onGets(char* s, int size) CXX11_OVERRIDE;
-  virtual int onVprintf(const char* format, va_list va) CXX11_OVERRIDE;
-  virtual int onFlush() CXX11_OVERRIDE;
-  virtual int onClose() CXX11_OVERRIDE;
-  virtual bool onSupportsColor() CXX11_OVERRIDE;
-  virtual bool isError() const CXX11_OVERRIDE;
-  virtual bool isEOF() const CXX11_OVERRIDE;
-  virtual bool isOpen() const CXX11_OVERRIDE;
+  size_t onRead(void* ptr, size_t count) override;
+  size_t onWrite(const void* ptr, size_t count) override;
+  char* onGets(char* s, int size) override;
+  int onVprintf(const char* format, va_list va) override;
+  int onFlush() override;
+  int onClose() override;
+  bool onSupportsColor() override;
+  bool isError() const override;
+  bool isEOF() const override;
+  bool isOpen() const override;
 
 private:
   // Don't allow copying

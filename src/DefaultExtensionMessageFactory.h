@@ -69,8 +69,8 @@ public:
   DefaultExtensionMessageFactory(const std::shared_ptr<Peer>& peer,
                                  ExtensionMessageRegistry* registry);
 
-  virtual std::unique_ptr<ExtensionMessage>
-  createMessage(const unsigned char* data, size_t length) CXX11_OVERRIDE;
+  std::unique_ptr<ExtensionMessage> createMessage(const unsigned char* data,
+                                                  size_t length) override;
 
   void setPeerStorage(PeerStorage* peerStorage);
 

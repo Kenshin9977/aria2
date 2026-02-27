@@ -43,9 +43,9 @@ class DefaultDiskWriter : public AbstractDiskWriter {
 public:
   DefaultDiskWriter(const std::string& filename);
 
-  virtual ~DefaultDiskWriter();
+  ~DefaultDiskWriter() override;
 
-  virtual void initAndOpenFile(int64_t totalLength = 0) CXX11_OVERRIDE;
+  void initAndOpenFile(int64_t totalLength = 0) override;
 };
 
 } // namespace aria2

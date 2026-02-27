@@ -58,13 +58,13 @@ public:
   FileAllocationEntry(RequestGroup* requestGroup,
                       std::unique_ptr<Command> nextCommand);
 
-  ~FileAllocationEntry();
+  ~FileAllocationEntry() override;
 
-  virtual int64_t getCurrentLength() CXX11_OVERRIDE;
+  int64_t getCurrentLength() override;
 
-  virtual int64_t getTotalLength() CXX11_OVERRIDE;
+  int64_t getTotalLength() override;
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
   void allocateChunk();
 

@@ -55,7 +55,7 @@ private:
   std::shared_ptr<HttpConnection> httpConnection_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   HttpRequestCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -63,7 +63,7 @@ public:
                      RequestGroup* requestGroup,
                      const std::shared_ptr<HttpConnection>& httpConnection,
                      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
-  virtual ~HttpRequestCommand();
+  ~HttpRequestCommand() override;
 
   void setProxyRequest(const std::shared_ptr<Request>& proxyRequest);
 };

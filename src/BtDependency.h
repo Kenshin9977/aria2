@@ -53,9 +53,9 @@ public:
   BtDependency(RequestGroup* dependant,
                const std::shared_ptr<RequestGroup>& dependee);
 
-  virtual ~BtDependency();
+  ~BtDependency() override;
 
-  virtual bool resolve() CXX11_OVERRIDE;
+  bool resolve() override;
 };
 
 } // namespace aria2

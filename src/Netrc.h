@@ -63,9 +63,9 @@ public:
   Authenticator(std::string machine, std::string login, std::string password,
                 std::string account);
 
-  virtual ~Authenticator();
+  ~Authenticator() override;
 
-  virtual bool match(const std::string& hostname) const CXX11_OVERRIDE;
+  bool match(const std::string& hostname) const override;
 
   const std::string& getMachine() const { return machine_; }
 
@@ -91,9 +91,9 @@ public:
   DefaultAuthenticator(std::string login, std::string password,
                        std::string account);
 
-  virtual ~DefaultAuthenticator();
+  ~DefaultAuthenticator() override;
 
-  virtual bool match(const std::string& hostname) const CXX11_OVERRIDE;
+  bool match(const std::string& hostname) const override;
 };
 
 class Netrc {

@@ -70,8 +70,8 @@ public:
                            const std::shared_ptr<BackupConnectInfo>& info,
                            Command* mainCommand, RequestGroup* requestGroup,
                            DownloadEngine* e);
-  ~BackupIPv4ConnectCommand();
-  virtual bool execute() CXX11_OVERRIDE;
+  ~BackupIPv4ConnectCommand() override;
+  bool execute() override;
 
 private:
   std::string ipaddr_;

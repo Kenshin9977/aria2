@@ -48,9 +48,9 @@ public:
                           RequestGroup* requestGroup, DownloadEngine* e,
                           const std::shared_ptr<Request>& proxyRequest,
                           const std::shared_ptr<ISocketCore>& s);
-  virtual ~FtpTunnelRequestCommand();
+  ~FtpTunnelRequestCommand() override;
 
-  virtual std::unique_ptr<Command> getNextCommand() CXX11_OVERRIDE;
+  std::unique_ptr<Command> getNextCommand() override;
 };
 
 } // namespace aria2

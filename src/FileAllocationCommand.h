@@ -55,11 +55,11 @@ public:
                         DownloadEngine* e,
                         FileAllocationEntry* fileAllocationEntry);
 
-  virtual ~FileAllocationCommand();
+  ~FileAllocationCommand() override;
 
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
-  virtual bool handleException(Exception& e) CXX11_OVERRIDE;
+  bool handleException(Exception& e) override;
 };
 
 } // namespace aria2

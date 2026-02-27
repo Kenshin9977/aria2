@@ -64,7 +64,7 @@ private:
   void poolConnection() const;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   HttpSkipResponseCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -75,7 +75,7 @@ public:
                           DownloadEngine* e,
                           const std::shared_ptr<ISocketCore>& s);
 
-  virtual ~HttpSkipResponseCommand();
+  ~HttpSkipResponseCommand() override;
 
   void installStreamFilter(std::unique_ptr<StreamFilter> streamFilter);
 

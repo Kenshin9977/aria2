@@ -50,17 +50,17 @@ public:
                   const std::shared_ptr<DHTNode>& remoteNode,
                   const std::string& transactionID = A2STR::NIL);
 
-  virtual ~DHTQueryMessage();
+  ~DHTQueryMessage() override;
 
-  virtual const std::string& getType() const CXX11_OVERRIDE;
+  const std::string& getType() const override;
 
-  virtual void fillMessage(Dict* msgDict) CXX11_OVERRIDE;
+  void fillMessage(Dict* msgDict) override;
 
   virtual std::unique_ptr<Dict> getArgument() = 0;
 
-  virtual bool isReply() const CXX11_OVERRIDE;
+  bool isReply() const override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   static const std::string Q;
 

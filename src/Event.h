@@ -88,9 +88,9 @@ public:
     return command_ == commandEvent.command_;
   }
 
-  virtual int getEvents() const { return events_; }
+  int getEvents() const override { return events_; }
 
-  virtual void processEvents(int events)
+  void processEvents(int events) override
   {
     if ((events_ & events) ||
         ((EventPoll::IEV_ERROR | EventPoll::IEV_HUP) & events)) {
@@ -110,12 +110,12 @@ public:
     }
   }
 
-  virtual void addSelf(SocketEntry* socketEntry) const
+  void addSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->addCommandEvent(*this);
   }
 
-  virtual void removeSelf(SocketEntry* socketEntry) const
+  void removeSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->removeCommandEvent(*this);
   }
@@ -143,9 +143,9 @@ public:
     return *resolver_ == *event.resolver_;
   }
 
-  virtual int getEvents() const { return events_; }
+  int getEvents() const override { return events_; }
 
-  virtual void processEvents(int events)
+  void processEvents(int events) override
   {
     ares_socket_t readfd;
     ares_socket_t writefd;
@@ -167,12 +167,12 @@ public:
     command_->setStatusActive();
   }
 
-  virtual void addSelf(SocketEntry* socketEntry) const
+  void addSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->addADNSEvent(*this);
   }
 
-  virtual void removeSelf(SocketEntry* socketEntry) const
+  void removeSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->removeADNSEvent(*this);
   }

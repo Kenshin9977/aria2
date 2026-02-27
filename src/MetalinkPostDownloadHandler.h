@@ -43,9 +43,8 @@ class MetalinkPostDownloadHandler : public PostDownloadHandler {
 public:
   MetalinkPostDownloadHandler();
 
-  virtual void
-  getNextRequestGroups(std::vector<std::shared_ptr<RequestGroup>>& groups,
-                       RequestGroup* requestGroup) const CXX11_OVERRIDE;
+  void getNextRequestGroups(std::vector<std::shared_ptr<RequestGroup>>& groups,
+                            RequestGroup* requestGroup) const override;
 };
 
 } // namespace aria2

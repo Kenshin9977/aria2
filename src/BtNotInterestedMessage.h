@@ -48,7 +48,7 @@ private:
 
 public:
   BtNotInterestedMessage();
-  virtual ~BtNotInterestedMessage();
+  ~BtNotInterestedMessage() override;
 
   static const uint8_t ID = 3;
 
@@ -57,7 +57,7 @@ public:
   static std::unique_ptr<BtNotInterestedMessage>
   create(const unsigned char* data, size_t dataLength);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
   void setPeerStorage(PeerStorage* peerStorage);
 };

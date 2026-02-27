@@ -120,7 +120,7 @@ public:
   // std::make_shared.
   SocketCore(sock_t sockfd, int sockType);
 
-  ~SocketCore();
+  ~SocketCore() override;
 
   sock_t getSockfd() const override { return sockfd_; }
 

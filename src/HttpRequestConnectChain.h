@@ -46,8 +46,8 @@ namespace aria2 {
 
 struct HttpRequestConnectChain : public ControlChain<ConnectCommand*> {
   HttpRequestConnectChain() {}
-  virtual ~HttpRequestConnectChain() {}
-  virtual int run(ConnectCommand* t, DownloadEngine* e) CXX11_OVERRIDE
+  ~HttpRequestConnectChain() override {}
+  int run(ConnectCommand* t, DownloadEngine* e) override
   {
     auto b = std::make_shared<SocketRecvBuffer>(t->getSocket());
     auto k = std::make_shared<HttpConnection>(t->getCuid(), t->getSocket(), b);

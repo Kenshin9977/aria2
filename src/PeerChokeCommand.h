@@ -56,9 +56,9 @@ private:
 public:
   PeerChokeCommand(cuid_t cuid, DownloadEngine* e);
 
-  virtual ~PeerChokeCommand();
+  ~PeerChokeCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setPeerStorage(const std::shared_ptr<PeerStorage>& peerStorage);
 

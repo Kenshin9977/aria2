@@ -44,13 +44,12 @@ class BitfieldMan;
 class GeomStreamPieceSelector : public StreamPieceSelector {
 public:
   GeomStreamPieceSelector(BitfieldMan* bitfieldMan, double base);
-  virtual ~GeomStreamPieceSelector();
+  ~GeomStreamPieceSelector() override;
 
-  virtual bool select(size_t& index, size_t minSplitSize,
-                      const unsigned char* ignoreBitfield,
-                      size_t length) CXX11_OVERRIDE;
+  bool select(size_t& index, size_t minSplitSize,
+              const unsigned char* ignoreBitfield, size_t length) override;
 
-  virtual void onBitfieldInit() CXX11_OVERRIDE;
+  void onBitfieldInit() override;
 
 private:
   BitfieldMan* bitfieldMan_;

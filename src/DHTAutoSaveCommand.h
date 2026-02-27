@@ -58,11 +58,11 @@ public:
   DHTAutoSaveCommand(cuid_t cuid, DownloadEngine* e, int family,
                      std::chrono::seconds interval);
 
-  virtual ~DHTAutoSaveCommand();
+  ~DHTAutoSaveCommand() override;
 
-  virtual void preProcess() CXX11_OVERRIDE;
+  void preProcess() override;
 
-  virtual void process() CXX11_OVERRIDE;
+  void process() override;
 
   void setLocalNode(const std::shared_ptr<DHTNode>& localNode);
 

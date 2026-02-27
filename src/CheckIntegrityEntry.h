@@ -65,15 +65,15 @@ public:
   CheckIntegrityEntry(RequestGroup* requestGroup,
                       std::unique_ptr<Command> nextCommand);
 
-  virtual ~CheckIntegrityEntry();
+  ~CheckIntegrityEntry() override;
 
-  virtual int64_t getTotalLength() CXX11_OVERRIDE;
+  int64_t getTotalLength() override;
 
-  virtual int64_t getCurrentLength() CXX11_OVERRIDE;
+  int64_t getCurrentLength() override;
 
   virtual void validateChunk();
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
   virtual bool isValidationReady() = 0;
 

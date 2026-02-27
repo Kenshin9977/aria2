@@ -62,9 +62,9 @@ private:
 public:
   DHTInteractionCommand(cuid_t cuid, DownloadEngine* e);
 
-  virtual ~DHTInteractionCommand();
+  ~DHTInteractionCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setReadCheckSocket(const std::shared_ptr<SocketCore>& socket);
 

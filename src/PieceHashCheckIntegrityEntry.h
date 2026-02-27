@@ -45,11 +45,11 @@ public:
   PieceHashCheckIntegrityEntry(RequestGroup* requestGroup,
                                std::unique_ptr<Command> nextCommand);
 
-  virtual ~PieceHashCheckIntegrityEntry();
+  ~PieceHashCheckIntegrityEntry() override;
 
-  virtual bool isValidationReady() CXX11_OVERRIDE;
+  bool isValidationReady() override;
 
-  virtual void initValidator() CXX11_OVERRIDE;
+  void initValidator() override;
 };
 
 } // namespace aria2

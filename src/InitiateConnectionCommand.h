@@ -50,7 +50,7 @@ protected:
    * Using nonblocking mode of socket, this function returns immediately
    * after send connection packet to the server.
    */
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
   // hostname and port are the hostname and port number we are going
   // to connect. If proxy server is used, these values are hostname
@@ -82,7 +82,7 @@ public:
                             const std::shared_ptr<FileEntry>& fileEntry,
                             RequestGroup* requestGroup, DownloadEngine* e);
 
-  virtual ~InitiateConnectionCommand();
+  ~InitiateConnectionCommand() override;
 };
 
 } // namespace aria2

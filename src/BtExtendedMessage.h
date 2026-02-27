@@ -51,7 +51,7 @@ public:
   BtExtendedMessage();
   BtExtendedMessage(std::unique_ptr<ExtensionMessage> extensionMessage);
 
-  ~BtExtendedMessage();
+  ~BtExtendedMessage() override;
 
   static const uint8_t ID = 20;
 
@@ -61,13 +61,13 @@ public:
   create(ExtensionMessageFactory* factory, const std::shared_ptr<Peer>& peer,
          const unsigned char* data, size_t dataLength);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual bool sendPredicate() const CXX11_OVERRIDE;
+  bool sendPredicate() const override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   const std::unique_ptr<ExtensionMessage>& getExtensionMessage() const;
 };

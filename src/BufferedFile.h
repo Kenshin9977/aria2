@@ -46,24 +46,26 @@ class BufferedFile : public IOFile {
 public:
   BufferedFile(const char* filename, const char* mode);
   BufferedFile(FILE* fp);
-  virtual ~BufferedFile();
+  ~BufferedFile() override;
 
 protected:
   // wrapper for fread. Using 1 for 2nd argument of fread.
-  virtual size_t onRead(void* ptr, size_t count) CXX11_OVERRIDE;
+  size_t onRead(void* ptr, size_t count) override;
   // wrapper for fwrite. Using 1 for 2nd argument of fwrite.
-  virtual size_t onWrite(const void* ptr, size_t count) CXX11_OVERRIDE;
+  size_t onWrite(const void* ptr, size_t count) override;
   // wrapper for fgets
-  virtual char* onGets(char* s, int size) CXX11_OVERRIDE;
-  virtual int onVprintf(const char* format, va_list va) CXX11_OVERRIDE;
+
+  char* onGets(char* s, int size) override;
+  int onVprintf(const char* format, va_list va) override;
   // wrapper for fflush
-  virtual int onFlush() CXX11_OVERRIDE;
+  int onFlush() override;
   // wrapper for fclose
-  virtual int onClose() CXX11_OVERRIDE;
-  virtual bool onSupportsColor() CXX11_OVERRIDE;
-  virtual bool isError() const CXX11_OVERRIDE;
-  virtual bool isEOF() const CXX11_OVERRIDE;
-  virtual bool isOpen() const CXX11_OVERRIDE;
+  int onClose() override;
+
+  bool onSupportsColor() override;
+  bool isError() const override;
+  bool isEOF() const override;
+  bool isOpen() const override;
 
 private:
   // Don't allow copying;

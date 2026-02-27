@@ -59,13 +59,12 @@ private:
 public:
   DefaultBtMessageReceiver();
 
-  virtual std::unique_ptr<BtHandshakeMessage>
-  receiveHandshake(bool quickReply = false) CXX11_OVERRIDE;
+  std::unique_ptr<BtHandshakeMessage>
+  receiveHandshake(bool quickReply = false) override;
 
-  virtual std::unique_ptr<BtHandshakeMessage>
-  receiveAndSendHandshake() CXX11_OVERRIDE;
+  std::unique_ptr<BtHandshakeMessage> receiveAndSendHandshake() override;
 
-  virtual std::unique_ptr<BtMessage> receiveMessage() CXX11_OVERRIDE;
+  std::unique_ptr<BtMessage> receiveMessage() override;
 
   void setDownloadContext(DownloadContext* downloadContext);
 

@@ -46,14 +46,13 @@ class DHTNodeLookupTask
 public:
   DHTNodeLookupTask(const unsigned char* targetNodeID);
 
-  virtual void
-  getNodesFromMessage(std::vector<std::shared_ptr<DHTNode>>& nodes,
-                      const DHTFindNodeReplyMessage* message) CXX11_OVERRIDE;
+  void getNodesFromMessage(std::vector<std::shared_ptr<DHTNode>>& nodes,
+                           const DHTFindNodeReplyMessage* message) override;
 
-  virtual std::unique_ptr<DHTMessage>
-  createMessage(const std::shared_ptr<DHTNode>& remoteNode) CXX11_OVERRIDE;
+  std::unique_ptr<DHTMessage>
+  createMessage(const std::shared_ptr<DHTNode>& remoteNode) override;
 
-  virtual std::unique_ptr<DHTMessageCallback> createCallback() CXX11_OVERRIDE;
+  std::unique_ptr<DHTMessageCallback> createCallback() override;
 };
 
 } // namespace aria2
