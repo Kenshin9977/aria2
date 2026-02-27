@@ -231,7 +231,9 @@ aria2c_SOURCES += BtAllowedFastMessageTest.cc\
 	DHTCommandTest.cc\
 	BtPeerIntegrationTest.cc\
 	BtValidatorTest.cc\
-	StreamPieceSelectorTest.cc
+	StreamPieceSelectorTest.cc\
+	DHTMessageDispatchTest.cc\
+	DHTTaskTest.cc
 endif # ENABLE_BITTORRENT
 
 if ENABLE_METALINK
