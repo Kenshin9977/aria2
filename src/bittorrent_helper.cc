@@ -280,8 +280,8 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
       }
       std::string pePath =
           strjoin(pathelem.begin(), pathelem.end(), "/",
-                  std::function<std::string(const std::string&)>(
-                      static_cast<std::string (*)(const std::string&)>(
+                  std::function<std::string(std::string_view)>(
+                      static_cast<std::string (*)(std::string_view)>(
                           util::percentEncode)));
       std::vector<std::string> uris;
       createUri(urlList.begin(), urlList.end(), std::back_inserter(uris),

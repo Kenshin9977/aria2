@@ -572,7 +572,7 @@ void UtilTest2::testPercentEncode()
 void UtilTest2::testPercentEncodeMini()
 {
   CPPUNIT_ASSERT_EQUAL(std::string("%80"),
-                       util::percentEncodeMini({(char)0x80}));
+                       util::percentEncodeMini(std::string({(char)0x80})));
 }
 
 void UtilTest2::testHtmlEscape()

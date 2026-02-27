@@ -216,9 +216,9 @@ std::string replace(const std::string& target, const std::string& oldstr,
 
 std::string percentEncode(const unsigned char* target, size_t len);
 
-std::string percentEncode(const std::string& target);
+std::string percentEncode(std::string_view target);
 
-std::string percentEncodeMini(const std::string& target);
+std::string percentEncodeMini(std::string_view target);
 
 bool inRFC3986ReservedChars(const char c);
 
@@ -240,13 +240,13 @@ std::string percentDecode(std::string::const_iterator first,
 
 std::string torrentPercentEncode(const unsigned char* target, size_t len);
 
-std::string torrentPercentEncode(const std::string& target);
+std::string torrentPercentEncode(std::string_view target);
 
 std::string toHex(const unsigned char* src, size_t len);
 
 std::string toHex(const char* src, size_t len);
 
-std::string toHex(const std::string& src);
+std::string toHex(std::string_view src);
 
 unsigned int hexCharToUInt(unsigned char ch);
 
@@ -278,14 +278,14 @@ std::string secfmt(time_t sec);
 std::expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
 
 // Valid range: [0, INT32_MAX]
-bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base = 10);
+bool parseUIntNoThrow(uint32_t& res, std::string_view s, int base = 10);
 
 std::expected<int64_t, std::string> parseLLInt(std::string_view s,
                                                int base = 10);
 
 std::expected<double, std::string> parseDouble(std::string_view s);
 
-SegList<int> parseIntSegments(const std::string& src);
+SegList<int> parseIntSegments(std::string_view src);
 
 // Parses string which specifies the range of piece index for higher
 // priority and appends those indexes into result.  The input string
@@ -306,7 +306,7 @@ void parsePrioritizePieceRange(
 
 // Converts ISO/IEC 8859-1 string src to utf-8.
 std::string iso8859p1ToUtf8(const char* src, size_t len);
-std::string iso8859p1ToUtf8(const std::string& src);
+std::string iso8859p1ToUtf8(std::string_view src);
 
 // Parses Content-Disposition header field value |in| with its length
 // |len| in a manner conforming to RFC 6266 and extracts filename
@@ -360,7 +360,7 @@ std::string getConfigFile();
 
 std::string getDHTFile(bool ipv6);
 
-int64_t getRealSize(const std::string& sizeWithUnit);
+int64_t getRealSize(std::string_view sizeWithUnit);
 
 std::string abbrevSize(int64_t size);
 
@@ -455,7 +455,7 @@ void* allocateAlignedMemory(size_t alignment, size_t size);
 
 Endpoint getNumericNameInfo(const struct sockaddr* sockaddr, socklen_t len);
 
-std::string htmlEscape(const std::string& src);
+std::string htmlEscape(std::string_view src);
 
 // Joins path element specified in [first, last).  If ".." is found,
 // it eats the previous element if it exists.  If "." is found, it
@@ -482,7 +482,7 @@ std::string joinPath(InputIterator first, InputIterator last)
 
 // Parses INDEX=PATH format string. INDEX must be an unsigned
 // integer.
-std::pair<size_t, std::string> parseIndexPath(const std::string& line);
+std::pair<size_t, std::string> parseIndexPath(std::string_view line);
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i);
 
@@ -733,7 +733,7 @@ std::string applyDir(const std::string& dir, const std::string& relPath);
 // should be non-percent-encoded basename.  Currently, this function
 // replaces '/' with '_' and result string is passed to escapePath()
 // function and its result is returned.
-std::string fixTaintedBasename(const std::string& src);
+std::string fixTaintedBasename(std::string_view src);
 
 // Generates 20 bytes random key and store it to the address pointed
 // by key.  Caller must allocate at least 20 bytes for generated key.
@@ -745,12 +745,12 @@ bool inPrivateAddress(std::string_view ipv4addr);
 // Returns true if s contains directory traversal path component such
 // as '..' or it contains null or control character which may fool
 // user.
-bool detectDirTraversal(const std::string& s);
+bool detectDirTraversal(std::string_view s);
 
 // Replaces null(0x00) and control character(0x01-0x1f) with '_'. If
 // __MINGW32__ is defined, following characters are also replaced with
 // '_': '"', '*', ':', '<', '>', '?', '\', '|'.
-std::string escapePath(const std::string& s);
+std::string escapePath(std::string_view s);
 
 // Returns true if ip1 and ip2 are in the same CIDR block.  ip1 and
 // ip2 must be numeric IPv4 or IPv6 address. If either of them or both
@@ -772,7 +772,7 @@ std::string createSafePath(const std::string& dir, const std::string& filename);
 
 std::string createSafePath(const std::string& filename);
 
-std::string encodeNonUtf8(const std::string& s);
+std::string encodeNonUtf8(std::string_view s);
 
 // Create string safely. If str is NULL, returns empty string.
 // Otherwise, returns std::string(str).
@@ -850,13 +850,13 @@ template <typename T> std::shared_ptr<T> copy(const std::shared_ptr<T>& a)
 //
 // * noProxyDomainMatch("aria2.sf.net", ".sf.net") returns true.
 // * noProxyDomainMatch("sf.net", ".sf.net") returns false.
-bool noProxyDomainMatch(const std::string& hostname, const std::string& domain);
+bool noProxyDomainMatch(std::string_view hostname, std::string_view domain);
 
 // Checks hostname matches pattern as described in RFC 6125.
-bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname);
+bool tlsHostnameMatch(std::string_view pattern, std::string_view hostname);
 
 #ifdef ENABLE_SSL
-TLSVersion toTLSVersion(const std::string& ver);
+TLSVersion toTLSVersion(std::string_view ver);
 #endif // ENABLE_SSL
 
 #ifdef __MINGW32__
