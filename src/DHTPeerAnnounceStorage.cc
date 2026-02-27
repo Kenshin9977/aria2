@@ -113,10 +113,10 @@ void DHTPeerAnnounceStorage::handleTimeout()
 {
   A2_LOG_DEBUG(fmt("Now purge peer announces(%lu entries) which are timed out.",
                    static_cast<unsigned long>(entries_.size())));
-  std::for_each(std::begin(entries_), std::end(entries_),
-                [](const std::shared_ptr<DHTPeerAnnounceEntry>& e) {
-                  e->removeStalePeerAddrEntry(DHT_PEER_ANNOUNCE_PURGE_INTERVAL);
-                });
+  std::ranges::for_each(
+      entries_, [](const std::shared_ptr<DHTPeerAnnounceEntry>& e) {
+        e->removeStalePeerAddrEntry(DHT_PEER_ANNOUNCE_PURGE_INTERVAL);
+      });
 
   for (auto i = std::begin(entries_); i != std::end(entries_);) {
     if ((*i)->empty()) {

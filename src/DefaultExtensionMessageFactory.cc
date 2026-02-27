@@ -111,7 +111,7 @@ DefaultExtensionMessageFactory::createMessage(const unsigned char* data,
                               static_cast<unsigned long>(length)));
       }
       size_t end;
-      auto decoded = bencode2::decode(data + 1, length - 1, end);
+      auto decoded = bencode2::decode({data + 1, length - 1}, end);
       const Dict* dict = downcast<Dict>(decoded);
       if (!dict) {
         throw DL_ABORT_EX("Bad ut_metadata: dictionary not found");

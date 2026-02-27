@@ -169,7 +169,7 @@ HandshakeExtensionMessage::create(const unsigned char* data, size_t length)
   }
   A2_LOG_DEBUG(fmt("Creating HandshakeExtensionMessage from %s",
                    util::percentEncode(data, length).c_str()));
-  auto decoded = bencode2::decode(data + 1, length - 1);
+  auto decoded = bencode2::decode({data + 1, length - 1});
   const Dict* dict = downcast<Dict>(decoded);
   if (!dict) {
     throw DL_ABORT_EX(

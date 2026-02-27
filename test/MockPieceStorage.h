@@ -4,6 +4,7 @@
 #include "PieceStorage.h"
 
 #include <algorithm>
+#include <span>
 
 #include "BitfieldMan.h"
 #include "FatalException.h"
@@ -181,10 +182,9 @@ public:
     return bitfieldMan->getBitfield();
   }
 
-  virtual void setBitfield(const unsigned char* bitfield,
-                           size_t bitfieldLength) override
+  virtual void setBitfield(std::span<const unsigned char> bitfield) override
   {
-    bitfieldMan->setBitfield(bitfield, bitfieldLength);
+    bitfieldMan->setBitfield(bitfield);
   }
 
   virtual size_t getBitfieldLength() override
@@ -266,19 +266,18 @@ public:
 
   virtual void addPieceStats(size_t index) override {}
 
-  virtual void addPieceStats(const unsigned char* bitfield,
-                             size_t bitfieldLength) override
+  virtual void addPieceStats(std::span<const unsigned char> bitfield) override
   {
   }
 
-  virtual void subtractPieceStats(const unsigned char* bitfield,
-                                  size_t bitfieldLength) override
+  virtual void
+  subtractPieceStats(std::span<const unsigned char> bitfield) override
   {
   }
 
-  virtual void updatePieceStats(const unsigned char* newBitfield,
-                                size_t newBitfieldLength,
-                                const unsigned char* oldBitfield) override
+  virtual void
+  updatePieceStats(std::span<const unsigned char> newBitfield,
+                   std::span<const unsigned char> oldBitfield) override
   {
   }
 

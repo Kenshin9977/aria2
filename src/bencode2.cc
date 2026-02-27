@@ -47,25 +47,28 @@ namespace aria2 {
 
 namespace bencode2 {
 
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len)
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data)
 {
   size_t end;
-  return decode(data, len, end);
+  return decode(data, end);
 }
 
 std::unique_ptr<ValueBase> decode(const std::string& data)
 {
   size_t end;
-  return decode(reinterpret_cast<const unsigned char*>(data.c_str()),
-                data.size(), end);
+  return decode(
+      std::span<const unsigned char>(
+          reinterpret_cast<const unsigned char*>(data.c_str()), data.size()),
+      end);
 }
 
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len,
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data,
                                   size_t& end)
 {
   ssize_t error;
   bittorrent::ValueBaseBencodeParser parser;
-  auto res = parser.parseFinal(reinterpret_cast<const char*>(data), len, error);
+  auto res = parser.parseFinal(reinterpret_cast<const char*>(data.data()),
+                               data.size(), error);
   if (error < 0) {
     throw DL_ABORT_EX2(
         fmt("Bencode decoding failed: error=%d", static_cast<int>(error)),

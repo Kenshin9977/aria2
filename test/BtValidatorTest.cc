@@ -34,7 +34,7 @@ public:
     // numPiece=8 means 1-byte bitfield
     BtBitfieldMessage msg;
     auto bf = std::vector<unsigned char>(1, 0xFF);
-    msg.setBitfield(bf.data(), bf.size());
+    msg.setBitfield({bf.data(), bf.size()});
     BtBitfieldMessageValidator v(&msg, 8);
     v.validate();
   }
@@ -44,7 +44,7 @@ public:
     // numPiece=8 needs 1 byte, but we provide 2 bytes
     BtBitfieldMessage msg;
     auto bf = std::vector<unsigned char>(2, 0xFF);
-    msg.setBitfield(bf.data(), bf.size());
+    msg.setBitfield({bf.data(), bf.size()});
     BtBitfieldMessageValidator v(&msg, 8);
     try {
       v.validate();

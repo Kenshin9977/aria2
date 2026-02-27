@@ -60,11 +60,11 @@ void BtHaveAllMessage::doReceivedAction()
   if (isMetadataGetMode()) {
     return;
   }
-  getPieceStorage()->subtractPieceStats(getPeer()->getBitfield(),
-                                        getPeer()->getBitfieldLength());
+  getPieceStorage()->subtractPieceStats(
+      {getPeer()->getBitfield(), getPeer()->getBitfieldLength()});
   getPeer()->setAllBitfield();
-  getPieceStorage()->addPieceStats(getPeer()->getBitfield(),
-                                   getPeer()->getBitfieldLength());
+  getPieceStorage()->addPieceStats(
+      {getPeer()->getBitfield(), getPeer()->getBitfieldLength()});
   if (getPeer()->isSeeder() && getPieceStorage()->downloadFinished()) {
     throw DL_ABORT_EX(MSG_GOOD_BYE_SEEDER);
   }

@@ -151,10 +151,10 @@ int32_t BitfieldMan::getBlockLength(size_t index) const
   }
 }
 
-bool BitfieldMan::hasMissingPiece(const unsigned char* peerBitfield,
-                                  size_t length) const
+bool BitfieldMan::hasMissingPiece(
+    std::span<const unsigned char> peerBitfield) const
 {
-  if (bitfieldLength_ != length) {
+  if (bitfieldLength_ != peerBitfield.size()) {
     return false;
   }
   bool retval = false;
@@ -297,22 +297,20 @@ getSparseMissingUnusedIndex(int32_t minSplitSize, const Array& bitfield,
 }
 } // namespace
 
-std::optional<size_t>
-BitfieldMan::getSparseMissingUnusedIndex(int32_t minSplitSize,
-                                         const unsigned char* ignoreBitfield,
-                                         size_t ignoreBitfieldLength) const
+std::optional<size_t> BitfieldMan::getSparseMissingUnusedIndex(
+    int32_t minSplitSize, std::span<const unsigned char> ignoreBitfield) const
 {
   if (filterEnabled_) {
     return aria2::getSparseMissingUnusedIndex(
         minSplitSize,
-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
-            array(useBitfield_),
+        array(ignoreBitfield.data()) | ~array(filterBitfield_) |
+            array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
   else {
     return aria2::getSparseMissingUnusedIndex(
         minSplitSize,
-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+        array(ignoreBitfield.data()) | array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
 }
@@ -353,20 +351,20 @@ getGeomMissingUnusedIndex(int32_t minSplitSize, const Array& bitfield,
 } // namespace
 
 std::optional<size_t> BitfieldMan::getGeomMissingUnusedIndex(
-    int32_t minSplitSize, const unsigned char* ignoreBitfield,
-    size_t ignoreBitfieldLength, double base, size_t offsetIndex) const
+    int32_t minSplitSize, std::span<const unsigned char> ignoreBitfield,
+    double base, size_t offsetIndex) const
 {
   if (filterEnabled_) {
     return aria2::getGeomMissingUnusedIndex(
         minSplitSize,
-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
-            array(useBitfield_),
+        array(ignoreBitfield.data()) | ~array(filterBitfield_) |
+            array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_, base, offsetIndex);
   }
   else {
     return aria2::getGeomMissingUnusedIndex(
         minSplitSize,
-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+        array(ignoreBitfield.data()) | array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_, base, offsetIndex);
   }
 }
@@ -415,42 +413,40 @@ getInorderMissingUnusedIndex(size_t startIndex, size_t lastIndex,
 }
 } // namespace
 
-std::optional<size_t>
-BitfieldMan::getInorderMissingUnusedIndex(int32_t minSplitSize,
-                                          const unsigned char* ignoreBitfield,
-                                          size_t ignoreBitfieldLength) const
+std::optional<size_t> BitfieldMan::getInorderMissingUnusedIndex(
+    int32_t minSplitSize, std::span<const unsigned char> ignoreBitfield) const
 {
   if (filterEnabled_) {
     return aria2::getInorderMissingUnusedIndex(
         0, blocks_, minSplitSize,
-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
-            array(useBitfield_),
+        array(ignoreBitfield.data()) | ~array(filterBitfield_) |
+            array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
   else {
     return aria2::getInorderMissingUnusedIndex(
         0, blocks_, minSplitSize,
-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+        array(ignoreBitfield.data()) | array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
 }
 
 std::optional<size_t> BitfieldMan::getInorderMissingUnusedIndex(
     size_t startIndex, size_t endIndex, int32_t minSplitSize,
-    const unsigned char* ignoreBitfield, size_t ignoreBitfieldLength) const
+    std::span<const unsigned char> ignoreBitfield) const
 {
   endIndex = std::min(endIndex, blocks_);
   if (filterEnabled_) {
     return aria2::getInorderMissingUnusedIndex(
         startIndex, endIndex, minSplitSize,
-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
-            array(useBitfield_),
+        array(ignoreBitfield.data()) | ~array(filterBitfield_) |
+            array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
   else {
     return aria2::getInorderMissingUnusedIndex(
         startIndex, endIndex, minSplitSize,
-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+        array(ignoreBitfield.data()) | array(bitfield_) | array(useBitfield_),
         useBitfield_, blockLength_, blocks_);
   }
 }
@@ -484,45 +480,44 @@ bool BitfieldMan::getAllMissingIndexes(unsigned char* misbitfield,
   }
 }
 
-bool BitfieldMan::getAllMissingIndexes(unsigned char* misbitfield, size_t len,
-                                       const unsigned char* peerBitfield,
-                                       size_t peerBitfieldLength) const
+bool BitfieldMan::getAllMissingIndexes(
+    unsigned char* misbitfield, size_t len,
+    std::span<const unsigned char> peerBitfield) const
 {
   assert(len == bitfieldLength_);
-  if (bitfieldLength_ != peerBitfieldLength) {
+  if (bitfieldLength_ != peerBitfield.size()) {
     return false;
   }
   if (filterEnabled_) {
     return copyBitfield(misbitfield,
-                        ~array(bitfield_) & array(peerBitfield) &
+                        ~array(bitfield_) & array(peerBitfield.data()) &
                             array(filterBitfield_),
                         blocks_);
   }
   else {
-    return copyBitfield(misbitfield, ~array(bitfield_) & array(peerBitfield),
-                        blocks_);
+    return copyBitfield(
+        misbitfield, ~array(bitfield_) & array(peerBitfield.data()), blocks_);
   }
 }
 
-bool BitfieldMan::getAllMissingUnusedIndexes(unsigned char* misbitfield,
-                                             size_t len,
-                                             const unsigned char* peerBitfield,
-                                             size_t peerBitfieldLength) const
+bool BitfieldMan::getAllMissingUnusedIndexes(
+    unsigned char* misbitfield, size_t len,
+    std::span<const unsigned char> peerBitfield) const
 {
   assert(len == bitfieldLength_);
-  if (bitfieldLength_ != peerBitfieldLength) {
+  if (bitfieldLength_ != peerBitfield.size()) {
     return false;
   }
   if (filterEnabled_) {
     return copyBitfield(misbitfield,
                         ~array(bitfield_) & ~array(useBitfield_) &
-                            array(peerBitfield) & array(filterBitfield_),
+                            array(peerBitfield.data()) & array(filterBitfield_),
                         blocks_);
   }
   else {
     return copyBitfield(misbitfield,
                         ~array(bitfield_) & ~array(useBitfield_) &
-                            array(peerBitfield),
+                            array(peerBitfield.data()),
                         blocks_);
   }
 }
@@ -532,19 +527,20 @@ size_t BitfieldMan::countMissingBlock() const { return cachedNumMissingBlock_; }
 size_t BitfieldMan::countMissingBlockNow() const
 {
   if (filterEnabled_) {
-    return bitfield::countSetBit(filterBitfield_, blocks_) -
+    return bitfield::countSetBit({filterBitfield_, bitfieldLength_}, blocks_) -
            bitfield::countSetBitSlow(array(bitfield_) & array(filterBitfield_),
                                      blocks_);
   }
   else {
-    return blocks_ - bitfield::countSetBit(bitfield_, blocks_);
+    return blocks_ -
+           bitfield::countSetBit({bitfield_, bitfieldLength_}, blocks_);
   }
 }
 
 size_t BitfieldMan::countFilteredBlockNow() const
 {
   if (filterEnabled_) {
-    return bitfield::countSetBit(filterBitfield_, blocks_);
+    return bitfield::countSetBit({filterBitfield_, bitfieldLength_}, blocks_);
   }
   else {
     return 0;
@@ -653,13 +649,12 @@ bool BitfieldMan::isUseBitSet(size_t index) const
   return bitfield::test(useBitfield_, blocks_, index);
 }
 
-void BitfieldMan::setBitfield(const unsigned char* bitfield,
-                              size_t bitfieldLength)
+void BitfieldMan::setBitfield(std::span<const unsigned char> bitfield)
 {
-  if (bitfieldLength_ == 0 || bitfieldLength_ != bitfieldLength) {
+  if (bitfieldLength_ == 0 || bitfieldLength_ != bitfield.size()) {
     return;
   }
-  std::copy_n(bitfield, bitfieldLength_, bitfield_);
+  std::copy_n(bitfield.data(), bitfieldLength_, bitfield_);
   std::fill_n(useBitfield_, bitfieldLength_, 0);
   updateCache();
 }
@@ -777,7 +772,8 @@ int64_t BitfieldMan::getFilteredTotalLengthNow() const
   if (!filterBitfield_) {
     return 0;
   }
-  size_t filteredBlocks = bitfield::countSetBit(filterBitfield_, blocks_);
+  size_t filteredBlocks =
+      bitfield::countSetBit({filterBitfield_, bitfieldLength_}, blocks_);
   if (filteredBlocks == 0) {
     return 0;
   }
@@ -822,7 +818,10 @@ int64_t BitfieldMan::getCompletedLength(bool useFilter) const
                                   &bitfield::countSetBitSlow<decltype(arr)>);
   }
   else {
-    return computeCompletedLength(bitfield_, this, &bitfield::countSetBit);
+    return computeCompletedLength(
+        bitfield_, this, [this](const unsigned char* bf, size_t nbits) {
+          return bitfield::countSetBit({bf, bitfieldLength_}, nbits);
+        });
   }
 }
 

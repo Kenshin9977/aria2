@@ -555,7 +555,7 @@ void loadFromMemory(const unsigned char* content, size_t length,
                     const std::string& defaultName,
                     const std::string& overrideName)
 {
-  processRootDictionary(ctx, bencode2::decode(content, length).get(), option,
+  processRootDictionary(ctx, bencode2::decode({content, length}).get(), option,
                         defaultName, overrideName, std::vector<std::string>());
 }
 
@@ -566,7 +566,7 @@ void loadFromMemory(const unsigned char* content, size_t length,
                     const std::string& defaultName,
                     const std::string& overrideName)
 {
-  processRootDictionary(ctx, bencode2::decode(content, length).get(), option,
+  processRootDictionary(ctx, bencode2::decode({content, length}).get(), option,
                         defaultName, overrideName, uris);
 }
 
@@ -665,8 +665,7 @@ std::vector<size_t> computeFastSet(const std::string& ipaddr, size_t numPieces,
       memcpy(&ny, x + j, 4);
       uint32_t y = ntohl(ny);
       size_t index = y % numPieces;
-      if (std::find(std::begin(fastSet), std::end(fastSet), index) ==
-          std::end(fastSet)) {
+      if (std::ranges::find(fastSet, index) == std::end(fastSet)) {
 
         fastSet.push_back(index);
       }

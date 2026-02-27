@@ -331,7 +331,7 @@ void DefaultBtProgressInfoFile::load()
   auto savedBitfield = make_unique<unsigned char[]>((size_t)bitfieldLength);
   READ_CHECK(fp, savedBitfield.get(), bitfieldLength);
   if (pieceLength == static_cast<uint32_t>(dctx_->getPieceLength())) {
-    pieceStorage_->setBitfield(savedBitfield.get(), bitfieldLength);
+    pieceStorage_->setBitfield({savedBitfield.get(), bitfieldLength});
 
     uint32_t numInFlightPiece;
     READ_CHECK(fp, &numInFlightPiece, sizeof(numInFlightPiece));
@@ -372,7 +372,7 @@ void DefaultBtProgressInfoFile::load()
       }
       auto pieceBitfield = make_unique<unsigned char[]>((size_t)bitfieldLength);
       READ_CHECK(fp, pieceBitfield.get(), bitfieldLength);
-      piece->setBitfield(pieceBitfield.get(), bitfieldLength);
+      piece->setBitfield({pieceBitfield.get(), bitfieldLength});
       piece->setHashType(dctx_->getPieceHashType());
 
       inFlightPieces.push_back(piece);
@@ -386,7 +386,7 @@ void DefaultBtProgressInfoFile::load()
       numInFlightPiece = ntohl(numInFlightPiece);
     }
     BitfieldMan src(pieceLength, totalLength);
-    src.setBitfield(savedBitfield.get(), bitfieldLength);
+    src.setBitfield({savedBitfield.get(), bitfieldLength});
     if ((src.getCompletedLength() || numInFlightPiece) &&
         !option_->getAsBool(PREF_ALLOW_PIECE_LENGTH_CHANGE)) {
       throw DOWNLOAD_FAILURE_EXCEPTION2(
@@ -397,7 +397,7 @@ void DefaultBtProgressInfoFile::load()
     }
     BitfieldMan dest(dctx_->getPieceLength(), totalLength);
     util::convertBitfield(&dest, &src);
-    pieceStorage_->setBitfield(dest.getBitfield(), dest.getBitfieldLength());
+    pieceStorage_->setBitfield({dest.getBitfield(), dest.getBitfieldLength()});
   }
   A2_LOG_INFO(MSG_LOADED_SEGMENT_FILE);
 }

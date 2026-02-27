@@ -32,28 +32,28 @@ void GeomStreamPieceSelectorTest::testOnBitfieldInit()
   memset(igbf, 0, 3);
   // 11111|11111|00000|00000
   {
-    auto r = sel.select(20_k, igbf, sizeof(igbf));
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     CPPUNIT_ASSERT_EQUAL((size_t)11, *r);
   }
   bf.setUseBit(11);
   // 11111|11111|10000|00000
   {
-    auto r = sel.select(20_k, igbf, sizeof(igbf));
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     CPPUNIT_ASSERT_EQUAL((size_t)12, *r);
   }
   bf.setUseBit(12);
   // 11111|11111|11000|00000
   {
-    auto r = sel.select(20_k, igbf, sizeof(igbf));
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     CPPUNIT_ASSERT_EQUAL((size_t)13, *r);
   }
   bf.setUseBit(13);
   // 11111|11111|11100|00000
   {
-    auto r = sel.select(20_k, igbf, sizeof(igbf));
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     CPPUNIT_ASSERT_EQUAL((size_t)15, *r);
   }

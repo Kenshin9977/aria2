@@ -184,9 +184,9 @@ void Piece::reconfigure(int64_t length)
       make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
 }
 
-void Piece::setBitfield(const unsigned char* bitfield, size_t len)
+void Piece::setBitfield(std::span<const unsigned char> bitfield)
 {
-  bitfield_->setBitfield(bitfield, len);
+  bitfield_->setBitfield(bitfield);
 }
 
 int64_t Piece::getCompletedLength() { return bitfield_->getCompletedLength(); }

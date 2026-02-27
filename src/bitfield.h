@@ -41,6 +41,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <optional>
+#include <span>
 
 #include "util.h"
 
@@ -96,7 +97,7 @@ inline size_t countBit32(uint32_t n)
 }
 
 // Counts set bit in bitfield.
-inline size_t countSetBit(const unsigned char* bitfield, size_t nbits)
+inline size_t countSetBit(std::span<const unsigned char> bitfield, size_t nbits)
 {
   if (nbits == 0) {
     return 0;

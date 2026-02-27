@@ -56,7 +56,7 @@ public:
 
   static const char NAME[];
 
-  void setBitfield(const unsigned char* bitfield, size_t bitfieldLength);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   const unsigned char* getBitfield() const { return bitfield_.data(); }
 

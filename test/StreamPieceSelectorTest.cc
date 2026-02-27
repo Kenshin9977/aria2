@@ -33,7 +33,7 @@ public:
 
     unsigned char igbf[2];
     memset(igbf, 0, sizeof(igbf));
-    auto r = sel.select(1024, igbf, sizeof(igbf));
+    auto r = sel.select(1024, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     // First missing piece should be 5
     CPPUNIT_ASSERT_EQUAL((size_t)5, *r);
@@ -48,7 +48,7 @@ public:
     unsigned char igbf[2];
     memset(igbf, 0, sizeof(igbf));
     // All pieces complete, nothing to select
-    CPPUNIT_ASSERT(!sel.select(1024, igbf, sizeof(igbf)).has_value());
+    CPPUNIT_ASSERT(!sel.select(1024, {igbf, sizeof(igbf)}).has_value());
   }
 
   void testRandomSelect()
@@ -60,7 +60,7 @@ public:
 
     unsigned char igbf[3];
     memset(igbf, 0, sizeof(igbf));
-    auto r = sel.select(1024, igbf, sizeof(igbf));
+    auto r = sel.select(1024, {igbf, sizeof(igbf)});
     CPPUNIT_ASSERT(r.has_value());
     // Should select a piece in range [10, 19]
     CPPUNIT_ASSERT(*r >= 10);
@@ -75,7 +75,7 @@ public:
 
     unsigned char igbf[2];
     memset(igbf, 0, sizeof(igbf));
-    CPPUNIT_ASSERT(!sel.select(1024, igbf, sizeof(igbf)).has_value());
+    CPPUNIT_ASSERT(!sel.select(1024, {igbf, sizeof(igbf)}).has_value());
   }
 
   void testUnionSeedCriteriaAllFalse()

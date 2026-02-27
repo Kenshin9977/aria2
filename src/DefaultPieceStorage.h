@@ -204,8 +204,7 @@ public:
 
   bool allDownloadFinished() override;
 
-  void setBitfield(const unsigned char* bitfield,
-                   size_t bitfieldLength) override;
+  void setBitfield(std::span<const unsigned char> bitfield) override;
 
   size_t getBitfieldLength() override;
 
@@ -252,15 +251,12 @@ public:
 
   void addPieceStats(size_t index) override;
 
-  void addPieceStats(const unsigned char* bitfield,
-                     size_t bitfieldLength) override;
+  void addPieceStats(std::span<const unsigned char> bitfield) override;
 
-  void subtractPieceStats(const unsigned char* bitfield,
-                          size_t bitfieldLength) override;
+  void subtractPieceStats(std::span<const unsigned char> bitfield) override;
 
-  void updatePieceStats(const unsigned char* newBitfield,
-                        size_t newBitfieldLength,
-                        const unsigned char* oldBitfield) override;
+  void updatePieceStats(std::span<const unsigned char> newBitfield,
+                        std::span<const unsigned char> oldBitfield) override;
 
   size_t getNextUsedIndex(size_t index) override;
 

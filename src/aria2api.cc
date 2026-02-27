@@ -593,8 +593,8 @@ void createFileEntry(OutputIterator out, InputIterator first,
                      int32_t pieceLength, const std::string& bitfield)
 {
   BitfieldMan bf(pieceLength, totalLength);
-  bf.setBitfield(reinterpret_cast<const unsigned char*>(bitfield.data()),
-                 bitfield.size());
+  bf.setBitfield({reinterpret_cast<const unsigned char*>(bitfield.data()),
+                  bitfield.size()});
   createFileEntry(out, first, last, &bf);
 }
 } // namespace
@@ -608,7 +608,7 @@ void createFileEntry(OutputIterator out, InputIterator first,
 {
   BitfieldMan bf(pieceLength, totalLength);
   if (ps) {
-    bf.setBitfield(ps->getBitfield(), ps->getBitfieldLength());
+    bf.setBitfield({ps->getBitfield(), ps->getBitfieldLength()});
   }
   createFileEntry(out, first, last, &bf);
 }
@@ -741,7 +741,7 @@ struct RequestGroupDH : public DownloadHandle {
     BitfieldMan bf(dctx->getPieceLength(), dctx->getTotalLength());
     const std::shared_ptr<PieceStorage>& ps = group->getPieceStorage();
     if (ps) {
-      bf.setBitfield(ps->getBitfield(), ps->getBitfieldLength());
+      bf.setBitfield({ps->getBitfield(), ps->getBitfieldLength()});
     }
     return createFileData(dctx->getFileEntries()[index - 1], index, &bf);
   }
@@ -826,8 +826,8 @@ struct DownloadResultDH : public DownloadHandle {
   FileData getFile(int index) override
   {
     BitfieldMan bf(dr->pieceLength, dr->totalLength);
-    bf.setBitfield(reinterpret_cast<const unsigned char*>(dr->bitfield.data()),
-                   dr->bitfield.size());
+    bf.setBitfield({reinterpret_cast<const unsigned char*>(dr->bitfield.data()),
+                    dr->bitfield.size()});
     return createFileData(dr->fileEntries[index - 1], index, &bf);
   }
   BtMetaInfoData getBtMetaInfo() override { return BtMetaInfoData(); }

@@ -188,8 +188,8 @@ std::shared_ptr<Piece> DefaultPieceStorage::findUsedPiece(size_t index) const
 
 bool DefaultPieceStorage::hasMissingPiece(const std::shared_ptr<Peer>& peer)
 {
-  return bitfieldMan_->hasMissingPiece(peer->getBitfield(),
-                                       peer->getBitfieldLength());
+  return bitfieldMan_->hasMissingPiece(
+      {peer->getBitfield(), peer->getBitfieldLength()});
 }
 
 void DefaultPieceStorage::getMissingPiece(
@@ -202,7 +202,7 @@ void DefaultPieceStorage::getMissingPiece(
   size_t misBlock = 0;
   if (isEndGame()) {
     bool r = bitfieldMan_->getAllMissingIndexes(misbitfield.get(), mislen,
-                                                bitfield, length);
+                                                {bitfield, length});
     if (!r) {
       return;
     }
@@ -230,7 +230,7 @@ void DefaultPieceStorage::getMissingPiece(
   }
   else {
     bool r = bitfieldMan_->getAllMissingUnusedIndexes(misbitfield.get(), mislen,
-                                                      bitfield, length);
+                                                      {bitfield, length});
     if (!r) {
       return;
     }
@@ -252,8 +252,8 @@ void unsetExcludedIndexes(BitfieldMan& bitfield,
                           const std::vector<size_t>& excludedIndexes)
 {
   using namespace std::placeholders;
-  std::for_each(excludedIndexes.begin(), excludedIndexes.end(),
-                std::bind(&BitfieldMan::unsetBit, &bitfield, _1));
+  std::ranges::for_each(excludedIndexes,
+                        std::bind(&BitfieldMan::unsetBit, &bitfield, _1));
 }
 } // namespace
 
@@ -283,7 +283,7 @@ void DefaultPieceStorage::getMissingPiece(
 {
   BitfieldMan tempBitfield(bitfieldMan_->getBlockLength(),
                            bitfieldMan_->getTotalLength());
-  tempBitfield.setBitfield(peer->getBitfield(), peer->getBitfieldLength());
+  tempBitfield.setBitfield({peer->getBitfield(), peer->getBitfieldLength()});
   unsetExcludedIndexes(tempBitfield, excludedIndexes);
   getMissingPiece(pieces, minMissingBlocks, tempBitfield.getBitfield(),
                   tempBitfield.getBitfieldLength(), cuid);
@@ -386,8 +386,8 @@ DefaultPieceStorage::getMissingPiece(size_t minSplitSize,
                                      const unsigned char* ignoreBitfield,
                                      size_t length, cuid_t cuid)
 {
-  if (auto index =
-          streamPieceSelector_->select(minSplitSize, ignoreBitfield, length)) {
+  if (auto index = streamPieceSelector_->select(minSplitSize,
+                                                {ignoreBitfield, length})) {
     return checkOutPiece(*index, cuid);
   }
   else {
@@ -658,11 +658,10 @@ void DefaultPieceStorage::initStorage()
   }
 }
 
-void DefaultPieceStorage::setBitfield(const unsigned char* bitfield,
-                                      size_t bitfieldLength)
+void DefaultPieceStorage::setBitfield(std::span<const unsigned char> bitfield)
 {
-  bitfieldMan_->setBitfield(bitfield, bitfieldLength);
-  addPieceStats(bitfield, bitfieldLength);
+  bitfieldMan_->setBitfield(bitfield);
+  addPieceStats(bitfield);
 }
 
 size_t DefaultPieceStorage::getBitfieldLength()
@@ -804,23 +803,22 @@ void DefaultPieceStorage::setDiskWriterFactory(
   diskWriterFactory_ = diskWriterFactory;
 }
 
-void DefaultPieceStorage::addPieceStats(const unsigned char* bitfield,
-                                        size_t bitfieldLength)
+void DefaultPieceStorage::addPieceStats(std::span<const unsigned char> bitfield)
 {
-  pieceStatMan_->addPieceStats(bitfield, bitfieldLength);
+  pieceStatMan_->addPieceStats(bitfield);
 }
 
-void DefaultPieceStorage::subtractPieceStats(const unsigned char* bitfield,
-                                             size_t bitfieldLength)
+void DefaultPieceStorage::subtractPieceStats(
+    std::span<const unsigned char> bitfield)
 {
-  pieceStatMan_->subtractPieceStats(bitfield, bitfieldLength);
+  pieceStatMan_->subtractPieceStats(bitfield);
 }
 
-void DefaultPieceStorage::updatePieceStats(const unsigned char* newBitfield,
-                                           size_t newBitfieldLength,
-                                           const unsigned char* oldBitfield)
+void DefaultPieceStorage::updatePieceStats(
+    std::span<const unsigned char> newBitfield,
+    std::span<const unsigned char> oldBitfield)
 {
-  pieceStatMan_->updatePieceStats(newBitfield, newBitfieldLength, oldBitfield);
+  pieceStatMan_->updatePieceStats(newBitfield, oldBitfield);
 }
 
 void DefaultPieceStorage::addPieceStats(size_t index)

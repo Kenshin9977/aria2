@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -128,7 +129,7 @@ public:
 
   const unsigned char* getBitfield() const;
 
-  void setBitfield(const unsigned char* bitfield, size_t len);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   size_t getBitfieldLength() const;
 

@@ -98,11 +98,10 @@ void DHTGetPeersMessage::addLocalPeer(std::vector<std::shared_ptr<Peer>>& peers)
   }
 
   auto tcpPort = btRegistry_->getTcpPort();
-  if (std::find_if(std::begin(peers), std::end(peers),
-                   [&externalIP, tcpPort](const std::shared_ptr<Peer>& peer) {
-                     return peer->getIPAddress() == externalIP &&
-                            peer->getPort() == tcpPort;
-                   }) != std::end(peers)) {
+  if (std::ranges::find_if(peers, [&externalIP,
+                                   tcpPort](const std::shared_ptr<Peer>& peer) {
+        return peer->getIPAddress() == externalIP && peer->getPort() == tcpPort;
+      }) != std::end(peers)) {
     return;
   }
 

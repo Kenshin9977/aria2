@@ -39,6 +39,7 @@
 
 #include <cstdlib>
 #include <optional>
+#include <span>
 
 namespace aria2 {
 
@@ -56,9 +57,9 @@ public:
   // is a advice to derived class not to select piece such which the
   // distance between it and already selected piece is less than
   // minSplitSize.
-  virtual std::optional<size_t> select(size_t minSplitSize,
-                                       const unsigned char* ignoreBitfield,
-                                       size_t length) = 0;
+  virtual std::optional<size_t>
+  select(size_t minSplitSize,
+         std::span<const unsigned char> ignoreBitfield) = 0;
 
   // Called when initial bitfield was fixed. Optimize
   // StreamPieceSelector to take advantages of the initial bitfield.

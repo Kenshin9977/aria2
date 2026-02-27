@@ -46,9 +46,9 @@ public:
   DefaultStreamPieceSelector(BitfieldMan* bitfieldMan);
   ~DefaultStreamPieceSelector() override;
 
-  std::optional<size_t> select(size_t minSplitSize,
-                               const unsigned char* ignoreBitfield,
-                               size_t length) override;
+  std::optional<size_t>
+  select(size_t minSplitSize,
+         std::span<const unsigned char> ignoreBitfield) override;
 
   void onBitfieldInit() override;
 

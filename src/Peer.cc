@@ -229,10 +229,10 @@ int64_t Peer::getSessionDownloadLength() const
   return res_->downloadLength();
 }
 
-void Peer::setBitfield(const unsigned char* bitfield, size_t bitfieldLength)
+void Peer::setBitfield(std::span<const unsigned char> bitfield)
 {
   assert(res_);
-  res_->setBitfield(bitfield, bitfieldLength);
+  res_->setBitfield(bitfield);
   updateSeeder();
 }
 

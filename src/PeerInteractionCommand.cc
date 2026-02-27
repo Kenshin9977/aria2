@@ -296,8 +296,8 @@ PeerInteractionCommand::PeerInteractionCommand(
 PeerInteractionCommand::~PeerInteractionCommand()
 {
   if (getPeer()->getCompletedLength() > 0) {
-    pieceStorage_->subtractPieceStats(getPeer()->getBitfield(),
-                                      getPeer()->getBitfieldLength());
+    pieceStorage_->subtractPieceStats(
+        {getPeer()->getBitfield(), getPeer()->getBitfieldLength()});
   }
   getPeer()->releaseSessionResource();
 

@@ -73,7 +73,7 @@ void BtBitfieldMessageTest::testCreateMessage()
   BtBitfieldMessage msg;
   unsigned char bitfield[2];
   memset(bitfield, 0xff, sizeof(bitfield));
-  msg.setBitfield(bitfield, sizeof(bitfield));
+  msg.setBitfield({bitfield, sizeof(bitfield)});
   unsigned char data[5 + 2];
   bittorrent::createPeerMessageString(data, sizeof(data), 3, 5);
   memcpy(&data[5], bitfield, sizeof(bitfield));
@@ -91,7 +91,7 @@ void BtBitfieldMessageTest::testDoReceivedAction()
   auto pieceStorage = make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
   unsigned char bitfield[] = {0xff, 0xff};
-  msg.setBitfield(bitfield, sizeof(bitfield));
+  msg.setBitfield({bitfield, sizeof(bitfield)});
 
   CPPUNIT_ASSERT_EQUAL(
       std::string("0000"),
@@ -111,7 +111,7 @@ void BtBitfieldMessageTest::testDoReceivedAction_goodByeSeeder()
   auto pieceStorage = make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
   unsigned char bitfield[] = {0x00};
-  msg.setBitfield(bitfield, sizeof(bitfield));
+  msg.setBitfield({bitfield, sizeof(bitfield)});
 
   // peer is not seeder and client have not completed download
   msg.doReceivedAction();
@@ -123,7 +123,7 @@ void BtBitfieldMessageTest::testDoReceivedAction_goodByeSeeder()
 
   pieceStorage->setDownloadFinished(false);
   bitfield[0] = 0x80;
-  msg.setBitfield(bitfield, sizeof(bitfield));
+  msg.setBitfield({bitfield, sizeof(bitfield)});
 
   // peer is seeder, but client have not completed download
   msg.doReceivedAction();
@@ -142,7 +142,7 @@ void BtBitfieldMessageTest::testToString()
 {
   BtBitfieldMessage msg;
   unsigned char bitfield[] = {0xff, 0xff};
-  msg.setBitfield(bitfield, sizeof(bitfield));
+  msg.setBitfield({bitfield, sizeof(bitfield)});
 
   CPPUNIT_ASSERT_EQUAL(std::string("bitfield ffff"), msg.toString());
 }
