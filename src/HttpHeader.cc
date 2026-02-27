@@ -55,24 +55,22 @@ void HttpHeader::remove(int hdKey) { table_.erase(hdKey); }
 
 bool HttpHeader::defined(int hdKey) const { return table_.count(hdKey); }
 
-const std::string& HttpHeader::find(int hdKey) const
+std::optional<std::string_view> HttpHeader::find(int hdKey) const
 {
   auto itr = table_.find(hdKey);
   if (itr == table_.end()) {
-    return A2STR::NIL;
+    return std::nullopt;
   }
-  else {
-    return (*itr).second;
-  }
+  return std::string_view(itr->second);
 }
 
 std::vector<std::string> HttpHeader::findAll(int hdKey) const
 {
   std::vector<std::string> v;
-  auto itrpair = table_.equal_range(hdKey);
-  while (itrpair.first != itrpair.second) {
-    v.push_back((*itrpair.first).second);
-    ++itrpair.first;
+  auto [first, last] = table_.equal_range(hdKey);
+  while (first != last) {
+    v.push_back(first->second);
+    ++first;
   }
   return v;
 }
@@ -86,26 +84,26 @@ HttpHeader::equalRange(int hdKey) const
 
 Range HttpHeader::getRange() const
 {
-  const auto& rangeStr = find(CONTENT_RANGE);
-  if (rangeStr.empty()) {
-    const std::string& clenStr = find(CONTENT_LENGTH);
-    if (clenStr.empty()) {
+  auto rangeStr = find(CONTENT_RANGE);
+  if (!rangeStr) {
+    auto clenStr = find(CONTENT_LENGTH);
+    if (!clenStr) {
       return Range();
     }
     else {
-      int64_t contentLength;
-      if (!util::parseLLIntNoThrow(contentLength, clenStr) ||
-          contentLength < 0) {
+      auto contentLength = util::parseLLInt(*clenStr);
+      if (!contentLength || *contentLength < 0) {
         throw DL_ABORT_EX("Content-Length must be positive integer");
       }
-      else if (contentLength > std::numeric_limits<a2_off_t>::max()) {
-        throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, contentLength));
+      else if (*contentLength > std::numeric_limits<a2_off_t>::max()) {
+        throw DOWNLOAD_FAILURE_EXCEPTION(
+            fmt(EX_TOO_LARGE_FILE, *contentLength));
       }
-      else if (contentLength == 0) {
+      else if (*contentLength == 0) {
         return Range();
       }
       else {
-        return Range(0, contentLength - 1, contentLength);
+        return Range(0, *contentLength - 1, *contentLength);
       }
     }
   }
@@ -113,28 +111,28 @@ Range HttpHeader::getRange() const
   // server returns '100-199/200', omitting bytes-unit specifier
   // 'bytes'.  Moreover, some server may return like
   // 'bytes=100-199/200'.
-  auto byteRangeSpec = std::find(rangeStr.begin(), rangeStr.end(), ' ');
-  if (byteRangeSpec == rangeStr.end()) {
+  auto byteRangeSpec = std::find(rangeStr->begin(), rangeStr->end(), ' ');
+  if (byteRangeSpec == rangeStr->end()) {
     // check for 'bytes=100-199/200' case
-    byteRangeSpec = std::find(rangeStr.begin(), rangeStr.end(), '=');
-    if (byteRangeSpec == rangeStr.end()) {
+    byteRangeSpec = std::find(rangeStr->begin(), rangeStr->end(), '=');
+    if (byteRangeSpec == rangeStr->end()) {
       // we assume bytes-unit specifier omitted.
-      byteRangeSpec = rangeStr.begin();
+      byteRangeSpec = rangeStr->begin();
     }
     else {
       ++byteRangeSpec;
     }
   }
   else {
-    while (byteRangeSpec != rangeStr.end() &&
+    while (byteRangeSpec != rangeStr->end() &&
            (*byteRangeSpec == ' ' || *byteRangeSpec == '\t')) {
       ++byteRangeSpec;
     }
   }
-  auto slash = std::find(byteRangeSpec, rangeStr.end(), '/');
-  if (slash == rangeStr.end() || slash + 1 == rangeStr.end() ||
+  auto slash = std::find(byteRangeSpec, rangeStr->end(), '/');
+  if (slash == rangeStr->end() || slash + 1 == rangeStr->end() ||
       (byteRangeSpec + 1 == slash && *byteRangeSpec == '*') ||
-      (slash + 2 == rangeStr.end() && *(slash + 1) == '*')) {
+      (slash + 2 == rangeStr->end() && *(slash + 1) == '*')) {
     // If byte-range-resp-spec or instance-length is "*", we returns
     // empty Range. The former is usually sent with 416 (Request range
     // not satisfiable) status.
@@ -144,24 +142,26 @@ Range HttpHeader::getRange() const
   if (minus == slash) {
     return Range();
   }
-  int64_t startByte, endByte, entityLength;
-  if (!util::parseLLIntNoThrow(startByte, std::string(byteRangeSpec, minus)) ||
-      !util::parseLLIntNoThrow(endByte, std::string(minus + 1, slash)) ||
-      !util::parseLLIntNoThrow(entityLength,
-                               std::string(slash + 1, rangeStr.end())) ||
-      startByte < 0 || endByte < 0 || entityLength < 0) {
+  auto startByte = util::parseLLInt(
+      std::string_view(&*byteRangeSpec, minus - byteRangeSpec));
+  auto endByte =
+      util::parseLLInt(std::string_view(&*(minus + 1), slash - (minus + 1)));
+  auto entityLength = util::parseLLInt(
+      std::string_view(&*(slash + 1), rangeStr->end() - (slash + 1)));
+  if (!startByte || !endByte || !entityLength || *startByte < 0 ||
+      *endByte < 0 || *entityLength < 0) {
     throw DL_ABORT_EX("byte-range-spec must be positive");
   }
-  if (startByte > std::numeric_limits<a2_off_t>::max()) {
-    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, startByte));
+  if (*startByte > std::numeric_limits<a2_off_t>::max()) {
+    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, *startByte));
   }
-  if (endByte > std::numeric_limits<a2_off_t>::max()) {
-    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, endByte));
+  if (*endByte > std::numeric_limits<a2_off_t>::max()) {
+    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, *endByte));
   }
-  if (entityLength > std::numeric_limits<a2_off_t>::max()) {
-    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, entityLength));
+  if (*entityLength > std::numeric_limits<a2_off_t>::max()) {
+    throw DOWNLOAD_FAILURE_EXCEPTION(fmt(EX_TOO_LARGE_FILE, *entityLength));
   }
-  return Range(startByte, endByte, entityLength);
+  return Range(*startByte, *endByte, *entityLength);
 }
 
 void HttpHeader::setVersion(const std::string& version) { version_ = version; }
@@ -194,17 +194,15 @@ void HttpHeader::setReasonPhrase(const std::string& reasonPhrase)
 
 bool HttpHeader::fieldContains(int hdKey, const char* value)
 {
-  std::pair<std::multimap<int, std::string>::const_iterator,
-            std::multimap<int, std::string>::const_iterator>
-      range = equalRange(hdKey);
-  for (auto i = range.first; i != range.second; ++i) {
+  auto [first, last] = equalRange(hdKey);
+  for (auto i = first; i != last; ++i) {
     std::vector<Scip> values;
-    util::splitIter((*i).second.begin(), (*i).second.end(),
+    util::splitIter(i->second.begin(), i->second.end(),
                     std::back_inserter(values), ',',
                     true // doStrip
     );
-    for (const auto& v : values) {
-      if (util::strieq(v.first, v.second, value)) {
+    for (const auto& [begin, end] : values) {
+      if (util::strieq(begin, end, value)) {
         return true;
       }
     }
@@ -214,9 +212,12 @@ bool HttpHeader::fieldContains(int hdKey, const char* value)
 
 bool HttpHeader::isKeepAlive() const
 {
-  const std::string& connection = find(CONNECTION);
-  return !util::strieq(connection, "close") &&
-         (version_ == "HTTP/1.1" || util::strieq(connection, "keep-alive"));
+  auto connection = find(CONNECTION);
+  if (!connection) {
+    return version_ == "HTTP/1.1";
+  }
+  return !util::strieq(*connection, "close") &&
+         (version_ == "HTTP/1.1" || util::strieq(*connection, "keep-alive"));
 }
 
 namespace {

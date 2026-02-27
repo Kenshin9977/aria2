@@ -190,14 +190,15 @@ bool HttpServer::receiveRequest()
     if (setupResponseRecv() < 0) {
       A2_LOG_INFO("Request path is invalid. Ignore the request body.");
     }
-    const std::string& contentLengthHdr =
+    auto contentLengthHdr =
         lastRequestHeader_->find(HttpHeader::CONTENT_LENGTH);
-    if (!contentLengthHdr.empty()) {
-      if (!util::parseLLIntNoThrow(lastContentLength_, contentLengthHdr) ||
-          lastContentLength_ < 0) {
-        throw DL_ABORT_EX(
-            fmt("Invalid Content-Length=%s", contentLengthHdr.c_str()));
+    if (contentLengthHdr) {
+      auto cl = util::parseLLInt(*contentLengthHdr);
+      if (!cl || *cl < 0) {
+        throw DL_ABORT_EX(fmt("Invalid Content-Length=%s",
+                              std::string(*contentLengthHdr).c_str()));
       }
+      lastContentLength_ = *cl;
     }
     else {
       lastContentLength_ = 0;
@@ -205,15 +206,13 @@ bool HttpServer::receiveRequest()
     headerProcessor_->clear();
 
     std::vector<Scip> acceptEncodings;
-    const std::string& acceptEnc =
-        lastRequestHeader_->find(HttpHeader::ACCEPT_ENCODING);
+    auto acceptEncOpt = lastRequestHeader_->find(HttpHeader::ACCEPT_ENCODING);
+    std::string acceptEnc(acceptEncOpt.value_or(""));
     util::splitIter(acceptEnc.begin(), acceptEnc.end(),
                     std::back_inserter(acceptEncodings), ',', true);
     acceptsGZip_ = false;
-    for (std::vector<Scip>::const_iterator i = acceptEncodings.begin(),
-                                           eoi = acceptEncodings.end();
-         i != eoi; ++i) {
-      if (util::strieq((*i).first, (*i).second, "gzip")) {
+    for (const auto& [begin, end] : acceptEncodings) {
+      if (util::strieq(begin, end, "gzip")) {
         acceptsGZip_ = true;
         break;
       }
@@ -324,11 +323,11 @@ bool HttpServer::authenticate()
     return true;
   }
 
-  const std::string& authHeader =
-      lastRequestHeader_->find(HttpHeader::AUTHORIZATION);
-  if (authHeader.empty()) {
+  auto authHeaderOpt = lastRequestHeader_->find(HttpHeader::AUTHORIZATION);
+  if (!authHeaderOpt) {
     return false;
   }
+  std::string authHeader(*authHeaderOpt);
   auto p = util::divide(std::begin(authHeader), std::end(authHeader), ' ');
   if (!util::streq(p.first.first, p.first.second, "Basic")) {
     return false;

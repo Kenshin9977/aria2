@@ -151,9 +151,9 @@ NumberOptionHandler::~NumberOptionHandler() = default;
 void NumberOptionHandler::parseArg(Option& option,
                                    const std::string& optarg) const
 {
-  int64_t number;
-  if (util::parseLLIntNoThrow(number, optarg)) {
-    parseArg(option, number);
+  auto number = util::parseLLInt(optarg);
+  if (number) {
+    parseArg(option, *number);
   }
   else {
     throw DL_ABORT_EX(fmt("Bad number %s", optarg.c_str()));

@@ -83,9 +83,11 @@ std::string toString(const char* str)
 namespace {
 bool parseTime(int64_t& time, const std::string& s)
 {
-  if (!util::parseLLIntNoThrow(time, s)) {
+  auto r = util::parseLLInt(s);
+  if (!r) {
     return false;
   }
+  time = *r;
   if (std::numeric_limits<time_t>::max() < time) {
     time = std::numeric_limits<time_t>::max();
   }

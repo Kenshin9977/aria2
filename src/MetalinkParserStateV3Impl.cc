@@ -114,16 +114,12 @@ void FileMetalinkParserState::beginElement(MetalinkParserStateMachine* psm,
   }
   else if (strcmp(localname, "resources") == 0) {
     psm->setResourcesState();
-    int maxConnections;
+    int maxConnections = -1;
     auto itr = findAttr(attrs, "maxconnections", METALINK3_NAMESPACE_URI);
-    if (itr == attrs.end()) {
-      maxConnections = -1;
-    }
-    else {
-      if (!util::parseIntNoThrow(
-              maxConnections, std::string((*itr).value, (*itr).valueLength)) ||
-          maxConnections <= 0) {
-        maxConnections = -1;
+    if (itr != attrs.end()) {
+      auto mc = util::parseInt(std::string((*itr).value, (*itr).valueLength));
+      if (mc && *mc > 0) {
+        maxConnections = *mc;
       }
     }
     psm->setMaxConnectionsOfEntry(maxConnections);
@@ -147,10 +143,9 @@ void SizeMetalinkParserState::endElement(MetalinkParserStateMachine* psm,
                                          std::string characters)
 {
   // current metalink specification doesn't require size element.
-  int64_t size;
-  if (util::parseLLIntNoThrow(size, characters) && size >= 0 &&
-      size <= std::numeric_limits<a2_off_t>::max()) {
-    psm->setFileLengthOfEntry(size);
+  auto size = util::parseLLInt(characters);
+  if (size && *size >= 0 && *size <= std::numeric_limits<a2_off_t>::max()) {
+    psm->setFileLengthOfEntry(*size);
   }
 }
 
@@ -346,29 +341,28 @@ void ResourcesMetalinkParserState::beginElement(
       if (itr == attrs.end()) {
         preference = MetalinkResource::getLowestPriority();
       }
-      else if (util::parseIntNoThrow(
-                   preference, std::string((*itr).value, (*itr).valueLength)) &&
-               preference >= 0) {
-        // In Metalink3Spec, highest preference value is 100.  We
-        // use Metalink4Spec priority unit system in which 1 is
-        // highest.
-        preference = 101 - preference;
-      }
       else {
-        preference = MetalinkResource::getLowestPriority();
+        auto pref =
+            util::parseInt(std::string((*itr).value, (*itr).valueLength));
+        if (pref && *pref >= 0) {
+          // In Metalink3Spec, highest preference value is 100.  We
+          // use Metalink4Spec priority unit system in which 1 is
+          // highest.
+          preference = 101 - *pref;
+        }
+        else {
+          preference = MetalinkResource::getLowestPriority();
+        }
       }
     }
-    int maxConnections;
+    int maxConnections = -1;
     {
       auto itr = findAttr(attrs, "maxconnections", METALINK3_NAMESPACE_URI);
-      if (itr == attrs.end()) {
-        maxConnections = -1;
-      }
-      else if (!util::parseIntNoThrow(
-                   maxConnections,
-                   std::string((*itr).value, (*itr).valueLength)) ||
-               maxConnections <= 0) {
-        maxConnections = -1;
+      if (itr != attrs.end()) {
+        auto mc = util::parseInt(std::string((*itr).value, (*itr).valueLength));
+        if (mc && *mc > 0) {
+          maxConnections = *mc;
+        }
       }
     }
     psm->newResourceTransaction();

@@ -114,9 +114,9 @@ void HttpResponse::validateResponse() const
 
 std::string HttpResponse::determineFilename(bool contentDispositionUTF8) const
 {
+  auto cd = httpHeader_->find(HttpHeader::CONTENT_DISPOSITION);
   std::string contentDisposition = util::getContentDispositionFilename(
-      httpHeader_->find(HttpHeader::CONTENT_DISPOSITION),
-      contentDispositionUTF8);
+      cd ? std::string(*cd) : "", contentDispositionUTF8);
   if (contentDisposition.empty()) {
     auto file = httpRequest_->getFile();
     file = util::percentDecode(file.begin(), file.end());
@@ -159,7 +159,9 @@ bool HttpResponse::isRedirect() const
 void HttpResponse::processRedirect()
 {
   const auto& req = httpRequest_->getRequest();
-  if (!req->redirectUri(util::percentEncodeMini(getRedirectURI()))) {
+  auto redirectURI = getRedirectURI();
+  if (!req->redirectUri(
+          util::percentEncodeMini(std::string(redirectURI.value_or(""))))) {
     throw DL_RETRY_EX(fmt(
         "CUID#%" PRId64 " - Redirect to %s failed. It may not be a valid URI.",
         cuid_, req->getCurrentUri().c_str()));
@@ -169,7 +171,7 @@ void HttpResponse::processRedirect()
                     httpRequest_->getRequest()->getCurrentUri().c_str()));
 }
 
-const std::string& HttpResponse::getRedirectURI() const
+std::optional<std::string_view> HttpResponse::getRedirectURI() const
 {
   return httpHeader_->find(HttpHeader::LOCATION);
 }
@@ -179,7 +181,7 @@ bool HttpResponse::isTransferEncodingSpecified() const
   return httpHeader_->defined(HttpHeader::TRANSFER_ENCODING);
 }
 
-const std::string& HttpResponse::getTransferEncoding() const
+std::optional<std::string_view> HttpResponse::getTransferEncoding() const
 {
   // TODO See TODO in getTransferEncodingStreamFilter()
   return httpHeader_->find(HttpHeader::TRANSFER_ENCODING);
@@ -191,7 +193,8 @@ HttpResponse::getTransferEncodingStreamFilter() const
   // TODO Transfer-Encoding header field can contains multiple tokens. We should
   // parse the field and retrieve each token.
   if (isTransferEncodingSpecified()) {
-    if (util::strieq(getTransferEncoding(), "chunked")) {
+    auto te = getTransferEncoding();
+    if (te && util::strieq(*te, "chunked")) {
       return make_unique<ChunkedDecodingStreamFilter>();
     }
   }
@@ -203,7 +206,7 @@ bool HttpResponse::isContentEncodingSpecified() const
   return httpHeader_->defined(HttpHeader::CONTENT_ENCODING);
 }
 
-const std::string& HttpResponse::getContentEncoding() const
+std::optional<std::string_view> HttpResponse::getContentEncoding() const
 {
   return httpHeader_->find(HttpHeader::CONTENT_ENCODING);
 }
@@ -212,8 +215,8 @@ std::unique_ptr<StreamFilter>
 HttpResponse::getContentEncodingStreamFilter() const
 {
 #ifdef HAVE_ZLIB
-  if (util::strieq(getContentEncoding(), "gzip") ||
-      util::strieq(getContentEncoding(), "deflate")) {
+  auto ce = getContentEncoding();
+  if (ce && (util::strieq(*ce, "gzip") || util::strieq(*ce, "deflate"))) {
     return make_unique<GZipDecodingStreamFilter>();
   }
 #endif // HAVE_ZLIB
@@ -245,9 +248,12 @@ std::string HttpResponse::getContentType() const
     return A2STR::NIL;
   }
 
-  const auto& ctype = httpHeader_->find(HttpHeader::CONTENT_TYPE);
-  auto i = std::find(ctype.begin(), ctype.end(), ';');
-  Scip p = util::stripIter(ctype.begin(), i);
+  auto ctype = httpHeader_->find(HttpHeader::CONTENT_TYPE);
+  if (!ctype) {
+    return A2STR::NIL;
+  }
+  auto i = std::find(ctype->begin(), ctype->end(), ';');
+  auto p = util::stripIter(ctype->begin(), i);
   return std::string(p.first, p.second);
 }
 
@@ -270,7 +276,8 @@ int HttpResponse::getStatusCode() const { return httpHeader_->getStatusCode(); }
 
 Time HttpResponse::getLastModifiedTime() const
 {
-  return Time::parseHTTPDate(httpHeader_->find(HttpHeader::LAST_MODIFIED));
+  auto lm = httpHeader_->find(HttpHeader::LAST_MODIFIED);
+  return Time::parseHTTPDate(lm ? std::string(*lm) : "");
 }
 
 bool HttpResponse::supportsPersistentConnection() const
@@ -330,11 +337,9 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
     }
 
     if (name == "pri") {
-      int32_t priValue;
-      if (util::parseIntNoThrow(priValue, value)) {
-        if (1 <= priValue && priValue <= 999999) {
-          result.pri = priValue;
-        }
+      auto priValue = util::parseInt(value);
+      if (priValue && 1 <= *priValue && *priValue <= 999999) {
+        result.pri = *priValue;
       }
       continue;
     }

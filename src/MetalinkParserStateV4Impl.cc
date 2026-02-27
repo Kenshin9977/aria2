@@ -117,16 +117,20 @@ void FileMetalinkParserStateV4::beginElement(MetalinkParserStateMachine* psm,
       if (itr == attrs.end()) {
         priority = MetalinkResource::getLowestPriority();
       }
-      else if (util::parseIntNoThrow(
-                   priority, std::string((*itr).value, (*itr).valueLength))) {
-        if (priority < 1 || MetalinkResource::getLowestPriority() < priority) {
-          psm->logError("metaurl@priority is out of range");
+      else {
+        auto pri =
+            util::parseInt(std::string((*itr).value, (*itr).valueLength));
+        if (pri) {
+          if (*pri < 1 || MetalinkResource::getLowestPriority() < *pri) {
+            psm->logError("metaurl@priority is out of range");
+            return;
+          }
+          priority = *pri;
+        }
+        else {
+          psm->logError("Bad metaurl@priority");
           return;
         }
-      }
-      else {
-        psm->logError("Bad metaurl@priority");
-        return;
       }
     }
     std::string mediatype;
@@ -158,16 +162,20 @@ void FileMetalinkParserStateV4::beginElement(MetalinkParserStateMachine* psm,
       if (itr == attrs.end()) {
         priority = MetalinkResource::getLowestPriority();
       }
-      else if (util::parseIntNoThrow(
-                   priority, std::string((*itr).value, (*itr).valueLength))) {
-        if (priority < 1 || MetalinkResource::getLowestPriority() < priority) {
-          psm->logError("url@priority is out of range");
+      else {
+        auto pri =
+            util::parseInt(std::string((*itr).value, (*itr).valueLength));
+        if (pri) {
+          if (*pri < 1 || MetalinkResource::getLowestPriority() < *pri) {
+            psm->logError("url@priority is out of range");
+            return;
+          }
+          priority = *pri;
+        }
+        else {
+          psm->logError("Bad url@priority");
           return;
         }
-      }
-      else {
-        psm->logError("Bad url@priority");
-        return;
       }
     }
     psm->newResourceTransaction();
@@ -242,10 +250,9 @@ void SizeMetalinkParserStateV4::endElement(MetalinkParserStateMachine* psm,
                                            const char* nsUri,
                                            std::string characters)
 {
-  int64_t size;
-  if (util::parseLLIntNoThrow(size, characters) && size >= 0 &&
-      size <= std::numeric_limits<a2_off_t>::max()) {
-    psm->setFileLengthOfEntry(size);
+  auto size = util::parseLLInt(characters);
+  if (size && *size >= 0 && *size <= std::numeric_limits<a2_off_t>::max()) {
+    psm->setFileLengthOfEntry(*size);
   }
   else {
     psm->cancelEntryTransaction();

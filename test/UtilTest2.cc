@@ -437,25 +437,18 @@ void UtilTest2::testParseIntSegments_invalidRange()
 
 void UtilTest2::testParseIntNoThrow()
 {
-  std::string s;
-  int32_t n;
-  s = " -1 ";
-  CPPUNIT_ASSERT(util::parseIntNoThrow(n, s));
-  CPPUNIT_ASSERT_EQUAL((int32_t)-1, n);
+  auto n = util::parseInt(" -1 ");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL((int32_t)-1, *n);
 
-  s = "2147483647";
-  CPPUNIT_ASSERT(util::parseIntNoThrow(n, s));
-  CPPUNIT_ASSERT_EQUAL((int32_t)2147483647, n);
+  n = util::parseInt("2147483647");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL((int32_t)2147483647, *n);
 
-  s = "2147483648";
-  CPPUNIT_ASSERT(!util::parseIntNoThrow(n, s));
-  s = "-2147483649";
-  CPPUNIT_ASSERT(!util::parseIntNoThrow(n, s));
-
-  s = "12x";
-  CPPUNIT_ASSERT(!util::parseIntNoThrow(n, s));
-  s = "";
-  CPPUNIT_ASSERT(!util::parseIntNoThrow(n, s));
+  CPPUNIT_ASSERT(!util::parseInt("2147483648"));
+  CPPUNIT_ASSERT(!util::parseInt("-2147483649"));
+  CPPUNIT_ASSERT(!util::parseInt("12x"));
+  CPPUNIT_ASSERT(!util::parseInt(""));
 }
 
 void UtilTest2::testParseUIntNoThrow()
@@ -473,18 +466,17 @@ void UtilTest2::testParseUIntNoThrow()
 
 void UtilTest2::testParseLLIntNoThrow()
 {
-  std::string s;
-  int64_t n;
-  s = " 9223372036854775807 ";
-  CPPUNIT_ASSERT(util::parseLLIntNoThrow(n, s));
-  CPPUNIT_ASSERT_EQUAL((int64_t)INT64_MAX, n);
-  s = "9223372036854775808";
-  CPPUNIT_ASSERT(!util::parseLLIntNoThrow(n, s));
-  s = "-9223372036854775808";
-  CPPUNIT_ASSERT(util::parseLLIntNoThrow(n, s));
-  CPPUNIT_ASSERT_EQUAL((int64_t)INT64_MIN, n);
-  s = "-9223372036854775809";
-  CPPUNIT_ASSERT(!util::parseLLIntNoThrow(n, s));
+  auto n = util::parseLLInt(" 9223372036854775807 ");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL((int64_t)INT64_MAX, *n);
+
+  CPPUNIT_ASSERT(!util::parseLLInt("9223372036854775808"));
+
+  n = util::parseLLInt("-9223372036854775808");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL((int64_t)INT64_MIN, *n);
+
+  CPPUNIT_ASSERT(!util::parseLLInt("-9223372036854775809"));
 }
 
 void UtilTest2::testToString_binaryStream()
@@ -998,19 +990,20 @@ void UtilTest2::testTlsHostnameMatch()
 
 void UtilTest2::testParseDoubleNoThrow()
 {
-  double n;
+  auto n = util::parseDouble(" 123 ");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL(123., *n);
 
-  CPPUNIT_ASSERT(util::parseDoubleNoThrow(n, " 123 "));
-  CPPUNIT_ASSERT_EQUAL(123., n);
+  n = util::parseDouble("3.14");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL(3.14, *n);
 
-  CPPUNIT_ASSERT(util::parseDoubleNoThrow(n, "3.14"));
-  CPPUNIT_ASSERT_EQUAL(3.14, n);
+  n = util::parseDouble("-3.14");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL(-3.14, *n);
 
-  CPPUNIT_ASSERT(util::parseDoubleNoThrow(n, "-3.14"));
-  CPPUNIT_ASSERT_EQUAL(-3.14, n);
-
-  CPPUNIT_ASSERT(!util::parseDoubleNoThrow(n, ""));
-  CPPUNIT_ASSERT(!util::parseDoubleNoThrow(n, "123x"));
+  CPPUNIT_ASSERT(!util::parseDouble(""));
+  CPPUNIT_ASSERT(!util::parseDouble("123x"));
 }
 
 void UtilTest2::testTorrentPercentEncode()

@@ -291,21 +291,20 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
           return nullptr;
         }
       }
-      int64_t delta;
-      if (util::parseLLIntNoThrow(delta,
-                                  std::string(attrp.first, attrp.second))) {
+      auto delta = util::parseLLInt(std::string(attrp.first, attrp.second));
+      if (delta) {
         foundMaxAge = true;
-        if (delta <= 0) {
+        if (*delta <= 0) {
           maxAge = 0;
         }
         else {
           int64_t n = creationTime;
 
-          if (n > std::numeric_limits<int64_t>::max() - delta) {
+          if (n > std::numeric_limits<int64_t>::max() - *delta) {
             maxAge = std::numeric_limits<time_t>::max();
           }
           else {
-            n += delta;
+            n += *delta;
 
             if (n < 0 || std::numeric_limits<time_t>::max() < n) {
               maxAge = std::numeric_limits<time_t>::max();

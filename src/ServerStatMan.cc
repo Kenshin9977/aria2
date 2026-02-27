@@ -219,11 +219,11 @@ bool ServerStatMan::load(const std::string& filename)
       }
       sstat->setCounter(uintval);
     }
-    int32_t intval;
-    if (!util::parseIntNoThrow(intval, m[S_LAST_UPDATED])) {
+    auto intval = util::parseInt(m[S_LAST_UPDATED]);
+    if (!intval) {
       continue;
     }
-    sstat->setLastUpdated(Time(intval));
+    sstat->setLastUpdated(Time(*intval));
     sstat->setStatus(m[S_STATUS]);
     add(sstat);
   }

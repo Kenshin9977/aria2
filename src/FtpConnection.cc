@@ -388,11 +388,11 @@ int FtpConnection::receiveSizeResponse(int64_t& size)
     if (response.first == 213) {
       auto rp = util::divide(std::begin(response.second),
                              std::end(response.second), ' ');
-      if (!util::parseLLIntNoThrow(
-              size, std::string(rp.second.first, rp.second.second)) ||
-          size < 0) {
+      auto s = util::parseLLInt(std::string(rp.second.first, rp.second.second));
+      if (!s || *s < 0) {
         throw DL_ABORT_EX("Size must be positive integer");
       }
+      size = *s;
     }
     return response.first;
   }
