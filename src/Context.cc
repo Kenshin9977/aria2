@@ -43,7 +43,7 @@
 
 #include <numeric>
 #include <vector>
-#include <iostream>
+#include <print>
 
 #include "LogFactory.h"
 #include "Logger.h"
@@ -117,9 +117,8 @@ void showFiles(const std::vector<std::string>& uris,
 {
   ProtocolDetector dt;
   for (const auto& uri : uris) {
-    printf(">>> ");
-    printf(MSG_SHOW_FILES, (uri).c_str());
-    printf("\n");
+    std::print(">>> ");
+    std::println("{}", fmt(MSG_SHOW_FILES, uri.c_str()));
     try {
 #  ifdef ENABLE_BITTORRENT
       if (dt.guessTorrentFile(uri)) {
@@ -134,7 +133,7 @@ void showFiles(const std::vector<std::string>& uris,
       else
 #  endif // ENABLE_METALINK
       {
-        printf("%s\n\n", MSG_NOT_TORRENT_METALINK);
+        std::println("{}\n", MSG_NOT_TORRENT_METALINK);
       }
     }
     catch (RecoverableException& e) {

@@ -34,9 +34,9 @@
 /* copyright --> */
 #include "common.h"
 
-#include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <print>
 
 #include "a2io.h"
 #include "FeatureConfig.h"
@@ -52,33 +52,35 @@ namespace aria2 {
 
 void showVersion()
 {
-  std::cout
-      << PACKAGE << _(" version ") << PACKAGE_VERSION << "\n"
-      << "Copyright (C) 2006, 2019 Tatsuhiro Tsujikawa"
-      << "\n"
-      << "\n"
-      << _("This program is free software; you can redistribute it and/or "
-           "modify\n"
-           "it under the terms of the GNU General Public License as published "
-           "by\n"
-           "the Free Software Foundation; either version 2 of the License, or\n"
-           "(at your option) any later version.\n"
-           "\n"
-           "This program is distributed in the hope that it will be useful,\n"
-           "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-           "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-           "GNU General Public License for more details.\n")
-      << "\n"
-      << _("** Configuration **") << "\n"
-      << _("Enabled Features") << ": " << featureSummary() << "\n"
-      << _("Hash Algorithms") << ": "
-      << MessageDigest::getSupportedHashTypeString() << "\n"
-      << _("Libraries") << ": " << usedLibs() << "\n"
-      << _("Compiler") << ": " << usedCompilerAndPlatform() << "\n"
-      << _("System") << ": " << getOperatingSystemInfo() << "\n"
-      << "\n"
-      << fmt(_("Report bugs to %s"), PACKAGE_BUGREPORT) << "\n"
-      << _("Visit") << " " << PACKAGE_URL << std::endl;
+  std::println("{}{}{}", PACKAGE, _(" version "), PACKAGE_VERSION);
+  std::println("Copyright (C) 2006, 2019 Tatsuhiro Tsujikawa");
+  std::println("");
+  std::print("{}", _("This program is free software; you can redistribute "
+                     "it and/or modify\n"
+                     "it under the terms of the GNU General Public License "
+                     "as published by\n"
+                     "the Free Software Foundation; either version 2 of "
+                     "the License, or\n"
+                     "(at your option) any later version.\n"
+                     "\n"
+                     "This program is distributed in the hope that it will "
+                     "be useful,\n"
+                     "but WITHOUT ANY WARRANTY; without even the implied "
+                     "warranty of\n"
+                     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. "
+                     " See the\n"
+                     "GNU General Public License for more details.\n"));
+  std::println("");
+  std::println("{}", _("** Configuration **"));
+  std::println("{}: {}", _("Enabled Features"), featureSummary());
+  std::println("{}: {}", _("Hash Algorithms"),
+               MessageDigest::getSupportedHashTypeString());
+  std::println("{}: {}", _("Libraries"), usedLibs());
+  std::println("{}: {}", _("Compiler"), usedCompilerAndPlatform());
+  std::println("{}: {}", _("System"), getOperatingSystemInfo());
+  std::println("");
+  std::println("{}", fmt(_("Report bugs to %s"), PACKAGE_BUGREPORT));
+  std::println("{} {}", _("Visit"), PACKAGE_URL);
 }
 
 void showUsage(const std::string& keyword,

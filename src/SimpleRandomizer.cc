@@ -39,7 +39,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
-#include <iostream>
+#include <print>
 
 #ifdef __APPLE__
 #  include <Security/SecRandom.h>
@@ -129,7 +129,7 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
   for (size_t i = 0; i < iter; ++i) {
     auto rv = getentropy(p, blocklen);
     if (rv != 0) {
-      std::cerr << "getentropy: " << strerror(errno) << std::endl;
+      std::println(stderr, "getentropy: {}", strerror(errno));
       assert(0);
       abort();
     }
@@ -144,7 +144,7 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
 
   auto rv = getentropy(p, rem);
   if (rv != 0) {
-    std::cerr << "getentropy: " << strerror(errno) << std::endl;
+    std::println(stderr, "getentropy: {}", strerror(errno));
     assert(0);
     abort();
   }
