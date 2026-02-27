@@ -630,18 +630,18 @@ namespace {
 std::string makeProxyUri(PrefPtr proxyPref, PrefPtr proxyUser,
                          PrefPtr proxyPasswd, const Option* option)
 {
-  uri::UriStruct us;
-  if (!uri::parse(us, option->get(proxyPref))) {
+  auto us = uri::parse(option->get(proxyPref));
+  if (!us) {
     return "";
   }
   if (option->defined(proxyUser)) {
-    us.username = option->get(proxyUser);
+    us->username = option->get(proxyUser);
   }
   if (option->defined(proxyPasswd)) {
-    us.password = option->get(proxyPasswd);
-    us.hasPassword = true;
+    us->password = option->get(proxyPasswd);
+    us->hasPassword = true;
   }
-  return uri::construct(us);
+  return uri::construct(*us);
 }
 } // namespace
 
