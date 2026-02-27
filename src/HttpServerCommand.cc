@@ -140,7 +140,8 @@ int websocketHandshake(const HttpHeader* header)
   if (header->getMethod() != "GET" || !wsKey || wsKey->empty()) {
     return 400;
   }
-  else if (header->find(HttpHeader::SEC_WEBSOCKET_VERSION) != "13") {
+  auto wsVer = header->find(HttpHeader::SEC_WEBSOCKET_VERSION);
+  if (!wsVer || *wsVer != "13") {
     return 426;
   }
   else if (header->getRequestPath() != "/jsonrpc") {

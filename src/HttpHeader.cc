@@ -201,8 +201,8 @@ bool HttpHeader::fieldContains(int hdKey, const char* value)
                     std::back_inserter(values), ',',
                     true // doStrip
     );
-    for (const auto& [first, last] : values) {
-      if (util::strieq(first, last, value)) {
+    for (const auto& [vbegin, vend] : values) {
+      if (util::strieq(vbegin, vend, value)) {
         return true;
       }
     }
