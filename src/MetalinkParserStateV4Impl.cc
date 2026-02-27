@@ -201,11 +201,13 @@ void FileMetalinkParserStateV4::beginElement(MetalinkParserStateMachine* psm,
         psm->logError("Missing pieces@length");
         return;
       }
-      if (!util::parseUIntNoThrow(
-              length, std::string((*itr).value, (*itr).valueLength))) {
+      auto lengthVal =
+          util::parseUIntNoThrow(std::string((*itr).value, (*itr).valueLength));
+      if (!lengthVal) {
         psm->logError("Bad pieces@length");
         return;
       }
+      length = *lengthVal;
     }
     std::string type;
     {

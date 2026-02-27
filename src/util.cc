@@ -566,18 +566,16 @@ std::expected<int32_t, std::string> parseInt(std::string_view s, int base)
   return std::unexpected(std::string("parse error"));
 }
 
-bool parseUIntNoThrow(uint32_t& res, std::string_view s, int base)
+std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
+                                                      int base)
 {
   std::string str(s);
   long int t;
   if (parseLong(t, strtol, str, base) && t >= 0 &&
       t <= std::numeric_limits<int32_t>::max()) {
-    res = t;
-    return true;
+    return static_cast<uint32_t>(t);
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
 std::expected<int64_t, std::string> parseLLInt(std::string_view s, int base)
@@ -2040,14 +2038,14 @@ std::string htmlEscape(std::string_view src)
 std::pair<size_t, std::string> parseIndexPath(std::string_view line)
 {
   auto p = divide(std::begin(line), std::end(line), '=');
-  uint32_t index;
-  if (!parseUIntNoThrow(index, std::string(p.first.first, p.first.second))) {
+  auto index = parseUIntNoThrow(std::string(p.first.first, p.first.second));
+  if (!index) {
     throw DL_ABORT_EX("Bad path index");
   }
   if (p.second.first == p.second.second) {
-    throw DL_ABORT_EX(fmt("Path with index=%u is empty.", index));
+    throw DL_ABORT_EX(fmt("Path with index=%u is empty.", *index));
   }
-  return std::make_pair(index, std::string(p.second.first, p.second.second));
+  return std::make_pair(*index, std::string(p.second.first, p.second.second));
 }
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i)

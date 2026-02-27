@@ -278,7 +278,8 @@ std::string secfmt(time_t sec);
 std::expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
 
 // Valid range: [0, INT32_MAX]
-bool parseUIntNoThrow(uint32_t& res, std::string_view s, int base = 10);
+std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
+                                                      int base = 10);
 
 std::expected<int64_t, std::string> parseLLInt(std::string_view s,
                                                int base = 10);

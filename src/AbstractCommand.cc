@@ -716,11 +716,11 @@ bool inNoProxy(const std::shared_ptr<Request>& req, const std::string& noProxy)
     // hostname(which may result in several IP addresses) and
     // evaluates against all of them
     std::string ip(first, slashpos);
-    uint32_t bits;
-    if (!util::parseUIntNoThrow(bits, std::string(slashpos + 1, last))) {
+    auto bits = util::parseUIntNoThrow(std::string(slashpos + 1, last));
+    if (!bits) {
       continue;
     }
-    if (util::inSameCidrBlock(ip, req->getHost(), bits)) {
+    if (util::inSameCidrBlock(ip, req->getHost(), *bits)) {
       return true;
     }
   }

@@ -107,9 +107,11 @@ InputIterator expandLoop(std::vector<std::string>& res, InputIterator first,
     step = 1;
   }
   else {
-    if (!util::parseUIntNoThrow(step, std::string(colon + 1, i))) {
+    auto stepVal = util::parseUIntNoThrow(std::string(colon + 1, i));
+    if (!stepVal) {
       throw DL_ABORT_EX("A step count must be a positive number.");
     }
+    step = *stepVal;
     if (step > UINT16_MAX) {
       throw DL_ABORT_EX("Loop step overflow.");
     }
@@ -119,11 +121,12 @@ InputIterator expandLoop(std::vector<std::string>& res, InputIterator first,
     throw DL_ABORT_EX("Loop range missing.");
   }
   if (util::isNumber(first, minus) && util::isNumber(minus + 1, colon)) {
-    uint32_t start, end;
-    if (!util::parseUIntNoThrow(start, std::string(first, minus)) ||
-        !util::parseUIntNoThrow(end, std::string(minus + 1, colon))) {
+    auto startVal = util::parseUIntNoThrow(std::string(first, minus));
+    auto endVal = util::parseUIntNoThrow(std::string(minus + 1, colon));
+    if (!startVal || !endVal) {
       throw DL_ABORT_EX("Loop range missing.");
     }
+    uint32_t start = *startVal, end = *endVal;
     if (start > UINT16_MAX || end > UINT16_MAX) {
       throw DL_ABORT_EX("Loop range overflow.");
     }

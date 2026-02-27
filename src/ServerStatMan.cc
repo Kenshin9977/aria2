@@ -193,31 +193,34 @@ bool ServerStatMan::load(const std::string& filename)
     }
     auto sstat = std::make_shared<ServerStat>(m[S_HOST], m[S_PROTOCOL]);
 
-    uint32_t uintval;
-    if (!util::parseUIntNoThrow(uintval, m[S_DL_SPEED])) {
+    auto dlSpeed = util::parseUIntNoThrow(m[S_DL_SPEED]);
+    if (!dlSpeed) {
       continue;
     }
-    sstat->setDownloadSpeed(uintval);
+    sstat->setDownloadSpeed(*dlSpeed);
     // Old serverstat file doesn't contains SC_AVG_SPEED
     if (!m[S_SC_AVG_SPEED].empty()) {
-      if (!util::parseUIntNoThrow(uintval, m[S_SC_AVG_SPEED])) {
+      auto scAvg = util::parseUIntNoThrow(m[S_SC_AVG_SPEED]);
+      if (!scAvg) {
         continue;
       }
-      sstat->setSingleConnectionAvgSpeed(uintval);
+      sstat->setSingleConnectionAvgSpeed(*scAvg);
     }
     // Old serverstat file doesn't contains MC_AVG_SPEED
     if (!m[S_MC_AVG_SPEED].empty()) {
-      if (!util::parseUIntNoThrow(uintval, m[S_MC_AVG_SPEED])) {
+      auto mcAvg = util::parseUIntNoThrow(m[S_MC_AVG_SPEED]);
+      if (!mcAvg) {
         continue;
       }
-      sstat->setMultiConnectionAvgSpeed(uintval);
+      sstat->setMultiConnectionAvgSpeed(*mcAvg);
     }
     // Old serverstat file doesn't contains COUNTER_SPEED
     if (!m[S_COUNTER].empty()) {
-      if (!util::parseUIntNoThrow(uintval, m[S_COUNTER])) {
+      auto counter = util::parseUIntNoThrow(m[S_COUNTER]);
+      if (!counter) {
         continue;
       }
-      sstat->setCounter(uintval);
+      sstat->setCounter(*counter);
     }
     auto intval = util::parseInt(m[S_LAST_UPDATED]);
     if (!intval) {

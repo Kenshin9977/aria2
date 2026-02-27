@@ -201,12 +201,12 @@ void VerificationMetalinkParserState::beginElement(
       if (itr == attrs.end()) {
         return;
       }
-      else {
-        if (!util::parseUIntNoThrow(
-                length, std::string((*itr).value, (*itr).valueLength))) {
-          return;
-        }
+      auto lengthVal =
+          util::parseUIntNoThrow(std::string((*itr).value, (*itr).valueLength));
+      if (!lengthVal) {
+        return;
       }
+      length = *lengthVal;
     }
     std::string type;
     {
@@ -267,10 +267,10 @@ void PiecesMetalinkParserState::beginElement(MetalinkParserStateMachine* psm,
       psm->cancelChunkChecksumTransaction();
     }
     else {
-      uint32_t idx;
-      if (util::parseUIntNoThrow(
-              idx, std::string((*itr).value, (*itr).valueLength))) {
-        psm->createNewHashOfChunkChecksum(idx);
+      auto idx =
+          util::parseUIntNoThrow(std::string((*itr).value, (*itr).valueLength));
+      if (idx) {
+        psm->createNewHashOfChunkChecksum(*idx);
       }
       else {
         psm->cancelChunkChecksumTransaction();

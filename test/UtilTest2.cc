@@ -453,15 +453,12 @@ void UtilTest2::testParseInt()
 
 void UtilTest2::testParseUIntNoThrow()
 {
-  std::string s;
-  uint32_t n;
-  s = " 2147483647 ";
-  CPPUNIT_ASSERT(util::parseUIntNoThrow(n, s));
-  CPPUNIT_ASSERT_EQUAL((uint32_t)INT32_MAX, n);
-  s = "2147483648";
-  CPPUNIT_ASSERT(!util::parseUIntNoThrow(n, s));
-  s = "-1";
-  CPPUNIT_ASSERT(!util::parseUIntNoThrow(n, s));
+  auto n = util::parseUIntNoThrow(" 2147483647 ");
+  CPPUNIT_ASSERT(n);
+  CPPUNIT_ASSERT_EQUAL((uint32_t)INT32_MAX, *n);
+
+  CPPUNIT_ASSERT(!util::parseUIntNoThrow("2147483648"));
+  CPPUNIT_ASSERT(!util::parseUIntNoThrow("-1"));
 }
 
 void UtilTest2::testParseLLInt()

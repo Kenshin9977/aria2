@@ -115,14 +115,18 @@ std::unique_ptr<LpdMessage> LpdMessageReceiver::receiveMessage()
     }
     std::string infoHashString(*infoHashOpt);
     auto portOpt = header->find(HttpHeader::PORT);
-    uint32_t port = 0;
-    if (!portOpt || !util::parseUIntNoThrow(port, std::string(*portOpt)) ||
-        port > UINT16_MAX || port == 0) {
-      A2_LOG_INFO(fmt("Bad LPD port=%u", port));
+    if (!portOpt) {
+      A2_LOG_INFO("Bad LPD port=0");
+      continue;
+    }
+    auto port = util::parseUIntNoThrow(std::string(*portOpt));
+    if (!port || *port > UINT16_MAX || *port == 0) {
+      A2_LOG_INFO(fmt("Bad LPD port=%u", port ? *port : 0));
       continue;
     }
     A2_LOG_INFO(fmt("LPD message received infohash=%s, port=%u from %s",
-                    infoHashString.c_str(), port, remoteEndpoint.addr.c_str()));
+                    infoHashString.c_str(), *port,
+                    remoteEndpoint.addr.c_str()));
     std::string infoHash;
     if (infoHashString.size() != 40 ||
         (infoHash = util::fromHex(infoHashString.begin(), infoHashString.end()))
@@ -130,7 +134,7 @@ std::unique_ptr<LpdMessage> LpdMessageReceiver::receiveMessage()
       A2_LOG_INFO(fmt("LPD bad request. infohash=%s", infoHashString.c_str()));
       continue;
     }
-    auto peer = std::make_shared<Peer>(remoteEndpoint.addr, port, false);
+    auto peer = std::make_shared<Peer>(remoteEndpoint.addr, *port, false);
     if (util::inPrivateAddress(remoteEndpoint.addr)) {
       peer->setLocalPeer(true);
     }
