@@ -803,7 +803,9 @@ void BittorrentHelperTest::testParseMagnet()
   std::string magnet =
       "magnet:?xt=urn:btih:248d0a1cd08284299de78d5c1ed359bb46717d8c&dn=aria2"
       "&tr=http://tracker1&tr=http://tracker2";
-  auto attrs = bittorrent::parseMagnet(magnet);
+  auto result1 = bittorrent::parseMagnet(magnet);
+  CPPUNIT_ASSERT(result1.has_value());
+  auto& attrs = *result1;
   CPPUNIT_ASSERT_EQUAL(std::string("248d0a1cd08284299de78d5c1ed359bb46717d8c"),
                        util::toHex(attrs->infoHash));
   CPPUNIT_ASSERT_EQUAL(std::string("[METADATA]aria2"), attrs->name);
@@ -814,17 +816,19 @@ void BittorrentHelperTest::testParseMagnet()
                        attrs->announceList[1][0]);
 
   magnet = "magnet:?xt=urn:btih:248d0a1cd08284299de78d5c1ed359bb46717d8c";
-  attrs = bittorrent::parseMagnet(magnet);
+  auto result2 = bittorrent::parseMagnet(magnet);
+  CPPUNIT_ASSERT(result2.has_value());
   CPPUNIT_ASSERT_EQUAL(
       std::string("[METADATA]248d0a1cd08284299de78d5c1ed359bb46717d8c"),
-      attrs->name);
-  CPPUNIT_ASSERT(attrs->announceList.empty());
+      (*result2)->name);
+  CPPUNIT_ASSERT((*result2)->announceList.empty());
 
   magnet = "magnet:?xt=urn:sha1:7899bdb90a026c746f3cbc10839dd9b2a2a3e985&"
            "xt=urn:btih:248d0a1cd08284299de78d5c1ed359bb46717d8c";
-  attrs = bittorrent::parseMagnet(magnet);
+  auto result3 = bittorrent::parseMagnet(magnet);
+  CPPUNIT_ASSERT(result3.has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("248d0a1cd08284299de78d5c1ed359bb46717d8c"),
-                       util::toHex(attrs->infoHash));
+                       util::toHex((*result3)->infoHash));
 }
 
 void BittorrentHelperTest::testParseMagnet_base32()
@@ -832,9 +836,10 @@ void BittorrentHelperTest::testParseMagnet_base32()
   std::string infoHash = "248d0a1cd08284299de78d5c1ed359bb46717d8c";
   std::string base32InfoHash = base32::encode(fromHex(infoHash));
   std::string magnet = "magnet:?xt=urn:btih:" + base32InfoHash + "&dn=aria2";
-  auto attrs = bittorrent::parseMagnet(magnet);
+  auto result = bittorrent::parseMagnet(magnet);
+  CPPUNIT_ASSERT(result.has_value());
   CPPUNIT_ASSERT_EQUAL(std::string("248d0a1cd08284299de78d5c1ed359bb46717d8c"),
-                       util::toHex(attrs->infoHash));
+                       util::toHex((*result)->infoHash));
 }
 
 void BittorrentHelperTest::testMetadata2Torrent()

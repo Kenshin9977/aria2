@@ -332,8 +332,8 @@ void Metalink2RequestGroup::createRequestGroup(
     // Inject dependency between rg and torrentRg here if
     // torrentRg is true
     if (torrentRg) {
-      auto dep = std::make_shared<BtDependency>(rg.get(), torrentRg);
-      rg->dependsOn(dep);
+      auto dep = make_unique<BtDependency>(rg.get(), torrentRg);
+      rg->dependsOn(std::move(dep));
       torrentRg->belongsTo(rg->getGID());
       // metadata download may take very long time. If URIs are
       // available, give up metadata download in at most 30 seconds.

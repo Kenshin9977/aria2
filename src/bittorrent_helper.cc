@@ -898,17 +898,16 @@ void assertID(uint8_t expected, const unsigned char* data, const char* msgName)
   }
 }
 
-std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
+std::expected<std::unique_ptr<TorrentAttribute>, std::string>
+parseMagnet(const std::string& magnet)
 {
   auto r = magnet::parse(magnet);
   if (!r) {
-    throw DL_ABORT_EX2("Bad BitTorrent Magnet URI.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Bad BitTorrent Magnet URI.");
   }
   const List* xts = downcast<List>(r->get("xt"));
   if (!xts) {
-    throw DL_ABORT_EX2("Missing xt parameter in Magnet URI.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Missing xt parameter in Magnet URI.");
   }
   auto attrs = make_unique<TorrentAttribute>();
   std::string infoHash;
@@ -933,9 +932,8 @@ std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
     }
   }
   if (infoHash.empty()) {
-    throw DL_ABORT_EX2("Bad BitTorrent Magnet URI. "
-                       "No valid BitTorrent Info Hash found.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Bad BitTorrent Magnet URI. "
+                           "No valid BitTorrent Info Hash found.");
   }
   const List* trs = downcast<List>(r->get("tr"));
   if (trs) {
@@ -962,7 +960,11 @@ std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
 void loadMagnet(const std::string& magnet,
                 const std::shared_ptr<DownloadContext>& dctx)
 {
-  dctx->setAttribute(CTX_ATTR_BT, parseMagnet(magnet));
+  auto result = parseMagnet(magnet);
+  if (!result) {
+    throw DL_ABORT_EX2(result.error(), error_code::MAGNET_PARSE_ERROR);
+  }
+  dctx->setAttribute(CTX_ATTR_BT, std::move(*result));
 }
 
 std::string metadata2Torrent(const std::string& metadata,

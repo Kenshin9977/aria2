@@ -75,7 +75,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(MetalinkProcessorTest);
 
 void MetalinkProcessorTest::testParseFileV4()
 {
-  auto m = metalink::parseFile(A2_TEST_DIR "/metalink4.xml");
+  auto result = metalink::parseFile(A2_TEST_DIR "/metalink4.xml");
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
   CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
   auto& e = m->getEntries()[0];
   CPPUNIT_ASSERT_EQUAL(std::string("example.ext"), e->getPath());
@@ -158,28 +160,18 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</file>"
                        "</metalink>";
     dw.setString(fmt(tmpl, "foo"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r.has_value());
+    m = std::move(*r);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     // empty name
     dw.setString(fmt(tmpl, ""));
-    try {
-      metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     // dir traversing
     dw.setString(fmt(tmpl, "../doughnuts"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing url@priority
@@ -190,41 +182,31 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</file>"
                        "</metalink>";
     dw.setString(fmt(tmpl, "0"));
-    try {
-      metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     dw.setString(fmt(tmpl, "1"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "100"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r2 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r2.has_value());
+    m = std::move(*r2);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "999999"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r3 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r3.has_value());
+    m = std::move(*r3);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "1000000"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
+
     dw.setString(fmt(tmpl, "A"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing metaurl@priority
@@ -236,41 +218,31 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</file>"
                        "</metalink>";
     dw.setString(fmt(tmpl, "0"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     dw.setString(fmt(tmpl, "1"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "100"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r2 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r2.has_value());
+    m = std::move(*r2);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "999999"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r3 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r3.has_value());
+    m = std::move(*r3);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     dw.setString(fmt(tmpl, "1000000"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
+
     dw.setString(fmt(tmpl, "A"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing metaurl@mediatype
@@ -282,13 +254,7 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                  "<metaurl>http://example.org</metaurl>"
                  "</file>"
                  "</metalink>");
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     const char* tmpl = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                        "<metalink xmlns=\"urn:ietf:params:xml:ns:metalink\">"
@@ -298,18 +264,14 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</metalink>";
 
     dw.setString(fmt(tmpl, "torrent"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     // empty mediatype
     dw.setString(fmt(tmpl, ""));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing metaurl@name
@@ -322,27 +284,18 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</metalink>";
 
     dw.setString(fmt(tmpl, "foo"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
     CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
 
     // dir traversing
     dw.setString(fmt(tmpl, "../doughnuts"));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
+
     // empty name
     dw.setString(fmt(tmpl, ""));
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-      // success
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing pieces@length
@@ -356,12 +309,7 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                  "</pieces>"
                  "</file>"
                  "</metalink>");
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     const char* tmpl = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                        "<metalink xmlns=\"urn:ietf:params:xml:ns:metalink\">"
@@ -374,23 +322,17 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</metalink>";
 
     dw.setString(fmt(tmpl, "262144"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
+
     // empty
-    try {
-      dw.setString(fmt(tmpl, ""));
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    dw.setString(fmt(tmpl, ""));
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
+
     // not a number
-    try {
-      dw.setString(fmt(tmpl, "A"));
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    dw.setString(fmt(tmpl, "A"));
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing pieces@type
@@ -404,12 +346,7 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                  "</pieces>"
                  "</file>"
                  "</metalink>");
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     const char* tmpl = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                        "<metalink xmlns=\"urn:ietf:params:xml:ns:metalink\">"
@@ -422,15 +359,13 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</metalink>";
 
     dw.setString(fmt(tmpl, "sha-1"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
+
     // empty
-    try {
-      dw.setString(fmt(tmpl, ""));
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    dw.setString(fmt(tmpl, ""));
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing hash@type
@@ -442,12 +377,7 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                  "<hash>0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33</hash>"
                  "</file>"
                  "</metalink>");
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     const char* tmpl =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -459,15 +389,13 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
         "</metalink>";
 
     dw.setString(fmt(tmpl, "sha-1"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
+
     // empty
-    try {
-      dw.setString(fmt(tmpl, ""));
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    dw.setString(fmt(tmpl, ""));
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
   {
     // Testing signature@mediatype
@@ -479,12 +407,7 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                  "<signature>sig</signature>"
                  "</file>"
                  "</metalink>");
-    try {
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 
     const char* tmpl = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                        "<metalink xmlns=\"urn:ietf:params:xml:ns:metalink\">"
@@ -495,124 +418,115 @@ void MetalinkProcessorTest::testParseFileV4_attrs()
                        "</metalink>";
 
     dw.setString(fmt(tmpl, "application/pgp-signature"));
-    m = metalink::parseBinaryStream(&dw);
+    auto r1 = metalink::parseBinaryStream(&dw);
+    CPPUNIT_ASSERT(r1.has_value());
+    m = std::move(*r1);
+
     // empty
-    try {
-      dw.setString(fmt(tmpl, ""));
-      m = metalink::parseBinaryStream(&dw);
-      CPPUNIT_FAIL("exception must be thrown.");
-    }
-    catch (RecoverableException& e) {
-    }
+    dw.setString(fmt(tmpl, ""));
+    CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
   }
 }
 
 void MetalinkProcessorTest::testParseFile()
 {
-  try {
-    auto metalinker = metalink::parseFile(A2_TEST_DIR "/test.xml");
-    auto entryItr = std::begin(metalinker->getEntries());
+  auto result = metalink::parseFile(A2_TEST_DIR "/test.xml");
+  CPPUNIT_ASSERT(result.has_value());
+  auto& metalinker = *result;
+  auto entryItr = std::begin(metalinker->getEntries());
 
-    auto& entry1 = *entryItr;
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), entry1->getPath());
-    CPPUNIT_ASSERT_EQUAL((int64_t)0LL, entry1->getLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("0.5.2"), entry1->version);
-    CPPUNIT_ASSERT_EQUAL(std::string("en-US"), entry1->languages[0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("Linux-x86"), entry1->oses[0]);
-    CPPUNIT_ASSERT_EQUAL(1, entry1->maxConnections);
-    CPPUNIT_ASSERT_EQUAL(
-        std::string("a96cf3f0266b91d87d5124cf94326422800b627d"),
-        util::toHex(entry1->checksum->getDigest()));
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry1->checksum->getHashType());
-    CPPUNIT_ASSERT(entry1->getSignature());
-    CPPUNIT_ASSERT_EQUAL(std::string("pgp"), entry1->getSignature()->getType());
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2.sig"),
-                         entry1->getSignature()->getFile());
-    // Note that we don't strip anything
-    CPPUNIT_ASSERT_EQUAL(
-        std::string(
-            "\n-----BEGIN PGP SIGNATURE-----\n"
-            "Version: GnuPG v1.4.9 (GNU/Linux)\n"
-            "\n"
-            "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
-            "ffffffffffffffffffffffff\n"
-            "fffff\n"
-            "-----END PGP SIGNATURE-----\n"
-            "\t"),
-        entry1->getSignature()->getBody());
+  auto& entry1 = *entryItr;
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), entry1->getPath());
+  CPPUNIT_ASSERT_EQUAL((int64_t)0LL, entry1->getLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("0.5.2"), entry1->version);
+  CPPUNIT_ASSERT_EQUAL(std::string("en-US"), entry1->languages[0]);
+  CPPUNIT_ASSERT_EQUAL(std::string("Linux-x86"), entry1->oses[0]);
+  CPPUNIT_ASSERT_EQUAL(1, entry1->maxConnections);
+  CPPUNIT_ASSERT_EQUAL(std::string("a96cf3f0266b91d87d5124cf94326422800b627d"),
+                       util::toHex(entry1->checksum->getDigest()));
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry1->checksum->getHashType());
+  CPPUNIT_ASSERT(entry1->getSignature());
+  CPPUNIT_ASSERT_EQUAL(std::string("pgp"), entry1->getSignature()->getType());
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2.sig"),
+                       entry1->getSignature()->getFile());
+  // Note that we don't strip anything
+  CPPUNIT_ASSERT_EQUAL(
+      std::string(
+          "\n-----BEGIN PGP SIGNATURE-----\n"
+          "Version: GnuPG v1.4.9 (GNU/Linux)\n"
+          "\n"
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
+          "ffffffffffffffffffffffff\n"
+          "fffff\n"
+          "-----END PGP SIGNATURE-----\n"
+          "\t"),
+      entry1->getSignature()->getBody());
 
-    auto resourceItr1 = std::begin(entry1->resources);
-    auto& resource1 = *resourceItr1;
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, resource1->type);
-    CPPUNIT_ASSERT_EQUAL(std::string("jp"), resource1->location);
-    CPPUNIT_ASSERT_EQUAL(1, resource1->priority);
-    CPPUNIT_ASSERT_EQUAL(std::string("ftp://ftphost/aria2-0.5.2.tar.bz2"),
-                         resource1->url);
-    CPPUNIT_ASSERT_EQUAL(1, resource1->maxConnections);
+  auto resourceItr1 = std::begin(entry1->resources);
+  auto& resource1 = *resourceItr1;
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, resource1->type);
+  CPPUNIT_ASSERT_EQUAL(std::string("jp"), resource1->location);
+  CPPUNIT_ASSERT_EQUAL(1, resource1->priority);
+  CPPUNIT_ASSERT_EQUAL(std::string("ftp://ftphost/aria2-0.5.2.tar.bz2"),
+                       resource1->url);
+  CPPUNIT_ASSERT_EQUAL(1, resource1->maxConnections);
 
-    ++resourceItr1;
-    auto& resource2 = *resourceItr1;
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_HTTP, resource2->type);
-    CPPUNIT_ASSERT_EQUAL(std::string("us"), resource2->location);
-    CPPUNIT_ASSERT_EQUAL(1, resource2->priority);
-    CPPUNIT_ASSERT_EQUAL(std::string("http://httphost/aria2-0.5.2.tar.bz2"),
-                         resource2->url);
-    CPPUNIT_ASSERT_EQUAL(-1, resource2->maxConnections);
+  ++resourceItr1;
+  auto& resource2 = *resourceItr1;
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_HTTP, resource2->type);
+  CPPUNIT_ASSERT_EQUAL(std::string("us"), resource2->location);
+  CPPUNIT_ASSERT_EQUAL(1, resource2->priority);
+  CPPUNIT_ASSERT_EQUAL(std::string("http://httphost/aria2-0.5.2.tar.bz2"),
+                       resource2->url);
+  CPPUNIT_ASSERT_EQUAL(-1, resource2->maxConnections);
 
-    ++entryItr;
+  ++entryItr;
 
-    auto& entry2 = *entryItr;
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.1.tar.bz2"), entry2->getPath());
-    CPPUNIT_ASSERT_EQUAL((int64_t)345689LL, entry2->getLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("0.5.1"), entry2->version);
-    CPPUNIT_ASSERT_EQUAL(std::string("ja-JP"), entry2->languages[0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("Linux-m68k"), entry2->oses[0]);
-    CPPUNIT_ASSERT_EQUAL(-1, entry2->maxConnections);
-    CPPUNIT_ASSERT_EQUAL(
-        std::string("4c255b0ed130f5ea880f0aa061c3da0487e251cc"),
-        util::toHex(entry2->checksum->getDigest()));
-    CPPUNIT_ASSERT_EQUAL((size_t)2, entry2->chunkChecksum->countPieceHash());
-    CPPUNIT_ASSERT_EQUAL(262144, entry2->chunkChecksum->getPieceLength());
-    CPPUNIT_ASSERT_EQUAL(
-        std::string("179463a88d79cbf0b1923991708aead914f26142"),
-        util::toHex(entry2->chunkChecksum->getPieceHash(0)));
-    CPPUNIT_ASSERT_EQUAL(
-        std::string("fecf8bc9a1647505fe16746f94e97a477597dbf3"),
-        util::toHex(entry2->chunkChecksum->getPieceHash(1)));
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry2->checksum->getHashType());
-    // See that signature is null
-    CPPUNIT_ASSERT(!entry2->getSignature());
+  auto& entry2 = *entryItr;
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.1.tar.bz2"), entry2->getPath());
+  CPPUNIT_ASSERT_EQUAL((int64_t)345689LL, entry2->getLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("0.5.1"), entry2->version);
+  CPPUNIT_ASSERT_EQUAL(std::string("ja-JP"), entry2->languages[0]);
+  CPPUNIT_ASSERT_EQUAL(std::string("Linux-m68k"), entry2->oses[0]);
+  CPPUNIT_ASSERT_EQUAL(-1, entry2->maxConnections);
+  CPPUNIT_ASSERT_EQUAL(std::string("4c255b0ed130f5ea880f0aa061c3da0487e251cc"),
+                       util::toHex(entry2->checksum->getDigest()));
+  CPPUNIT_ASSERT_EQUAL((size_t)2, entry2->chunkChecksum->countPieceHash());
+  CPPUNIT_ASSERT_EQUAL(262144, entry2->chunkChecksum->getPieceLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("179463a88d79cbf0b1923991708aead914f26142"),
+                       util::toHex(entry2->chunkChecksum->getPieceHash(0)));
+  CPPUNIT_ASSERT_EQUAL(std::string("fecf8bc9a1647505fe16746f94e97a477597dbf3"),
+                       util::toHex(entry2->chunkChecksum->getPieceHash(1)));
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry2->checksum->getHashType());
+  // See that signature is null
+  CPPUNIT_ASSERT(!entry2->getSignature());
 
-    ++entryItr;
+  ++entryItr;
 
-    // test case: verification hash is not provided
-    auto& entry3 = *entryItr;
-    CPPUNIT_ASSERT_EQUAL(std::string("NoVerificationHash"), entry3->getPath());
-    CPPUNIT_ASSERT(!entry3->checksum);
-    CPPUNIT_ASSERT(!entry3->chunkChecksum);
+  // test case: verification hash is not provided
+  auto& entry3 = *entryItr;
+  CPPUNIT_ASSERT_EQUAL(std::string("NoVerificationHash"), entry3->getPath());
+  CPPUNIT_ASSERT(!entry3->checksum);
+  CPPUNIT_ASSERT(!entry3->chunkChecksum);
 
-    ++entryItr;
+  ++entryItr;
 
-    // test case: unsupported verification hash is included
-    auto& entry4 = *entryItr;
-    CPPUNIT_ASSERT_EQUAL(std::string("UnsupportedVerificationHashTypeIncluded"),
-                         entry4->getPath());
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry4->checksum->getHashType());
-    CPPUNIT_ASSERT_EQUAL(
-        std::string("4c255b0ed130f5ea880f0aa061c3da0487e251cc"),
-        util::toHex(entry4->checksum->getDigest()));
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"),
-                         entry4->chunkChecksum->getHashType());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  // test case: unsupported verification hash is included
+  auto& entry4 = *entryItr;
+  CPPUNIT_ASSERT_EQUAL(std::string("UnsupportedVerificationHashTypeIncluded"),
+                       entry4->getPath());
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), entry4->checksum->getHashType());
+  CPPUNIT_ASSERT_EQUAL(std::string("4c255b0ed130f5ea880f0aa061c3da0487e251cc"),
+                       util::toHex(entry4->checksum->getDigest()));
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"),
+                       entry4->chunkChecksum->getHashType());
 }
 
 void MetalinkProcessorTest::testParseFile_dirtraversal()
 {
-  auto metalinker =
-      metalink::parseFile(A2_TEST_DIR "/metalink3-dirtraversal.xml");
+  auto result = metalink::parseFile(A2_TEST_DIR "/metalink3-dirtraversal.xml");
+  CPPUNIT_ASSERT(result.has_value());
+  auto& metalinker = *result;
   CPPUNIT_ASSERT_EQUAL((size_t)1, metalinker->getEntries().size());
   auto& e = metalinker->getEntries()[0];
   CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.3.tar.bz2"), e->getPath());
@@ -626,14 +540,11 @@ void MetalinkProcessorTest::testParseBinaryStream()
   dw.enableReadOnly();
   dw.openExistingFile();
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& entry1 = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), entry1->getPath());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& entry1 = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), entry1->getPath());
 }
 
 void MetalinkProcessorTest::testMalformedXML()
@@ -643,13 +554,8 @@ void MetalinkProcessorTest::testMalformedXML()
                "xmlns=\"http://www.metalinker.org/\"><files></file></"
                "metalink>");
 
-  try {
-    metalink::parseBinaryStream(&dw);
-    CPPUNIT_FAIL("exception must be thrown.");
-  }
-  catch (Exception& e) {
-    std::cerr << e.stackTrace() << std::endl;
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(!result.has_value());
 }
 
 void MetalinkProcessorTest::testMalformedXML2()
@@ -658,13 +564,8 @@ void MetalinkProcessorTest::testMalformedXML2()
   dw.setString("<metalink version=\"3.0\" "
                "xmlns=\"http://www.metalinker.org/\"><files></files>");
 
-  try {
-    metalink::parseBinaryStream(&dw);
-    CPPUNIT_FAIL("exception must be thrown.");
-  }
-  catch (Exception& e) {
-    std::cerr << e.stackTrace() << std::endl;
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(!result.has_value());
 }
 
 void MetalinkProcessorTest::testBadSizeV4()
@@ -680,15 +581,10 @@ void MetalinkProcessorTest::testBadSizeV4()
                      "</metalink>";
 
   dw.setString(fmt(tmpl, "9223372036854775807"));
-  metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(metalink::parseBinaryStream(&dw).has_value());
 
   dw.setString(fmt(tmpl, "-1"));
-  try {
-    metalink::parseBinaryStream(&dw);
-    CPPUNIT_FAIL("exception must be thrown.");
-  }
-  catch (RecoverableException& e) {
-  }
+  CPPUNIT_ASSERT(!metalink::parseBinaryStream(&dw).has_value());
 }
 
 void MetalinkProcessorTest::testBadSize()
@@ -705,18 +601,15 @@ void MetalinkProcessorTest::testBadSize()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), e->getPath());
-    CPPUNIT_ASSERT_EQUAL((int64_t)0LL, e->getLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("0.5.2"), e->version);
-    CPPUNIT_ASSERT_EQUAL(std::string("en-US"), e->languages[0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("Linux-x86"), e->oses[0]);
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), e->getPath());
+  CPPUNIT_ASSERT_EQUAL((int64_t)0LL, e->getLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("0.5.2"), e->version);
+  CPPUNIT_ASSERT_EQUAL(std::string("en-US"), e->languages[0]);
+  CPPUNIT_ASSERT_EQUAL(std::string("Linux-x86"), e->oses[0]);
 }
 
 void MetalinkProcessorTest::testBadMaxConn()
@@ -734,14 +627,11 @@ void MetalinkProcessorTest::testBadMaxConn()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL((int64_t)43743838LL, e->getLength());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL((int64_t)43743838LL, e->getLength());
 }
 
 void MetalinkProcessorTest::testNoName()
@@ -764,15 +654,12 @@ void MetalinkProcessorTest::testNoName()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), e->getPath());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL(std::string("aria2-0.5.2.tar.bz2"), e->getPath());
 }
 
 void MetalinkProcessorTest::testBadURLPrefs()
@@ -793,18 +680,15 @@ void MetalinkProcessorTest::testBadURLPrefs()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    auto& r = e->resources[0];
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r->type);
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::getLowestPriority(), r->priority);
-    CPPUNIT_ASSERT_EQUAL(1, r->maxConnections);
-    CPPUNIT_ASSERT_EQUAL(std::string("jp"), r->location);
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  auto& r = e->resources[0];
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r->type);
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::getLowestPriority(), r->priority);
+  CPPUNIT_ASSERT_EQUAL(1, r->maxConnections);
+  CPPUNIT_ASSERT_EQUAL(std::string("jp"), r->location);
 }
 
 void MetalinkProcessorTest::testBadURLMaxConn()
@@ -826,18 +710,15 @@ void MetalinkProcessorTest::testBadURLMaxConn()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    auto& r = e->resources[0];
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r->type);
-    CPPUNIT_ASSERT_EQUAL(1, r->priority);
-    CPPUNIT_ASSERT_EQUAL(-1, r->maxConnections);
-    CPPUNIT_ASSERT_EQUAL(std::string("jp"), r->location);
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  auto& r = e->resources[0];
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r->type);
+  CPPUNIT_ASSERT_EQUAL(1, r->priority);
+  CPPUNIT_ASSERT_EQUAL(-1, r->maxConnections);
+  CPPUNIT_ASSERT_EQUAL(std::string("jp"), r->location);
 }
 
 void MetalinkProcessorTest::testUnsupportedType()
@@ -859,20 +740,17 @@ void MetalinkProcessorTest::testUnsupportedType()
                "</files>"
                "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL((size_t)3, e->resources.size());
-    auto& r1 = e->resources[0];
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r1->type);
-    auto& r2 = e->resources[1];
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_NOT_SUPPORTED, r2->type);
-    auto& r3 = e->resources[2];
-    CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_HTTP, r3->type);
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL((size_t)3, e->resources.size());
+  auto& r1 = e->resources[0];
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_FTP, r1->type);
+  auto& r2 = e->resources[1];
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_NOT_SUPPORTED, r2->type);
+  auto& r3 = e->resources[2];
+  CPPUNIT_ASSERT_EQUAL(MetalinkResource::TYPE_HTTP, r3->type);
 }
 
 void MetalinkProcessorTest::testMultiplePieces()
@@ -891,17 +769,14 @@ void MetalinkProcessorTest::testMultiplePieces()
                "</files>"
                "</metalink>");
 
-  try {
-    // aria2 prefers sha1
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    auto& c = e->chunkChecksum;
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
-    CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  // aria2 prefers sha1
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  auto& c = e->chunkChecksum;
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
+  CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
 }
 
 void MetalinkProcessorTest::testBadPieceNo()
@@ -925,17 +800,14 @@ void MetalinkProcessorTest::testBadPieceNo()
       "</files>"
       "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    auto& c = e->chunkChecksum;
-    CPPUNIT_ASSERT(c);
-    CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  auto& c = e->chunkChecksum;
+  CPPUNIT_ASSERT(c);
+  CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
 }
 
 void MetalinkProcessorTest::testBadPieceLength()
@@ -957,18 +829,14 @@ void MetalinkProcessorTest::testBadPieceLength()
       "</files>"
       "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
-    auto& e = m->getEntries()[0];
-    auto& c = e->chunkChecksum;
-    CPPUNIT_ASSERT(c);
-    CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  CPPUNIT_ASSERT_EQUAL((size_t)1, (*result)->getEntries().size());
+  auto& e = (*result)->getEntries()[0];
+  auto& c = e->chunkChecksum;
+  CPPUNIT_ASSERT(c);
+  CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
 }
 
 void MetalinkProcessorTest::testUnsupportedType_piece()
@@ -990,17 +858,14 @@ void MetalinkProcessorTest::testUnsupportedType_piece()
       "</files>"
       "</metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    auto& c = e->chunkChecksum;
-    CPPUNIT_ASSERT(c);
-    CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
-    CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  auto& c = e->chunkChecksum;
+  CPPUNIT_ASSERT(c);
+  CPPUNIT_ASSERT_EQUAL((int32_t)1_k, c->getPieceLength());
+  CPPUNIT_ASSERT_EQUAL(std::string("sha-1"), c->getHashType());
 }
 
 void MetalinkProcessorTest::testLargeFileSize()
@@ -1016,14 +881,12 @@ void MetalinkProcessorTest::testLargeFileSize()
                "</file>"
                "</files>"
                "</metalink>");
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL((int64_t)9223372036854775807LL, e->getLength());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL((int64_t)9223372036854775807LL, e->getLength());
 }
 
 void MetalinkProcessorTest::testXmlPrefixV3()
@@ -1041,15 +904,12 @@ void MetalinkProcessorTest::testXmlPrefixV3()
       "</m:files>"
       "</m:metalink>");
 
-  try {
-    auto m = metalink::parseBinaryStream(&dw);
-    CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
-    auto& e = m->getEntries()[0];
-    CPPUNIT_ASSERT_EQUAL((int64_t)9223372036854775807LL, e->getLength());
-  }
-  catch (Exception& e) {
-    CPPUNIT_FAIL(e.stackTrace());
-  }
+  auto result = metalink::parseBinaryStream(&dw);
+  CPPUNIT_ASSERT(result.has_value());
+  auto& m = *result;
+  CPPUNIT_ASSERT_EQUAL((size_t)1, m->getEntries().size());
+  auto& e = m->getEntries()[0];
+  CPPUNIT_ASSERT_EQUAL((int64_t)9223372036854775807LL, e->getLength());
 }
 
 } // namespace aria2

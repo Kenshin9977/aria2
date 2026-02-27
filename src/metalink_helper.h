@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <expected>
 #include <string>
 #include <vector>
 #include <memory>
@@ -64,10 +65,10 @@ std::vector<std::pair<std::string, std::vector<MetalinkEntry*>>>
 groupEntryByMetaurlName(
     const std::vector<std::unique_ptr<MetalinkEntry>>& entries);
 
-std::unique_ptr<Metalinker> parseFile(const std::string& filename,
-                                      const std::string& baseUri = A2STR::NIL);
+std::expected<std::unique_ptr<Metalinker>, std::string>
+parseFile(const std::string& filename, const std::string& baseUri = A2STR::NIL);
 
-std::unique_ptr<Metalinker>
+std::expected<std::unique_ptr<Metalinker>, std::string>
 parseBinaryStream(BinaryStream* bs, const std::string& baseUri = A2STR::NIL);
 
 } // namespace metalink

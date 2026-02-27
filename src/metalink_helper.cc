@@ -67,14 +67,22 @@ std::vector<std::unique_ptr<MetalinkEntry>>
 parseAndQuery(const std::string& filename, const Option* option,
               const std::string& baseUri)
 {
-  return query(parseFile(filename, baseUri), option);
+  auto result = parseFile(filename, baseUri);
+  if (!result) {
+    throw DL_ABORT_EX2(result.error(), error_code::METALINK_PARSE_ERROR);
+  }
+  return query(std::move(*result), option);
 }
 
 std::vector<std::unique_ptr<MetalinkEntry>>
 parseAndQuery(BinaryStream* bs, const Option* option,
               const std::string& baseUri)
 {
-  return query(parseBinaryStream(bs, baseUri), option);
+  auto result = parseBinaryStream(bs, baseUri);
+  if (!result) {
+    throw DL_ABORT_EX2(result.error(), error_code::METALINK_PARSE_ERROR);
+  }
+  return query(std::move(*result), option);
 }
 
 std::vector<std::pair<std::string, std::vector<MetalinkEntry*>>>
@@ -108,23 +116,22 @@ groupEntryByMetaurlName(
   return result;
 }
 
-std::unique_ptr<Metalinker> parseFile(const std::string& filename,
-                                      const std::string& baseUri)
+std::expected<std::unique_ptr<Metalinker>, std::string>
+parseFile(const std::string& filename, const std::string& baseUri)
 {
   MetalinkParserStateMachine psm;
   psm.setBaseUri(baseUri);
   if (!xml::parseFile(filename, &psm)) {
-    throw DL_ABORT_EX2("Could not parse Metalink XML document.",
-                       error_code::METALINK_PARSE_ERROR);
+    return std::unexpected("Could not parse Metalink XML document.");
   }
   if (!psm.getErrors().empty()) {
-    throw DL_ABORT_EX2(psm.getErrorString(), error_code::METALINK_PARSE_ERROR);
+    return std::unexpected(psm.getErrorString());
   }
   return psm.getResult();
 }
 
-std::unique_ptr<Metalinker> parseBinaryStream(BinaryStream* bs,
-                                              const std::string& baseUri)
+std::expected<std::unique_ptr<Metalinker>, std::string>
+parseBinaryStream(BinaryStream* bs, const std::string& baseUri)
 {
   MetalinkParserStateMachine psm;
   psm.setBaseUri(baseUri);
@@ -146,11 +153,10 @@ std::unique_ptr<Metalinker> parseBinaryStream(BinaryStream* bs,
     }
   }
   if (!retval) {
-    throw DL_ABORT_EX2("Could not parse Metalink XML document.",
-                       error_code::METALINK_PARSE_ERROR);
+    return std::unexpected("Could not parse Metalink XML document.");
   }
   if (!psm.getErrors().empty()) {
-    throw DL_ABORT_EX2(psm.getErrorString(), error_code::METALINK_PARSE_ERROR);
+    return std::unexpected(psm.getErrorString());
   }
   return psm.getResult();
 }
