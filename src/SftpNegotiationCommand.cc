@@ -251,7 +251,10 @@ void SftpNegotiationCommand::onFileSizeDetermined(int64_t totalLength)
       return;
     }
 
-    getRequestGroup()->adjustFilename(std::make_shared<NullProgressInfoFile>());
+    {
+      NullProgressInfoFile nullInfoFile;
+      getRequestGroup()->adjustFilename(&nullInfoFile);
+    }
     getRequestGroup()->initPieceStorage();
     getPieceStorage()->getDiskAdaptor()->initAndOpenFile();
 
@@ -284,9 +287,9 @@ void SftpNegotiationCommand::onFileSizeDetermined(int64_t totalLength)
     return;
   }
   else {
-    auto progressInfoFile = std::make_shared<DefaultBtProgressInfoFile>(
+    auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
         getDownloadContext(), nullptr, getOption().get());
-    getRequestGroup()->adjustFilename(progressInfoFile);
+    getRequestGroup()->adjustFilename(progressInfoFile.get());
     getRequestGroup()->initPieceStorage();
 
     if (getOption()->getAsBool(PREF_DRY_RUN)) {

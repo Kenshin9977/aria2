@@ -919,7 +919,7 @@ AbstractCommand::getDownloadContext() const
   return requestGroup_->getDownloadContext();
 }
 
-const std::shared_ptr<SegmentMan>& AbstractCommand::getSegmentMan() const
+SegmentMan* AbstractCommand::getSegmentMan() const
 {
   return requestGroup_->getSegmentMan();
 }

@@ -206,7 +206,7 @@ public:
   const std::shared_ptr<Option>& getOption() const;
 
   const std::shared_ptr<DownloadContext>& getDownloadContext() const;
-  const std::shared_ptr<SegmentMan>& getSegmentMan() const;
+  SegmentMan* getSegmentMan() const;
   const std::shared_ptr<PieceStorage>& getPieceStorage() const;
 
   Timer& getCheckPoint() { return checkPoint_; }

@@ -99,17 +99,17 @@ private:
   // options applied on restart
   std::shared_ptr<Option> pendingOption_;
 
-  std::shared_ptr<SegmentMan> segmentMan_;
+  std::unique_ptr<SegmentMan> segmentMan_;
 
   std::shared_ptr<DownloadContext> downloadContext_;
 
   std::shared_ptr<PieceStorage> pieceStorage_;
 
-  std::shared_ptr<BtProgressInfoFile> progressInfoFile_;
+  std::unique_ptr<BtProgressInfoFile> progressInfoFile_;
 
   std::shared_ptr<DiskWriterFactory> diskWriterFactory_;
 
-  std::shared_ptr<Dependency> dependency_;
+  std::unique_ptr<Dependency> dependency_;
 
   std::unique_ptr<URISelector> uriSelector_;
 
@@ -206,8 +206,7 @@ private:
   // returns error_code::UNKNOWN_ERROR.
   std::pair<error_code::Value, std::string> downloadResult() const;
 
-  void removeDefunctControlFile(
-      const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void removeDefunctControlFile(BtProgressInfoFile* progressInfoFile);
 
 public:
   RequestGroup(const std::shared_ptr<GroupId>& gid,
@@ -219,10 +218,7 @@ public:
 
   void tryAutoFileRenaming();
 
-  const std::shared_ptr<SegmentMan>& getSegmentMan() const
-  {
-    return segmentMan_;
-  }
+  SegmentMan* getSegmentMan() const { return segmentMan_.get(); }
 
   std::unique_ptr<CheckIntegrityEntry> createCheckIntegrityEntry();
 
@@ -297,7 +293,7 @@ public:
   void setPieceStorage(std::shared_ptr<PieceStorage> pieceStorage);
 
   void
-  setProgressInfoFile(std::shared_ptr<BtProgressInfoFile> progressInfoFile);
+  setProgressInfoFile(std::unique_ptr<BtProgressInfoFile> progressInfoFile);
 
   void increaseStreamCommand();
 
@@ -356,7 +352,7 @@ public:
 
   bool isRestartRequested() const { return restartRequested_; }
 
-  void dependsOn(const std::shared_ptr<Dependency>& dep);
+  void dependsOn(std::unique_ptr<Dependency> dep);
 
   bool isDependencyResolved();
 
@@ -389,12 +385,11 @@ public:
 
   bool downloadFinishedByFileLength();
 
-  void
-  loadAndOpenFile(const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void loadAndOpenFile(std::unique_ptr<BtProgressInfoFile> progressInfoFile);
 
   void shouldCancelDownloadForSafety();
 
-  void adjustFilename(const std::shared_ptr<BtProgressInfoFile>& infoFile);
+  void adjustFilename(BtProgressInfoFile* infoFile);
 
   std::shared_ptr<DownloadResult> createDownloadResult() const;
 

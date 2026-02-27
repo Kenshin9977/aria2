@@ -124,7 +124,7 @@ RequestGroup::RequestGroup(const std::shared_ptr<GroupId>& gid,
     : belongsToGID_(0),
       gid_(gid),
       option_(option),
-      progressInfoFile_(std::make_shared<NullProgressInfoFile>()),
+      progressInfoFile_(make_unique<NullProgressInfoFile>()),
       uriSelector_(make_unique<InorderURISelector>()),
       requestGroupMan_(nullptr),
 #ifdef ENABLE_BITTORRENT
@@ -220,14 +220,14 @@ void RequestGroup::closeFile()
 // that this function open file.
 std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
 {
-  auto infoFile = std::make_shared<DefaultBtProgressInfoFile>(
+  auto infoFile = make_unique<DefaultBtProgressInfoFile>(
       downloadContext_, pieceStorage_, option_.get());
 
   if (option_->getAsBool(PREF_CHECK_INTEGRITY) &&
       downloadContext_->isPieceHashVerificationAvailable()) {
     // When checking piece hash, we don't care file is downloaded and
     // infoFile exists.
-    loadAndOpenFile(infoFile);
+    loadAndOpenFile(std::move(infoFile));
     return make_unique<StreamCheckIntegrityEntry>(this);
   }
 
@@ -239,7 +239,7 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
     // loadAndOpenFile()). If so, use ChecksumCheckIntegrityEntry when
     // verification is enabled, because CreateRequestCommand does not
     // issue checksum verification and download fails without it.
-    loadAndOpenFile(infoFile);
+    loadAndOpenFile(std::move(infoFile));
     if (downloadFinished()) {
       if (downloadContext_->isChecksumVerificationNeeded()) {
         A2_LOG_INFO(MSG_HASH_CHECK_NOT_DONE);
@@ -258,13 +258,13 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
   if (downloadFinishedByFileLength() &&
       downloadContext_->isChecksumVerificationAvailable()) {
     pieceStorage_->markAllPiecesDone();
-    loadAndOpenFile(infoFile);
+    loadAndOpenFile(std::move(infoFile));
     auto tempEntry = make_unique<ChecksumCheckIntegrityEntry>(this);
     tempEntry->setRedownload(true);
     return std::move(tempEntry);
   }
 
-  loadAndOpenFile(infoFile);
+  loadAndOpenFile(std::move(infoFile));
   return make_unique<StreamCheckIntegrityEntry>(this);
 }
 
@@ -310,9 +310,9 @@ void RequestGroup::createInitialCommand(
       }
     }
 
-    std::shared_ptr<DefaultBtProgressInfoFile> progressInfoFile;
+    std::unique_ptr<DefaultBtProgressInfoFile> progressInfoFile;
     if (!metadataGetMode) {
-      progressInfoFile = std::make_shared<DefaultBtProgressInfoFile>(
+      progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
           downloadContext_, pieceStorage_, option_.get());
     }
 
@@ -343,9 +343,9 @@ void RequestGroup::createInitialCommand(
     assert(!btRegistry->get(gid_->getNumericId()));
     btRegistry->put(
         gid_->getNumericId(),
-        make_unique<BtObject>(
-            downloadContext_, pieceStorage_, peerStorage, btAnnounce, btRuntime,
-            (progressInfoFile ? progressInfoFile : progressInfoFile_)));
+        make_unique<BtObject>(downloadContext_, pieceStorage_, peerStorage,
+                              btAnnounce, btRuntime,
+                              std::shared_ptr<BtProgressInfoFile>{}));
 
     if (option_->getAsBool(PREF_ENABLE_DHT) ||
         (!e->getOption()->getAsBool(PREF_DISABLE_IPV6) &&
@@ -406,7 +406,7 @@ void RequestGroup::createInitialCommand(
       return;
     }
 
-    removeDefunctControlFile(progressInfoFile);
+    removeDefunctControlFile(progressInfoFile.get());
     {
       int64_t actualFileSize = pieceStorage_->getDiskAdaptor()->size();
       if (actualFileSize == downloadContext_->getTotalLength()) {
@@ -446,7 +446,7 @@ void RequestGroup::createInitialCommand(
     else {
       pieceStorage_->getDiskAdaptor()->openFile();
     }
-    progressInfoFile_ = progressInfoFile;
+    progressInfoFile_ = std::move(progressInfoFile);
 
     auto entry = make_unique<BtCheckIntegrityEntry>(this);
     // --bt-seed-unverified=true is given and download has completed, skip
@@ -470,9 +470,9 @@ void RequestGroup::createInitialCommand(
       createNextCommand(commands, e, 1);
       return;
     }
-    auto progressInfoFile = std::make_shared<DefaultBtProgressInfoFile>(
+    auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
         downloadContext_, nullptr, option_.get());
-    adjustFilename(progressInfoFile);
+    adjustFilename(progressInfoFile.get());
     initPieceStorage();
     auto checkEntry = createCheckIntegrityEntry();
     if (checkEntry) {
@@ -500,9 +500,9 @@ void RequestGroup::createInitialCommand(
   if (downloadContext_->getFileEntries().size() > 1) {
     pieceStorage_->setupFileFilter();
   }
-  auto progressInfoFile = std::make_shared<DefaultBtProgressInfoFile>(
+  auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
       downloadContext_, pieceStorage_, option_.get());
-  removeDefunctControlFile(progressInfoFile);
+  removeDefunctControlFile(progressInfoFile.get());
   // Call Load, Save and file allocation command here
   if (progressInfoFile->exists()) {
     // load .aria2 file if it exists.
@@ -521,7 +521,7 @@ void RequestGroup::createInitialCommand(
   else {
     pieceStorage_->getDiskAdaptor()->openFile();
   }
-  progressInfoFile_ = progressInfoFile;
+  progressInfoFile_ = std::move(progressInfoFile);
   processCheckIntegrityEntry(commands,
                              make_unique<StreamCheckIntegrityEntry>(this), e);
 }
@@ -615,8 +615,7 @@ void RequestGroup::initPieceStorage()
     tempPieceStorage->getDiskAdaptor()->setOpenedFileCounter(
         requestGroupMan_->getOpenedFileCounter());
   }
-  segmentMan_ =
-      std::make_shared<SegmentMan>(downloadContext_, tempPieceStorage);
+  segmentMan_ = make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
   pieceStorage_ = tempPieceStorage;
 
 #ifdef __MINGW32__
@@ -673,8 +672,7 @@ bool RequestGroup::downloadFinishedByFileLength()
   return false;
 }
 
-void RequestGroup::adjustFilename(
-    const std::shared_ptr<BtProgressInfoFile>& infoFile)
+void RequestGroup::adjustFilename(BtProgressInfoFile* infoFile)
 {
   if (!isPreLocalFileCheckEnabled()) {
     // OK, no need to care about filename.
@@ -716,7 +714,7 @@ void RequestGroup::adjustFilename(
 }
 
 void RequestGroup::removeDefunctControlFile(
-    const std::shared_ptr<BtProgressInfoFile>& progressInfoFile)
+    BtProgressInfoFile* progressInfoFile)
 {
   // Remove the control file if download file doesn't exist
   if (progressInfoFile->exists() &&
@@ -729,14 +727,14 @@ void RequestGroup::removeDefunctControlFile(
 }
 
 void RequestGroup::loadAndOpenFile(
-    const std::shared_ptr<BtProgressInfoFile>& progressInfoFile)
+    std::unique_ptr<BtProgressInfoFile> progressInfoFile)
 {
   try {
     if (!isPreLocalFileCheckEnabled()) {
       pieceStorage_->getDiskAdaptor()->initAndOpenFile();
       return;
     }
-    removeDefunctControlFile(progressInfoFile);
+    removeDefunctControlFile(progressInfoFile.get());
     if (progressInfoFile->exists()) {
       progressInfoFile->load();
       pieceStorage_->getDiskAdaptor()->openExistingFile();
@@ -755,7 +753,7 @@ void RequestGroup::loadAndOpenFile(
         pieceStorage_->getDiskAdaptor()->initAndOpenFile();
       }
     }
-    setProgressInfoFile(progressInfoFile);
+    setProgressInfoFile(std::move(progressInfoFile));
   }
   catch (RecoverableException& e) {
     throw DOWNLOAD_FAILURE_EXCEPTION2(EX_DOWNLOAD_ABORTED, e);
@@ -1033,7 +1031,7 @@ void RequestGroup::releaseRuntimeResource(DownloadEngine* e)
   }
   // Don't reset segmentMan_ and pieceStorage_ here to provide
   // progress information via RPC
-  progressInfoFile_ = std::make_shared<NullProgressInfoFile>();
+  progressInfoFile_ = make_unique<NullProgressInfoFile>();
   downloadContext_->releaseRuntimeResource();
   // Reset seedOnly_, so that we can handle pause/unpause-ing seeding
   // torrent with --bt-detach-seed-only.
@@ -1123,9 +1121,9 @@ bool RequestGroup::isDependencyResolved()
   return dependency_->resolve();
 }
 
-void RequestGroup::dependsOn(const std::shared_ptr<Dependency>& dep)
+void RequestGroup::dependsOn(std::unique_ptr<Dependency> dep)
 {
-  dependency_ = dep;
+  dependency_ = std::move(dep);
 }
 
 void RequestGroup::setDiskWriterFactory(
@@ -1154,7 +1152,7 @@ void RequestGroup::setPieceStorage(std::shared_ptr<PieceStorage> pieceStorage)
 }
 
 void RequestGroup::setProgressInfoFile(
-    std::shared_ptr<BtProgressInfoFile> progressInfoFile)
+    std::unique_ptr<BtProgressInfoFile> progressInfoFile)
 {
   progressInfoFile_ = std::move(progressInfoFile);
 }
