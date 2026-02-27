@@ -53,6 +53,8 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <string_view>
+#include <expected>
 
 #include "a2time.h"
 #include "a2netcompat.h"
@@ -231,7 +233,7 @@ bool inRFC5987AttrChar(const char c);
 // Returns true if |c| is in ISO/IEC 8859-1 character set.
 bool isIso8859p1(unsigned char c);
 
-bool isUtf8(const std::string& str);
+bool isUtf8(std::string_view str);
 
 std::string percentDecode(std::string::const_iterator first,
                           std::string::const_iterator last);
@@ -273,16 +275,15 @@ std::string fromHex(InputIterator first, InputIterator last)
 
 std::string secfmt(time_t sec);
 
-bool parseIntNoThrow(int32_t& res, const std::string& s, int base = 10);
+std::expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
 
 // Valid range: [0, INT32_MAX]
 bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base = 10);
 
-bool parseLLIntNoThrow(int64_t& res, const std::string& s, int base = 10);
+std::expected<int64_t, std::string> parseLLInt(std::string_view s,
+                                               int base = 10);
 
-// Parses |s| as floating point number, and stores the result into
-// |res|.  This function returns true if it succeeds.
-bool parseDoubleNoThrow(double& res, const std::string& s);
+std::expected<double, std::string> parseDouble(std::string_view s);
 
 SegList<int> parseIntSegments(const std::string& src);
 
@@ -344,7 +345,7 @@ char toUpperChar(char c);
 
 char toLowerChar(char c);
 
-bool isNumericHost(const std::string& name);
+bool isNumericHost(std::string_view name);
 
 typedef void (*signal_handler_t)(int);
 void setGlobalSignalHandler(int signal, sigset_t* mask,
@@ -407,7 +408,7 @@ bool isDigit(const char c);
 
 bool isHexDigit(const char c);
 
-bool isHexDigit(const std::string& s);
+bool isHexDigit(std::string_view s);
 
 bool isLws(const char c);
 
@@ -632,8 +633,7 @@ bool strieq(InputIterator first, InputIterator last, const char* b)
   return first == last && *b == '\0';
 }
 
-bool strieq(const std::string& a, const char* b);
-bool strieq(const std::string& a, const std::string& b);
+bool strieq(std::string_view a, std::string_view b);
 
 template <typename InputIterator1, typename InputIterator2>
 bool startsWith(InputIterator1 first1, InputIterator1 last1,
@@ -656,8 +656,7 @@ bool startsWith(InputIterator first, InputIterator last, const char* b)
   return *b == '\0';
 }
 
-bool startsWith(const std::string& a, const char* b);
-bool startsWith(const std::string& a, const std::string& b);
+bool startsWith(std::string_view a, std::string_view b);
 
 template <typename InputIterator1, typename InputIterator2>
 bool istartsWith(InputIterator1 first1, InputIterator1 last1,
@@ -681,8 +680,7 @@ bool istartsWith(InputIterator first, InputIterator last, const char* b)
   return *b == '\0';
 }
 
-bool istartsWith(const std::string& a, const char* b);
-bool istartsWith(const std::string& a, const std::string& b);
+bool istartsWith(std::string_view a, std::string_view b);
 
 template <typename InputIterator1, typename InputIterator2>
 bool endsWith(InputIterator1 first1, InputIterator1 last1,
@@ -694,8 +692,7 @@ bool endsWith(InputIterator1 first1, InputIterator1 last1,
   return std::equal(first2, last2, last1 - (last2 - first2));
 }
 
-bool endsWith(const std::string& a, const char* b);
-bool endsWith(const std::string& a, const std::string& b);
+bool endsWith(std::string_view a, std::string_view b);
 
 template <typename InputIterator1, typename InputIterator2>
 bool iendsWith(InputIterator1 first1, InputIterator1 last1,
@@ -707,8 +704,7 @@ bool iendsWith(InputIterator1 first1, InputIterator1 last1,
   return std::equal(first2, last2, last1 - (last2 - first2), CaseCmp());
 }
 
-bool iendsWith(const std::string& a, const char* b);
-bool iendsWith(const std::string& a, const std::string& b);
+bool iendsWith(std::string_view a, std::string_view b);
 
 // Returns true if strcmp(a, b) < 0
 bool strless(const char* a, const char* b);
@@ -744,7 +740,7 @@ std::string fixTaintedBasename(const std::string& src);
 void generateRandomKey(unsigned char* key);
 
 // Returns true is given numeric ipv4addr is in Private Address Space.
-bool inPrivateAddress(const std::string& ipv4addr);
+bool inPrivateAddress(std::string_view ipv4addr);
 
 // Returns true if s contains directory traversal path component such
 // as '..' or it contains null or control character which may fool

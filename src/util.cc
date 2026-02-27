@@ -243,7 +243,7 @@ bool isHexDigit(const char c)
   return isDigit(c) || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f');
 }
 
-bool isHexDigit(const std::string& s)
+bool isHexDigit(std::string_view s)
 {
   for (const auto& c : s) {
     if (!isHexDigit(c)) {
@@ -312,10 +312,9 @@ bool inPercentEncodeMini(const unsigned char c)
 
 } // namespace
 
-bool isUtf8(const std::string& str)
+bool isUtf8(std::string_view str)
 {
-  for (std::string::const_iterator s = str.begin(), eos = str.end(); s != eos;
-       ++s) {
+  for (auto s = str.begin(), eos = str.end(); s != eos; ++s) {
     unsigned char firstChar = *s;
     // See ABNF in http://tools.ietf.org/search/rfc3629#section-4
     if (in(firstChar, 0x20u, 0x7eu) || firstChar == 0x08u || // \b
@@ -557,18 +556,16 @@ bool parseLong(T& res, F f, const std::string& s, int base)
 }
 } // namespace
 
-bool parseIntNoThrow(int32_t& res, const std::string& s, int base)
+std::expected<int32_t, std::string> parseInt(std::string_view s, int base)
 {
+  std::string str(s);
   long int t;
-  if (parseLong(t, strtol, s, base) &&
+  if (parseLong(t, strtol, str, base) &&
       t >= std::numeric_limits<int32_t>::min() &&
       t <= std::numeric_limits<int32_t>::max()) {
-    res = t;
-    return true;
+    return static_cast<int32_t>(t);
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
 bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base)
@@ -584,43 +581,40 @@ bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base)
   }
 }
 
-bool parseLLIntNoThrow(int64_t& res, const std::string& s, int base)
+std::expected<int64_t, std::string> parseLLInt(std::string_view s, int base)
 {
+  std::string str(s);
   int64_t t;
-  if (parseLong(t, strtoll, s, base)) {
-    res = t;
-    return true;
+  if (parseLong(t, strtoll, str, base)) {
+    return t;
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
-bool parseDoubleNoThrow(double& res, const std::string& s)
+std::expected<double, std::string> parseDouble(std::string_view s)
 {
   if (s.empty()) {
-    return false;
+    return std::unexpected(std::string("empty string"));
   }
 
+  std::string str(s);
   errno = 0;
   char* endptr;
-  auto d = strtod(s.c_str(), &endptr);
+  auto d = strtod(str.c_str(), &endptr);
 
   if (errno == ERANGE) {
-    return false;
+    return std::unexpected(std::string("out of range"));
   }
 
-  if (endptr != s.c_str() + s.size()) {
-    for (auto i = std::begin(s) + (endptr - s.c_str()); i != std::end(s); ++i) {
+  if (endptr != str.c_str() + str.size()) {
+    for (auto i = str.begin() + (endptr - str.c_str()); i != str.end(); ++i) {
       if (!isspace(*i)) {
-        return false;
+        return std::unexpected(std::string("parse error"));
       }
     }
   }
 
-  res = d;
-
-  return true;
+  return d;
 }
 
 SegList<int> parseIntSegments(const std::string& src)
@@ -635,9 +629,9 @@ SegList<int> parseIntSegments(const std::string& src)
     }
     std::string::const_iterator p = std::find(i, j, '-');
     if (p == j) {
-      int a;
-      if (parseIntNoThrow(a, std::string(i, j))) {
-        sgl.add(a, a + 1);
+      auto a = parseInt(std::string_view(&*i, j - i));
+      if (a) {
+        sgl.add(*a, *a + 1);
       }
       else {
         throw DL_ABORT_EX(fmt("Bad range %s", std::string(i, j).c_str()));
@@ -647,10 +641,10 @@ SegList<int> parseIntSegments(const std::string& src)
       throw DL_ABORT_EX(fmt(MSG_INCOMPLETE_RANGE, std::string(i, j).c_str()));
     }
     else {
-      int a, b;
-      if (parseIntNoThrow(a, std::string(i, p)) &&
-          parseIntNoThrow(b, (std::string(p + 1, j)))) {
-        sgl.add(a, b + 1);
+      auto a = parseInt(std::string_view(&*i, p - i));
+      auto b = parseInt(std::string_view(&*(p + 1), j - (p + 1)));
+      if (a && b) {
+        sgl.add(*a, *b + 1);
       }
       else {
         throw DL_ABORT_EX(fmt("Bad range %s", std::string(i, j).c_str()));
@@ -1632,14 +1626,15 @@ char toLowerChar(char c)
   return c;
 }
 
-bool isNumericHost(const std::string& name)
+bool isNumericHost(std::string_view name)
 {
   struct addrinfo hints;
   struct addrinfo* res;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_flags = AI_NUMERICHOST;
-  if (getaddrinfo(name.c_str(), nullptr, &hints, &res)) {
+  std::string nameStr(name);
+  if (getaddrinfo(nameStr.c_str(), nullptr, &hints, &res)) {
     return false;
   }
   freeaddrinfo(res);
@@ -1845,16 +1840,16 @@ int64_t getRealSize(const std::string& sizeWithUnit)
     }
     size.assign(sizeWithUnit.begin(), sizeWithUnit.begin() + p);
   }
-  int64_t v;
-  if (!parseLLIntNoThrow(v, size) || v < 0) {
+  auto v = parseLLInt(size);
+  if (!v || *v < 0) {
     throw DL_ABORT_EX(
         fmt("Bad or negative value detected: %s", sizeWithUnit.c_str()));
   }
-  if (INT64_MAX / mult < v) {
+  if (INT64_MAX / mult < *v) {
     throw DL_ABORT_EX(
         fmt(MSG_STRING_INTEGER_CONVERSION_FAILURE, "overflow/underflow"));
   }
-  return v * mult;
+  return *v * mult;
 }
 
 std::string abbrevSize(int64_t size)
@@ -2141,7 +2136,7 @@ void generateRandomKey(unsigned char* key)
 // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
 // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
 // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
-bool inPrivateAddress(const std::string& ipv4addr)
+bool inPrivateAddress(std::string_view ipv4addr)
 {
   if (util::startsWith(ipv4addr, "10.") ||
       util::startsWith(ipv4addr, "192.168.")) {
@@ -2415,52 +2410,27 @@ bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
                    ptLeftLabelEnd);
 }
 
-bool strieq(const std::string& a, const char* b)
-{
-  return strieq(a.begin(), a.end(), b);
-}
-
-bool strieq(const std::string& a, const std::string& b)
+bool strieq(std::string_view a, std::string_view b)
 {
   return strieq(a.begin(), a.end(), b.begin(), b.end());
 }
 
-bool startsWith(const std::string& a, const char* b)
-{
-  return startsWith(a.begin(), a.end(), b);
-}
-
-bool startsWith(const std::string& a, const std::string& b)
+bool startsWith(std::string_view a, std::string_view b)
 {
   return startsWith(a.begin(), a.end(), b.begin(), b.end());
 }
 
-bool istartsWith(const std::string& a, const char* b)
+bool istartsWith(std::string_view a, std::string_view b)
 {
-  return istartsWith(a.begin(), a.end(), b);
+  return istartsWith(a.begin(), a.end(), b.begin(), b.end());
 }
 
-bool istartsWith(const std::string& a, const std::string& b)
-{
-  return istartsWith(std::begin(a), std::end(a), std::begin(b), std::end(b));
-}
-
-bool endsWith(const std::string& a, const char* b)
-{
-  return endsWith(a.begin(), a.end(), b, b + strlen(b));
-}
-
-bool endsWith(const std::string& a, const std::string& b)
+bool endsWith(std::string_view a, std::string_view b)
 {
   return endsWith(a.begin(), a.end(), b.begin(), b.end());
 }
 
-bool iendsWith(const std::string& a, const char* b)
-{
-  return iendsWith(a.begin(), a.end(), b, b + strlen(b));
-}
-
-bool iendsWith(const std::string& a, const std::string& b)
+bool iendsWith(std::string_view a, std::string_view b)
 {
   return iendsWith(a.begin(), a.end(), b.begin(), b.end());
 }
