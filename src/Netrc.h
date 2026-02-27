@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -47,7 +48,7 @@ class Authenticatable {
 public:
   virtual ~Authenticatable() = default;
 
-  virtual bool match(const std::string& hostname) const = 0;
+  virtual bool match(std::string_view hostname) const = 0;
 };
 
 class Authenticator : public Authenticatable {
@@ -65,7 +66,7 @@ public:
 
   ~Authenticator() override;
 
-  bool match(const std::string& hostname) const override;
+  bool match(std::string_view hostname) const override;
 
   const std::string& getMachine() const { return machine_; }
 
@@ -93,7 +94,7 @@ public:
 
   ~DefaultAuthenticator() override;
 
-  bool match(const std::string& hostname) const override;
+  bool match(std::string_view hostname) const override;
 };
 
 class Netrc {
@@ -109,7 +110,7 @@ public:
 
   void parse(const std::string& path);
 
-  const Authenticator* findAuthenticator(const std::string& hostname) const;
+  const Authenticator* findAuthenticator(std::string_view hostname) const;
 
   const std::vector<std::unique_ptr<Authenticator>>& getAuthenticators() const;
 

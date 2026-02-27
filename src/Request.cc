@@ -77,14 +77,14 @@ Request::Request()
 Request::~Request() = default;
 
 namespace {
-std::string removeFragment(const std::string& uri)
+std::string removeFragment(std::string_view uri)
 {
-  std::string::size_type sharpIndex = uri.find("#");
-  if (sharpIndex == std::string::npos) {
-    return uri;
+  auto sharpIndex = uri.find('#');
+  if (sharpIndex == std::string_view::npos) {
+    return std::string(uri);
   }
   else {
-    return uri.substr(0, sharpIndex);
+    return std::string(uri.substr(0, sharpIndex));
   }
 }
 } // namespace
@@ -103,7 +103,7 @@ bool Request::resetUri()
   return parseUri(uri_);
 }
 
-void Request::setReferer(const std::string& uri)
+void Request::setReferer(std::string_view uri)
 {
   referer_ = removeFragment(uri);
 }

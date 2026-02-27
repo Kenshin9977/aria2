@@ -39,6 +39,7 @@
 
 #include <cassert>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -107,7 +108,7 @@ public:
   }
 
   template <typename InputIterator>
-  void setPieceHashes(const std::string& hashType, InputIterator first,
+  void setPieceHashes(std::string_view hashType, InputIterator first,
                       InputIterator last)
   {
     pieceHashType_ = hashType;
@@ -158,7 +159,7 @@ public:
 
   const std::string& getHashType() const { return hashType_; }
 
-  void setDigest(const std::string& hashType, const std::string& digest);
+  void setDigest(std::string_view hashType, std::string_view digest);
 
   // The representative path name for this context. It is used as a
   // part of .aria2 control file. If basePath_ is set, returns

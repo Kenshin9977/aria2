@@ -37,6 +37,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <memory>
 
 #include "TimerA2.h"
@@ -98,7 +99,7 @@ public:
   const std::string& getUri() const { return uri_; }
   const std::string& getCurrentUri() const { return currentUri_; }
   const std::string& getReferer() const { return referer_; }
-  void setReferer(const std::string& uri);
+  void setReferer(std::string_view uri);
   Protocol getProtocol() const { return us_.protocol; }
   const std::string& getHost() const { return us_.host; }
   // Same as getHost(), but for IPv6 literal addresses, enclose them

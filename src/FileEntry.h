@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <deque>
 #include <vector>
 #include <ostream>
@@ -216,9 +217,9 @@ public:
   // Translate global offset goff to file local offset.
   int64_t gtoloff(int64_t goff) const;
 
-  void removeURIWhoseHostnameIs(const std::string& hostname);
+  void removeURIWhoseHostnameIs(std::string_view hostname);
 
-  void removeIdenticalURI(const std::string& uri);
+  void removeIdenticalURI(std::string_view uri);
 
   void addURIResult(std::string uri, error_code::Value result);
 

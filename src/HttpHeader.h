@@ -101,7 +101,7 @@ public:
   };
 
   // For all methods, use lowercased header field name.
-  void put(int hdKey, const std::string& value);
+  void put(int hdKey, std::string_view value);
   bool defined(int hdKey) const;
   std::optional<std::string_view> find(int hdKey) const;
   std::vector<std::string> findAll(int hdKey) const;
@@ -119,11 +119,11 @@ public:
 
   const std::string& getReasonPhrase() const;
 
-  void setReasonPhrase(const std::string& reasonPhrase);
+  void setReasonPhrase(std::string_view reasonPhrase);
 
   const std::string& getVersion() const;
 
-  void setVersion(const std::string& version);
+  void setVersion(std::string_view version);
 
   template <typename InputIterator>
   void setVersion(InputIterator first, InputIterator last)
@@ -133,7 +133,7 @@ public:
 
   const std::string& getMethod() const;
 
-  void setMethod(const std::string& method);
+  void setMethod(std::string_view method);
 
   template <typename InputIterator>
   void setMethod(InputIterator first, InputIterator last)
@@ -143,7 +143,7 @@ public:
 
   const std::string& getRequestPath() const;
 
-  void setRequestPath(const std::string& requestPath);
+  void setRequestPath(std::string_view requestPath);
 
   template <typename InputIterator>
   void setRequestPath(InputIterator first, InputIterator last)

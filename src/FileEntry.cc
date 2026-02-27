@@ -351,7 +351,7 @@ bool FileEntry::removeRequest(const std::shared_ptr<Request>& request)
   return inFlightRequests_.erase(request) == 1;
 }
 
-void FileEntry::removeURIWhoseHostnameIs(const std::string& hostname)
+void FileEntry::removeURIWhoseHostnameIs(std::string_view hostname)
 {
   std::deque<std::string> newURIs;
   for (std::deque<std::string>::const_iterator itr = uris_.begin(),
@@ -362,7 +362,7 @@ void FileEntry::removeURIWhoseHostnameIs(const std::string& hostname)
       continue;
     }
     if (us.fields[USR_HOST].len != hostname.size() ||
-        memcmp((*itr).c_str() + us.fields[USR_HOST].off, hostname.c_str(),
+        memcmp((*itr).c_str() + us.fields[USR_HOST].off, hostname.data(),
                hostname.size()) != 0) {
       newURIs.push_back(*itr);
     }
@@ -373,7 +373,7 @@ void FileEntry::removeURIWhoseHostnameIs(const std::string& hostname)
   uris_.swap(newURIs);
 }
 
-void FileEntry::removeIdenticalURI(const std::string& uri)
+void FileEntry::removeIdenticalURI(std::string_view uri)
 {
   uris_.erase(std::remove(uris_.begin(), uris_.end(), uri), uris_.end());
 }

@@ -284,8 +284,8 @@ const std::string& DownloadContext::getPieceHash(size_t index) const
   }
 }
 
-void DownloadContext::setDigest(const std::string& hashType,
-                                const std::string& digest)
+void DownloadContext::setDigest(std::string_view hashType,
+                                std::string_view digest)
 {
   hashType_ = hashType;
   digest_ = digest;

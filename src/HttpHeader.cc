@@ -45,10 +45,9 @@ HttpHeader::HttpHeader() : statusCode_(0) {}
 
 HttpHeader::~HttpHeader() = default;
 
-void HttpHeader::put(int hdKey, const std::string& value)
+void HttpHeader::put(int hdKey, std::string_view value)
 {
-  std::multimap<int, std::string>::value_type vt(hdKey, value);
-  table_.insert(vt);
+  table_.emplace(hdKey, std::string(value));
 }
 
 void HttpHeader::remove(int hdKey) { table_.erase(hdKey); }
@@ -164,11 +163,11 @@ Range HttpHeader::getRange() const
   return Range(*startByte, *endByte, *entityLength);
 }
 
-void HttpHeader::setVersion(const std::string& version) { version_ = version; }
+void HttpHeader::setVersion(std::string_view version) { version_ = version; }
 
-void HttpHeader::setMethod(const std::string& method) { method_ = method; }
+void HttpHeader::setMethod(std::string_view method) { method_ = method; }
 
-void HttpHeader::setRequestPath(const std::string& requestPath)
+void HttpHeader::setRequestPath(std::string_view requestPath)
 {
   requestPath_ = requestPath;
 }
@@ -187,7 +186,7 @@ const std::string& HttpHeader::getRequestPath() const { return requestPath_; }
 
 const std::string& HttpHeader::getReasonPhrase() const { return reasonPhrase_; }
 
-void HttpHeader::setReasonPhrase(const std::string& reasonPhrase)
+void HttpHeader::setReasonPhrase(std::string_view reasonPhrase)
 {
   reasonPhrase_ = reasonPhrase;
 }

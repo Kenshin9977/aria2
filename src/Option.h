@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -57,7 +58,7 @@ public:
   Option(const Option& option);
   Option& operator=(const Option& option);
 
-  void put(PrefPtr pref, const std::string& value);
+  void put(PrefPtr pref, std::string_view value);
   // Returns true if name is defined. Otherwise returns false.  Note
   // that even if the value is a empty string, this method returns
   // true.  If option is not defined in this object and parent_ is not
