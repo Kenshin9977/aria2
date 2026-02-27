@@ -198,8 +198,8 @@ void Metalink2RequestGroup::createRequestGroup(
     }
     entries.resize(inspoint);
   }
-  std::for_each(std::begin(entries), std::end(entries),
-                std::mem_fn(&MetalinkEntry::reorderMetaurlsByPriority));
+  std::ranges::for_each(entries,
+                        std::mem_fn(&MetalinkEntry::reorderMetaurlsByPriority));
   auto entryGroups = metalink::groupEntryByMetaurlName(entries);
   for (auto& entryGroup : entryGroups) {
     auto& metaurl = entryGroup.first;
@@ -247,8 +247,7 @@ void Metalink2RequestGroup::createRequestGroup(
         A2_LOG_DEBUG(fmt("priority=%d url=%s", mr->priority, mr->url.c_str()));
       }
       std::vector<std::string> uris;
-      std::for_each(std::begin(entry->resources), std::end(entry->resources),
-                    AccumulateNonP2PUri(uris));
+      std::ranges::for_each(entry->resources, AccumulateNonP2PUri(uris));
       // If piece hash is specified in the metalink,
       // make segment size equal to piece hash size.
       int32_t pieceLength;
@@ -299,8 +298,7 @@ void Metalink2RequestGroup::createRequestGroup(
             fmt("originalName = %s", entry->metaurls[0]->name.c_str()));
         entry->reorderResourcesByPriority();
         std::vector<std::string> uris;
-        std::for_each(std::begin(entry->resources), std::end(entry->resources),
-                      AccumulateNonP2PUri(uris));
+        std::ranges::for_each(entry->resources, AccumulateNonP2PUri(uris));
         auto fe = std::make_shared<FileEntry>(
             util::applyDir(option->get(PREF_DIR), entry->file->getPath()),
             entry->file->getLength(), offset, uris);

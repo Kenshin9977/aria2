@@ -62,10 +62,7 @@ OptionParser::OptionParser()
 {
 }
 
-OptionParser::~OptionParser()
-{
-  std::for_each(handlers_.begin(), handlers_.end(), Deleter());
-}
+OptionParser::~OptionParser() { std::ranges::for_each(handlers_, Deleter()); }
 
 namespace {
 template <typename InputIterator>

@@ -138,7 +138,7 @@ bool BtDependency::resolve()
           e->setRequested(false);
           destFiles.push_back(e);
         }
-        std::sort(std::begin(destFiles), std::end(destFiles), EntryCmp());
+        std::ranges::sort(destFiles, EntryCmp());
         // Copy file path in dependant_'s FileEntries to newly created
         // context's FileEntries to endorse the path structure of
         // dependant_.  URIs and singleHostMultiConnection are also copied.

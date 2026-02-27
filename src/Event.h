@@ -211,8 +211,7 @@ public:
 
   void addCommandEvent(const CommandEvent& cev)
   {
-    typename std::deque<CommandEvent>::iterator i =
-        std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+    auto i = std::ranges::find(commandEvents_, cev);
     if (i == commandEvents_.end()) {
       commandEvents_.push_back(cev);
     }
@@ -223,8 +222,7 @@ public:
 
   void removeCommandEvent(const CommandEvent& cev)
   {
-    typename std::deque<CommandEvent>::iterator i =
-        std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+    auto i = std::ranges::find(commandEvents_, cev);
     if (i == commandEvents_.end()) {
       // not found
     }
@@ -240,8 +238,7 @@ public:
 
   void addADNSEvent(const ADNSEvent& aev)
   {
-    typename std::deque<ADNSEvent>::iterator i =
-        std::find(adnsEvents_.begin(), adnsEvents_.end(), aev);
+    auto i = std::ranges::find(adnsEvents_, aev);
     if (i == adnsEvents_.end()) {
       adnsEvents_.push_back(aev);
     }
@@ -249,8 +246,7 @@ public:
 
   void removeADNSEvent(const ADNSEvent& aev)
   {
-    typename std::deque<ADNSEvent>::iterator i =
-        std::find(adnsEvents_.begin(), adnsEvents_.end(), aev);
+    auto i = std::ranges::find(adnsEvents_, aev);
     if (i == adnsEvents_.end()) {
       // not found
     }
@@ -276,11 +272,11 @@ public:
   void processEvents(int events)
   {
     using namespace std::placeholders;
-    std::for_each(commandEvents_.begin(), commandEvents_.end(),
-                  std::bind(&CommandEvent::processEvents, _1, events));
+    std::ranges::for_each(commandEvents_,
+                          std::bind(&CommandEvent::processEvents, _1, events));
 #ifdef ENABLE_ASYNC_DNS
-    std::for_each(adnsEvents_.begin(), adnsEvents_.end(),
-                  std::bind(&ADNSEvent::processEvents, _1, events));
+    std::ranges::for_each(adnsEvents_,
+                          std::bind(&ADNSEvent::processEvents, _1, events));
 #endif // ENABLE_ASYNC_DNS
   }
 };

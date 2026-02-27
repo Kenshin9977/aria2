@@ -140,8 +140,8 @@ bool BtLeecherStateChoke::PeerFilter::operator()(
 void BtLeecherStateChoke::plannedOptimisticUnchoke(
     std::vector<PeerEntry>& peerEntries)
 {
-  std::for_each(std::begin(peerEntries), std::end(peerEntries),
-                std::mem_fn(&PeerEntry::disableOptUnchoking));
+  std::ranges::for_each(peerEntries,
+                        std::mem_fn(&PeerEntry::disableOptUnchoking));
 
   auto i = std::partition(std::begin(peerEntries), std::end(peerEntries),
                           PeerFilter(true, true));

@@ -522,8 +522,8 @@ void AbstractCommand::onAbort()
   getPieceStorage()->markPiecesDone(0);
   std::vector<std::string> uris;
   uris.reserve(res.size());
-  std::transform(std::begin(res), std::end(res), std::back_inserter(uris),
-                 std::mem_fn(&URIResult::getURI));
+  std::ranges::transform(res, std::back_inserter(uris),
+                         std::mem_fn(&URIResult::getURI));
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - %lu URIs found.", getCuid(),
                    static_cast<unsigned long int>(uris.size())));
   fileEntry_->addUris(std::begin(uris), std::end(uris));

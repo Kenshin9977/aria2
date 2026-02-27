@@ -384,8 +384,8 @@ void ChecksumOptionHandler::parseArg(Option& option,
   auto p = util::divide(std::begin(optarg), std::end(optarg), '=');
   std::string hashType(p.first.first, p.first.second);
   if (!acceptableTypes_.empty() &&
-      std::find(std::begin(acceptableTypes_), std::end(acceptableTypes_),
-                hashType) == std::end(acceptableTypes_)) {
+      std::ranges::find(acceptableTypes_, hashType) ==
+          std::end(acceptableTypes_)) {
     throw DL_ABORT_EX(
         fmt("Checksum type %s is not acceptable", hashType.c_str()));
   }

@@ -248,8 +248,7 @@ public:
 const Authenticator* Netrc::findAuthenticator(const std::string& hostname) const
 {
   std::unique_ptr<Authenticator> res;
-  auto itr = std::find_if(std::begin(authenticators_),
-                          std::end(authenticators_), AuthHostMatch(hostname));
+  auto itr = std::ranges::find_if(authenticators_, AuthHostMatch(hostname));
   if (itr == std::end(authenticators_)) {
     return nullptr;
   }

@@ -93,8 +93,7 @@ static inline bool isWhitespace(char c)
 
 static inline std::string stripWhitespace(std::string str)
 {
-  str.erase(std::remove_if(std::begin(str), std::end(str), isWhitespace),
-            std::end(str));
+  std::erase_if(str, isWhitespace);
   return str;
 }
 
@@ -166,8 +165,8 @@ bool checkIdentity(const SecIdentityRef id, const std::string& fingerPrint,
   // future-proof. Also "usually" doesn't cut it; there is already software
   // using SHA-2 class algos, and SHA-3 is standardized and potential users
   // cannot be far.
-  return std::find_if(std::begin(supported), std::end(supported),
-                      hash_finder(data.get(), fingerPrint)) !=
+  return std::ranges::find_if(supported,
+                              hash_finder(data.get(), fingerPrint)) !=
          std::end(supported);
 }
 
@@ -225,8 +224,7 @@ bool AppleTLSContext::tryAsFingerprint(const std::string& fingerprint)
 
   // Verify this can represent a hash
   auto ht = MessageDigest::getSupportedHashTypes();
-  if (std::find_if(std::begin(ht), std::end(ht), hash_validator(fp)) ==
-      std::end(ht)) {
+  if (std::ranges::find_if(ht, hash_validator(fp)) == std::end(ht)) {
     A2_LOG_INFO(fmt("%s is not a fingerprint, invalid hash representation",
                     fingerprint.c_str()));
     return false;

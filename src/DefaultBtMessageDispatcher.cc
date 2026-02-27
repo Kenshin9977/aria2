@@ -282,8 +282,8 @@ void DefaultBtMessageDispatcher::addOutstandingRequest(
 
 size_t DefaultBtMessageDispatcher::countOutstandingUpload()
 {
-  return std::count_if(std::begin(messageQueue_), std::end(messageQueue_),
-                       std::mem_fn(&BtMessage::isUploading));
+  return std::ranges::count_if(messageQueue_,
+                               std::mem_fn(&BtMessage::isUploading));
 }
 
 void DefaultBtMessageDispatcher::setPeer(const std::shared_ptr<Peer>& peer)

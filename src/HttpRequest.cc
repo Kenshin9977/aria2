@@ -267,9 +267,9 @@ std::string HttpRequest::createRequest()
     }
   }
   for (const auto& [name, value] : builtinHds) {
-    auto it = std::find_if(
-        std::begin(headers_), std::end(headers_),
-        [&name](const std::string& hd) { return util::istartsWith(hd, name); });
+    auto it = std::ranges::find_if(headers_, [&name](const std::string& hd) {
+      return util::istartsWith(hd, name);
+    });
     if (it == std::end(headers_)) {
       requestLine += name;
       requestLine += ' ';

@@ -56,12 +56,9 @@ Metalinker::queryEntry(const std::string& version, const std::string& language,
     }
     res.push_back(std::move(entry));
   }
-  entries_.erase(
-      std::remove_if(std::begin(entries_), std::end(entries_),
-                     [](const std::unique_ptr<MetalinkEntry>& entry) {
-                       return !entry.get();
-                     }),
-      std::end(entries_));
+  std::erase_if(entries_, [](const std::unique_ptr<MetalinkEntry>& entry) {
+    return !entry.get();
+  });
   return res;
 }
 

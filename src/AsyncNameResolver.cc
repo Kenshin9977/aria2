@@ -91,8 +91,8 @@ void AsyncNameResolver::handle_sock_state(ares_socket_t fd, int read, int write)
     events |= EventPoll::EVENT_WRITE;
   }
 
-  auto it = std::find_if(
-      std::begin(socks_), std::end(socks_),
+  auto it = std::ranges::find_if(
+      socks_,
       [fd](const AsyncNameResolverSocketEntry& ent) { return ent.fd == fd; });
   if (it == std::end(socks_)) {
     if (!events) {

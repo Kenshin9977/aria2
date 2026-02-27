@@ -95,19 +95,17 @@ bool DomainNode::addCookie(std::unique_ptr<Cookie> cookie, time_t now)
     }
   }
 
-  auto i = std::find_if(
-      std::begin(*cookies_), std::end(*cookies_),
-      [&](const std::unique_ptr<Cookie>& c) { return *c == *cookie; });
+  auto i =
+      std::ranges::find_if(*cookies_, [&](const std::unique_ptr<Cookie>& c) {
+        return *c == *cookie;
+      });
   if (i == std::end(*cookies_)) {
     if (cookie->isExpired(now)) {
       return false;
     }
     else {
       if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
-        cookies_->erase(std::remove_if(std::begin(*cookies_),
-                                       std::end(*cookies_),
-                                       std::bind(&Cookie::isExpired, _1, now)),
-                        std::end(*cookies_));
+        std::erase_if(*cookies_, std::bind(&Cookie::isExpired, _1, now));
         if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
           auto m = std::min_element(std::begin(*cookies_), std::end(*cookies_),
                                     [](const std::unique_ptr<Cookie>& lhs,
@@ -415,11 +413,10 @@ CookieStorage::criteriaFind(const std::string& requestHost,
     node = nextNode;
   }
   auto divs = std::vector<CookiePathDivider>{};
-  std::transform(std::begin(res), std::end(res), std::back_inserter(divs),
-                 CookiePathDividerConverter{});
-  std::sort(std::begin(divs), std::end(divs), OrderByPathDepthDesc{});
-  std::transform(std::begin(divs), std::end(divs), std::begin(res),
-                 CookiePathDividerConverter{});
+  std::ranges::transform(res, std::back_inserter(divs),
+                         CookiePathDividerConverter{});
+  std::ranges::sort(divs, OrderByPathDepthDesc{});
+  std::ranges::transform(divs, std::begin(res), CookiePathDividerConverter{});
   return res;
 }
 

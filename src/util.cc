@@ -153,8 +153,8 @@ std::string wCharToUtf8(const std::wstring& wsrc)
 std::string toForwardSlash(const std::string& src)
 {
   auto dst = src;
-  std::transform(std::begin(dst), std::end(dst), std::begin(dst),
-                 [](char c) { return c == '\\' ? '/' : c; });
+  std::ranges::transform(dst, std::begin(dst),
+                         [](char c) { return c == '\\' ? '/' : c; });
   return dst;
 }
 
@@ -258,16 +258,14 @@ bool inRFC3986ReservedChars(const char c)
 {
   static const char reserved[] = {':', '/',  '?', '#', '[', ']', '@', '!', '$',
                                   '&', '\'', '(', ')', '*', '+', ',', ';', '='};
-  return std::find(std::begin(reserved), std::end(reserved), c) !=
-         std::end(reserved);
+  return std::ranges::find(reserved, c) != std::end(reserved);
 }
 
 bool inRFC3986UnreservedChars(const char c)
 {
   static const char unreserved[] = {'-', '.', '_', '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(unreserved), std::end(unreserved), c) !=
-             std::end(unreserved);
+         std::ranges::find(unreserved, c) != std::end(unreserved);
 }
 
 bool inRFC2978MIMECharset(const char c)
@@ -275,7 +273,7 @@ bool inRFC2978MIMECharset(const char c)
   static const char chars[] = {'!', '#', '$', '%', '&', '\'', '+',
                                '-', '^', '_', '`', '{', '}',  '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(chars), std::end(chars), c) != std::end(chars);
+         std::ranges::find(chars, c) != std::end(chars);
 }
 
 bool inRFC2616HttpToken(const char c)
@@ -283,7 +281,7 @@ bool inRFC2616HttpToken(const char c)
   static const char chars[] = {'!', '#', '$', '%', '&', '\'', '*', '+',
                                '-', '.', '^', '_', '`', '|',  '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(chars), std::end(chars), c) != std::end(chars);
+         std::ranges::find(chars, c) != std::end(chars);
 }
 
 bool inRFC5987AttrChar(const char c)
@@ -2184,9 +2182,8 @@ std::string escapePath(const std::string& s)
     unsigned char c = cc;
     if (in(c, 0x00u, 0x1fu) || c == 0x7fu
 #ifdef __MINGW32__
-        || std::find(std::begin(WIN_INVALID_PATH_CHARS),
-                     std::end(WIN_INVALID_PATH_CHARS),
-                     c) != std::end(WIN_INVALID_PATH_CHARS)
+        || std::ranges::find(WIN_INVALID_PATH_CHARS, c) !=
+               std::end(WIN_INVALID_PATH_CHARS)
 #endif // __MINGW32__
     ) {
       d += fmt("%%%02X", c);

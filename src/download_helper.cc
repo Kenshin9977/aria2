@@ -486,9 +486,8 @@ void createRequestGroupForUri(
   }
   if (!ignoreForceSequential &&
       option->get(PREF_FORCE_SEQUENTIAL) == A2_V_TRUE) {
-    std::for_each(
-        std::begin(nargs), std::end(nargs),
-        AccRequestGroup(result, option, ignoreLocalPath, throwOnError));
+    std::ranges::for_each(
+        nargs, AccRequestGroup(result, option, ignoreLocalPath, throwOnError));
   }
   else {
     auto strmProtoEnd = std::stable_partition(

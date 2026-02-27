@@ -432,8 +432,8 @@ void MultiDiskAdaptor::flushOSBuffers()
 
 bool MultiDiskAdaptor::fileExists()
 {
-  return std::find_if(std::begin(getFileEntries()), std::end(getFileEntries()),
-                      std::mem_fn(&FileEntry::exists)) !=
+  return std::ranges::find_if(getFileEntries(),
+                              std::mem_fn(&FileEntry::exists)) !=
          std::end(getFileEntries());
 }
 

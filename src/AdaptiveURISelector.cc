@@ -90,7 +90,7 @@ std::string AdaptiveURISelector::select(
   std::string selected = selectOne(uris);
 
   if (selected != A2STR::NIL) {
-    uris.erase(std::find(std::begin(uris), std::end(uris), selected));
+    uris.erase(std::ranges::find(uris, selected));
   }
   return selected;
 }
@@ -109,8 +109,8 @@ void AdaptiveURISelector::mayRetryWithIncreasedTimeout(FileEntry* fileEntry)
   // looking for retries
   std::deque<URIResult> timeouts;
   fileEntry->extractURIResult(timeouts, error_code::TIME_OUT);
-  std::transform(std::begin(timeouts), std::end(timeouts),
-                 std::back_inserter(uris), std::mem_fn(&URIResult::getURI));
+  std::ranges::transform(timeouts, std::back_inserter(uris),
+                         std::mem_fn(&URIResult::getURI));
 
   if (A2_LOG_DEBUG_ENABLED) {
     for (const auto& uri : uris) {

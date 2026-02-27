@@ -253,7 +253,7 @@ std::string HttpResponse::getContentType() const
   if (!ctype) {
     return A2STR::NIL;
   }
-  auto i = std::find(ctype->begin(), ctype->end(), ';');
+  auto i = std::ranges::find(*ctype, ';');
   auto p = util::stripIter(ctype->begin(), i);
   return std::string(p.first, p.second);
 }

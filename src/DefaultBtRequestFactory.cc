@@ -259,8 +259,8 @@ std::vector<size_t> DefaultBtRequestFactory::getTargetPieceIndexes() const
 {
   auto res = std::vector<size_t>{};
   res.reserve(pieces_.size());
-  std::transform(std::begin(pieces_), std::end(pieces_),
-                 std::back_inserter(res), std::mem_fn(&Piece::getIndex));
+  std::ranges::transform(pieces_, std::back_inserter(res),
+                         std::mem_fn(&Piece::getIndex));
   return res;
 }
 

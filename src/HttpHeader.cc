@@ -111,10 +111,10 @@ Range HttpHeader::getRange() const
   // server returns '100-199/200', omitting bytes-unit specifier
   // 'bytes'.  Moreover, some server may return like
   // 'bytes=100-199/200'.
-  auto byteRangeSpec = std::find(rangeStr->begin(), rangeStr->end(), ' ');
+  auto byteRangeSpec = std::ranges::find(*rangeStr, ' ');
   if (byteRangeSpec == rangeStr->end()) {
     // check for 'bytes=100-199/200' case
-    byteRangeSpec = std::find(rangeStr->begin(), rangeStr->end(), '=');
+    byteRangeSpec = std::ranges::find(*rangeStr, '=');
     if (byteRangeSpec == rangeStr->end()) {
       // we assume bytes-unit specifier omitted.
       byteRangeSpec = rangeStr->begin();

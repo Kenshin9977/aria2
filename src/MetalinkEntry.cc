@@ -61,8 +61,7 @@ void MetalinkEntry::setLocationPriority(
     const std::vector<std::string>& locations, int priorityToAdd)
 {
   for (auto& res : resources) {
-    if (std::find(std::begin(locations), std::end(locations), res->location) !=
-        std::end(locations)) {
+    if (std::ranges::find(locations, res->location) != std::end(locations)) {
       res->priority += priorityToAdd;
     }
   }
@@ -92,14 +91,14 @@ void MetalinkEntry::reorderResourcesByPriority()
 {
   std::shuffle(std::begin(resources), std::end(resources),
                *SimpleRandomizer::getInstance());
-  std::sort(std::begin(resources), std::end(resources),
-            PriorityHigher<std::unique_ptr<MetalinkResource>>{});
+  std::ranges::sort(resources,
+                    PriorityHigher<std::unique_ptr<MetalinkResource>>{});
 }
 
 void MetalinkEntry::reorderMetaurlsByPriority()
 {
-  std::sort(std::begin(metaurls), std::end(metaurls),
-            PriorityHigher<std::unique_ptr<MetalinkMetaurl>>{});
+  std::ranges::sort(metaurls,
+                    PriorityHigher<std::unique_ptr<MetalinkMetaurl>>{});
 }
 
 namespace {
@@ -126,24 +125,21 @@ public:
 
 void MetalinkEntry::dropUnsupportedResource()
 {
-  resources.erase(
-      std::remove_if(std::begin(resources), std::end(resources),
-                     [](const std::unique_ptr<MetalinkResource>& res) {
-                       switch (res->type) {
-                       case MetalinkResource::TYPE_FTP:
-                       case MetalinkResource::TYPE_HTTP:
+  std::erase_if(resources, [](const std::unique_ptr<MetalinkResource>& res) {
+    switch (res->type) {
+    case MetalinkResource::TYPE_FTP:
+    case MetalinkResource::TYPE_HTTP:
 #ifdef ENABLE_SSL
-                       case MetalinkResource::TYPE_HTTPS:
+    case MetalinkResource::TYPE_HTTPS:
 #endif // ENABLE_SSL
 #ifdef ENABLE_BITTORRENT
-                       case MetalinkResource::TYPE_BITTORRENT:
+    case MetalinkResource::TYPE_BITTORRENT:
 #endif // ENABLE_BITTORRENT
-                         return false;
-                       default:
-                         return true;
-                       }
-                     }),
-      std::end(resources));
+      return false;
+    default:
+      return true;
+    }
+  });
 }
 
 std::vector<std::unique_ptr<FileEntry>> MetalinkEntry::toFileEntry(

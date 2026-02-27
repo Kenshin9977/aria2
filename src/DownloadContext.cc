@@ -138,8 +138,8 @@ void DownloadContext::setFileFilter(SegList<int> sgl)
   using namespace std::placeholders;
 
   if (!sgl.hasNext() || fileEntries_.size() == 1) {
-    std::for_each(fileEntries_.begin(), fileEntries_.end(),
-                  std::bind(&FileEntry::setRequested, _1, true));
+    std::ranges::for_each(fileEntries_,
+                          std::bind(&FileEntry::setRequested, _1, true));
     return;
   }
   assert(sgl.peek() >= 1);

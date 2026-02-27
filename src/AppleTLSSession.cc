@@ -103,10 +103,7 @@ static inline const char* protoToString(SSLProtocol proto)
   }
 }
 
-#define SUITE(s, n)                                                            \
-  {                                                                            \
-    n, #s                                                                      \
-  }
+#define SUITE(s, n) {n, #s}
 static struct {
   SSLCipherSuite suite;
   const char* name;
@@ -354,8 +351,7 @@ static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
     return rv;
   }
 
-  rv.erase(std::remove_if(std::begin(rv), std::end(rv), isBlockedSuite),
-           std::end(rv));
+  std::erase_if(rv, isBlockedSuite);
   return rv;
 }
 
