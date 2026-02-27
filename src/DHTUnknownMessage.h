@@ -37,11 +37,13 @@
 
 #include "DHTMessage.h"
 
+#include <vector>
+
 namespace aria2 {
 
 class DHTUnknownMessage : public DHTMessage {
 private:
-  unsigned char* data_;
+  std::vector<unsigned char> data_;
   size_t length_;
   std::string ipaddr_;
   uint16_t port_;
@@ -52,7 +54,7 @@ public:
                     const unsigned char* data, size_t length,
                     const std::string& ipaddr, uint16_t port);
 
-  ~DHTUnknownMessage() override;
+  ~DHTUnknownMessage() override = default;
 
   // do nothing
   void doReceivedAction() override;

@@ -36,6 +36,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 #include "a2io.h"
 #include "ParserStateMachine.h"
@@ -48,19 +49,16 @@ namespace aria2 {
 namespace xml {
 
 namespace {
-void splitNsName(const char** localname, const char** nsUri, const char* src)
+std::string splitNsName(const char** localname, const char* src)
 {
   const char* sep = strchr(src, '\t');
   if (sep) {
     *localname = sep + 1;
-    size_t nsUriLen = sep - src;
-    auto temp = new char[nsUriLen + 1];
-    memcpy(temp, src, nsUriLen);
-    temp[nsUriLen] = '\0';
-    *nsUri = temp;
+    return std::string(src, sep - src);
   }
   else {
     *localname = src;
+    return {};
   }
 }
 } // namespace
@@ -70,6 +68,7 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
 {
   SessionData* sd = reinterpret_cast<SessionData*>(userData);
   std::vector<XmlAttr> xmlAttrs;
+  std::vector<std::string> attrNsUris;
   if (attrs) {
     const char** p = attrs;
     while (*p) {
@@ -78,7 +77,9 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
       if (!*p) {
         break;
       }
-      splitNsName(&xa.localname, &xa.nsUri, attrNsName);
+      attrNsUris.push_back(splitNsName(&xa.localname, attrNsName));
+      xa.nsUri =
+          attrNsUris.back().empty() ? nullptr : attrNsUris.back().c_str();
       const char* value = *p++;
       xa.value = value;
       xa.valueLength = strlen(value);
@@ -87,13 +88,9 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
   }
   const char* localname = nullptr;
   const char* prefix = nullptr;
-  const char* nsUri = nullptr;
-  splitNsName(&localname, &nsUri, nsName);
+  std::string nsUriStr = splitNsName(&localname, nsName);
+  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
   sd->psm->beginElement(localname, prefix, nsUri, xmlAttrs);
-  delete[] nsUri;
-  for (auto& a : xmlAttrs) {
-    delete[] a.nsUri;
-  }
   if (sd->psm->needsCharactersBuffering()) {
     sd->charactersStack.push_front(A2STR::NIL);
   }
@@ -105,8 +102,8 @@ void mlEndElement(void* userData, const char* nsName)
 {
   const char* localname = nullptr;
   const char* prefix = nullptr;
-  const char* nsUri = nullptr;
-  splitNsName(&localname, &nsUri, nsName);
+  std::string nsUriStr = splitNsName(&localname, nsName);
+  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
   SessionData* sd = reinterpret_cast<SessionData*>(userData);
   std::string characters;
   if (sd->psm->needsCharactersBuffering()) {
@@ -114,7 +111,6 @@ void mlEndElement(void* userData, const char* nsName)
     sd->charactersStack.pop_front();
   }
   sd->psm->endElement(localname, prefix, nsUri, std::move(characters));
-  delete[] nsUri;
 }
 } // namespace
 

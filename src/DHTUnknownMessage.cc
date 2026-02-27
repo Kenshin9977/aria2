@@ -51,20 +51,12 @@ DHTUnknownMessage::DHTUnknownMessage(const std::shared_ptr<DHTNode>& localNode,
                                      const unsigned char* data, size_t length,
                                      const std::string& ipaddr, uint16_t port)
     : DHTMessage(localNode, std::shared_ptr<DHTNode>()),
+      data_(data, data + length),
       length_(length),
       ipaddr_(ipaddr),
       port_(port)
 {
-  if (length_ == 0) {
-    data_ = nullptr;
-  }
-  else {
-    data_ = new unsigned char[length];
-    memcpy(data_, data, length);
-  }
 }
-
-DHTUnknownMessage::~DHTUnknownMessage() { delete[] data_; }
 
 void DHTUnknownMessage::doReceivedAction() {}
 
@@ -82,7 +74,7 @@ std::string DHTUnknownMessage::toString() const
   }
   return fmt("dht unknown Remote:%s(%u) length=%lu, first 8 bytes(hex)=%s",
              ipaddr_.c_str(), port_, static_cast<unsigned long>(length_),
-             util::toHex(data_, sampleLength).c_str());
+             util::toHex(data_.data(), sampleLength).c_str());
 }
 
 } // namespace aria2
