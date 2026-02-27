@@ -182,8 +182,7 @@ void SelectEventPoll::poll(const struct timeval& tv)
 
 #ifdef ENABLE_ASYNC_DNS
 
-  for (auto& i : nameResolverEntries_) {
-    auto& entry = i.second;
+  for (auto& [key, entry] : nameResolverEntries_) {
     auto fd = entry.getFds(&rfds, &wfds);
     // TODO force error if fd == 0
     if (fdmax_ < fd) {
@@ -204,21 +203,20 @@ void SelectEventPoll::poll(const struct timeval& tv)
 #endif // !__MINGW32__
   } while (retval == -1 && errno == EINTR);
   if (retval > 0) {
-    for (auto& i : socketEntries_) {
-      auto& e = i.second;
+    for (auto& [fd, entry] : socketEntries_) {
       int events = 0;
-      if (FD_ISSET(e.getSocket(), &rfds)) {
+      if (FD_ISSET(entry.getSocket(), &rfds)) {
         events |= EventPoll::EVENT_READ;
       }
-      if (FD_ISSET(e.getSocket(), &wfds)) {
+      if (FD_ISSET(entry.getSocket(), &wfds)) {
         events |= EventPoll::EVENT_WRITE;
       }
 #ifdef __MINGW32__
-      if (FD_ISSET(e.getSocket(), &efds)) {
+      if (FD_ISSET(entry.getSocket(), &efds)) {
         events |= EventPoll::EVENT_ERROR;
       }
 #endif // __MINGW32__
-      e.processEvents(events);
+      entry.processEvents(events);
     }
   }
   else if (retval == -1) {
@@ -228,8 +226,8 @@ void SelectEventPoll::poll(const struct timeval& tv)
   }
 #ifdef ENABLE_ASYNC_DNS
 
-  for (auto& i : nameResolverEntries_) {
-    i.second.process(&rfds, &wfds);
+  for (auto& [key, entry] : nameResolverEntries_) {
+    entry.process(&rfds, &wfds);
   }
 
 #endif // ENABLE_ASYNC_DNS
@@ -259,9 +257,8 @@ void SelectEventPoll::updateFdSet()
   fdmax_ = 0;
 #endif // !__MINGW32__
 
-  for (auto& i : socketEntries_) {
-    auto& e = i.second;
-    sock_t fd = e.getSocket();
+  for (auto& [key, entry] : socketEntries_) {
+    sock_t fd = entry.getSocket();
 #ifndef __MINGW32__
     if (fd < 0 || FD_SETSIZE <= fd) {
       A2_LOG_WARN("Detected file descriptor >= FD_SETSIZE or < 0. "
@@ -269,7 +266,7 @@ void SelectEventPoll::updateFdSet()
       continue;
     }
 #endif // !__MINGW32__
-    int events = e.getEvents();
+    int events = entry.getEvents();
     if (events & EventPoll::EVENT_READ) {
 #ifdef __MINGW32__
       checkFdCountMingw(rfdset_);

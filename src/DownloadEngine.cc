@@ -318,9 +318,9 @@ void DownloadEngine::evictSocketPool()
 
   std::multimap<std::string, SocketPoolEntry> newPool;
   A2_LOG_DEBUG("Scanning SocketPool and erasing timed out entry.");
-  for (auto& elem : socketPool_) {
-    if (!elem.second.isTimeout()) {
-      newPool.insert(elem);
+  for (auto& [key, entry] : socketPool_) {
+    if (!entry.isTimeout()) {
+      newPool.insert({key, entry});
     }
   }
   A2_LOG_DEBUG(
@@ -431,14 +431,12 @@ void DownloadEngine::poolSocket(const std::shared_ptr<Request>& request,
 std::multimap<std::string, DownloadEngine::SocketPoolEntry>::iterator
 DownloadEngine::findSocketPoolEntry(const std::string& key)
 {
-  std::pair<std::multimap<std::string, SocketPoolEntry>::iterator,
-            std::multimap<std::string, SocketPoolEntry>::iterator>
-      range = socketPool_.equal_range(key);
-  for (auto i = range.first, eoi = range.second; i != eoi; ++i) {
-    const SocketPoolEntry& e = (*i).second;
+  auto [first, last] = socketPool_.equal_range(key);
+  for (auto i = first; i != last; ++i) {
+    const auto& [k, entry] = *i;
     // We assume that if socket is readable it means peer shutdowns
     // connection and the socket will receive EOF. So skip it.
-    if (!e.isTimeout() && !e.getSocket()->isReadable(0)) {
+    if (!entry.isTimeout() && !entry.getSocket()->isReadable(0)) {
       A2_LOG_INFO(fmt("Found socket for %s", key.c_str()));
       return i;
     }
@@ -455,7 +453,7 @@ DownloadEngine::popPooledSocket(const std::string& ipaddr, uint16_t port,
   auto i = findSocketPoolEntry(
       createSockPoolKey(ipaddr, port, A2STR::NIL, proxyhost, proxyport));
   if (i != socketPool_.end()) {
-    s = (*i).second.getSocket();
+    s = i->second.getSocket();
     socketPool_.erase(i);
   }
   return s;
@@ -471,8 +469,8 @@ DownloadEngine::popPooledSocket(std::string& options, const std::string& ipaddr,
   auto i = findSocketPoolEntry(
       createSockPoolKey(ipaddr, port, username, proxyhost, proxyport));
   if (i != socketPool_.end()) {
-    s = (*i).second.getSocket();
-    options = (*i).second.getOptions();
+    s = i->second.getSocket();
+    options = i->second.getOptions();
     socketPool_.erase(i);
   }
   return s;

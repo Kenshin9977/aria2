@@ -1557,10 +1557,12 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
   grOption->merge(option);
   if (option.defined(PREF_CHECKSUM)) {
     const std::string& checksum = grOption->get(PREF_CHECKSUM);
-    auto p = util::divide(std::begin(checksum), std::end(checksum), '=');
-    std::string hashType(p.first.first, p.first.second);
+    auto [hashRange, digestRange] =
+        util::divide(std::begin(checksum), std::end(checksum), '=');
+    std::string hashType(hashRange.first, hashRange.second);
     util::lowercase(hashType);
-    dctx->setDigest(hashType, util::fromHex(p.second.first, p.second.second));
+    dctx->setDigest(hashType,
+                    util::fromHex(digestRange.first, digestRange.second));
   }
   if (option.defined(PREF_SELECT_FILE)) {
     auto sgl = util::parseIntSegments(grOption->get(PREF_SELECT_FILE));
@@ -1618,12 +1620,9 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
       std::istringstream indexOutIn(grOption->get(PREF_INDEX_OUT));
       std::vector<std::pair<size_t, std::string>> indexPaths =
           util::createIndexPaths(indexOutIn);
-      for (std::vector<std::pair<size_t, std::string>>::const_iterator
-               i = indexPaths.begin(),
-               eoi = indexPaths.end();
-           i != eoi; ++i) {
+      for (const auto& [index, path] : indexPaths) {
         dctx->setFilePathWithIndex(
-            (*i).first, util::applyDir(grOption->get(PREF_DIR), (*i).second));
+            index, util::applyDir(grOption->get(PREF_DIR), path));
       }
     }
   }

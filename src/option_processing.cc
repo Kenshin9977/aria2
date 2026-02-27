@@ -164,8 +164,8 @@ void showCandidates(const std::string& unknownOption,
   global::cerr()->printf(_("Did you mean:"));
   global::cerr()->printf("\n");
   for (auto i = cands.begin(), eoi = cands.end();
-       i != eoi && (*i).first <= threshold; ++i) {
-    global::cerr()->printf("\t--%s\n", (*i).second->k);
+       i != eoi && i->first <= threshold; ++i) {
+    global::cerr()->printf("\t--%s\n", i->second->k);
   }
 }
 

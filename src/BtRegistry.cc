@@ -64,10 +64,10 @@ BtRegistry::getDownloadContext(a2_gid_t gid) const
 const std::shared_ptr<DownloadContext>&
 BtRegistry::getDownloadContext(const std::string& infoHash) const
 {
-  for (auto& kv : pool_) {
-    if (bittorrent::getTorrentAttrs(kv.second->downloadContext)->infoHash ==
+  for (auto& [gid, obj] : pool_) {
+    if (bittorrent::getTorrentAttrs(obj->downloadContext)->infoHash ==
         infoHash) {
-      return kv.second->downloadContext;
+      return obj->downloadContext;
     }
   }
   return getNull<DownloadContext>();
@@ -85,7 +85,7 @@ BtObject* BtRegistry::get(a2_gid_t gid) const
     return nullptr;
   }
   else {
-    return (*i).second.get();
+    return i->second.get();
   }
 }
 

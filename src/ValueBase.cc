@@ -163,9 +163,9 @@ Dict::Dict() {}
 void Dict::put(std::string key, std::unique_ptr<ValueBase> vlb)
 {
   auto p = std::make_pair(std::move(key), std::move(vlb));
-  auto r = dict_.insert(std::move(p));
-  if (!r.second) {
-    (*r.first).second = std::move(p.second);
+  auto [it, inserted] = dict_.insert(std::move(p));
+  if (!inserted) {
+    it->second = std::move(p.second);
   }
 }
 
@@ -181,7 +181,7 @@ ValueBase* Dict::get(const std::string& key) const
     return nullptr;
   }
   else {
-    return (*itr).second.get();
+    return itr->second.get();
   }
 }
 
@@ -201,7 +201,7 @@ std::unique_ptr<ValueBase> Dict::popValue(const std::string& key)
     return nullptr;
   }
   else {
-    auto res = std::move((*i).second);
+    auto res = std::move(i->second);
     dict_.erase(i);
     return res;
   }

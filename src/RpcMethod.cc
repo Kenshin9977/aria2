@@ -111,20 +111,20 @@ void gatherOption(InputIterator first, InputIterator last, Pred pred,
                   const std::shared_ptr<OptionParser>& optionParser)
 {
   for (; first != last; ++first) {
-    const std::string& optionName = (*first).first;
+    const auto& [optionName, optionValue] = *first;
     PrefPtr pref = option::k2p(optionName);
     const OptionHandler* handler = optionParser->find(pref);
     if (!handler || !pred(handler)) {
       // Just ignore the unacceptable options in this context.
       continue;
     }
-    const String* opval = downcast<String>((*first).second);
+    const String* opval = downcast<String>(optionValue);
     if (opval) {
       handler->parse(*option, opval->s());
     }
     else if (handler->getCumulative()) {
       // header and index-out option can take array as value
-      const List* oplist = downcast<List>((*first).second);
+      const List* oplist = downcast<List>(optionValue);
       if (oplist) {
         for (auto& elem : *oplist) {
           const String* opval = downcast<String>(elem);
@@ -154,11 +154,7 @@ void RpcMethod::gatherChangeableOption(Option* option, Option* pendingOption,
     return;
   }
 
-  auto first = optionsDict->begin();
-  auto last = optionsDict->end();
-
-  for (; first != last; ++first) {
-    const auto& optionName = (*first).first;
+  for (const auto& [optionName, optionValue] : *optionsDict) {
     auto pref = option::k2p(optionName);
     auto handler = optionParser_->find(pref);
     if (!handler) {
@@ -178,13 +174,13 @@ void RpcMethod::gatherChangeableOption(Option* option, Option* pendingOption,
       continue;
     }
 
-    const auto opval = downcast<String>((*first).second);
+    const auto opval = downcast<String>(optionValue);
     if (opval) {
       handler->parse(*dst, opval->s());
     }
     else if (handler->getCumulative()) {
       // header and index-out option can take array as value
-      const auto oplist = downcast<List>((*first).second);
+      const auto oplist = downcast<List>(optionValue);
       if (oplist) {
         for (auto& elem : *oplist) {
           const auto opval = downcast<String>(elem);

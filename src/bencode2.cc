@@ -109,11 +109,10 @@ std::string encode(const ValueBase* vlb)
     void visit(const Dict& dict) override
     {
       out_ << "d";
-      for (const auto& e : dict) {
-        auto& key = e.first;
+      for (const auto& [key, value] : dict) {
         out_ << key.size() << ":";
         out_.write(key.data(), key.size());
-        e.second->accept(*this);
+        value->accept(*this);
       }
       out_ << "e";
     }

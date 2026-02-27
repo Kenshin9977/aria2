@@ -194,14 +194,14 @@ void apiGatherOption(InputIterator first, InputIterator last, Pred pred,
                      const std::shared_ptr<OptionParser>& optionParser)
 {
   for (; first != last; ++first) {
-    const std::string& optionName = (*first).first;
+    const auto& [optionName, optionValue] = *first;
     PrefPtr pref = option::k2p(optionName);
     const OptionHandler* handler = optionParser->find(pref);
     if (!handler || !pred(handler)) {
       // Just ignore the unacceptable options in this context.
       continue;
     }
-    handler->parse(*option, (*first).second);
+    handler->parse(*option, optionValue);
   }
 }
 } // namespace

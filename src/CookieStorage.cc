@@ -202,7 +202,7 @@ DomainNode* DomainNode::findNext(const std::string& label) const
     return nullptr;
   }
   else {
-    return (*i).second.get();
+    return i->second.get();
   }
 }
 
@@ -250,7 +250,7 @@ size_t CookieStorage::getLruTrackerSize() const { return lruTracker_.size(); }
 void CookieStorage::evictNode(size_t delnum)
 {
   for (; delnum > 0 && !lruTracker_.empty(); --delnum) {
-    auto node = (*lruTracker_.begin()).second;
+    auto [accessTime, node] = *lruTracker_.begin();
     lruTracker_.erase(lruTracker_.begin());
     node->setInLru(false);
     node->clearCookie();
@@ -426,8 +426,8 @@ CookieStorage::criteriaFind(const std::string& requestHost,
 size_t CookieStorage::size() const
 {
   size_t n = 0;
-  for (auto& p : lruTracker_) {
-    n += p.second->countCookie();
+  for (auto& [accessTime, node] : lruTracker_) {
+    n += node->countCookie();
   }
   return n;
 }
@@ -490,8 +490,8 @@ bool CookieStorage::saveNsFormat(const std::string& filename)
       A2_LOG_ERROR(fmt("Cannot create cookie file %s", filename.c_str()));
       return false;
     }
-    for (auto& p : lruTracker_) {
-      if (!p.second->writeCookie(fp)) {
+    for (auto& [accessTime, node] : lruTracker_) {
+      if (!node->writeCookie(fp)) {
         A2_LOG_ERROR(fmt("Failed to save cookies to %s", filename.c_str()));
         return false;
       }

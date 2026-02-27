@@ -86,9 +86,9 @@ void encodeValue(const ValueBase* value, OutputStream& o)
     void visit(const Dict& v) override
     {
       o_ << "<value><struct>";
-      for (const auto& e : v) {
-        o_ << "<member><name>" << util::htmlEscape(e.first) << "</name>";
-        e.second->accept(*this);
+      for (const auto& [name, value] : v) {
+        o_ << "<member><name>" << util::htmlEscape(name) << "</name>";
+        value->accept(*this);
         o_ << "</member>";
       }
       o_ << "</struct></value>";

@@ -140,11 +140,10 @@ void KqueueEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& r : nameResolverEntries_) {
-    auto& ent = r.second;
-    ent.processTimeout();
-    ent.removeSocketEvents(this);
-    ent.addSocketEvents(this);
+  for (auto& [key, entry] : nameResolverEntries_) {
+    entry.processTimeout();
+    entry.removeSocketEvents(this);
+    entry.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
 

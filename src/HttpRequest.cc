@@ -265,15 +265,14 @@ std::string HttpRequest::createRequest()
       builtinHds.emplace_back("Want-Digest:", wantDigest);
     }
   }
-  for (const auto& builtinHd : builtinHds) {
-    auto it = std::find_if(std::begin(headers_), std::end(headers_),
-                           [&builtinHd](const std::string& hd) {
-                             return util::istartsWith(hd, builtinHd.first);
-                           });
+  for (const auto& [name, value] : builtinHds) {
+    auto it = std::find_if(
+        std::begin(headers_), std::end(headers_),
+        [&name](const std::string& hd) { return util::istartsWith(hd, name); });
     if (it == std::end(headers_)) {
-      requestLine += builtinHd.first;
+      requestLine += name;
       requestLine += ' ';
-      requestLine += builtinHd.second;
+      requestLine += value;
       requestLine += "\r\n";
     }
   }

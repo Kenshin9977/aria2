@@ -703,11 +703,10 @@ bool inNoProxy(const std::shared_ptr<Request>& req, const std::string& noProxy)
     return false;
   }
 
-  for (const auto& e : entries) {
-    const auto slashpos = std::find(e.first, e.second, '/');
-    if (slashpos == e.second) {
-      if (util::noProxyDomainMatch(req->getHost(),
-                                   std::string(e.first, e.second))) {
+  for (const auto& [begin, end] : entries) {
+    const auto slashpos = std::find(begin, end, '/');
+    if (slashpos == end) {
+      if (util::noProxyDomainMatch(req->getHost(), std::string(begin, end))) {
         return true;
       }
 
@@ -717,9 +716,9 @@ bool inNoProxy(const std::shared_ptr<Request>& req, const std::string& noProxy)
     // implementation is that we should first resolve
     // hostname(which may result in several IP addresses) and
     // evaluates against all of them
-    std::string ip(e.first, slashpos);
+    std::string ip(begin, slashpos);
     uint32_t bits;
-    if (!util::parseUIntNoThrow(bits, std::string(slashpos + 1, e.second))) {
+    if (!util::parseUIntNoThrow(bits, std::string(slashpos + 1, end))) {
       continue;
     }
     if (util::inSameCidrBlock(ip, req->getHost(), bits)) {

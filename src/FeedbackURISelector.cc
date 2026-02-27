@@ -62,9 +62,9 @@ std::string FeedbackURISelector::select(
     const std::vector<std::pair<size_t, std::string>>& usedHosts)
 {
   if (A2_LOG_DEBUG_ENABLED) {
-    for (const auto& h : usedHosts) {
-      A2_LOG_DEBUG(fmt("UsedHost=%lu, %s", static_cast<unsigned long>(h.first),
-                       h.second.c_str()));
+    for (const auto& [count, host] : usedHosts) {
+      A2_LOG_DEBUG(fmt("UsedHost=%lu, %s", static_cast<unsigned long>(count),
+                       host.c_str()));
     }
   }
   if (fileEntry->getRemainingUris().empty()) {
@@ -105,10 +105,10 @@ std::string FeedbackURISelector::selectRarer(
     }
     cands.push_back(std::make_pair(host, u));
   }
-  for (const auto& h : usedHosts) {
-    for (const auto& c : cands) {
-      if (h.second == c.first) {
-        return c.second;
+  for (const auto& [count, usedHost] : usedHosts) {
+    for (const auto& [candHost, candUri] : cands) {
+      if (usedHost == candHost) {
+        return candUri;
       }
     }
   }
