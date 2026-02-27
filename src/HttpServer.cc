@@ -211,8 +211,8 @@ bool HttpServer::receiveRequest()
     util::splitIter(acceptEnc.begin(), acceptEnc.end(),
                     std::back_inserter(acceptEncodings), ',', true);
     acceptsGZip_ = false;
-    for (const auto& [begin, end] : acceptEncodings) {
-      if (util::strieq(begin, end, "gzip")) {
+    for (const auto& [first, last] : acceptEncodings) {
+      if (util::strieq(first, last, "gzip")) {
         acceptsGZip_ = true;
         break;
       }

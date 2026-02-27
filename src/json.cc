@@ -119,21 +119,21 @@ JsonGetParam decodeGetParams(const std::string& query)
   std::vector<Scip> getParams;
   util::splitIter(query.begin() + 1, query.end(), std::back_inserter(getParams),
                   '&');
-  for (const auto& [begin, end] : getParams) {
-    if (util::startsWith(begin, end, "method=")) {
-      method.first = begin + 7;
-      method.second = end;
+  for (const auto& [first, last] : getParams) {
+    if (util::startsWith(first, last, "method=")) {
+      method.first = first + 7;
+      method.second = last;
     }
-    else if (util::startsWith(begin, end, "id=")) {
-      id.first = begin + 3;
-      id.second = end;
+    else if (util::startsWith(first, last, "id=")) {
+      id.first = first + 3;
+      id.second = last;
     }
-    else if (util::startsWith(begin, end, "params=")) {
-      params.first = begin + 7;
-      params.second = end;
+    else if (util::startsWith(first, last, "params=")) {
+      params.first = first + 7;
+      params.second = last;
     }
-    else if (util::startsWith(begin, end, "jsoncallback=")) {
-      callback.assign(begin + 13, end);
+    else if (util::startsWith(first, last, "jsoncallback=")) {
+      callback.assign(first + 13, last);
     }
   }
   std::string decparam = util::percentDecode(params.first, params.second);

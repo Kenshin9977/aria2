@@ -39,9 +39,9 @@ class UtilTest2 : public CppUnit::TestFixture {
   CPPUNIT_TEST(testConvertBitfield);
   CPPUNIT_TEST(testParseIntSegments);
   CPPUNIT_TEST(testParseIntSegments_invalidRange);
-  CPPUNIT_TEST(testParseIntNoThrow);
+  CPPUNIT_TEST(testParseInt);
   CPPUNIT_TEST(testParseUIntNoThrow);
-  CPPUNIT_TEST(testParseLLIntNoThrow);
+  CPPUNIT_TEST(testParseLLInt);
   CPPUNIT_TEST(testToString_binaryStream);
   CPPUNIT_TEST(testItos);
   CPPUNIT_TEST(testUitos);
@@ -67,7 +67,7 @@ class UtilTest2 : public CppUnit::TestFixture {
   CPPUNIT_TEST(testInPrivateAddress);
   CPPUNIT_TEST(testSecfmt);
   CPPUNIT_TEST(testTlsHostnameMatch);
-  CPPUNIT_TEST(testParseDoubleNoThrow);
+  CPPUNIT_TEST(testParseDouble);
   CPPUNIT_TEST(testTorrentPercentEncode);
   CPPUNIT_TEST(testIso8859p1ToUtf8);
   CPPUNIT_TEST(testCharacterClassification);
@@ -96,9 +96,9 @@ public:
   void testConvertBitfield();
   void testParseIntSegments();
   void testParseIntSegments_invalidRange();
-  void testParseIntNoThrow();
+  void testParseInt();
   void testParseUIntNoThrow();
-  void testParseLLIntNoThrow();
+  void testParseLLInt();
   void testToString_binaryStream();
   void testItos();
   void testUitos();
@@ -124,7 +124,7 @@ public:
   void testInPrivateAddress();
   void testSecfmt();
   void testTlsHostnameMatch();
-  void testParseDoubleNoThrow();
+  void testParseDouble();
   void testTorrentPercentEncode();
   void testIso8859p1ToUtf8();
   void testCharacterClassification();
@@ -435,7 +435,7 @@ void UtilTest2::testParseIntSegments_invalidRange()
   }
 }
 
-void UtilTest2::testParseIntNoThrow()
+void UtilTest2::testParseInt()
 {
   auto n = util::parseInt(" -1 ");
   CPPUNIT_ASSERT(n);
@@ -464,7 +464,7 @@ void UtilTest2::testParseUIntNoThrow()
   CPPUNIT_ASSERT(!util::parseUIntNoThrow(n, s));
 }
 
-void UtilTest2::testParseLLIntNoThrow()
+void UtilTest2::testParseLLInt()
 {
   auto n = util::parseLLInt(" 9223372036854775807 ");
   CPPUNIT_ASSERT(n);
@@ -988,7 +988,7 @@ void UtilTest2::testTlsHostnameMatch()
   CPPUNIT_ASSERT(!util::tlsHostnameMatch("xn--*.a.b", "xn--c.a.b"));
 }
 
-void UtilTest2::testParseDoubleNoThrow()
+void UtilTest2::testParseDouble()
 {
   auto n = util::parseDouble(" 123 ");
   CPPUNIT_ASSERT(n);
