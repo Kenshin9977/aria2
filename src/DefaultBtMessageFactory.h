@@ -87,11 +87,11 @@ private:
 public:
   DefaultBtMessageFactory();
 
-  std::unique_ptr<BtMessage> createBtMessage(const unsigned char* msg,
-                                             size_t msgLength) override;
+  std::unique_ptr<BtMessage>
+  createBtMessage(std::span<const unsigned char> msg) override;
 
   std::unique_ptr<BtHandshakeMessage>
-  createHandshakeMessage(const unsigned char* msg, size_t msgLength) override;
+  createHandshakeMessage(std::span<const unsigned char> msg) override;
 
   std::unique_ptr<BtHandshakeMessage>
   createHandshakeMessage(const unsigned char* infoHash,

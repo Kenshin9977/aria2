@@ -54,8 +54,8 @@ public:
 
   static const char NAME[];
 
-  static std::unique_ptr<BtInterestedMessage> create(const unsigned char* data,
-                                                     size_t dataLength);
+  static std::unique_ptr<BtInterestedMessage>
+  create(std::span<const unsigned char> data);
 
   void doReceivedAction() override;
 

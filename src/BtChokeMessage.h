@@ -49,8 +49,8 @@ public:
 
   void doReceivedAction() override;
 
-  static std::unique_ptr<BtChokeMessage> create(const unsigned char* data,
-                                                size_t dataLength);
+  static std::unique_ptr<BtChokeMessage>
+  create(std::span<const unsigned char> data);
 };
 
 } // namespace aria2

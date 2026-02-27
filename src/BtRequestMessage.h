@@ -54,8 +54,8 @@ public:
   size_t getBlockIndex() const { return blockIndex_; }
   void setBlockIndex(size_t blockIndex) { blockIndex_ = blockIndex; }
 
-  static std::unique_ptr<BtRequestMessage> create(const unsigned char* data,
-                                                  size_t dataLength);
+  static std::unique_ptr<BtRequestMessage>
+  create(std::span<const unsigned char> data);
 
   void doReceivedAction() override;
 

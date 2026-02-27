@@ -70,14 +70,14 @@ void BtChokeMessageTest::testCreate()
 {
   unsigned char msg[5];
   bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 0);
-  auto pm = BtChokeMessage::create(&msg[4], 1);
+  auto pm = BtChokeMessage::create({&msg[4], 1});
   CPPUNIT_ASSERT_EQUAL((uint8_t)0, pm->getId());
 
   // case: payload size is wrong
   try {
     unsigned char msg[6];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 2, 0);
-    BtChokeMessage::create(&msg[4], 2);
+    BtChokeMessage::create({&msg[4], 2});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -86,7 +86,7 @@ void BtChokeMessageTest::testCreate()
   try {
     unsigned char msg[5];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 1);
-    BtChokeMessage::create(&msg[4], 1);
+    BtChokeMessage::create({&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {

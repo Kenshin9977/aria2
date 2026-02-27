@@ -46,9 +46,9 @@ const char BtHaveAllMessage::NAME[] = "have all";
 BtHaveAllMessage::BtHaveAllMessage() : ZeroBtMessage(ID, NAME) {}
 
 std::unique_ptr<BtHaveAllMessage>
-BtHaveAllMessage::create(const unsigned char* data, size_t dataLength)
+BtHaveAllMessage::create(std::span<const unsigned char> data)
 {
-  return ZeroBtMessage::create<BtHaveAllMessage>(data, dataLength);
+  return ZeroBtMessage::create<BtHaveAllMessage>(data);
 }
 
 void BtHaveAllMessage::doReceivedAction()

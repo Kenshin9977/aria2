@@ -35,6 +35,7 @@
 #include "DefaultBtMessageReceiver.h"
 
 #include <cstring>
+#include <span>
 
 #include "BtHandshakeMessage.h"
 #include "message.h"
@@ -73,7 +74,7 @@ DefaultBtMessageReceiver::receiveHandshake(bool quickReply)
   if (handshakeSent_ || !quickReply ||
       peerConnection_->getBufferLength() < 48) {
     if (peerConnection_->receiveHandshake(data, dataLength)) {
-      auto msg = messageFactory_->createHandshakeMessage(data, dataLength);
+      auto msg = messageFactory_->createHandshakeMessage({data, dataLength});
       msg->validate();
       return msg;
     }
@@ -95,7 +96,7 @@ DefaultBtMessageReceiver::receiveHandshake(bool quickReply)
     if (peerConnection_->getBufferLength() ==
             BtHandshakeMessage::MESSAGE_LENGTH &&
         peerConnection_->receiveHandshake(data, dataLength)) {
-      auto msg = messageFactory_->createHandshakeMessage(data, dataLength);
+      auto msg = messageFactory_->createHandshakeMessage({data, dataLength});
       msg->validate();
       return msg;
     }
@@ -125,7 +126,7 @@ std::unique_ptr<BtMessage> DefaultBtMessageReceiver::receiveMessage()
     return nullptr;
   }
   auto msg = messageFactory_->createBtMessage(
-      peerConnection_->getMsgPayloadBuffer(), dataLength);
+      {peerConnection_->getMsgPayloadBuffer(), dataLength});
   msg->validate();
   if (msg->getId() == BtPieceMessage::ID) {
     auto piecemsg = static_cast<BtPieceMessage*>(msg.get());

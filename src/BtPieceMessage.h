@@ -37,6 +37,8 @@
 
 #include "AbstractBtMessage.h"
 
+#include <span>
+
 namespace aria2 {
 
 class Piece;
@@ -91,8 +93,8 @@ public:
 
   void setPeerStorage(PeerStorage* peerStorage);
 
-  static std::unique_ptr<BtPieceMessage> create(const unsigned char* data,
-                                                size_t dataLength);
+  static std::unique_ptr<BtPieceMessage>
+  create(std::span<const unsigned char> data);
 
   void doReceivedAction() override;
 

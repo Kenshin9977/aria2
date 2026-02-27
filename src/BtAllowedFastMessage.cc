@@ -48,9 +48,9 @@ BtAllowedFastMessage::BtAllowedFastMessage(size_t index)
 }
 
 std::unique_ptr<BtAllowedFastMessage>
-BtAllowedFastMessage::create(const unsigned char* data, size_t dataLength)
+BtAllowedFastMessage::create(std::span<const unsigned char> data)
 {
-  return IndexBtMessage::create<BtAllowedFastMessage>(data, dataLength);
+  return IndexBtMessage::create<BtAllowedFastMessage>(data);
 }
 
 void BtAllowedFastMessage::doReceivedAction()

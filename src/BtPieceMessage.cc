@@ -83,13 +83,13 @@ BtPieceMessage::~BtPieceMessage() = default;
 void BtPieceMessage::setMsgPayload(const unsigned char* data) { data_ = data; }
 
 std::unique_ptr<BtPieceMessage>
-BtPieceMessage::create(const unsigned char* data, size_t dataLength)
+BtPieceMessage::create(std::span<const unsigned char> data)
 {
-  bittorrent::assertPayloadLengthGreater(9, dataLength, NAME);
-  bittorrent::assertID(ID, data, NAME);
-  return make_unique<BtPieceMessage>(bittorrent::getIntParam(data, 1),
-                                     bittorrent::getIntParam(data, 5),
-                                     dataLength - 9);
+  bittorrent::assertPayloadLengthGreater(9, data.size(), NAME);
+  bittorrent::assertID(ID, data.data(), NAME);
+  return make_unique<BtPieceMessage>(bittorrent::getIntParam(data.data(), 1),
+                                     bittorrent::getIntParam(data.data(), 5),
+                                     data.size() - 9);
 }
 
 void BtPieceMessage::doReceivedAction()

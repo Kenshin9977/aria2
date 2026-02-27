@@ -69,7 +69,7 @@ void BtHandshakeMessage::init()
 }
 
 std::unique_ptr<BtHandshakeMessage>
-BtHandshakeMessage::create(const unsigned char* data, size_t dataLength)
+BtHandshakeMessage::create(std::span<const unsigned char> data)
 {
   auto msg = make_unique<BtHandshakeMessage>();
   msg->pstrlen_ = data[0];

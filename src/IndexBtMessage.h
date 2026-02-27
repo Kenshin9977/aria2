@@ -36,6 +36,9 @@
 #define D_INDEX_BT_MESSAGE_H
 
 #include "SimpleBtMessage.h"
+
+#include <span>
+
 #include "bittorrent_helper.h"
 
 namespace aria2 {
@@ -48,11 +51,11 @@ private:
 
 protected:
   template <typename T>
-  static std::unique_ptr<T> create(const unsigned char* data, size_t dataLength)
+  static std::unique_ptr<T> create(std::span<const unsigned char> data)
   {
-    bittorrent::assertPayloadLengthEqual(5, dataLength, T::NAME);
-    bittorrent::assertID(T::ID, data, T::NAME);
-    return make_unique<T>(bittorrent::getIntParam(data, 1));
+    bittorrent::assertPayloadLengthEqual(5, data.size(), T::NAME);
+    bittorrent::assertID(T::ID, data.data(), T::NAME);
+    return make_unique<T>(bittorrent::getIntParam(data.data(), 1));
   }
 
 public:

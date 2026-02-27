@@ -43,7 +43,8 @@ void BtBitfieldMessageTest::testCreate()
   unsigned char bitfield[2];
   memset(bitfield, 0xff, sizeof(bitfield));
   memcpy(&msg[5], bitfield, sizeof(bitfield));
-  std::shared_ptr<BtBitfieldMessage> pm(BtBitfieldMessage::create(&msg[4], 3));
+  std::shared_ptr<BtBitfieldMessage> pm(
+      BtBitfieldMessage::create({&msg[4], 3}));
   CPPUNIT_ASSERT_EQUAL((uint8_t)5, pm->getId());
   CPPUNIT_ASSERT(memcmp(bitfield, pm->getBitfield(), sizeof(bitfield)) == 0);
   CPPUNIT_ASSERT_EQUAL((size_t)2, pm->getBitfieldLength());
@@ -51,7 +52,7 @@ void BtBitfieldMessageTest::testCreate()
   try {
     unsigned char msg[5];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 5);
-    BtBitfieldMessage::create(&msg[4], 1);
+    BtBitfieldMessage::create({&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -60,7 +61,7 @@ void BtBitfieldMessageTest::testCreate()
   try {
     unsigned char msg[5 + 2];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 3, 6);
-    BtBitfieldMessage::create(&msg[4], 3);
+    BtBitfieldMessage::create({&msg[4], 3});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {

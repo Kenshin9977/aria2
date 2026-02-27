@@ -48,7 +48,7 @@ public:
   static const char NAME[];
 
   static std::unique_ptr<BtSuggestPieceMessage>
-  create(const unsigned char* data, size_t dataLength);
+  create(std::span<const unsigned char> data);
 
   void doReceivedAction() override
   {

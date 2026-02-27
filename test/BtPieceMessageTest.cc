@@ -97,7 +97,7 @@ void BtPieceMessageTest::testCreate()
   bittorrent::setIntParam(&msg[5], 12345);
   bittorrent::setIntParam(&msg[9], 256);
   memcpy(&msg[13], data, sizeof(data));
-  std::shared_ptr<BtPieceMessage> pm(BtPieceMessage::create(&msg[4], 11));
+  std::shared_ptr<BtPieceMessage> pm(BtPieceMessage::create({&msg[4], 11}));
   CPPUNIT_ASSERT_EQUAL((uint8_t)7, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
   CPPUNIT_ASSERT_EQUAL(256, pm->getBegin());
@@ -107,7 +107,7 @@ void BtPieceMessageTest::testCreate()
   try {
     unsigned char msg[13];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 9, 7);
-    BtPieceMessage::create(&msg[4], 9);
+    BtPieceMessage::create({&msg[4], 9});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -116,7 +116,7 @@ void BtPieceMessageTest::testCreate()
   try {
     unsigned char msg[13 + 2];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 11, 8);
-    BtPieceMessage::create(&msg[4], 11);
+    BtPieceMessage::create({&msg[4], 11});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {

@@ -65,12 +65,12 @@ void BtBitfieldMessage::setBitfield(const unsigned char* bitfield,
 }
 
 std::unique_ptr<BtBitfieldMessage>
-BtBitfieldMessage::create(const unsigned char* data, size_t dataLength)
+BtBitfieldMessage::create(std::span<const unsigned char> data)
 {
-  bittorrent::assertPayloadLengthGreater(1, dataLength, NAME);
-  bittorrent::assertID(ID, data, NAME);
+  bittorrent::assertPayloadLengthGreater(1, data.size(), NAME);
+  bittorrent::assertID(ID, data.data(), NAME);
   auto message = make_unique<BtBitfieldMessage>();
-  message->setBitfield(data + 1, dataLength - 1);
+  message->setBitfield(data.data() + 1, data.size() - 1);
   return message;
 }
 

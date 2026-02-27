@@ -112,7 +112,7 @@ void BtRequestMessageTest::testCreate()
   bittorrent::setIntParam(&msg[5], 12345);
   bittorrent::setIntParam(&msg[9], 256);
   bittorrent::setIntParam(&msg[13], 1_k);
-  auto pm = BtRequestMessage::create(&msg[4], 13);
+  auto pm = BtRequestMessage::create({&msg[4], 13});
   CPPUNIT_ASSERT_EQUAL((uint8_t)6, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
   CPPUNIT_ASSERT_EQUAL(256, pm->getBegin());
@@ -122,7 +122,7 @@ void BtRequestMessageTest::testCreate()
   try {
     unsigned char msg[18];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 14, 6);
-    BtRequestMessage::create(&msg[4], 14);
+    BtRequestMessage::create({&msg[4], 14});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -131,7 +131,7 @@ void BtRequestMessageTest::testCreate()
   try {
     unsigned char msg[17];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 13, 7);
-    BtRequestMessage::create(&msg[4], 13);
+    BtRequestMessage::create({&msg[4], 13});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {

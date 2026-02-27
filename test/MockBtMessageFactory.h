@@ -3,6 +3,8 @@
 
 #include "BtMessageFactory.h"
 
+#include <span>
+
 #include "BtHandshakeMessage.h"
 #include "BtRequestMessage.h"
 #include "BtCancelMessage.h"
@@ -32,14 +34,14 @@ public:
 
   virtual ~MockBtMessageFactory() {}
 
-  virtual std::unique_ptr<BtMessage> createBtMessage(const unsigned char* msg,
-                                                     size_t msgLength) override
+  virtual std::unique_ptr<BtMessage>
+  createBtMessage(std::span<const unsigned char> msg) override
   {
     return nullptr;
   };
 
   virtual std::unique_ptr<BtHandshakeMessage>
-  createHandshakeMessage(const unsigned char* msg, size_t msgLength) override
+  createHandshakeMessage(std::span<const unsigned char> msg) override
   {
     return nullptr;
   }

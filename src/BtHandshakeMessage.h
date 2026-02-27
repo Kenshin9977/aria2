@@ -38,6 +38,7 @@
 #include "SimpleBtMessage.h"
 
 #include <array>
+#include <span>
 
 #include "BtConstants.h"
 
@@ -68,8 +69,8 @@ public:
   BtHandshakeMessage(const unsigned char* infoHash,
                      const unsigned char* peerId);
 
-  static std::unique_ptr<BtHandshakeMessage> create(const unsigned char* data,
-                                                    size_t dataLength);
+  static std::unique_ptr<BtHandshakeMessage>
+  create(std::span<const unsigned char> data);
 
   ~BtHandshakeMessage() override;
 
