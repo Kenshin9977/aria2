@@ -1,4 +1,5 @@
 #include "ContextAttribute.h"
+#include "DefaultBtInteractive.h"
 #include "Notifier.h"
 #include "FatalException.h"
 #include "TruncFileAllocationIterator.h"
@@ -37,6 +38,9 @@ class SmallClassCoverageTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testTruncFileAllocationIterator);
   CPPUNIT_TEST(testTruncFileAllocationIteratorAlreadyFinished);
   CPPUNIT_TEST(testUnknownOptionException);
+  CPPUNIT_TEST(testFloodingStatBasic);
+  CPPUNIT_TEST(testFloodingStatReset);
+  CPPUNIT_TEST(testFloodingStatOverflow);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -112,6 +116,46 @@ public:
     CPPUNIT_ASSERT_EQUAL(std::string("--bad-option"), ex.getUnknownOption());
     std::string msg(ex.what());
     CPPUNIT_ASSERT(msg.find("--bad-option") != std::string::npos);
+  }
+
+  void testFloodingStatBasic()
+  {
+    FloodingStat stat;
+    CPPUNIT_ASSERT_EQUAL(0, stat.getChokeUnchokeCount());
+    CPPUNIT_ASSERT_EQUAL(0, stat.getKeepAliveCount());
+
+    stat.incChokeUnchokeCount();
+    stat.incChokeUnchokeCount();
+    CPPUNIT_ASSERT_EQUAL(2, stat.getChokeUnchokeCount());
+
+    stat.incKeepAliveCount();
+    CPPUNIT_ASSERT_EQUAL(1, stat.getKeepAliveCount());
+  }
+
+  void testFloodingStatReset()
+  {
+    FloodingStat stat;
+    stat.incChokeUnchokeCount();
+    stat.incKeepAliveCount();
+    stat.incKeepAliveCount();
+
+    stat.reset();
+    CPPUNIT_ASSERT_EQUAL(0, stat.getChokeUnchokeCount());
+    CPPUNIT_ASSERT_EQUAL(0, stat.getKeepAliveCount());
+  }
+
+  void testFloodingStatOverflow()
+  {
+    // FloodingStat guards against INT_MAX overflow
+    FloodingStat stat;
+    // We can't iterate to INT_MAX in a test, but we can verify
+    // the increment works and does not crash
+    for (int i = 0; i < 100; ++i) {
+      stat.incChokeUnchokeCount();
+      stat.incKeepAliveCount();
+    }
+    CPPUNIT_ASSERT_EQUAL(100, stat.getChokeUnchokeCount());
+    CPPUNIT_ASSERT_EQUAL(100, stat.getKeepAliveCount());
   }
 };
 
