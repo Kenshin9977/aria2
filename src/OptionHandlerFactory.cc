@@ -1417,6 +1417,41 @@ std::vector<OptionHandler*> OptionHandlerFactory::createOptionHandlers()
     handlers.push_back(op);
   }
   {
+    OptionHandler* op(new HttpProxyOptionHandler(
+        PREF_SOCKS5_PROXY, TEXT_SOCKS5_PROXY, NO_DEFAULT_VALUE));
+    op->addTag(TAG_FTP);
+    op->addTag(TAG_HTTP);
+    op->addTag(TAG_HTTPS);
+    op->setInitialOption(true);
+    op->setChangeGlobalOption(true);
+    op->setChangeOptionForReserved(true);
+    handlers.push_back(op);
+  }
+  {
+    OptionHandler* op(new DefaultOptionHandler(
+        PREF_SOCKS5_PROXY_PASSWD, TEXT_SOCKS5_PROXY_PASSWD, NO_DEFAULT_VALUE));
+    op->addTag(TAG_FTP);
+    op->addTag(TAG_HTTP);
+    op->addTag(TAG_HTTPS);
+    op->setEraseAfterParse(true);
+    op->setInitialOption(true);
+    op->setChangeGlobalOption(true);
+    op->setChangeOptionForReserved(true);
+    handlers.push_back(op);
+  }
+  {
+    OptionHandler* op(new DefaultOptionHandler(
+        PREF_SOCKS5_PROXY_USER, TEXT_SOCKS5_PROXY_USER, NO_DEFAULT_VALUE));
+    op->addTag(TAG_FTP);
+    op->addTag(TAG_HTTP);
+    op->addTag(TAG_HTTPS);
+    op->setEraseAfterParse(true);
+    op->setInitialOption(true);
+    op->setChangeGlobalOption(true);
+    op->setChangeOptionForReserved(true);
+    handlers.push_back(op);
+  }
+  {
     OptionHandler* op(new DefaultOptionHandler(PREF_NO_PROXY, TEXT_NO_PROXY,
                                                NO_DEFAULT_VALUE,
                                                "HOSTNAME,DOMAIN,NETWORK/CIDR"));

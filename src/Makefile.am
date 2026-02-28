@@ -228,6 +228,10 @@ SRCS =  \
 	SingleFileAllocationIterator.cc SingleFileAllocationIterator.h\
 	SingletonHolder.h\
 	SinkStreamFilter.cc SinkStreamFilter.h\
+	SlowStartController.h\
+	Socks5ConnectCommand.cc Socks5ConnectCommand.h\
+	Socks5HandshakeCommand.cc Socks5HandshakeCommand.h\
+	Socks5RequestConnectChain.h\
 	SocketBuffer.cc SocketBuffer.h\
 	SocketCore.cc SocketCore.h\
 	SocketRecvBuffer.cc SocketRecvBuffer.h\

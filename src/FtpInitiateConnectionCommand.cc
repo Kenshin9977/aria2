@@ -60,6 +60,7 @@
 #include "FtpNegotiationConnectChain.h"
 #include "FtpTunnelRequestConnectChain.h"
 #include "HttpRequestConnectChain.h"
+#include "Socks5RequestConnectChain.h"
 #ifdef HAVE_LIBSSH2
 #  include "SftpNegotiationConnectChain.h"
 #  include "SftpNegotiationCommand.h"
@@ -113,7 +114,10 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
     auto c = make_unique<ConnectCommand>(getCuid(), getRequest(), proxyRequest,
                                          getFileEntry(), getRequestGroup(),
                                          getDownloadEngine(), getSocket());
-    if (proxyMethod == V_GET) {
+    if (isSocks5Proxy()) {
+      c->setControlChain(std::make_shared<Socks5RequestConnectChain>());
+    }
+    else if (proxyMethod == V_GET) {
       // Use GET for FTP via HTTP proxy.
       getRequest()->setMethod(HttpMethod::GET);
       c->setControlChain(std::make_shared<HttpRequestConnectChain>());

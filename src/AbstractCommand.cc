@@ -686,8 +686,16 @@ void AbstractCommand::initConnectTimeout()
 
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
+// SOCKS5 proxy takes priority when set; falls back to protocol-specific
+// HTTP proxies.
 std::string getProxyUri(Protocol protocol, const Option* option)
 {
+  // SOCKS5 proxy overrides all protocol-specific proxies
+  std::string socks5 = option->get(PREF_SOCKS5_PROXY);
+  if (!socks5.empty()) {
+    return socks5;
+  }
+
   if (protocol == Protocol::HTTP) {
     return getProxyOptionFor(PREF_HTTP_PROXY, PREF_HTTP_PROXY_USER,
                              PREF_HTTP_PROXY_PASSWD, option);
@@ -704,6 +712,11 @@ std::string getProxyUri(Protocol protocol, const Option* option)
   }
 
   return A2STR::NIL;
+}
+
+bool AbstractCommand::isSocks5Proxy() const
+{
+  return !getOption()->get(PREF_SOCKS5_PROXY).empty();
 }
 
 namespace {

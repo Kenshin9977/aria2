@@ -451,6 +451,9 @@ PrefPtr PREF_FTP_PROXY_USER = makePref("ftp-proxy-user");
 PrefPtr PREF_FTP_PROXY_PASSWD = makePref("ftp-proxy-passwd");
 PrefPtr PREF_ALL_PROXY_USER = makePref("all-proxy-user");
 PrefPtr PREF_ALL_PROXY_PASSWD = makePref("all-proxy-passwd");
+PrefPtr PREF_SOCKS5_PROXY = makePref("socks5-proxy");
+PrefPtr PREF_SOCKS5_PROXY_USER = makePref("socks5-proxy-user");
+PrefPtr PREF_SOCKS5_PROXY_PASSWD = makePref("socks5-proxy-passwd");
 
 /**
  * BitTorrent related preferences

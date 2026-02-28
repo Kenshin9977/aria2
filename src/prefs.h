@@ -403,6 +403,9 @@ extern PrefPtr PREF_FTP_PROXY_USER;
 extern PrefPtr PREF_FTP_PROXY_PASSWD;
 extern PrefPtr PREF_ALL_PROXY_USER;
 extern PrefPtr PREF_ALL_PROXY_PASSWD;
+extern PrefPtr PREF_SOCKS5_PROXY;
+extern PrefPtr PREF_SOCKS5_PROXY_USER;
+extern PrefPtr PREF_SOCKS5_PROXY_PASSWD;
 
 /**
  * BitTorrent related preferences
