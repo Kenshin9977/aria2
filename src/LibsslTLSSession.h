@@ -60,6 +60,8 @@ public:
                  std::string& handshakeErr) override;
   int tlsAccept(TLSVersion& version) override;
   std::string getLastErrorString() override;
+  int setALPNProtocols(const std::vector<std::string>& protocols) override;
+  std::string getNegotiatedProtocol() const override;
   size_t getRecvBufferedLength() override { return 0; }
 
 private:

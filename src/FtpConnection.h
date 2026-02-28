@@ -85,6 +85,9 @@ public:
                 const std::shared_ptr<AuthConfig>& authConfig,
                 const Option* op);
   ~FtpConnection();
+  bool sendAuthTls();
+  bool sendPbsz();
+  bool sendProtP();
   bool sendUser();
   bool sendPass();
   bool sendType();

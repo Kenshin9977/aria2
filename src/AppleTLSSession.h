@@ -105,6 +105,9 @@ public:
   // Returns last error string
   std::string getLastErrorString() override;
 
+  int setALPNProtocols(const std::vector<std::string>& protocols) override;
+  std::string getNegotiatedProtocol() const override;
+
   size_t getRecvBufferedLength() override { return 0; }
 
 private:

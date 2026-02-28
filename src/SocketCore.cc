@@ -942,6 +942,13 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
                               tlsSession_->getLastErrorString().c_str()));
       }
     }
+    // Set ALPN protocols if configured
+    if (!alpnProtocols_.empty()) {
+      rv = tlsSession_->setALPNProtocols(alpnProtocols_);
+      if (rv != TLS_ERR_OK) {
+        A2_LOG_WARN("Failed to set ALPN protocols");
+      }
+    }
     // Done with the setup, now let handshaking begin immediately.
     secure_ = A2_TLS_HANDSHAKING;
     A2_LOG_DEBUG("TLS Handshaking");
@@ -994,7 +1001,16 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
       A2_LOG_DEBUG(fmt("Securely connected to %s with %s", peerInfo.c_str(),
                        tlsVersion.c_str()));
 
-      // 2. We're connected now!
+      // 2. Query ALPN result
+      if (!alpnProtocols_.empty()) {
+        negotiatedProtocol_ = tlsSession_->getNegotiatedProtocol();
+        if (!negotiatedProtocol_.empty()) {
+          A2_LOG_INFO(fmt("ALPN negotiated protocol: %s",
+                          negotiatedProtocol_.c_str()));
+        }
+      }
+
+      // 3. We're connected now!
       secure_ = A2_TLS_CONNECTED;
       return true;
     }

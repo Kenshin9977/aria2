@@ -78,6 +78,39 @@ FtpConnection::FtpConnection(cuid_t cuid,
 
 FtpConnection::~FtpConnection() = default;
 
+bool FtpConnection::sendAuthTls()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "AUTH TLS\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
+bool FtpConnection::sendPbsz()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "PBSZ 0\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
+bool FtpConnection::sendProtP()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "PROT P\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
 bool FtpConnection::sendUser()
 {
   if (socketBuffer_.sendBufferIsEmpty()) {

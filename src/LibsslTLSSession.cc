@@ -168,6 +168,37 @@ ssize_t OpenSSLTLSSession::readData(void* data, size_t len)
   return ret;
 }
 
+int OpenSSLTLSSession::setALPNProtocols(
+    const std::vector<std::string>& protocols)
+{
+  if (!ssl_) {
+    return TLS_ERR_ERROR;
+  }
+  // Build ALPN wire format: each protocol prefixed by its length byte
+  std::vector<unsigned char> wire;
+  for (const auto& proto : protocols) {
+    wire.push_back(static_cast<unsigned char>(proto.size()));
+    wire.insert(wire.end(), proto.begin(), proto.end());
+  }
+  // SSL_set_alpn_protos returns 0 on success
+  int rv = SSL_set_alpn_protos(ssl_, wire.data(), wire.size());
+  return rv == 0 ? TLS_ERR_OK : TLS_ERR_ERROR;
+}
+
+std::string OpenSSLTLSSession::getNegotiatedProtocol() const
+{
+  if (!ssl_) {
+    return std::string();
+  }
+  const unsigned char* proto = nullptr;
+  unsigned int len = 0;
+  SSL_get0_alpn_selected(ssl_, &proto, &len);
+  if (proto && len > 0) {
+    return std::string(reinterpret_cast<const char*>(proto), len);
+  }
+  return std::string();
+}
+
 int OpenSSLTLSSession::handshake(TLSVersion& version)
 {
   ERR_clear_error();

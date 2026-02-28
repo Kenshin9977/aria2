@@ -92,6 +92,11 @@ private:
 
   std::shared_ptr<TLSSession> tlsSession_;
 
+  // ALPN protocols to offer during TLS handshake
+  std::vector<std::string> alpnProtocols_;
+  // Protocol selected by ALPN after handshake completes
+  std::string negotiatedProtocol_;
+
   /**
    * Makes this socket secure. The connection must be established
    * before calling this method.
@@ -295,6 +300,20 @@ public:
   // If you are going to verify peer's certificate, hostname must be
   // supplied.
   bool tlsConnect(const std::string& hostname);
+
+  // Sets ALPN protocols to offer during TLS handshake. Must be
+  // called before tlsConnect()/tlsAccept().
+  void setALPNProtocols(const std::vector<std::string>& protocols)
+  {
+    alpnProtocols_ = protocols;
+  }
+
+  // Returns the negotiated ALPN protocol after TLS handshake, or
+  // empty string if ALPN was not negotiated.
+  const std::string& getNegotiatedProtocol() const
+  {
+    return negotiatedProtocol_;
+  }
 #endif // ENABLE_SSL
 
 #ifdef HAVE_LIBSSH2

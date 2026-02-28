@@ -76,6 +76,7 @@
 #include "SocketRecvBuffer.h"
 #include "NullProgressInfoFile.h"
 #include "ChecksumCheckIntegrityEntry.h"
+#include "uri.h"
 
 namespace aria2 {
 
@@ -91,7 +92,8 @@ FtpNegotiationCommand::FtpNegotiationCommand(
           e->getAuthConfigFactory()->createAuthConfig(
               req, requestGroup->getOption().get()),
           getOption().get())),
-      pasvPort_(0)
+      pasvPort_(0),
+      dataProtected_(false)
 {
   ftp_->setBaseWorkingDir(baseWorkingDir);
   if (seq == SEQ_RECV_GREETING) {
@@ -164,8 +166,120 @@ bool FtpNegotiationCommand::recvGreeting()
   if (status != 220) {
     throw DL_ABORT_EX2(EX_CONNECTION_FAILED, error_code::FTP_PROTOCOL_ERROR);
   }
-  sequence_ = SEQ_SEND_USER;
+#ifdef ENABLE_SSL
+  if (getRequest()->getProtocol() == Protocol::FTPS) {
+    sequence_ = SEQ_SEND_AUTH_TLS;
+  }
+  else
+#endif // ENABLE_SSL
+  {
+    sequence_ = SEQ_SEND_USER;
+  }
 
+  return true;
+}
+
+bool FtpNegotiationCommand::sendAuthTls()
+{
+  if (ftp_->sendAuthTls()) {
+    disableWriteCheckSocket();
+    sequence_ = SEQ_RECV_AUTH_TLS;
+  }
+  else {
+    setWriteCheckSocket(getSocket());
+  }
+  return false;
+}
+
+bool FtpNegotiationCommand::recvAuthTls()
+{
+  int status = ftp_->receiveResponse();
+  if (status == 0) {
+    return false;
+  }
+  if (status != 234) {
+    throw DL_ABORT_EX2(fmt("AUTH TLS failed, status=%d", status),
+                       error_code::FTP_PROTOCOL_ERROR);
+  }
+  A2_LOG_INFO(fmt("CUID#%" PRId64 " - AUTH TLS successful, starting"
+                  " TLS handshake",
+                  getCuid()));
+  sequence_ = SEQ_TLS_HANDSHAKE;
+  return true;
+}
+
+bool FtpNegotiationCommand::tlsHandshake()
+{
+  auto s = std::static_pointer_cast<SocketCore>(getSocket());
+  if (s->tlsConnect(getRequest()->getHost())) {
+    A2_LOG_INFO(fmt("CUID#%" PRId64 " - control connection TLS"
+                    " handshake complete",
+                    getCuid()));
+    sequence_ = SEQ_SEND_PBSZ;
+    return true;
+  }
+  if (s->wantRead()) {
+    setReadCheckSocket(getSocket());
+  }
+  if (s->wantWrite()) {
+    setWriteCheckSocket(getSocket());
+  }
+  return false;
+}
+
+bool FtpNegotiationCommand::sendPbsz()
+{
+  if (ftp_->sendPbsz()) {
+    disableWriteCheckSocket();
+    sequence_ = SEQ_RECV_PBSZ;
+  }
+  else {
+    setWriteCheckSocket(getSocket());
+  }
+  return false;
+}
+
+bool FtpNegotiationCommand::recvPbsz()
+{
+  int status = ftp_->receiveResponse();
+  if (status == 0) {
+    return false;
+  }
+  if (status != 200) {
+    throw DL_ABORT_EX2(fmt("PBSZ failed, status=%d", status),
+                       error_code::FTP_PROTOCOL_ERROR);
+  }
+  sequence_ = SEQ_SEND_PROT_P;
+  return true;
+}
+
+bool FtpNegotiationCommand::sendProtP()
+{
+  if (ftp_->sendProtP()) {
+    disableWriteCheckSocket();
+    sequence_ = SEQ_RECV_PROT_P;
+  }
+  else {
+    setWriteCheckSocket(getSocket());
+  }
+  return false;
+}
+
+bool FtpNegotiationCommand::recvProtP()
+{
+  int status = ftp_->receiveResponse();
+  if (status == 0) {
+    return false;
+  }
+  if (status != 200) {
+    throw DL_ABORT_EX2(fmt("PROT P failed, status=%d", status),
+                       error_code::FTP_PROTOCOL_ERROR);
+  }
+  dataProtected_ = true;
+  A2_LOG_INFO(fmt("CUID#%" PRId64 " - data connection protection"
+                  " enabled (PROT P)",
+                  getCuid()));
+  sequence_ = SEQ_SEND_USER;
   return true;
 }
 
@@ -778,7 +892,7 @@ bool FtpNegotiationCommand::sendTunnelRequest()
     // Construct fake URI in order to use HttpRequest
     std::pair<std::string, uint16_t> dataAddr;
     uri::UriStruct us;
-    us.protocol = Protocol::FTP;
+    us.protocol = getRequest()->getProtocol();
     us.host = getRequest()->getHost();
     us.port = pasvPort_;
     us.ipv6LiteralAddress = getRequest()->isIPv6LiteralAddress();
@@ -889,7 +1003,12 @@ bool FtpNegotiationCommand::recvRetr()
                          error_code::FTP_PROTOCOL_ERROR);
   }
   if (getOption()->getAsBool(PREF_FTP_PASV)) {
-    sequence_ = SEQ_NEGOTIATION_COMPLETED;
+    if (dataProtected_) {
+      sequence_ = SEQ_DATA_TLS_HANDSHAKE;
+    }
+    else {
+      sequence_ = SEQ_NEGOTIATION_COMPLETED;
+    }
     return false;
   }
   else {
@@ -905,7 +1024,30 @@ bool FtpNegotiationCommand::waitConnection()
   disableReadCheckSocket();
   setReadCheckSocket(getSocket());
   dataSocket_ = serverSocket_->acceptConnection();
-  sequence_ = SEQ_NEGOTIATION_COMPLETED;
+  if (dataProtected_) {
+    sequence_ = SEQ_DATA_TLS_HANDSHAKE;
+  }
+  else {
+    sequence_ = SEQ_NEGOTIATION_COMPLETED;
+  }
+  return false;
+}
+
+bool FtpNegotiationCommand::dataTlsHandshake()
+{
+  if (dataSocket_->tlsConnect(getRequest()->getHost())) {
+    A2_LOG_INFO(fmt("CUID#%" PRId64 " - data connection TLS"
+                    " handshake complete",
+                    getCuid()));
+    sequence_ = SEQ_NEGOTIATION_COMPLETED;
+    return false;
+  }
+  if (dataSocket_->wantRead()) {
+    setReadCheckSocket(dataSocket_);
+  }
+  if (dataSocket_->wantWrite()) {
+    setWriteCheckSocket(dataSocket_);
+  }
   return false;
 }
 
@@ -916,6 +1058,20 @@ bool FtpNegotiationCommand::processSequence(
   switch (sequence_) {
   case SEQ_RECV_GREETING:
     return recvGreeting();
+  case SEQ_SEND_AUTH_TLS:
+    return sendAuthTls();
+  case SEQ_RECV_AUTH_TLS:
+    return recvAuthTls();
+  case SEQ_TLS_HANDSHAKE:
+    return tlsHandshake();
+  case SEQ_SEND_PBSZ:
+    return sendPbsz();
+  case SEQ_RECV_PBSZ:
+    return recvPbsz();
+  case SEQ_SEND_PROT_P:
+    return sendProtP();
+  case SEQ_RECV_PROT_P:
+    return recvProtP();
   case SEQ_SEND_USER:
     return sendUser();
   case SEQ_RECV_USER:
@@ -988,6 +1144,8 @@ bool FtpNegotiationCommand::processSequence(
     return recvRetr();
   case SEQ_WAIT_CONNECTION:
     return waitConnection();
+  case SEQ_DATA_TLS_HANDSHAKE:
+    return dataTlsHandshake();
   default:
     abort();
   }

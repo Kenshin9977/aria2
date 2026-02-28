@@ -546,6 +546,63 @@ int AppleTLSSession::setSNIHostname(const std::string& hostname)
   return (lastError_ != noErr) ? TLS_ERR_ERROR : TLS_ERR_OK;
 }
 
+int AppleTLSSession::setALPNProtocols(
+    const std::vector<std::string>& protocols)
+{
+#if defined(__MAC_10_13)
+  if (!sslCtx_) {
+    return TLS_ERR_ERROR;
+  }
+  CFMutableArrayRef alpnArray = CFArrayCreateMutable(
+      nullptr, protocols.size(), &kCFTypeArrayCallBacks);
+  if (!alpnArray) {
+    return TLS_ERR_ERROR;
+  }
+  for (const auto& proto : protocols) {
+    CFStringRef str = CFStringCreateWithBytes(
+        nullptr, reinterpret_cast<const UInt8*>(proto.data()), proto.size(),
+        kCFStringEncodingUTF8, false);
+    if (str) {
+      CFArrayAppendValue(alpnArray, str);
+      CFRelease(str);
+    }
+  }
+  OSStatus status = SSLSetALPNProtocols(sslCtx_, alpnArray);
+  CFRelease(alpnArray);
+  return status == noErr ? TLS_ERR_OK : TLS_ERR_ERROR;
+#else
+  return TLS_ERR_OK;
+#endif
+}
+
+std::string AppleTLSSession::getNegotiatedProtocol() const
+{
+#if defined(__MAC_10_13)
+  if (!sslCtx_) {
+    return std::string();
+  }
+  CFArrayRef protocols = nullptr;
+  OSStatus status = SSLCopyALPNProtocols(sslCtx_, &protocols);
+  if (status != noErr || !protocols || CFArrayGetCount(protocols) == 0) {
+    if (protocols) {
+      CFRelease(protocols);
+    }
+    return std::string();
+  }
+  CFStringRef proto =
+      static_cast<CFStringRef>(CFArrayGetValueAtIndex(protocols, 0));
+  char buf[64];
+  std::string result;
+  if (CFStringGetCString(proto, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+    result = buf;
+  }
+  CFRelease(protocols);
+  return result;
+#else
+  return std::string();
+#endif
+}
+
 int AppleTLSSession::closeConnection()
 {
   if (state_ != st_connected) {

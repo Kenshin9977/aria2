@@ -36,6 +36,8 @@
 
 #include <map>
 
+#include "uri.h"
+
 #include "DownloadEngine.h"
 #include "Option.h"
 #include "Request.h"
@@ -152,7 +154,8 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
         FtpNegotiationCommand::SEQ_SEND_CWD_PREP, options);
   }
 
-  assert(getRequest()->getProtocol() == Protocol::FTP);
+  assert(getRequest()->getProtocol() == Protocol::FTP ||
+         getRequest()->getProtocol() == Protocol::FTPS);
 
   if (proxyMethod != V_GET) {
     assert(0);

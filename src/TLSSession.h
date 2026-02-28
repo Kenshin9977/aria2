@@ -36,6 +36,10 @@
 #define TLS_SESSION_H
 
 #include "common.h"
+
+#include <string>
+#include <vector>
+
 #include "a2netcompat.h"
 #include "TLSContext.h"
 
@@ -106,6 +110,23 @@ public:
 
   // Returns last error string
   virtual std::string getLastErrorString() = 0;
+
+  // Sets ALPN protocols for negotiation. |protocols| is a list of
+  // protocol names (e.g., "h2", "http/1.1"). Must be called after
+  // init() but before handshake. Returns TLS_ERR_OK on success.
+  // Default implementation is a no-op for backends without ALPN.
+  virtual int
+  setALPNProtocols(const std::vector<std::string>& /* protocols */)
+  {
+    return TLS_ERR_OK;
+  }
+
+  // Returns the negotiated ALPN protocol after handshake, or empty
+  // string if ALPN was not negotiated or not supported.
+  virtual std::string getNegotiatedProtocol() const
+  {
+    return std::string();
+  }
 
   // Returns buffered length, which can be read immediately without
   // contacting network.
