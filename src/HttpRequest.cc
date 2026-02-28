@@ -145,6 +145,7 @@ std::string HttpRequest::createRequest()
 {
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
   std::string requestLine(httpMethodToString(request_->getMethod()));
+  requestLine.reserve(512);
   requestLine += ' ';
   if (proxyRequest_) {
     if (getProtocol() == Protocol::FTP && request_->getUsername().empty() &&
