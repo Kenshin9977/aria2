@@ -273,16 +273,15 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
       }
       std::string utf8Path = strjoin(
           pathelem.begin(), pathelem.end(), "/",
-          std::function<std::string(const std::string&)>(util::encodeNonUtf8));
+          util::encodeNonUtf8);
       if (util::detectDirTraversal(utf8Path)) {
         throw DL_ABORT_EX2(fmt(MSG_DIR_TRAVERSAL_DETECTED, utf8Path.c_str()),
                            error_code::BITTORRENT_PARSE_ERROR);
       }
       std::string pePath =
           strjoin(pathelem.begin(), pathelem.end(), "/",
-                  std::function<std::string(std::string_view)>(
-                      static_cast<std::string (*)(std::string_view)>(
-                          util::percentEncode)));
+                  static_cast<std::string (*)(std::string_view)>(
+                      util::percentEncode));
       std::vector<std::string> uris;
       createUri(urlList.begin(), urlList.end(), std::back_inserter(uris),
                 pePath);

@@ -39,7 +39,6 @@
 
 #include <deque>
 #include <memory>
-#include <functional>
 
 namespace aria2 {
 
@@ -74,12 +73,14 @@ public:
 
   size_t countEntryInQueue() const { return entries_.size(); }
 
-  bool isPicked(const std::function<bool(const T&)>& pred) const
+  template <typename Pred>
+  bool isPicked(const Pred& pred) const
   {
     return pickedEntry_ && pred(*pickedEntry_);
   }
 
-  bool isQueued(const std::function<bool(const T&)>& pred) const
+  template <typename Pred>
+  bool isQueued(const Pred& pred) const
   {
     for (auto& e : entries_) {
       if (pred(*e)) {
