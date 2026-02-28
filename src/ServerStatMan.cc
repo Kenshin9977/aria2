@@ -60,26 +60,18 @@ std::shared_ptr<ServerStat>
 ServerStatMan::find(const std::string& hostname,
                     const std::string& protocol) const
 {
-  auto ss = std::make_shared<ServerStat>(hostname, protocol);
-  auto i = serverStats_.find(ss);
+  auto i = serverStats_.find({hostname, protocol});
   if (i == serverStats_.end()) {
     return nullptr;
   }
-  else {
-    return *i;
-  }
+  return i->second;
 }
 
 bool ServerStatMan::add(const std::shared_ptr<ServerStat>& serverStat)
 {
-  auto i = serverStats_.lower_bound(serverStat);
-  if (i != serverStats_.end() && *(*i) == *serverStat) {
-    return false;
-  }
-  else {
-    serverStats_.insert(i, serverStat);
-    return true;
-  }
+  auto key = StatKey{serverStat->getHostname(), serverStat->getProtocol()};
+  auto r = serverStats_.emplace(std::move(key), serverStat);
+  return r.second;
 }
 
 bool ServerStatMan::save(const std::string& filename) const
@@ -93,8 +85,8 @@ bool ServerStatMan::save(const std::string& filename) const
           fmt(MSG_OPENING_WRITABLE_SERVER_STAT_FILE_FAILED, filename.c_str()));
       return false;
     }
-    for (auto& e : serverStats_) {
-      std::string l = e->toString();
+    for (auto& [key, stat] : serverStats_) {
+      std::string l = stat->toString();
       l += "\n";
       if (fp.write(l.data(), l.size()) != l.size()) {
         A2_LOG_ERROR(
@@ -237,9 +229,9 @@ bool ServerStatMan::load(const std::string& filename)
 void ServerStatMan::removeStaleServerStat(const std::chrono::seconds& timeout)
 {
   auto now = Time();
-  for (auto i = std::begin(serverStats_); i != std::end(serverStats_);) {
-    if ((*i)->getLastUpdated().difference(now) >= timeout) {
-      serverStats_.erase(i++);
+  for (auto i = serverStats_.begin(); i != serverStats_.end();) {
+    if (i->second->getLastUpdated().difference(now) >= timeout) {
+      i = serverStats_.erase(i);
     }
     else {
       ++i;

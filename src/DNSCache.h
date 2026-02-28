@@ -38,11 +38,10 @@
 #include "common.h"
 
 #include <string>
-#include <set>
+#include <map>
 #include <algorithm>
 #include <vector>
-
-#include "a2functional.h"
+#include <utility>
 
 namespace aria2 {
 
@@ -92,15 +91,10 @@ private:
 
     void markBad(const std::string& addr);
 
-    bool operator<(const CacheEntry& e) const;
-
-    bool operator==(const CacheEntry& e) const;
   };
 
-  typedef std::set<std::shared_ptr<CacheEntry>,
-                   DerefLess<std::shared_ptr<CacheEntry>>>
-      CacheEntrySet;
-  CacheEntrySet entries_;
+  typedef std::pair<std::string, uint16_t> CacheKey;
+  std::map<CacheKey, CacheEntry> entries_;
 
 public:
   DNSCache();
@@ -115,10 +109,9 @@ public:
   void findAll(OutputIterator out, const std::string& hostname,
                uint16_t port) const
   {
-    auto target = std::make_shared<CacheEntry>(hostname, port);
-    auto i = entries_.find(target);
+    auto i = entries_.find({hostname, port});
     if (i != entries_.end()) {
-      (*i)->getAllGoodAddrs(out);
+      i->second.getAllGoodAddrs(out);
     }
   }
 

@@ -76,10 +76,8 @@ DNSCache::CacheEntry& DNSCache::CacheEntry::operator=(const CacheEntry& c)
 
 bool DNSCache::CacheEntry::add(const std::string& addr)
 {
-  for (std::vector<AddrEntry>::const_iterator i = addrEntries_.begin(),
-                                              eoi = addrEntries_.end();
-       i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
+  for (auto& entry : addrEntries_) {
+    if (entry.addr_ == addr) {
       return false;
     }
   }
@@ -118,7 +116,7 @@ const std::string& DNSCache::CacheEntry::getGoodAddr() const
 {
   for (auto& elem : addrEntries_) {
     if (elem.good_) {
-      return (elem).addr_;
+      return elem.addr_;
     }
   }
   return A2STR::NIL;
@@ -130,20 +128,6 @@ void DNSCache::CacheEntry::markBad(const std::string& addr)
   if (i != addrEntries_.end()) {
     i->good_ = false;
   }
-}
-
-bool DNSCache::CacheEntry::operator<(const CacheEntry& e) const
-{
-  int r = hostname_.compare(e.hostname_);
-  if (r != 0) {
-    return r < 0;
-  }
-  return port_ < e.port_;
-}
-
-bool DNSCache::CacheEntry::operator==(const CacheEntry& e) const
-{
-  return hostname_ == e.hostname_ && port_ == e.port_;
 }
 
 DNSCache::DNSCache() {}
@@ -163,44 +147,40 @@ DNSCache& DNSCache::operator=(const DNSCache& c)
 const std::string& DNSCache::find(const std::string& hostname,
                                   uint16_t port) const
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.find(target);
+  auto i = entries_.find({hostname, port});
   if (i == entries_.end()) {
     return A2STR::NIL;
   }
-  else {
-    return (*i)->getGoodAddr();
-  }
+  return i->second.getGoodAddr();
 }
 
 void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
                    uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.lower_bound(target);
-  if (i != entries_.end() && *(*i) == *target) {
-    (*i)->add(ipaddr);
+  auto key = CacheKey{hostname, port};
+  auto i = entries_.find(key);
+  if (i != entries_.end()) {
+    i->second.add(ipaddr);
   }
   else {
-    target->add(ipaddr);
-    entries_.insert(i, target);
+    CacheEntry entry(hostname, port);
+    entry.add(ipaddr);
+    entries_.emplace(std::move(key), std::move(entry));
   }
 }
 
 void DNSCache::markBad(const std::string& hostname, const std::string& ipaddr,
                        uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.find(target);
+  auto i = entries_.find({hostname, port});
   if (i != entries_.end()) {
-    (*i)->markBad(ipaddr);
+    i->second.markBad(ipaddr);
   }
 }
 
 void DNSCache::remove(const std::string& hostname, uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  entries_.erase(target);
+  entries_.erase({hostname, port});
 }
 
 } // namespace aria2

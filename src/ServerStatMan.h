@@ -37,11 +37,11 @@
 #include "common.h"
 
 #include <string>
-#include <set>
+#include <map>
 #include <memory>
+#include <utility>
 
 #include "a2time.h"
-#include "a2functional.h"
 
 namespace aria2 {
 
@@ -65,10 +65,8 @@ public:
   void removeStaleServerStat(const std::chrono::seconds& timeout);
 
 private:
-  typedef std::set<std::shared_ptr<ServerStat>,
-                   DerefLess<std::shared_ptr<ServerStat>>>
-      ServerStatSet;
-  ServerStatSet serverStats_;
+  typedef std::pair<std::string, std::string> StatKey;
+  std::map<StatKey, std::shared_ptr<ServerStat>> serverStats_;
 };
 
 } // namespace aria2

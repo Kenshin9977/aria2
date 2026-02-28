@@ -38,7 +38,7 @@
 #include "PieceStorage.h"
 
 #include <deque>
-#include <set>
+#include <map>
 
 #include "a2functional.h"
 
@@ -76,9 +76,7 @@ private:
   std::unique_ptr<BitfieldMan> bitfieldMan_;
   std::shared_ptr<DiskAdaptor> diskAdaptor_;
   std::shared_ptr<DiskWriterFactory> diskWriterFactory_;
-  typedef std::set<std::shared_ptr<Piece>, DerefLess<std::shared_ptr<Piece>>>
-      UsedPieceSet;
-  UsedPieceSet usedPieces_;
+  std::map<size_t, std::shared_ptr<Piece>> usedPieces_;
 
   bool endGame_;
   size_t endGamePieceNum_;

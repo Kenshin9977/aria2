@@ -164,24 +164,18 @@ std::shared_ptr<Piece> DefaultPieceStorage::getPiece(size_t index)
 
 void DefaultPieceStorage::addUsedPiece(const std::shared_ptr<Piece>& piece)
 {
-  usedPieces_.insert(piece);
+  usedPieces_[piece->getIndex()] = piece;
   A2_LOG_DEBUG(fmt("usedPieces_.size()=%lu",
                    static_cast<unsigned long>(usedPieces_.size())));
 }
 
 std::shared_ptr<Piece> DefaultPieceStorage::findUsedPiece(size_t index) const
 {
-  auto p = std::make_shared<Piece>();
-  p->setIndex(index);
-
-  auto i = usedPieces_.find(p);
+  auto i = usedPieces_.find(index);
   if (i == usedPieces_.end()) {
-    p.reset();
-    return p;
+    return nullptr;
   }
-  else {
-    return *i;
-  }
+  return i->second;
 }
 
 #ifdef ENABLE_BITTORRENT
@@ -413,7 +407,7 @@ void DefaultPieceStorage::deleteUsedPiece(const std::shared_ptr<Piece>& piece)
   if (!piece) {
     return;
   }
-  usedPieces_.erase(piece);
+  usedPieces_.erase(piece->getIndex());
   piece->releaseWrCache(wrDiskCache_);
 }
 
@@ -570,8 +564,8 @@ int64_t DefaultPieceStorage::getFilteredCompletedLength()
 int64_t DefaultPieceStorage::getInFlightPieceCompletedLength() const
 {
   int64_t len = 0;
-  for (auto& elem : usedPieces_) {
-    len += elem->getCompletedLength();
+  for (auto& [idx, piece] : usedPieces_) {
+    len += piece->getCompletedLength();
   }
   return len;
 }
@@ -579,9 +573,9 @@ int64_t DefaultPieceStorage::getInFlightPieceCompletedLength() const
 int64_t DefaultPieceStorage::getInFlightPieceFilteredCompletedLength() const
 {
   int64_t len = 0;
-  for (auto& elem : usedPieces_) {
-    if (bitfieldMan_->isFilterBitSet(elem->getIndex())) {
-      len += elem->getCompletedLength();
+  for (auto& [idx, piece] : usedPieces_) {
+    if (bitfieldMan_->isFilterBitSet(idx)) {
+      len += piece->getCompletedLength();
     }
   }
   return len;
@@ -689,7 +683,7 @@ void DefaultPieceStorage::flushWrDiskCacheEntry(bool releaseEntries)
   // UsedPieceSet is sorted by piece index. It means we can flush
   // cache by non-decreasing offset, which is good to reduce disk seek
   // unless the file is heavily fragmented.
-  for (auto& piece : usedPieces_) {
+  for (auto& [idx, piece] : usedPieces_) {
     auto ce = piece->getWrDiskCacheEntry();
     if (ce) {
       piece->flushWrCache(wrDiskCache_);
@@ -786,7 +780,9 @@ void DefaultPieceStorage::markPieceMissing(size_t index)
 void DefaultPieceStorage::addInFlightPiece(
     const std::vector<std::shared_ptr<Piece>>& pieces)
 {
-  usedPieces_.insert(pieces.begin(), pieces.end());
+  for (auto& piece : pieces) {
+    usedPieces_[piece->getIndex()] = piece;
+  }
 }
 
 size_t DefaultPieceStorage::countInFlightPiece() { return usedPieces_.size(); }
@@ -794,7 +790,9 @@ size_t DefaultPieceStorage::countInFlightPiece() { return usedPieces_.size(); }
 void DefaultPieceStorage::getInFlightPieces(
     std::vector<std::shared_ptr<Piece>>& pieces)
 {
-  pieces.insert(pieces.end(), usedPieces_.begin(), usedPieces_.end());
+  for (auto& [idx, piece] : usedPieces_) {
+    pieces.push_back(piece);
+  }
 }
 
 void DefaultPieceStorage::setDiskWriterFactory(
