@@ -51,12 +51,9 @@ void IteratableChunkChecksumValidatorTest::testValidate()
   IteratableChunkChecksumValidator validator(dctx, ps);
   validator.init();
 
-  validator.validateChunk();
-  CPPUNIT_ASSERT(!validator.finished());
-  validator.validateChunk();
-  CPPUNIT_ASSERT(!validator.finished());
-  validator.validateChunk();
-  CPPUNIT_ASSERT(validator.finished());
+  while (!validator.finished()) {
+    validator.validateChunk();
+  }
   CPPUNIT_ASSERT(ps->downloadFinished());
 
   // make the test fail

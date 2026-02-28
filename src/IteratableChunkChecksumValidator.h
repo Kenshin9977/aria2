@@ -39,6 +39,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace aria2 {
 
@@ -54,10 +55,18 @@ private:
   std::unique_ptr<BitfieldMan> bitfield_;
   size_t currentIndex_;
   std::unique_ptr<MessageDigest> ctx_;
+  size_t batchSize_;
 
   std::string calculateActualChecksum();
 
   std::string digest(int64_t offset, size_t length);
+
+  // Read piece data from disk into buffer
+  std::vector<unsigned char> readPiece(size_t index);
+
+  // Compute hash of pre-read buffer
+  static std::string hashData(const std::string& hashType,
+                              const unsigned char* data, size_t length);
 
 public:
   IteratableChunkChecksumValidator(
