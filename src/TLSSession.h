@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -57,7 +58,7 @@ enum TLSErrorCode {
 //
 class TLSSession {
 public:
-  static TLSSession* make(TLSContext* ctx);
+  static std::unique_ptr<TLSSession> make(TLSContext* ctx);
 
   // MUST deallocate all resources
   virtual ~TLSSession() = default;

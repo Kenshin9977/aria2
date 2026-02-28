@@ -41,6 +41,7 @@
 #include <openssl/pkcs12.h>
 #include <openssl/bio.h>
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
@@ -92,9 +93,10 @@ using x509_sk_t = std::unique_ptr<STACK_OF(X509), x509_sk_deleter>;
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion minVer)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion minVer)
 {
-  return new OpenSSLTLSContext(side, minVer);
+  return make_unique<OpenSSLTLSContext>(side, minVer);
 }
 
 OpenSSLTLSContext::OpenSSLTLSContext(TLSSessionSide side, TLSVersion minVer)

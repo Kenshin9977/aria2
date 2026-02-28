@@ -944,7 +944,7 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
   if (secure_ == A2_TLS_NONE) {
     // Do some initial setup
     A2_LOG_DEBUG("Creating TLS session");
-    tlsSession_.reset(TLSSession::make(tlsctx));
+    tlsSession_ = TLSSession::make(tlsctx);
     auto rv = tlsSession_->init(sockfd_);
     if (rv != TLS_ERR_OK) {
       std::string error = tlsSession_->getLastErrorString();

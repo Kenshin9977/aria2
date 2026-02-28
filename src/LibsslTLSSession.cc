@@ -38,6 +38,7 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "util.h"
 #include "SocketCore.h"
@@ -53,9 +54,10 @@ const unsigned char* ASN1_STRING_get0_data(ASN1_STRING* x)
 } // namespace
 #endif // !OPENSSL_101_API
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new OpenSSLTLSSession(static_cast<OpenSSLTLSContext*>(ctx));
+  return make_unique<OpenSSLTLSSession>(
+      static_cast<OpenSSLTLSContext*>(ctx));
 }
 
 OpenSSLTLSSession::OpenSSLTLSSession(OpenSSLTLSContext* tlsContext)

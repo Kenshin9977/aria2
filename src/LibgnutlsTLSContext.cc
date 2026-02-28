@@ -41,6 +41,7 @@
 #  include <gnutls/pkcs12.h>
 #endif // HAVE_LIBGNUTLS
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
@@ -49,9 +50,10 @@
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion ver)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion ver)
 {
-  return new GnuTLSContext(side, ver);
+  return make_unique<GnuTLSContext>(side, ver);
 }
 
 GnuTLSContext::GnuTLSContext(TLSSessionSide side, TLSVersion ver)

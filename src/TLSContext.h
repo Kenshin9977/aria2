@@ -35,6 +35,7 @@
 #ifndef D_TLS_CONTEXT_H
 #define D_TLS_CONTEXT_H
 
+#include <memory>
 #include <string>
 
 #include "common.h"
@@ -52,7 +53,8 @@ enum TLSVersion {
 
 class TLSContext {
 public:
-  static TLSContext* make(TLSSessionSide side, TLSVersion minVer);
+  static std::unique_ptr<TLSContext> make(TLSSessionSide side,
+                                           TLSVersion minVer);
   virtual ~TLSContext() = default;
 
   // private key `keyfile' must be decrypted.

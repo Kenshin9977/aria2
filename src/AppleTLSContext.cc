@@ -38,6 +38,8 @@
 #include <functional>
 #include <sstream>
 
+#include "a2functional.h"
+
 #ifdef __MAC_10_6
 #  include <Security/SecImportExport.h>
 #endif
@@ -175,9 +177,10 @@ bool checkIdentity(const SecIdentityRef id, const std::string& fingerPrint,
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion ver)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion ver)
 {
-  return new AppleTLSContext(side, ver);
+  return make_unique<AppleTLSContext>(side, ver);
 }
 
 AppleTLSContext::~AppleTLSContext()

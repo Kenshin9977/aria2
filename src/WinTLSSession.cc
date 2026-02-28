@@ -121,9 +121,10 @@ inline static uint32_t getProtocolVersion(CtxtHandle* handle)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new WinTLSSession(static_cast<WinTLSContext*>(ctx));
+  return make_unique<WinTLSSession>(
+      static_cast<WinTLSContext*>(ctx));
 }
 
 WinTLSSession::WinTLSSession(WinTLSContext* ctx)

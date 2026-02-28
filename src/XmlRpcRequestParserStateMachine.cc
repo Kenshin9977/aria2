@@ -33,6 +33,8 @@
  */
 /* copyright --> */
 #include "XmlRpcRequestParserStateMachine.h"
+
+#include "a2functional.h"
 #include "XmlRpcRequestParserController.h"
 #include "XmlRpcRequestParserStateImpl.h"
 
@@ -75,15 +77,12 @@ auto arrayValueState = new ArrayValueXmlRpcRequestParserState();
 } // namespace
 
 XmlRpcRequestParserStateMachine::XmlRpcRequestParserStateMachine()
-    : controller_(new XmlRpcRequestParserController())
+    : controller_(make_unique<XmlRpcRequestParserController>())
 {
   stateStack_.push(initialState);
 }
 
-XmlRpcRequestParserStateMachine::~XmlRpcRequestParserStateMachine()
-{
-  delete controller_;
-}
+XmlRpcRequestParserStateMachine::~XmlRpcRequestParserStateMachine() = default;
 
 void XmlRpcRequestParserStateMachine::reset()
 {

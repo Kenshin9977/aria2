@@ -359,9 +359,10 @@ static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new AppleTLSSession(static_cast<AppleTLSContext*>(ctx));
+  return make_unique<AppleTLSSession>(
+      static_cast<AppleTLSContext*>(ctx));
 }
 
 AppleTLSSession::AppleTLSSession(AppleTLSContext* ctx)

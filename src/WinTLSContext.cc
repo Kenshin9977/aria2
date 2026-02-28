@@ -38,6 +38,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "a2functional.h"
 #include "BufferedFile.h"
 #include "LogFactory.h"
 #include "Logger.h"
@@ -119,9 +120,10 @@ WinTLSContext::WinTLSContext(TLSSessionSide side, TLSVersion ver)
   setVerifyPeer(side_ == TLS_CLIENT);
 }
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion ver)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion ver)
 {
-  return new WinTLSContext(side, ver);
+  return make_unique<WinTLSContext>(side, ver);
 }
 
 WinTLSContext::~WinTLSContext()
@@ -174,7 +176,7 @@ CredHandle* WinTLSContext::getCredHandle()
   }
 
   TimeStamp ts;
-  cred_.reset(new CredHandle());
+  cred_ = make_unique<CredHandle>();
 
   const CERT_CONTEXT* ctx = nullptr;
   if (store_) {

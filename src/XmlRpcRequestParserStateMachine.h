@@ -41,6 +41,8 @@
 #include <stack>
 #include <memory>
 
+#include "a2functional.h"
+
 namespace aria2 {
 
 class ValueBase;
@@ -95,7 +97,7 @@ public:
 
 private:
   std::stack<XmlRpcRequestParserState*> stateStack_;
-  XmlRpcRequestParserController* controller_;
+  std::unique_ptr<XmlRpcRequestParserController> controller_;
 };
 
 } // namespace rpc

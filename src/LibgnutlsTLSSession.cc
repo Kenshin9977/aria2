@@ -38,6 +38,7 @@
 
 #include <gnutls/x509.h>
 
+#include "a2functional.h"
 #include "TLSContext.h"
 #include "util.h"
 #include "SocketCore.h"
@@ -65,9 +66,10 @@ TLSVersion getProtocolFromSession(gnutls_session_t& session)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new GnuTLSSession(static_cast<GnuTLSContext*>(ctx));
+  return make_unique<GnuTLSSession>(
+      static_cast<GnuTLSContext*>(ctx));
 }
 
 GnuTLSSession::GnuTLSSession(GnuTLSContext* tlsContext)
