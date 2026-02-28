@@ -46,7 +46,7 @@ namespace aria2 {
 // fopen/fclose/fread/fwrite/fgets functionality.
 class IOFile : public OutputFile {
 private:
-  typedef void (IOFile::*unspecified_bool_type)() const;
+  using unspecified_bool_type = void (IOFile::*)() const;
   void goodState() const {}
 
 public:

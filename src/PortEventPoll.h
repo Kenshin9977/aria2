@@ -55,10 +55,10 @@ class PortEventPoll : public EventPoll {
 private:
   class KSocketEntry;
 
-  typedef Event<KSocketEntry> KEvent;
-  typedef CommandEvent<KSocketEntry, PortEventPoll> KCommandEvent;
-  typedef ADNSEvent<KSocketEntry, PortEventPoll> KADNSEvent;
-  typedef AsyncNameResolverEntry<PortEventPoll> KAsyncNameResolverEntry;
+  using KEvent = Event<KSocketEntry>;
+  using KCommandEvent = CommandEvent<KSocketEntry, PortEventPoll>;
+  using KADNSEvent = ADNSEvent<KSocketEntry, PortEventPoll>;
+  using KAsyncNameResolverEntry = AsyncNameResolverEntry<PortEventPoll>;
   friend class AsyncNameResolverEntry<PortEventPoll>;
 
   struct A2PortEvent {
@@ -76,14 +76,14 @@ private:
   friend int accumulateEvent(int events, const KEvent& event);
 
 private:
-  typedef std::set<std::shared_ptr<KSocketEntry>,
-                   DerefLess<std::shared_ptr<KSocketEntry>>>
-      KSocketEntrySet;
+  using KSocketEntrySet =
+      std::set<std::shared_ptr<KSocketEntry>,
+               DerefLess<std::shared_ptr<KSocketEntry>>>;
   KSocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
-  typedef std::set<std::shared_ptr<KAsyncNameResolverEntry>,
-                   DerefLess<std::shared_ptr<KAsyncNameResolverEntry>>>
-      KAsyncNameResolverEntrySet;
+  using KAsyncNameResolverEntrySet =
+      std::set<std::shared_ptr<KAsyncNameResolverEntry>,
+               DerefLess<std::shared_ptr<KAsyncNameResolverEntry>>>;
   KAsyncNameResolverEntrySet nameResolverEntries_;
 #endif // ENABLE_ASYNC_DNS
 

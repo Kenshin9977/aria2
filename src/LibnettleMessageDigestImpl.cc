@@ -74,12 +74,12 @@ private:
   size_t len_;
 };
 
-typedef MessageDigestBase<&nettle_md5> MessageDigestMD5;
-typedef MessageDigestBase<&nettle_sha1> MessageDigestSHA1;
-typedef MessageDigestBase<&nettle_sha224> MessageDigestSHA224;
-typedef MessageDigestBase<&nettle_sha256> MessageDigestSHA256;
-typedef MessageDigestBase<&nettle_sha384> MessageDigestSHA384;
-typedef MessageDigestBase<&nettle_sha512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<&nettle_md5>;
+using MessageDigestSHA1 = MessageDigestBase<&nettle_sha1>;
+using MessageDigestSHA224 = MessageDigestBase<&nettle_sha224>;
+using MessageDigestSHA256 = MessageDigestBase<&nettle_sha256>;
+using MessageDigestSHA384 = MessageDigestBase<&nettle_sha384>;
+using MessageDigestSHA512 = MessageDigestBase<&nettle_sha512>;
 } // namespace
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()

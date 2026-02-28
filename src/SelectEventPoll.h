@@ -158,12 +158,12 @@ private:
   sock_t dummySocket_;
 #endif // __MINGW32__
 
-  typedef std::unordered_map<sock_t, SocketEntry> SocketEntrySet;
+  using SocketEntrySet = std::unordered_map<sock_t, SocketEntry>;
   SocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
-  typedef std::map<std::pair<AsyncNameResolver*, Command*>,
-                   AsyncNameResolverEntry>
-      AsyncNameResolverEntrySet;
+  using AsyncNameResolverEntrySet =
+      std::map<std::pair<AsyncNameResolver*, Command*>,
+               AsyncNameResolverEntry>;
   AsyncNameResolverEntrySet nameResolverEntries_;
 #endif // ENABLE_ASYNC_DNS
 

@@ -96,8 +96,8 @@ private:
   const size_t len_;
 };
 
-typedef MessageDigestBase<EVP_md5> MessageDigestMD5;
-typedef MessageDigestBase<EVP_sha1> MessageDigestSHA1;
+using MessageDigestMD5 = MessageDigestBase<EVP_md5>;
+using MessageDigestSHA1 = MessageDigestBase<EVP_sha1>;
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {

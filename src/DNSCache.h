@@ -95,7 +95,7 @@ private:
 
   };
 
-  typedef std::pair<std::string, uint16_t> CacheKey;
+  using CacheKey = std::pair<std::string, uint16_t>;
   std::map<CacheKey, CacheEntry> entries_;
   std::chrono::seconds ttl_;
 

@@ -324,7 +324,7 @@ static inline bool isBlockedSuite(SSLCipherSuite suite)
   return false;
 }
 
-typedef std::vector<SSLCipherSuite> SSLCipherSuiteList;
+using SSLCipherSuiteList = std::vector<SSLCipherSuite>;
 static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
 {
 #ifndef CIPHER_CONSTRUCT_ALWAYS

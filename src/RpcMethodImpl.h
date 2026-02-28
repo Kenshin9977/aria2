@@ -344,7 +344,7 @@ private:
   }
 
 protected:
-  typedef IndexedList<a2_gid_t, std::shared_ptr<T>> ItemListType;
+  using ItemListType = IndexedList<a2_gid_t, std::shared_ptr<T>>;
 
   std::unique_ptr<ValueBase> process(const RpcRequest& req,
                                      DownloadEngine* e) override

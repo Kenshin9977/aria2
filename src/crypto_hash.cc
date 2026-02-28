@@ -78,7 +78,7 @@ using namespace crypto::hash;
 template <typename word_, uint_fast8_t bsize, uint_fast8_t ssize>
 class AlgorithmImpl : public Algorithm {
 public:
-  typedef word_ word_t;
+  using word_t = word_;
 
 protected:
   template <uint_fast8_t size> union buffer_t {

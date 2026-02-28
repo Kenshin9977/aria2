@@ -59,7 +59,7 @@ private:
 #endif // ! __MINGW32__
 
 public:
-  typedef std::mt19937::result_type result_type;
+  using result_type = std::mt19937::result_type;
 
   static const std::unique_ptr<SimpleRandomizer>& getInstance();
 

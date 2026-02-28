@@ -65,7 +65,7 @@ public:
   void removeStaleServerStat(const std::chrono::seconds& timeout);
 
 private:
-  typedef std::pair<std::string, std::string> StatKey;
+  using StatKey = std::pair<std::string, std::string>;
   std::map<StatKey, std::shared_ptr<ServerStat>> serverStats_;
 };
 

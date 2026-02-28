@@ -53,8 +53,8 @@ public:
 
   ~GenericParser() = default;
 
-  typedef typename ParserStateMachine::ResultType ResultType;
-  typedef ParserStateMachine ParserStateMachineType;
+  using ResultType = typename ParserStateMachine::ResultType;
+  using ParserStateMachineType = ParserStateMachine;
 
   // Parses |size| bytes of data |data| and returns the number of
   // bytes processed. On error, one of the negative error codes is

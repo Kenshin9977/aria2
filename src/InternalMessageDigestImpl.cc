@@ -74,12 +74,12 @@ private:
   std::unique_ptr<hash::Algorithm> ctx_;
 };
 
-typedef MessageDigestBase<hash::algoMD5> MessageDigestMD5;
-typedef MessageDigestBase<hash::algoSHA1> MessageDigestSHA1;
-typedef MessageDigestBase<hash::algoSHA224> MessageDigestSHA224;
-typedef MessageDigestBase<hash::algoSHA256> MessageDigestSHA256;
-typedef MessageDigestBase<hash::algoSHA384> MessageDigestSHA384;
-typedef MessageDigestBase<hash::algoSHA512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<hash::algoMD5>;
+using MessageDigestSHA1 = MessageDigestBase<hash::algoSHA1>;
+using MessageDigestSHA224 = MessageDigestBase<hash::algoSHA224>;
+using MessageDigestSHA256 = MessageDigestBase<hash::algoSHA256>;
+using MessageDigestSHA384 = MessageDigestBase<hash::algoSHA384>;
+using MessageDigestSHA512 = MessageDigestBase<hash::algoSHA512>;
 
 } // namespace
 

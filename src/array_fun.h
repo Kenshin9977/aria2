@@ -118,7 +118,7 @@ UnExpr<Arg, Op> operator~(Arg arg)
 }
 
 template <typename T> struct Array {
-  typedef T value_type;
+  using value_type = T;
 
   Array(T* t) : t(t) {}
 

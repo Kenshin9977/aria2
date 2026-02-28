@@ -93,12 +93,12 @@ private:
   std::unique_ptr<std::remove_pointer<gcry_md_hd_t>::type, Deleter> ctx_;
 };
 
-typedef MessageDigestBase<GCRY_MD_MD5> MessageDigestMD5;
-typedef MessageDigestBase<GCRY_MD_SHA1> MessageDigestSHA1;
-typedef MessageDigestBase<GCRY_MD_SHA224> MessageDigestSHA224;
-typedef MessageDigestBase<GCRY_MD_SHA256> MessageDigestSHA256;
-typedef MessageDigestBase<GCRY_MD_SHA384> MessageDigestSHA384;
-typedef MessageDigestBase<GCRY_MD_SHA512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<GCRY_MD_MD5>;
+using MessageDigestSHA1 = MessageDigestBase<GCRY_MD_SHA1>;
+using MessageDigestSHA224 = MessageDigestBase<GCRY_MD_SHA224>;
+using MessageDigestSHA256 = MessageDigestBase<GCRY_MD_SHA256>;
+using MessageDigestSHA384 = MessageDigestBase<GCRY_MD_SHA384>;
+using MessageDigestSHA512 = MessageDigestBase<GCRY_MD_SHA512>;
 } // namespace
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()

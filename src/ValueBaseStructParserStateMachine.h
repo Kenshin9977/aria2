@@ -55,7 +55,7 @@ class ValueBaseStructParserState;
 // value holder.
 class ValueBaseStructParserStateMachine : public StructParserStateMachine {
 public:
-  typedef std::unique_ptr<ValueBase> ResultType;
+  using ResultType = std::unique_ptr<ValueBase>;
   static std::unique_ptr<ValueBase> noResult();
 
   struct NumberData {

@@ -56,8 +56,8 @@ private:
     bool operator()(const std::shared_ptr<DHTPeerAnnounceEntry>& lhs,
                     const std::shared_ptr<DHTPeerAnnounceEntry>& rhs) const;
   };
-  typedef std::set<std::shared_ptr<DHTPeerAnnounceEntry>, InfoHashLess>
-      DHTPeerAnnounceEntrySet;
+  using DHTPeerAnnounceEntrySet =
+      std::set<std::shared_ptr<DHTPeerAnnounceEntry>, InfoHashLess>;
   DHTPeerAnnounceEntrySet entries_;
 
   std::shared_ptr<DHTPeerAnnounceEntry>

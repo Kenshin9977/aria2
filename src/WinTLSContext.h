@@ -60,7 +60,7 @@ struct cred_deleter {
     }
   }
 };
-typedef std::unique_ptr<CredHandle, cred_deleter> CredPtr;
+using CredPtr = std::unique_ptr<CredHandle, cred_deleter>;
 } // namespace wintls
 
 class WinTLSContext : public TLSContext {

@@ -77,11 +77,11 @@ extern const Color clear;
 
 } // namespace colors
 
-typedef std::char_traits<char> traits_t;
+using traits_t = std::char_traits<char>;
 class ColorizedStreamBuf : public std::basic_streambuf<char, traits_t> {
   enum part_t { eColor, eString };
-  typedef std::pair<part_t, std::string> elem_t;
-  typedef std::deque<elem_t> elems_t;
+  using elem_t = std::pair<part_t, std::string>;
+  using elems_t = std::deque<elem_t>;
   elems_t elems;
 
 public:

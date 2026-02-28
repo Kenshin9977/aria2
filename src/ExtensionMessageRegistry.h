@@ -41,7 +41,7 @@
 
 namespace aria2 {
 
-typedef std::vector<int> Extensions;
+using Extensions = std::vector<int>;
 
 // This class stores mapping between BitTorrent extension name and its
 // ID. The BitTorrent Extension Protocol is specified in BEP10.  This

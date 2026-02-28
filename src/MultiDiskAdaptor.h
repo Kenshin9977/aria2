@@ -90,7 +90,7 @@ public:
   void needsDiskWriter(bool f) { needsDiskWriter_ = f; }
 };
 
-typedef std::vector<std::unique_ptr<DiskWriterEntry>> DiskWriterEntries;
+using DiskWriterEntries = std::vector<std::unique_ptr<DiskWriterEntry>>;
 
 class MultiDiskAdaptor : public DiskAdaptor {
   friend class MultiFileAllocationIterator;

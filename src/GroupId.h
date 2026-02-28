@@ -43,7 +43,7 @@
 
 namespace aria2 {
 
-typedef uint64_t a2_gid_t;
+using a2_gid_t = uint64_t;
 
 class GroupId {
 public:

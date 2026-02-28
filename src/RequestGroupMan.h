@@ -63,9 +63,10 @@ class UriListParser;
 class WrDiskCache;
 class OpenedFileCounter;
 
-typedef IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>> RequestGroupList;
-typedef IndexedList<a2_gid_t, std::shared_ptr<DownloadResult>>
-    DownloadResultList;
+using RequestGroupList =
+    IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>>;
+using DownloadResultList =
+    IndexedList<a2_gid_t, std::shared_ptr<DownloadResult>>;
 
 class RequestGroupMan : public RequestGroupContext {
 private:
