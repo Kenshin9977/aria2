@@ -37,14 +37,14 @@
 #include <cstring>
 #include <algorithm>
 
-#include "SocketCore.h"
+#include "ISocketCore.h"
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
 
 namespace aria2 {
 
-Http2Session::Http2Session(const std::shared_ptr<SocketCore>& socket)
+Http2Session::Http2Session(const std::shared_ptr<ISocketCore>& socket)
     : session_(nullptr), socket_(socket), fatal_(false)
 {
 }

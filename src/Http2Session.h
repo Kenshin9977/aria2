@@ -47,7 +47,7 @@
 
 namespace aria2 {
 
-class SocketCore;
+class ISocketCore;
 
 // Per-stream state tracked by Http2Session.
 struct Http2StreamData {
@@ -72,7 +72,7 @@ struct Http2StreamData {
 // for HTTP/2 streams over an already-established TLS connection.
 class Http2Session {
 public:
-  Http2Session(const std::shared_ptr<SocketCore>& socket);
+  Http2Session(const std::shared_ptr<ISocketCore>& socket);
   ~Http2Session();
 
   // Initializes the nghttp2 session and sends the connection preface
@@ -136,7 +136,7 @@ private:
   Http2StreamData& getOrCreateStream(int32_t streamId);
 
   nghttp2_session* session_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   std::unordered_map<int32_t, Http2StreamData> streams_;
   bool fatal_;
 
