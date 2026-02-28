@@ -38,6 +38,8 @@
 #include "BtMessageDispatcher.h"
 
 #include <deque>
+#include <set>
+#include <utility>
 
 #include "a2time.h"
 #include "Command.h"
@@ -57,6 +59,10 @@ private:
   cuid_t cuid_;
   std::deque<std::unique_ptr<BtMessage>> messageQueue_;
   std::deque<std::unique_ptr<RequestSlot>> requestSlots_;
+  std::set<std::pair<size_t, size_t>> outstandingIndex_;
+
+  void rebuildOutstandingIndex();
+
   DownloadContext* downloadContext_;
   PeerConnection* peerConnection_;
   BtMessageFactory* messageFactory_;

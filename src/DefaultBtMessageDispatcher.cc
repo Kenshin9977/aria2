@@ -169,6 +169,7 @@ void DefaultBtMessageDispatcher::doAbortOutstandingRequestAction(
   std::erase_if(requestSlots_, [&](const std::unique_ptr<RequestSlot>& slot) {
     return slot->getIndex() == piece->getIndex();
   });
+  rebuildOutstandingIndex();
 
   BtAbortOutstandingRequestEvent event(piece);
 
@@ -193,6 +194,7 @@ void DefaultBtMessageDispatcher::doChokedAction()
   std::erase_if(requestSlots_, [&](const std::unique_ptr<RequestSlot>& slot) {
     return !peer_->isInPeerAllowedIndexSet(slot->getIndex());
   });
+  rebuildOutstandingIndex();
 }
 
 // localhost dispatched choke message to the peer.
@@ -230,6 +232,7 @@ void DefaultBtMessageDispatcher::checkRequestSlotAndDoNecessaryThing()
     return slot->isTimeout(requestTimeout_) ||
            slot->getPiece()->hasBlock(slot->getBlockIndex());
   });
+  rebuildOutstandingIndex();
 }
 
 bool DefaultBtMessageDispatcher::isSendingInProgress()
@@ -240,12 +243,15 @@ bool DefaultBtMessageDispatcher::isSendingInProgress()
 bool DefaultBtMessageDispatcher::isOutstandingRequest(size_t index,
                                                       size_t blockIndex)
 {
+  return outstandingIndex_.count({index, blockIndex}) > 0;
+}
+
+void DefaultBtMessageDispatcher::rebuildOutstandingIndex()
+{
+  outstandingIndex_.clear();
   for (auto& slot : requestSlots_) {
-    if (slot->getIndex() == index && slot->getBlockIndex() == blockIndex) {
-      return true;
-    }
+    outstandingIndex_.emplace(slot->getIndex(), slot->getBlockIndex());
   }
-  return false;
 }
 
 const RequestSlot*
@@ -267,6 +273,7 @@ void DefaultBtMessageDispatcher::removeOutstandingRequest(
   for (auto i = std::begin(requestSlots_), eoi = std::end(requestSlots_);
        i != eoi; ++i) {
     if (*(*i) == *slot) {
+      outstandingIndex_.erase({(*i)->getIndex(), (*i)->getBlockIndex()});
       abortOutstandingRequest((*i).get(), (*i)->getPiece(), cuid_);
       requestSlots_.erase(i);
       break;
@@ -277,6 +284,7 @@ void DefaultBtMessageDispatcher::removeOutstandingRequest(
 void DefaultBtMessageDispatcher::addOutstandingRequest(
     std::unique_ptr<RequestSlot> slot)
 {
+  outstandingIndex_.emplace(slot->getIndex(), slot->getBlockIndex());
   requestSlots_.push_back(std::move(slot));
 }
 
