@@ -187,6 +187,20 @@ extern int ftruncate64(int fd, off64_t length);
 #  define a2_off_t off_t
 #endif
 
+// Positioned read/write (pread/pwrite) wrappers.
+// These avoid the separate seek() + read()/write() pattern, cutting
+// syscall count in half and enabling thread-safe I/O.
+#ifdef __MINGW32__
+// Windows: no pwrite/pread; we use WriteFile/ReadFile with OVERLAPPED
+// in AbstractDiskWriter directly.
+#elif defined(__ANDROID__) || defined(ANDROID)
+#  define a2pwrite(fd, buf, count, offset) pwrite64(fd, buf, count, offset)
+#  define a2pread(fd, buf, count, offset) pread64(fd, buf, count, offset)
+#else
+#  define a2pwrite(fd, buf, count, offset) pwrite(fd, buf, count, offset)
+#  define a2pread(fd, buf, count, offset) pread(fd, buf, count, offset)
+#endif
+
 #define OPEN_MODE S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH
 #define DIR_OPEN_MODE S_IRWXU | S_IRWXG | S_IRWXO
 
