@@ -59,6 +59,9 @@ private:
   bool hostOnly_;
   bool secure_;
   bool httpOnly_;
+  // SameSite attribute (RFC 6265bis)
+  // Default is empty string meaning attribute was not set.
+  std::string sameSite_;
 
 public:
   Cookie();
@@ -136,6 +139,13 @@ public:
   bool getHttpOnly() const { return httpOnly_; }
 
   void setHttpOnly(bool httpOnly) { httpOnly_ = httpOnly; }
+
+  const std::string& getSameSite() const { return sameSite_; }
+
+  void setSameSite(std::string sameSite)
+  {
+    sameSite_ = std::move(sameSite);
+  }
 
   time_t getCreationTime() const { return creationTime_; }
 

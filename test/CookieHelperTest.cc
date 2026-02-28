@@ -17,6 +17,7 @@ class CookieHelperTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testDomainMatch);
   CPPUNIT_TEST(testPathMatch);
   CPPUNIT_TEST(testParse);
+  CPPUNIT_TEST(testParse_sameSite);
   CPPUNIT_TEST(testReverseDomainLevel);
   CPPUNIT_TEST_SUITE_END();
 
@@ -25,6 +26,7 @@ public:
   void testDomainMatch();
   void testPathMatch();
   void testParse();
+  void testParse_sameSite();
   void testReverseDomainLevel();
 };
 
@@ -227,6 +229,53 @@ void CookieHelperTest::testParse()
     auto c = cookie::parse(str, "localhost", "/foo", creationDate);
     CPPUNIT_ASSERT(c);
     CPPUNIT_ASSERT_EQUAL(std::string("/foo"), c->getPath());
+  }
+}
+
+void CookieHelperTest::testParse_sameSite()
+{
+  time_t creationDate = 141;
+  {
+    // SameSite=Strict
+    std::string str = "id=val; SameSite=Strict";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string("Strict"), c->getSameSite());
+  }
+  {
+    // SameSite=Lax
+    std::string str = "id=val; SameSite=Lax";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string("Lax"), c->getSameSite());
+  }
+  {
+    // SameSite=None
+    std::string str = "id=val; SameSite=None";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string("None"), c->getSameSite());
+  }
+  {
+    // Case-insensitive attribute name and value
+    std::string str = "id=val; samesite=STRICT";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string("Strict"), c->getSameSite());
+  }
+  {
+    // Unknown SameSite value is ignored
+    std::string str = "id=val; SameSite=Invalid";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string(""), c->getSameSite());
+  }
+  {
+    // No SameSite attribute - defaults to empty
+    std::string str = "id=val;";
+    auto c = cookie::parse(str, "localhost", "/", creationDate);
+    CPPUNIT_ASSERT(c);
+    CPPUNIT_ASSERT_EQUAL(std::string(""), c->getSameSite());
   }
 }
 

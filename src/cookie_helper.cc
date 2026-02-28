@@ -252,6 +252,7 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
   std::string cookiePath;
   bool secure = false;
   bool httpOnly = false;
+  std::string sameSite;
 
   if (nvEnd != end) {
     ++nvEnd;
@@ -346,6 +347,18 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
     else if (util::strieq(p.first, p.second, "httponly")) {
       httpOnly = true;
     }
+    else if (util::strieq(p.first, p.second, "samesite")) {
+      std::string val(attrp.first, attrp.second);
+      if (util::strieq(val, "strict")) {
+        sameSite = "Strict";
+      }
+      else if (util::strieq(val, "lax")) {
+        sameSite = "Lax";
+      }
+      else if (util::strieq(val, "none")) {
+        sameSite = "None";
+      }
+    }
   }
 
   if (foundMaxAge) {
@@ -386,6 +399,9 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
   cookie->setPath(std::move(cookiePath));
   cookie->setSecure(secure);
   cookie->setHttpOnly(httpOnly);
+  if (!sameSite.empty()) {
+    cookie->setSameSite(std::move(sameSite));
+  }
   cookie->setCreationTime(creationTime);
   cookie->setLastAccessTime(creationTime);
 
