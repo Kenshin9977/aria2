@@ -32,44 +32,52 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
-#ifndef D_HTTP_REQUEST_COMMAND_H
-#define D_HTTP_REQUEST_COMMAND_H
+#ifndef D_HTTP2_REQUEST_COMMAND_H
+#define D_HTTP2_REQUEST_COMMAND_H
 
 #include "AbstractCommand.h"
 
+#include <memory>
+
 namespace aria2 {
 
-class HttpConnection;
-class ISocketCore;
+class Http2Session;
 
-// HttpRequestCommand sends HTTP request header to remote server.
-// Because network I/O is non-blocking, execute() returns false if all
-// headers have not been sent. Subsequent calls of execute() send
-// remaining header and when all headers are completely sent,
-// execute() creates next Command object, HttpResponseCommand, and
-// returns true.
-class HttpRequestCommand : public AbstractCommand {
-private:
-  std::shared_ptr<Request> proxyRequest_;
-
-  std::shared_ptr<HttpConnection> httpConnection_;
-
-  bool createHttp2Command();
+// Handles the HTTP/2 request/response cycle for a single stream.
+// Created by HttpRequestCommand when ALPN negotiates "h2".
+// Drives the nghttp2 session I/O, collects response headers, and
+// streams body data to the PieceStorage via writeData callbacks.
+class Http2RequestCommand : public AbstractCommand {
+public:
+  Http2RequestCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
+                      const std::shared_ptr<FileEntry>& fileEntry,
+                      RequestGroup* requestGroup, DownloadEngine* e,
+                      const std::shared_ptr<ISocketCore>& socket,
+                      const std::shared_ptr<Http2Session>& h2session,
+                      int32_t streamId);
+  ~Http2RequestCommand() override;
 
 protected:
   bool executeInternal() override;
 
-public:
-  HttpRequestCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
-                     const std::shared_ptr<FileEntry>& fileEntry,
-                     RequestGroup* requestGroup,
-                     const std::shared_ptr<HttpConnection>& httpConnection,
-                     DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
-  ~HttpRequestCommand() override;
+private:
+  enum State {
+    // Sending frames (connection preface + request headers)
+    H2_SEND,
+    // Waiting for response headers
+    H2_RECV_HEADERS,
+    // Receiving body data
+    H2_RECV_DATA,
+    // Stream complete
+    H2_DONE
+  };
 
-  void setProxyRequest(const std::shared_ptr<Request>& proxyRequest);
+  std::shared_ptr<Http2Session> h2session_;
+  int32_t streamId_;
+  State state_;
+  int64_t totalReceived_;
 };
 
 } // namespace aria2
 
-#endif // D_HTTP_REQUEST_COMMAND_H
+#endif // D_HTTP2_REQUEST_COMMAND_H

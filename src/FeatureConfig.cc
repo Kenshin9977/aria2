@@ -83,6 +83,8 @@ uint16_t getDefaultPort(Protocol protocol)
     return 443;
   case Protocol::FTP:
     return 21;
+  case Protocol::FTPS:
+    return 21;
   case Protocol::SFTP:
     return 22;
   default:

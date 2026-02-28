@@ -72,6 +72,9 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
                                                       requestGroup, e);
   }
   else if (req->getProtocol() == Protocol::FTP
+#ifdef ENABLE_SSL
+           || req->getProtocol() == Protocol::FTPS
+#endif // ENABLE_SSL
 #ifdef HAVE_LIBSSH2
            || req->getProtocol() == Protocol::SFTP
 #endif // HAVE_LIBSSH2

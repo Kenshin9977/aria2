@@ -148,7 +148,9 @@ std::string HttpRequest::createRequest()
   requestLine.reserve(512);
   requestLine += ' ';
   if (proxyRequest_) {
-    if (getProtocol() == Protocol::FTP && request_->getUsername().empty() &&
+    if ((getProtocol() == Protocol::FTP ||
+         getProtocol() == Protocol::FTPS) &&
+        request_->getUsername().empty() &&
         authConfig_) {
       // Insert user into URI, like ftp://USER@host/
       auto uri = getCurrentURI();
