@@ -50,16 +50,6 @@
 
 namespace aria2 {
 
-const std::string DHTGetPeersReplyMessage::GET_PEERS("get_peers");
-
-const std::string DHTGetPeersReplyMessage::TOKEN("token");
-
-const std::string DHTGetPeersReplyMessage::VALUES("values");
-
-const std::string DHTGetPeersReplyMessage::NODES("nodes");
-
-const std::string DHTGetPeersReplyMessage::NODES6("nodes6");
-
 DHTGetPeersReplyMessage::DHTGetPeersReplyMessage(
     int family, const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode, const std::string& token,
@@ -144,7 +134,7 @@ std::unique_ptr<Dict> DHTGetPeersReplyMessage::getResponse()
   return rDict;
 }
 
-const std::string& DHTGetPeersReplyMessage::getMessageType() const
+const char* DHTGetPeersReplyMessage::getMessageType() const
 {
   return GET_PEERS;
 }

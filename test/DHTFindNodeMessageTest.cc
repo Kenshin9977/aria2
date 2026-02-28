@@ -105,7 +105,8 @@ void DHTFindNodeMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("find_node"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("find_node"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
   CPPUNIT_ASSERT_EQUAL((size_t)1, m->getClosestKNodes().size());
 }

@@ -43,10 +43,6 @@
 
 namespace aria2 {
 
-const std::string DHTUnknownMessage::E("e");
-
-const std::string DHTUnknownMessage::UNKNOWN("unknown");
-
 DHTUnknownMessage::DHTUnknownMessage(const std::shared_ptr<DHTNode>& localNode,
                                      const unsigned char* data, size_t length,
                                      const std::string& ipaddr, uint16_t port)
@@ -64,7 +60,7 @@ bool DHTUnknownMessage::send() { return true; }
 
 bool DHTUnknownMessage::isReply() const { return false; }
 
-const std::string& DHTUnknownMessage::getMessageType() const { return UNKNOWN; }
+const char* DHTUnknownMessage::getMessageType() const { return UNKNOWN; }
 
 std::string DHTUnknownMessage::toString() const
 {

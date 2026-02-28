@@ -54,10 +54,6 @@
 
 namespace aria2 {
 
-const std::string DHTGetPeersMessage::GET_PEERS("get_peers");
-
-const std::string DHTGetPeersMessage::INFO_HASH("info_hash");
-
 DHTGetPeersMessage::DHTGetPeersMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode, const unsigned char* infoHash,
@@ -135,7 +131,7 @@ std::unique_ptr<Dict> DHTGetPeersMessage::getArgument()
   return aDict;
 }
 
-const std::string& DHTGetPeersMessage::getMessageType() const
+const char* DHTGetPeersMessage::getMessageType() const
 {
   return GET_PEERS;
 }

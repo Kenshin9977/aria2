@@ -50,9 +50,9 @@ public:
 
   std::unique_ptr<Dict> getArgument() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
-  static const std::string PING;
+  static constexpr const char PING[] = "ping";
 };
 
 } // namespace aria2

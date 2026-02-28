@@ -68,7 +68,7 @@ public:
 
   std::unique_ptr<Dict> getResponse() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   void accept(DHTMessageCallback* callback) override;
 
@@ -88,15 +88,15 @@ public:
 
   const std::string& getToken() const { return token_; }
 
-  static const std::string GET_PEERS;
+  static constexpr const char GET_PEERS[] = "get_peers";
 
-  static const std::string TOKEN;
+  static constexpr const char TOKEN[] = "token";
 
-  static const std::string VALUES;
+  static constexpr const char VALUES[] = "values";
 
-  static const std::string NODES;
+  static constexpr const char NODES[] = "nodes";
 
-  static const std::string NODES6;
+  static constexpr const char NODES6[] = "nodes6";
 };
 
 } // namespace aria2

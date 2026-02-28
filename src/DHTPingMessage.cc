@@ -42,8 +42,6 @@
 
 namespace aria2 {
 
-const std::string DHTPingMessage::PING("ping");
-
 DHTPingMessage::DHTPingMessage(const std::shared_ptr<DHTNode>& localNode,
                                const std::shared_ptr<DHTNode>& remoteNode,
                                const std::string& transactionID)
@@ -67,6 +65,6 @@ std::unique_ptr<Dict> DHTPingMessage::getArgument()
   return aDict;
 }
 
-const std::string& DHTPingMessage::getMessageType() const { return PING; }
+const char* DHTPingMessage::getMessageType() const { return PING; }
 
 } // namespace aria2

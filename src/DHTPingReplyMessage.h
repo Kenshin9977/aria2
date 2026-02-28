@@ -54,13 +54,13 @@ public:
 
   std::unique_ptr<Dict> getResponse() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   void accept(DHTMessageCallback* callback) override;
 
   const unsigned char* getRemoteID() { return id_; }
 
-  static const std::string PING;
+  static constexpr const char PING[] = "ping";
 };
 
 } // namespace aria2

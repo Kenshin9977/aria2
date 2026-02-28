@@ -76,7 +76,7 @@ public:
 
   std::unique_ptr<Dict> getArgument() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   const unsigned char* getInfoHash() const { return infoHash_; }
 
@@ -88,9 +88,9 @@ public:
 
   void setFamily(int family);
 
-  static const std::string GET_PEERS;
+  static constexpr const char GET_PEERS[] = "get_peers";
 
-  static const std::string INFO_HASH;
+  static constexpr const char INFO_HASH[] = "info_hash";
 };
 
 } // namespace aria2

@@ -54,7 +54,7 @@ public:
 
   ~DHTResponseMessage() override;
 
-  const std::string& getType() const override;
+  const char* getType() const override;
 
   void fillMessage(Dict* msgDict) override;
 
@@ -66,7 +66,7 @@ public:
 
   virtual void accept(DHTMessageCallback* callback) = 0;
 
-  static const std::string R;
+  static constexpr const char R[] = "r";
 };
 
 } // namespace aria2

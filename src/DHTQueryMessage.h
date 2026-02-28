@@ -52,7 +52,7 @@ public:
 
   ~DHTQueryMessage() override;
 
-  const std::string& getType() const override;
+  const char* getType() const override;
 
   void fillMessage(Dict* msgDict) override;
 
@@ -62,9 +62,9 @@ public:
 
   std::string toString() const override;
 
-  static const std::string Q;
+  static constexpr const char Q[] = "q";
 
-  static const std::string A;
+  static constexpr const char A[] = "a";
 };
 
 } // namespace aria2

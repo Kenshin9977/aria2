@@ -70,7 +70,7 @@ public:
 
   std::unique_ptr<Dict> getArgument() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   void validate() const override;
 
@@ -84,13 +84,13 @@ public:
 
   void setTokenTracker(DHTTokenTracker* tokenTracker);
 
-  static const std::string ANNOUNCE_PEER;
+  static constexpr const char ANNOUNCE_PEER[] = "announce_peer";
 
-  static const std::string INFO_HASH;
+  static constexpr const char INFO_HASH[] = "info_hash";
 
-  static const std::string PORT;
+  static constexpr const char PORT[] = "port";
 
-  static const std::string TOKEN;
+  static constexpr const char TOKEN[] = "token";
 };
 
 } // namespace aria2

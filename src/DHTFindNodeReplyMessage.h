@@ -58,7 +58,7 @@ public:
 
   std::unique_ptr<Dict> getResponse() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   void accept(DHTMessageCallback* callback) override;
 
@@ -69,11 +69,11 @@ public:
 
   void setClosestKNodes(std::vector<std::shared_ptr<DHTNode>> closestKNodes);
 
-  static const std::string FIND_NODE;
+  static constexpr const char FIND_NODE[] = "find_node";
 
-  static const std::string NODES;
+  static constexpr const char NODES[] = "nodes";
 
-  static const std::string NODES6;
+  static constexpr const char NODES6[] = "nodes6";
 };
 
 } // namespace aria2

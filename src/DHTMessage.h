@@ -79,7 +79,7 @@ public:
 
   virtual void validate() const {}
 
-  virtual const std::string& getMessageType() const = 0;
+  virtual const char* getMessageType() const = 0;
 
   virtual std::string toString() const = 0;
 
@@ -87,13 +87,13 @@ public:
 
   void setVersion(const std::string& version) { version_ = version; }
 
-  static const std::string Y;
+  static constexpr const char Y[] = "y";
 
-  static const std::string T;
+  static constexpr const char T[] = "t";
 
-  static const std::string V;
+  static constexpr const char V[] = "v";
 
-  static const std::string ID;
+  static constexpr const char ID[] = "id";
 };
 
 } // namespace aria2

@@ -63,7 +63,7 @@ public:
 
   bool send() override;
 
-  virtual const std::string& getType() const = 0;
+  virtual const char* getType() const = 0;
 
   virtual void fillMessage(Dict* msgDict) = 0;
 

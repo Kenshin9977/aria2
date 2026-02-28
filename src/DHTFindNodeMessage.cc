@@ -46,10 +46,6 @@
 
 namespace aria2 {
 
-const std::string DHTFindNodeMessage::FIND_NODE("find_node");
-
-const std::string DHTFindNodeMessage::TARGET_NODE("target");
-
 DHTFindNodeMessage::DHTFindNodeMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode,
@@ -77,7 +73,7 @@ std::unique_ptr<Dict> DHTFindNodeMessage::getArgument()
   return aDict;
 }
 
-const std::string& DHTFindNodeMessage::getMessageType() const
+const char* DHTFindNodeMessage::getMessageType() const
 {
   return FIND_NODE;
 }

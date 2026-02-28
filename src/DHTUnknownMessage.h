@@ -66,14 +66,14 @@ public:
   bool isReply() const override;
 
   // returns "unknown"
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   // show some sample bytes
   std::string toString() const override;
 
-  static const std::string E;
+  static constexpr const char E[] = "e";
 
-  static const std::string UNKNOWN;
+  static constexpr const char UNKNOWN[] = "unknown";
 };
 
 } // namespace aria2

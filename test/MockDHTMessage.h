@@ -47,7 +47,7 @@ public:
 
   void setReply(bool f) { isReply_ = f; }
 
-  const std::string& getMessageType() const override { return messageType_; }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
   std::string toString() const override { return "MockDHTMessage"; }
 };
@@ -80,7 +80,7 @@ public:
 
   bool isReply() const override { return false; }
 
-  const std::string& getMessageType() const override { return messageType_; }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
   std::string toString() const override { return "MockDHTMessage"; }
 
@@ -115,7 +115,7 @@ public:
 
   bool isReply() const override { return true; }
 
-  const std::string& getMessageType() const override { return messageType_; }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
   std::string toString() const override { return "MockDHTMessage"; }
 

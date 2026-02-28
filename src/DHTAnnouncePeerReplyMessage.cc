@@ -38,8 +38,6 @@
 
 namespace aria2 {
 
-const std::string DHTAnnouncePeerReplyMessage::ANNOUNCE_PEER("announce_peer");
-
 DHTAnnouncePeerReplyMessage::DHTAnnouncePeerReplyMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode,
@@ -59,7 +57,7 @@ std::unique_ptr<Dict> DHTAnnouncePeerReplyMessage::getResponse()
   return rDict;
 }
 
-const std::string& DHTAnnouncePeerReplyMessage::getMessageType() const
+const char* DHTAnnouncePeerReplyMessage::getMessageType() const
 {
   return ANNOUNCE_PEER;
 }

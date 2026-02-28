@@ -114,7 +114,8 @@ void DHTAnnouncePeerMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("announce_peer"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("announce_peer"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(transactionID, m->getTransactionID());
   std::vector<std::shared_ptr<Peer>> peers;
   peerAnnounceStorage.getPeers(peers, infoHash);

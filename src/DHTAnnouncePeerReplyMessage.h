@@ -51,11 +51,11 @@ public:
 
   std::unique_ptr<Dict> getResponse() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   void accept(DHTMessageCallback* callback) override;
 
-  static const std::string ANNOUNCE_PEER;
+  static constexpr const char ANNOUNCE_PEER[] = "announce_peer";
 };
 
 } // namespace aria2

@@ -95,7 +95,8 @@ void DHTPingMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("ping"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("ping"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
 }
 

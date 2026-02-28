@@ -57,14 +57,14 @@ public:
 
   std::unique_ptr<Dict> getArgument() override;
 
-  const std::string& getMessageType() const override;
+  const char* getMessageType() const override;
 
   const unsigned char* getTargetNodeID() const { return targetNodeID_; }
 
-  static const std::string FIND_NODE;
+  static constexpr const char FIND_NODE[] = "find_node";
 
   // We want "TARGET", but it is defined by macro.
-  static const std::string TARGET_NODE;
+  static constexpr const char TARGET_NODE[] = "target";
 };
 
 } // namespace aria2
