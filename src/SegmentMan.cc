@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "a2functional.h"
 #include "util.h"
 #include "message.h"
 #include "prefs.h"
@@ -158,8 +159,8 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
     segment = std::make_shared<PiecedSegment>(
         downloadContext_->getPieceLength(), piece);
   }
-  auto entry = std::make_shared<SegmentEntry>(cuid, segment);
-  usedSegmentEntries_.push_back(entry);
+  auto entry = make_unique<SegmentEntry>(cuid, segment);
+  usedSegmentEntries_.push_back(std::move(entry));
   A2_LOG_DEBUG(fmt("index=%lu, length=%" PRId64 ", segmentLength=%" PRId64 ","
                    " writtenLength=%" PRId64,
                    static_cast<unsigned long>(segment->getIndex()),
@@ -193,7 +194,7 @@ void SegmentMan::getInFlightSegment(
   for (SegmentEntries::const_iterator itr = usedSegmentEntries_.begin(),
                                       eoi = usedSegmentEntries_.end();
        itr != eoi; ++itr) {
-    const std::shared_ptr<SegmentEntry>& segmentEntry = *itr;
+    const auto& segmentEntry = *itr;
     if (segmentEntry->cuid == cuid) {
       segments.push_back(segmentEntry->segment);
     }
@@ -260,7 +261,7 @@ std::shared_ptr<Segment> SegmentMan::getCleanSegmentIfOwnerIsIdle(cuid_t cuid,
   for (SegmentEntries::const_iterator itr = usedSegmentEntries_.begin(),
                                       eoi = usedSegmentEntries_.end();
        itr != eoi; ++itr) {
-    const std::shared_ptr<SegmentEntry>& segmentEntry = *itr;
+    const auto& segmentEntry = *itr;
     if (segmentEntry->segment->getIndex() == index) {
       if (segmentEntry->segment->getWrittenLength() > 0) {
         return nullptr;
@@ -363,7 +364,7 @@ public:
   {
   }
 
-  bool operator()(const std::shared_ptr<SegmentEntry>& segmentEntry) const
+  bool operator()(const std::unique_ptr<SegmentEntry>& segmentEntry) const
   {
     return segmentEntry->segment->getIndex() == segment_->getIndex();
   }

@@ -39,7 +39,7 @@
 
 #include <deque>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "TimerA2.h"
@@ -68,7 +68,7 @@ struct SegmentEntry {
   SegmentEntry& operator=(const SegmentEntry&);
 };
 
-typedef std::deque<std::shared_ptr<SegmentEntry>> SegmentEntries;
+typedef std::deque<std::unique_ptr<SegmentEntry>> SegmentEntries;
 
 /**
  * This class holds the download progress of the one download entry.
@@ -83,7 +83,7 @@ private:
 
   // Remember writtenLength for each segment. The key is an index of a
   // segment. The value is writtenLength for that segment.
-  std::map<size_t, int64_t> segmentWrittenLengthMemo_;
+  std::unordered_map<size_t, int64_t> segmentWrittenLengthMemo_;
 
   // Used for calculating download speed.
   std::vector<std::shared_ptr<PeerStat>> peerStats_;
