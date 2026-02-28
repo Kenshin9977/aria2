@@ -283,13 +283,43 @@ void HttpResponseTest::testGetTransferEncoding()
 
 void HttpResponseTest::testGetTransferEncodingStreamFilter()
 {
-  HttpResponse httpResponse;
-
-  httpResponse.setHttpHeader(make_unique<HttpHeader>());
-  CPPUNIT_ASSERT(!httpResponse.getTransferEncodingStreamFilter());
-
-  httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING, "chunked");
-  CPPUNIT_ASSERT(httpResponse.getTransferEncodingStreamFilter());
+  {
+    HttpResponse httpResponse;
+    httpResponse.setHttpHeader(make_unique<HttpHeader>());
+    CPPUNIT_ASSERT(!httpResponse.getTransferEncodingStreamFilter());
+  }
+  {
+    // Single token: "chunked"
+    HttpResponse httpResponse;
+    httpResponse.setHttpHeader(make_unique<HttpHeader>());
+    httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING,
+                                      "chunked");
+    CPPUNIT_ASSERT(httpResponse.getTransferEncodingStreamFilter());
+  }
+  {
+    // Multi-token: "gzip, chunked" (common CDN pattern)
+    HttpResponse httpResponse;
+    httpResponse.setHttpHeader(make_unique<HttpHeader>());
+    httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING,
+                                      "gzip, chunked");
+    CPPUNIT_ASSERT(httpResponse.getTransferEncodingStreamFilter());
+  }
+  {
+    // Multi-token case-insensitive: "Gzip, Chunked"
+    HttpResponse httpResponse;
+    httpResponse.setHttpHeader(make_unique<HttpHeader>());
+    httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING,
+                                      "Gzip, Chunked");
+    CPPUNIT_ASSERT(httpResponse.getTransferEncodingStreamFilter());
+  }
+  {
+    // Unknown encoding only — no chunked
+    HttpResponse httpResponse;
+    httpResponse.setHttpHeader(make_unique<HttpHeader>());
+    httpResponse.getHttpHeader()->put(HttpHeader::TRANSFER_ENCODING,
+                                      "gzip");
+    CPPUNIT_ASSERT(!httpResponse.getTransferEncodingStreamFilter());
+  }
 }
 
 void HttpResponseTest::testIsContentEncodingSpecified()

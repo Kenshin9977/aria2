@@ -184,18 +184,37 @@ bool HttpResponse::isTransferEncodingSpecified() const
 
 std::optional<std::string_view> HttpResponse::getTransferEncoding() const
 {
-  // TODO See TODO in getTransferEncodingStreamFilter()
   return httpHeader_->find(HttpHeader::TRANSFER_ENCODING);
 }
+
+namespace {
+// Returns true if |token| appears as a comma-separated token in |field|.
+// Comparison is case-insensitive per RFC 7230 section 3.3.1.
+bool hasToken(std::string_view field, std::string_view token)
+{
+  std::vector<std::pair<std::string_view::const_iterator,
+                        std::string_view::const_iterator>>
+      tokens;
+  util::splitIter(field.begin(), field.end(), std::back_inserter(tokens),
+                  ',', true);
+  for (const auto& t : tokens) {
+    if (util::strieq(t.first, t.second, token.begin(), token.end())) {
+      return true;
+    }
+  }
+  return false;
+}
+} // namespace
 
 std::unique_ptr<StreamFilter>
 HttpResponse::getTransferEncodingStreamFilter() const
 {
-  // TODO Transfer-Encoding header field can contains multiple tokens. We should
-  // parse the field and retrieve each token.
+  // RFC 7230 section 3.3.1: Transfer-Encoding may contain multiple
+  // comma-separated tokens (e.g. "gzip, chunked"). We check whether
+  // "chunked" appears as a token.
   if (isTransferEncodingSpecified()) {
     auto te = getTransferEncoding();
-    if (te && util::strieq(*te, "chunked")) {
+    if (te && hasToken(*te, "chunked")) {
       return make_unique<ChunkedDecodingStreamFilter>();
     }
   }
