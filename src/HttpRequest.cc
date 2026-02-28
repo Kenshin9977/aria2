@@ -334,8 +334,17 @@ void HttpRequest::disableContentEncoding() { contentEncodingEnabled_ = false; }
 
 void HttpRequest::addHeader(std::string_view headersString)
 {
+  std::vector<std::string> hdrs;
   util::split(std::begin(headersString), std::end(headersString),
-              std::back_inserter(headers_), '\n', true);
+              std::back_inserter(hdrs), '\n', true);
+  // Reject headers containing CR or LF to prevent HTTP header injection.
+  for (auto& hd : hdrs) {
+    if (hd.find('\r') != std::string::npos ||
+        hd.find('\n') != std::string::npos) {
+      continue;
+    }
+    headers_.push_back(std::move(hd));
+  }
 }
 
 void HttpRequest::clearHeader() { headers_.clear(); }
