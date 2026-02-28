@@ -475,8 +475,8 @@ AppleTLSSession::AppleTLSSession(AppleTLSContext* ctx)
     return;
   }
 
-  std::unique_ptr<void, decltype(&CFRelease)> del_certs((void*)certs,
-                                                        CFRelease);
+  std::unique_ptr<void, decltype(&CFRelease)> del_certs(
+      const_cast<void*>(static_cast<const void*>(certs)), CFRelease);
   lastError_ = SSLSetCertificate(sslCtx_, certs);
   if (lastError_ != noErr) {
     A2_LOG_ERROR(fmt("AppleTLS: Failed to set credentials: %s",
@@ -904,7 +904,7 @@ std::string AppleTLSSession::getLastErrorString()
     return "Connection refused";
 
   default:
-    return fmt("Unspecified error %ld", (long)lastError_);
+    return fmt("Unspecified error %ld", static_cast<long>(lastError_));
   }
 }
 

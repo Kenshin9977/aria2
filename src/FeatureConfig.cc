@@ -275,10 +275,10 @@ std::string usedCompilerAndPlatform()
 #  ifdef __MINGW32__
   rv << "mingw ";
 #    ifdef __MINGW32_MAJOR_VERSION
-  rv << (int)__MINGW32_MAJOR_VERSION;
+  rv << static_cast<int>(__MINGW32_MAJOR_VERSION);
 #    endif // __MINGW32_MAJOR_VERSION
 #    ifdef __MINGW32_MINOR_VERSION
-  rv << "." << (int)__MINGW32_MINOR_VERSION;
+  rv << "." << static_cast<int>(__MINGW32_MINOR_VERSION);
 #    endif // __MINGW32_MINOR_VERSION
   rv << " / ";
 #  endif   // __MINGW32__

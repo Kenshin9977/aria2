@@ -307,7 +307,7 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
               continue;
             }
           }
-          dnsNames.push_back(std::string(name, name + len));
+          dnsNames.emplace_back(name, name + len);
         }
         else if (altName->type == GEN_IPADD) {
           const unsigned char* ipAddr = altName->d.iPAddress->data;
@@ -315,8 +315,8 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
             continue;
           }
           size_t len = altName->d.iPAddress->length;
-          ipAddrs.push_back(
-              std::string(reinterpret_cast<const char*>(ipAddr), len));
+          ipAddrs.emplace_back(
+              reinterpret_cast<const char*>(ipAddr), len);
         }
       }
     }

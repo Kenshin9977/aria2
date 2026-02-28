@@ -263,7 +263,7 @@ ssize_t AbstractDiskWriter::writeDataInternal(const unsigned char* data,
   }
   else {
     ssize_t writtenLength = 0;
-    while ((size_t)writtenLength < len) {
+    while (static_cast<size_t>(writtenLength) < len) {
 #ifdef __MINGW32__
       DWORD nwrite;
       OVERLAPPED ov = {};

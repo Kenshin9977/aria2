@@ -236,7 +236,7 @@ void updateHashWithRead(MessageDigest* mdctx,
   ldiv_t res = ldiv(len, buf.size());
   for (int j = 0; j < res.quot; ++j) {
     ssize_t nread = adaptor->readData(buf.data(), buf.size(), offset);
-    if ((size_t)nread != buf.size()) {
+    if (static_cast<size_t>(nread) != buf.size()) {
       throw DL_ABORT_EX(fmt(EX_FILE_READ, "n/a", "data is too short"));
     }
     mdctx->update(buf.data(), nread);

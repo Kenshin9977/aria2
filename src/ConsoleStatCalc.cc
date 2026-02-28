@@ -302,7 +302,7 @@ void ConsoleStatCalc::calculateStat(const DownloadEngine* e)
 #  ifdef HAVE_TERMIOS_H
     struct winsize size;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == 0) {
-      cols = std::max(0, (int)size.ws_col - 1);
+      cols = std::max(0, static_cast<int>(size.ws_col) - 1);
     }
 #  endif // HAVE_TERMIOS_H
 #else    // __MINGW32__

@@ -58,7 +58,7 @@ public:
     auto bytes = reinterpret_cast<const char*>(data);
     while (length) {
       CC_LONG l =
-          std::min(length, (size_t)std::numeric_limits<uint32_t>::max());
+          std::min(length, static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       update_fn(&ctx_, bytes, l);
       length -= l;
       bytes += l;

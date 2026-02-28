@@ -111,7 +111,9 @@ size_t GZipFile::onRead(void* ptr, size_t count)
   char* data = reinterpret_cast<char*>(ptr);
   size_t read = 0;
   while (count) {
-    size_t len = std::min(count, (size_t)std::numeric_limits<unsigned>::max());
+    size_t len = std::min(
+        count,
+        static_cast<size_t>(std::numeric_limits<unsigned>::max()));
     int rv = gzread(fp_, data, len);
     if (rv <= 0) {
       break;
@@ -128,7 +130,9 @@ size_t GZipFile::onWrite(const void* ptr, size_t count)
   const char* data = reinterpret_cast<const char*>(ptr);
   size_t written = 0;
   while (count) {
-    size_t len = std::min(count, (size_t)std::numeric_limits<unsigned>::max());
+    size_t len = std::min(
+        count,
+        static_cast<size_t>(std::numeric_limits<unsigned>::max()));
     int rv = gzwrite(fp_, data, len);
     if (rv <= 0) {
       break;

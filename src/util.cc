@@ -119,7 +119,7 @@ std::wstring utf8ToWChar(const char* src)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<wchar_t[]>((size_t)len);
+  auto buf = make_unique<wchar_t[]>(static_cast<size_t>(len));
   len = utf8ToWChar(buf.get(), len, src);
   if (len <= 0) {
     abort();
@@ -140,7 +140,7 @@ std::string wCharToUtf8(const std::wstring& wsrc)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<char[]>((size_t)len);
+  auto buf = make_unique<char[]>(static_cast<size_t>(len));
   len = wCharToUtf8(buf.get(), len, wsrc.c_str());
   if (len <= 0) {
     abort();
@@ -201,8 +201,8 @@ int64_t difftv(struct timeval tv1, struct timeval tv2)
       ((tv1.tv_sec == tv2.tv_sec) && (tv1.tv_usec < tv2.tv_usec))) {
     return 0;
   }
-  return ((int64_t)(tv1.tv_sec - tv2.tv_sec) * 1000000 + tv1.tv_usec -
-          tv2.tv_usec);
+  return (static_cast<int64_t>(tv1.tv_sec - tv2.tv_sec) * 1000000 +
+          tv1.tv_usec - tv2.tv_usec);
 }
 
 int32_t difftvsec(struct timeval tv1, struct timeval tv2)
@@ -246,12 +246,8 @@ bool isHexDigit(const char c)
 
 bool isHexDigit(std::string_view s)
 {
-  for (const auto& c : s) {
-    if (!isHexDigit(c)) {
-      return false;
-    }
-  }
-  return true;
+  return std::ranges::all_of(
+      s, [](char c) { return isHexDigit(c); });
 }
 
 bool inRFC3986ReservedChars(const char c)
@@ -1949,8 +1945,9 @@ void convertBitfield(BitfieldMan* dest, const BitfieldMan* src)
 {
   size_t numBlock = dest->countBlock();
   for (size_t index = 0; index < numBlock; ++index) {
-    if (src->isBitSetOffsetRange((int64_t)index * dest->getBlockLength(),
-                                 dest->getBlockLength())) {
+    if (src->isBitSetOffsetRange(
+            static_cast<int64_t>(index) * dest->getBlockLength(),
+            dest->getBlockLength())) {
       dest->setBit(index);
     }
   }

@@ -329,10 +329,10 @@ int GnuTLSSession::tlsConnect(const std::string& hostname, TLSVersion& version,
           }
         }
 
-        dnsNames.push_back(std::string(altName, altNameLen));
+        dnsNames.emplace_back(altName, altNameLen);
       }
       else if (ret == GNUTLS_SAN_IPADDRESS) {
-        ipAddrs.push_back(std::string(altName, altNameLen));
+        ipAddrs.emplace_back(altName, altNameLen);
       }
     }
     altNameLen = sizeof(altName);
