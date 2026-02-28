@@ -43,7 +43,7 @@ struct ContextAttribute {
   virtual ~ContextAttribute() = default;
 };
 
-enum ContextAttributeType {
+enum class ContextAttributeType {
   // For BitTorrent
   CTX_ATTR_BT,
   // Max value of attribute type to use allocate vector to hold

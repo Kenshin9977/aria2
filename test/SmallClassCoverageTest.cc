@@ -76,7 +76,7 @@ public:
   void testContextAttributeType()
   {
     CPPUNIT_ASSERT_EQUAL(std::string("BitTorrent"),
-                         std::string(strContextAttributeType(CTX_ATTR_BT)));
+                         std::string(strContextAttributeType(ContextAttributeType::CTX_ATTR_BT)));
   }
 
   void testNotifierSingleListener()

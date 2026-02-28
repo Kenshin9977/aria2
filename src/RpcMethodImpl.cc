@@ -791,7 +791,8 @@ void gatherProgress(Dict* entryDict, const std::shared_ptr<RequestGroup>& group,
 {
   gatherProgressCommon(entryDict, group, keys);
 #ifdef ENABLE_BITTORRENT
-  if (group->getDownloadContext()->hasAttribute(CTX_ATTR_BT)) {
+  if (group->getDownloadContext()->hasAttribute(
+          ContextAttributeType::CTX_ATTR_BT)) {
     gatherProgressBitTorrent(
         entryDict, group,
         bittorrent::getTorrentAttrs(group->getDownloadContext()),
@@ -911,9 +912,14 @@ void gatherStoppedDownload(Dict* entryDict,
   }
 
 #ifdef ENABLE_BITTORRENT
-  if (ds->attrs.size() > CTX_ATTR_BT && ds->attrs[CTX_ATTR_BT]) {
-    const auto attrs =
-        static_cast<TorrentAttribute*>(ds->attrs[CTX_ATTR_BT].get());
+  if (ds->attrs.size() >
+          static_cast<size_t>(ContextAttributeType::CTX_ATTR_BT) &&
+      ds->attrs[static_cast<size_t>(
+          ContextAttributeType::CTX_ATTR_BT)]) {
+    const auto attrs = static_cast<TorrentAttribute*>(
+        ds->attrs[static_cast<size_t>(
+                      ContextAttributeType::CTX_ATTR_BT)]
+            .get());
     if (requested_key(keys, KEY_BITTORRENT)) {
       auto btDict = Dict::g();
       gatherBitTorrentMetadata(btDict.get(), attrs);
@@ -1603,7 +1609,7 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
     }
     else if (group->getMetadataInfo()
 #ifdef ENABLE_BITTORRENT
-             && !dctx->hasAttribute(CTX_ATTR_BT)
+             && !dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)
 #endif // ENABLE_BITTORRENT
     ) {
       // In case of Metalink
@@ -1617,7 +1623,7 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
   }
 #ifdef ENABLE_BITTORRENT
   if (option.defined(PREF_DIR) || option.defined(PREF_INDEX_OUT)) {
-    if (dctx->hasAttribute(CTX_ATTR_BT)) {
+    if (dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
       std::istringstream indexOutIn(grOption->get(PREF_INDEX_OUT));
       std::vector<std::pair<size_t, std::string>> indexPaths =
           util::createIndexPaths(indexOutIn);

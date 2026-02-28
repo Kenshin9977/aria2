@@ -112,7 +112,7 @@ void DHTGetPeersMessageTest::testDoReceivedAction()
   torrentAttrs->infoHash = std::string(infoHash, infoHash + DHT_ID_LENGTH);
 
   auto dctx = std::make_shared<DownloadContext>();
-  dctx->setAttribute(CTX_ATTR_BT, torrentAttrs);
+  dctx->setAttribute(ContextAttributeType::CTX_ATTR_BT, torrentAttrs);
 
   auto option = std::make_shared<Option>();
   option->put(PREF_BT_EXTERNAL_IP, "192.168.0.1");

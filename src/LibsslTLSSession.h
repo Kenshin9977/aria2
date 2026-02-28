@@ -53,7 +53,7 @@ public:
   int init(sock_t sockfd) override;
   int setSNIHostname(const std::string& hostname) override;
   int closeConnection() override;
-  int checkDirection() override;
+  TLSDirection checkDirection() override;
   ssize_t writeData(const void* data, size_t len) override;
   ssize_t readData(void* data, size_t len) override;
   int tlsConnect(const std::string& hostname, TLSVersion& version,

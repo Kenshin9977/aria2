@@ -152,7 +152,7 @@ public:
   // needs to write more data to proceed. If SSL/TLS session needs
   // neither read nor write data at the moment, return value is
   // undefined.
-  int checkDirection() override;
+  TLSDirection checkDirection() override;
 
   // Sends |data| with length |len|. This function returns the number
   // of bytes sent if it succeeds, or TLS_ERR_WOULDBLOCK if the

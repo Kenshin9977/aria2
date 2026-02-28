@@ -194,10 +194,11 @@ int GnuTLSSession::closeConnection()
   }
 }
 
-int GnuTLSSession::checkDirection()
+TLSDirection GnuTLSSession::checkDirection()
 {
   int direction = gnutls_record_get_direction(sslSession_);
-  return direction == 0 ? TLS_WANT_READ : TLS_WANT_WRITE;
+  return direction == 0 ? TLSDirection::TLS_WANT_READ
+                        : TLSDirection::TLS_WANT_WRITE;
 }
 
 ssize_t GnuTLSSession::writeData(const void* data, size_t len)

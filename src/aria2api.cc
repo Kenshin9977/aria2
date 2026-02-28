@@ -694,7 +694,7 @@ struct RequestGroupDH : public DownloadHandle {
   virtual const std::string& getInfoHash() override
   {
 #ifdef ENABLE_BITTORRENT
-    if (group->getDownloadContext()->hasAttribute(CTX_ATTR_BT)) {
+    if (group->getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
       return bittorrent::getTorrentAttrs(group->getDownloadContext())->infoHash;
     }
 #endif // ENABLE_BITTORRENT
@@ -749,7 +749,7 @@ struct RequestGroupDH : public DownloadHandle {
   {
     BtMetaInfoData res;
 #ifdef ENABLE_BITTORRENT
-    if (group->getDownloadContext()->hasAttribute(CTX_ATTR_BT)) {
+    if (group->getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
       auto torrentAttrs =
           bittorrent::getTorrentAttrs(group->getDownloadContext());
       res.announceList = torrentAttrs->announceList;

@@ -46,7 +46,7 @@
 
 namespace aria2 {
 
-enum TLSDirection { TLS_WANT_READ = 1, TLS_WANT_WRITE };
+enum class TLSDirection { TLS_WANT_READ = 1, TLS_WANT_WRITE };
 
 enum TLSErrorCode {
   TLS_ERR_OK = 0,
@@ -83,7 +83,7 @@ public:
   // needs to write more data to proceed. If SSL/TLS session needs
   // neither read nor write data at the moment, TLS_WANT_READ must be
   // returned.
-  virtual int checkDirection() = 0;
+  virtual TLSDirection checkDirection() = 0;
 
   // Sends |data| with length |len|. This function returns the number
   // of bytes sent if it succeeds, or TLS_ERR_WOULDBLOCK if the

@@ -403,7 +403,7 @@ public:
           // FileEntry::getPath() does not return actual file path, so
           // we don't remove it.
           if (group->getOption()->getAsBool(PREF_BT_REMOVE_UNSELECTED_FILE) &&
-              !group->inMemoryDownload() && dctx->hasAttribute(CTX_ATTR_BT)) {
+              !group->inMemoryDownload() && dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
             A2_LOG_INFO(fmt(MSG_REMOVING_UNSELECTED_FILE,
                             GroupId::toHex(group->getGID()).c_str()));
             const std::vector<std::shared_ptr<FileEntry>>& files =

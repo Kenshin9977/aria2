@@ -106,15 +106,15 @@ int OpenSSLTLSSession::closeConnection()
   return TLS_ERR_OK;
 }
 
-int OpenSSLTLSSession::checkDirection()
+TLSDirection OpenSSLTLSSession::checkDirection()
 {
   int error = SSL_get_error(ssl_, rv_);
   if (error == SSL_ERROR_WANT_WRITE) {
-    return TLS_WANT_WRITE;
+    return TLSDirection::TLS_WANT_WRITE;
   }
   else {
     // TODO We ignore error other than SSL_ERR_WANT_READ here for now
-    return TLS_WANT_READ;
+    return TLSDirection::TLS_WANT_READ;
   }
 }
 

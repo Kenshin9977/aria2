@@ -844,7 +844,8 @@ ssize_t SocketCore::writeData(const void* data, size_t len)
         throw DL_RETRY_EX(
             fmt(EX_SOCKET_SEND, tlsSession_->getLastErrorString().c_str()));
       }
-      if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() ==
+          TLSDirection::TLS_WANT_READ) {
         wantRead_ = true;
       }
       else {
@@ -905,7 +906,8 @@ void SocketCore::readData(void* data, size_t& len)
           throw DL_RETRY_EX(
               fmt(EX_SOCKET_RECV, tlsSession_->getLastErrorString().c_str()));
         }
-        if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+        if (tlsSession_->checkDirection() ==
+            TLSDirection::TLS_WANT_READ) {
           wantRead_ = true;
         }
         else {
@@ -1036,7 +1038,8 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
 
     if (rv == TLS_ERR_WOULDBLOCK) {
       // We're not done yet...
-      if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() ==
+          TLSDirection::TLS_WANT_READ) {
         // ... but read buffers are empty.
         wantRead_ = true;
       }

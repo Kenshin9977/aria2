@@ -228,21 +228,21 @@ int WinTLSSession::closeConnection()
   return TLS_ERR_OK;
 }
 
-int WinTLSSession::checkDirection()
+TLSDirection WinTLSSession::checkDirection()
 {
   if (state_ == st_handshake_write || state_ == st_handshake_write_last) {
-    return TLS_WANT_WRITE;
+    return TLSDirection::TLS_WANT_WRITE;
   }
   if (state_ == st_handshake_read) {
-    return TLS_WANT_READ;
+    return TLSDirection::TLS_WANT_READ;
   }
   if (readBuf_.size() || decBuf_.size()) {
-    return TLS_WANT_READ;
+    return TLSDirection::TLS_WANT_READ;
   }
   if (getLeftTLSRecordSize() || writeBuf_.size()) {
-    return TLS_WANT_WRITE;
+    return TLSDirection::TLS_WANT_WRITE;
   }
-  return TLS_WANT_READ;
+  return TLSDirection::TLS_WANT_READ;
 }
 
 namespace {
