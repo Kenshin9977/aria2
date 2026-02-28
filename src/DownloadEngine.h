@@ -62,6 +62,7 @@ class StatCalc;
 class ISocketCore;
 class SocketCore;
 class CookieStorage;
+class HstsStore;
 class AuthConfigFactory;
 class Request;
 class EventPoll;
@@ -131,6 +132,7 @@ private:
   Timer lastRefresh_;
 
   std::unique_ptr<CookieStorage> cookieStorage_;
+  std::unique_ptr<HstsStore> hstsStore_;
 
 #ifdef ENABLE_BITTORRENT
   std::unique_ptr<BtRegistry> btRegistry_;
@@ -287,6 +289,11 @@ public:
   void evictSocketPool();
 
   const std::unique_ptr<CookieStorage>& getCookieStorage() const;
+
+  const std::unique_ptr<HstsStore>& getHstsStore() const
+  {
+    return hstsStore_;
+  }
 
 #ifdef ENABLE_BITTORRENT
   const std::unique_ptr<BtRegistry>& getBtRegistry() const

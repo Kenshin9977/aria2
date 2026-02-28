@@ -41,9 +41,9 @@
 #include <cstring>
 #include <iostream>
 
-#ifdef __APPLE__
+#ifdef HAVE_APPLETLS
 #  include <Security/SecRandom.h>
-#endif // __APPLE__
+#endif // HAVE_APPLETLS
 
 #ifdef HAVE_LIBGNUTLS
 #  include <gnutls/crypto.h>
@@ -106,7 +106,7 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
     assert(r);
     abort();
   }
-#elif defined(__APPLE__)
+#elif defined(HAVE_APPLETLS)
   auto rv = SecRandomCopyBytes(kSecRandomDefault, len, buf);
   assert(errSecSuccess == rv);
 #elif defined(HAVE_LIBGNUTLS)

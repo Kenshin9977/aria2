@@ -66,6 +66,7 @@
 #include "HttpHeader.h"
 #include "LogFactory.h"
 #include "CookieStorage.h"
+#include "HstsStore.h"
 #include "AuthConfigFactory.h"
 #include "AuthConfig.h"
 #include "a2functional.h"
@@ -161,6 +162,16 @@ bool HttpResponseCommand::executeInternal()
   // check HTTP status code
   httpResponse->validateResponse();
   httpResponse->retrieveCookie();
+
+  // Process HSTS header (RFC 6797: only over secure transport)
+  if (getRequest()->getProtocol() == Protocol::HTTPS) {
+    const auto& httpHeader = httpResponse->getHttpHeader();
+    auto hsts = httpHeader->find(HttpHeader::STRICT_TRANSPORT_SECURITY);
+    if (hsts) {
+      getDownloadEngine()->getHstsStore()->processHeader(
+          getRequest()->getHost(), std::string(*hsts));
+    }
+  }
 
   const auto& httpHeader = httpResponse->getHttpHeader();
   // Disable persistent connection if:

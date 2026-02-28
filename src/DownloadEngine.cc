@@ -56,6 +56,7 @@
 #include "DlAbortEx.h"
 #include "ServerStatMan.h"
 #include "CookieStorage.h"
+#include "HstsStore.h"
 #include "A2STR.h"
 #include "AuthConfigFactory.h"
 #include "AuthConfig.h"
@@ -102,6 +103,7 @@ DownloadEngine::DownloadEngine(std::unique_ptr<EventPoll> eventPoll)
       refreshInterval_(DEFAULT_REFRESH_INTERVAL),
       lastRefresh_(Timer::zero()),
       cookieStorage_(make_unique<CookieStorage>()),
+      hstsStore_(make_unique<HstsStore>()),
 #ifdef ENABLE_BITTORRENT
       btRegistry_(make_unique<BtRegistry>()),
 #endif // ENABLE_BITTORRENT

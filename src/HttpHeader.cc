@@ -242,6 +242,7 @@ constexpr const char* INTERESTING_HEADER_NAMES[] = {
     "sec-websocket-key",
     "sec-websocket-version",
     "set-cookie",
+    "strict-transport-security",
     "transfer-encoding",
     "upgrade",
 };

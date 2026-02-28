@@ -100,7 +100,7 @@ TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion minVer)
 OpenSSLTLSContext::OpenSSLTLSContext(TLSSessionSide side, TLSVersion minVer)
     : sslCtx_(nullptr), side_(side), verifyPeer_(true)
 {
-  sslCtx_ = SSL_CTX_new(SSLv23_method());
+  sslCtx_ = SSL_CTX_new(TLS_method());
   if (sslCtx_) {
     good_ = true;
   }

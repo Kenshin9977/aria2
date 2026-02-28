@@ -53,6 +53,7 @@
 #include "SocketRecvBuffer.h"
 #include "BackupIPv4ConnectCommand.h"
 #include "ConnectCommand.h"
+#include "HstsStore.h"
 
 namespace aria2 {
 
@@ -73,6 +74,22 @@ InitiateConnectionCommand::~InitiateConnectionCommand() = default;
 
 bool InitiateConnectionCommand::executeInternal()
 {
+  // HSTS: upgrade HTTP to HTTPS if the host has an active HSTS policy
+  if (getRequest()->getProtocol() == Protocol::HTTP) {
+    auto& hstsStore = getDownloadEngine()->getHstsStore();
+    if (hstsStore && hstsStore->shouldUpgrade(getRequest()->getHost())) {
+      std::string httpsUri = getRequest()->getUri();
+      if (httpsUri.substr(0, 7) == "http://") {
+        httpsUri = "https://" + httpsUri.substr(7);
+        A2_LOG_INFO(fmt("CUID#%" PRId64
+                        " - HSTS: upgrading %s to HTTPS",
+                        getCuid(),
+                        getRequest()->getUri().c_str()));
+        getRequest()->redirectUri(httpsUri);
+      }
+    }
+  }
+
   std::string hostname;
   uint16_t port;
   std::shared_ptr<Request> proxyRequest = createProxyRequest();
