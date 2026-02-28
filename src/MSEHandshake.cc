@@ -170,8 +170,15 @@ bool MSEHandshake::receivePublicKey()
     return false;
   }
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - public key received.", cuid_));
-  // TODO handle exception. in catch, resbufLength = 0;
-  dh_->computeSecret(secret_, sizeof(secret_), rbuf_, KEY_LENGTH);
+  try {
+    dh_->computeSecret(secret_, sizeof(secret_), rbuf_, KEY_LENGTH);
+  }
+  catch (RecoverableException& e) {
+    A2_LOG_DEBUG_EX(
+        fmt("CUID#%" PRId64 " - DH secret computation failed.", cuid_), e);
+    rbufLength_ = 0;
+    return false;
+  }
   // shift buffer
   shiftBuffer(KEY_LENGTH);
   return true;

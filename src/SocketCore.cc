@@ -605,9 +605,18 @@ void SocketCore::setNonBlockingMode()
   int flags;
   while ((flags = fcntl(sockfd_, F_GETFL, 0)) == -1 && errno == EINTR)
     ;
-  // TODO add error handling
-  while (fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK) == -1 && errno == EINTR)
+  if (flags == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_NONBLOCKING, errorMsg(errNum).c_str()));
+  }
+  int r;
+  while ((r = fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK)) == -1 &&
+         errno == EINTR)
     ;
+  if (r == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_NONBLOCKING, errorMsg(errNum).c_str()));
+  }
 #endif // __MINGW32__
   blocking_ = false;
 }
@@ -624,9 +633,18 @@ void SocketCore::setBlockingMode()
   int flags;
   while ((flags = fcntl(sockfd_, F_GETFL, 0)) == -1 && errno == EINTR)
     ;
-  // TODO add error handling
-  while (fcntl(sockfd_, F_SETFL, flags & (~O_NONBLOCK)) == -1 && errno == EINTR)
+  if (flags == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_BLOCKING, errorMsg(errNum).c_str()));
+  }
+  int r;
+  while ((r = fcntl(sockfd_, F_SETFL, flags & (~O_NONBLOCK))) == -1 &&
+         errno == EINTR)
     ;
+  if (r == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_BLOCKING, errorMsg(errNum).c_str()));
+  }
 #endif // __MINGW32__
   blocking_ = true;
 }
