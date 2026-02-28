@@ -139,6 +139,9 @@ void DHTPeerAnnounceStorage::announcePeer()
     }
     e->notifyUpdate();
     auto task = taskFactory_->createPeerAnnounceTask(e->getInfoHash());
+    if (!task) {
+      continue;
+    }
     taskQueue_->addPeriodicTask2(task);
     A2_LOG_DEBUG(fmt("Added 1 peer announce: infoHash=%s",
                      util::toHex(e->getInfoHash(), DHT_ID_LENGTH).c_str()));

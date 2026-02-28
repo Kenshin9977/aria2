@@ -167,7 +167,6 @@ void DefaultBtProgressInfoFile::save(IOFile& fp)
   WRITE_CHECK(fp, pieceStorage_->getBitfield(),
               pieceStorage_->getBitfieldLength());
   // the number of in-flight piece: 32 bits
-  // TODO implement this
   uint32_t numInFlightPieceNL = htonl(pieceStorage_->countInFlightPiece());
   WRITE_CHECK(fp, &numInFlightPieceNL, sizeof(numInFlightPieceNL));
   std::vector<std::shared_ptr<Piece>> inFlightPieces;

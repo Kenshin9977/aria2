@@ -385,7 +385,6 @@ bool PeerInteractionCommand::executeInternal()
   return false;
 }
 
-// TODO this method removed when PeerBalancerCommand is implemented
 bool PeerInteractionCommand::prepareForNextPeer(time_t wait)
 {
   if (peerStorage_->isPeerAvailable() && btRuntime_->lessThanEqMinPeers()) {

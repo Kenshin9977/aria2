@@ -243,7 +243,6 @@ std::vector<std::unique_ptr<OptionHandler>> OptionHandlerFactory::createOptionHa
   }
 #ifdef ENABLE_ASYNC_DNS
   {
-    // TODO Deprecated
     auto op = std::make_unique<DeprecatedOptionHandler>(
         std::make_unique<BooleanOptionHandler>(PREF_ENABLE_ASYNC_DNS6, TEXT_ENABLE_ASYNC_DNS6,
                                  NO_DEFAULT_VALUE, OptionHandler::OPT_ARG));
