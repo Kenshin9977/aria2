@@ -43,6 +43,7 @@
 #  include <ifaddrs.h>
 #endif // HAVE_IFADDRS_H
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <cassert>
@@ -1582,24 +1583,18 @@ bool verifyHostname(const std::string& hostname,
     if (addrLen == 0) {
       return false;
     }
-    for (auto& ipAddr : ipAddrs) {
-      if (addrLen == ipAddr.size() &&
-          memcmp(binAddr, ipAddr.c_str(), addrLen) == 0) {
-        return true;
-      }
-    }
-    return false;
+    return std::ranges::any_of(ipAddrs, [&](const auto& ipAddr) {
+      return addrLen == ipAddr.size() &&
+             memcmp(binAddr, ipAddr.c_str(), addrLen) == 0;
+    });
   }
 
   if (dnsNames.empty()) {
     return util::tlsHostnameMatch(commonName, hostname);
   }
-  for (auto& dnsName : dnsNames) {
-    if (util::tlsHostnameMatch(dnsName, hostname)) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(dnsNames, [&hostname](const auto& dnsName) {
+    return util::tlsHostnameMatch(dnsName, hostname);
+  });
 }
 
 namespace {

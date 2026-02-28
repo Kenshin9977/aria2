@@ -37,6 +37,7 @@
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
+#include <numeric>
 
 #include "util.h"
 #include "LogFactory.h"
@@ -424,11 +425,11 @@ CookieStorage::criteriaFind(const std::string& requestHost,
 
 size_t CookieStorage::size() const
 {
-  size_t n = 0;
-  for (auto& [accessTime, node] : lruTracker_) {
-    n += node->countCookie();
-  }
-  return n;
+  return std::accumulate(
+      lruTracker_.begin(), lruTracker_.end(), size_t{0},
+      [](size_t n, const auto& entry) {
+        return n + entry.second->countCookie();
+      });
 }
 
 bool CookieStorage::load(const std::string& filename, time_t now)

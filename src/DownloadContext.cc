@@ -237,23 +237,15 @@ const std::string& DownloadContext::getBasePath() const
 
 std::shared_ptr<FileEntry> DownloadContext::getFirstRequestedFileEntry() const
 {
-  for (auto& e : fileEntries_) {
-    if (e->isRequested()) {
-      return e;
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      fileEntries_, [](const auto& e) { return e->isRequested(); });
+  return it != fileEntries_.end() ? *it : nullptr;
 }
 
 size_t DownloadContext::countRequestedFileEntry() const
 {
-  size_t numFiles = 0;
-  for (const auto& e : fileEntries_) {
-    if (e->isRequested()) {
-      ++numFiles;
-    }
-  }
-  return numFiles;
+  return std::ranges::count_if(
+      fileEntries_, [](const auto& e) { return e->isRequested(); });
 }
 
 bool DownloadContext::isChecksumVerificationNeeded() const

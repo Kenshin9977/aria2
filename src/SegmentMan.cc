@@ -410,12 +410,9 @@ void SegmentMan::registerPeerStat(const std::shared_ptr<PeerStat>& peerStat)
 
 std::shared_ptr<PeerStat> SegmentMan::getPeerStat(cuid_t cuid) const
 {
-  for (auto& e : peerStats_) {
-    if (e->getCuid() == cuid) {
-      return e;
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      peerStats_, [cuid](const auto& e) { return e->getCuid() == cuid; });
+  return it != peerStats_.end() ? *it : nullptr;
 }
 
 namespace {

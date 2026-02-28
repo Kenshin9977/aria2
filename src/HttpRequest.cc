@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "HttpRequest.h"
 
+#include <algorithm>
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -427,13 +428,10 @@ bool HttpRequest::conditionalRequest() const
   if (!ifModSinceHeader_.empty()) {
     return true;
   }
-  for (auto& h : headers_) {
-    if (util::istartsWith(h, "if-modified-since") ||
-        util::istartsWith(h, "if-none-match")) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(headers_, [](const auto& h) {
+    return util::istartsWith(h, "if-modified-since") ||
+           util::istartsWith(h, "if-none-match");
+  });
 }
 
 } // namespace aria2

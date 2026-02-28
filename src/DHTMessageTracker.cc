@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "DHTMessageTracker.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "DHTMessage.h"
@@ -159,14 +160,12 @@ void DHTMessageTracker::handleTimeout()
 const DHTMessageTrackerEntry*
 DHTMessageTracker::getEntryFor(const DHTMessage* message) const
 {
-  for (auto& ent : entries_) {
-    if (ent->match(message->getTransactionID(),
-                   message->getRemoteNode()->getIPAddress(),
-                   message->getRemoteNode()->getPort())) {
-      return ent.get();
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(entries_, [&message](const auto& ent) {
+    return ent->match(message->getTransactionID(),
+                      message->getRemoteNode()->getIPAddress(),
+                      message->getRemoteNode()->getPort());
+  });
+  return it != entries_.end() ? it->get() : nullptr;
 }
 
 size_t DHTMessageTracker::countEntry() const { return entries_.size(); }

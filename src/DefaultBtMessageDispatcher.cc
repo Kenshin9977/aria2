@@ -258,13 +258,12 @@ const RequestSlot*
 DefaultBtMessageDispatcher::getOutstandingRequest(size_t index, int32_t begin,
                                                   int32_t length)
 {
-  for (auto& slot : requestSlots_) {
-    if (slot->getIndex() == index && slot->getBegin() == begin &&
-        slot->getLength() == length) {
-      return slot.get();
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      requestSlots_, [index, begin, length](const auto& slot) {
+        return slot->getIndex() == index && slot->getBegin() == begin &&
+               slot->getLength() == length;
+      });
+  return it != requestSlots_.end() ? it->get() : nullptr;
 }
 
 void DefaultBtMessageDispatcher::removeOutstandingRequest(

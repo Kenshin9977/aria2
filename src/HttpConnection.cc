@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "HttpConnection.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "util.h"
@@ -185,12 +186,10 @@ std::unique_ptr<HttpResponse> HttpConnection::receiveResponse()
 
 bool HttpConnection::isIssued(const std::shared_ptr<Segment>& segment) const
 {
-  for (const auto& entry : outstandingHttpRequests_) {
-    if (*entry->getHttpRequest()->getSegment() == *segment) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(
+      outstandingHttpRequests_, [&segment](const auto& entry) {
+        return *entry->getHttpRequest()->getSegment() == *segment;
+      });
 }
 
 bool HttpConnection::sendBufferIsEmpty() const

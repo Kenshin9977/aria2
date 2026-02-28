@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "DHTTokenTracker.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "util.h"
@@ -92,12 +93,9 @@ bool DHTTokenTracker::validateToken(const std::string& token,
                                     const std::string& ipaddr,
                                     uint16_t port) const
 {
-  for (auto& elem : secret_) {
-    if (generateToken(infoHash, ipaddr, port, elem) == token) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(secret_, [&](const auto& elem) {
+    return generateToken(infoHash, ipaddr, port, elem) == token;
+  });
 }
 
 void DHTTokenTracker::updateTokenSecret()
