@@ -41,7 +41,7 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 #include "a2functional.h"
@@ -52,7 +52,7 @@ class MessageDigestImpl {
 public:
   using factory_t = std::function<std::unique_ptr<MessageDigestImpl>()>;
   using hash_info_t = std::tuple<factory_t, size_t>;
-  using hashes_t = std::map<std::string, hash_info_t>;
+  using hashes_t = std::unordered_map<std::string, hash_info_t>;
 
   template <typename T> inline static hash_info_t make_hi()
   {

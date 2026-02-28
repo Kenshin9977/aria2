@@ -39,7 +39,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <utility>
 
@@ -137,7 +137,7 @@ private:
 
   nghttp2_session* session_;
   std::shared_ptr<SocketCore> socket_;
-  std::map<int32_t, Http2StreamData> streams_;
+  std::unordered_map<int32_t, Http2StreamData> streams_;
   bool fatal_;
 
   Http2Session(const Http2Session&);

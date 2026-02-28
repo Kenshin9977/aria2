@@ -37,12 +37,14 @@
 #include "OptionParser.h"
 #include "OptionHandler.h"
 
+#include <unordered_map>
+
 namespace aria2 {
 
 namespace rpc {
 
 namespace {
-std::map<std::string, std::unique_ptr<RpcMethod>> cache;
+std::unordered_map<std::string, std::unique_ptr<RpcMethod>> cache;
 } // namespace
 
 namespace {

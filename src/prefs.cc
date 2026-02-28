@@ -36,7 +36,7 @@
 
 #include <cassert>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace aria2 {
 
@@ -85,7 +85,7 @@ public:
 private:
   size_t count_;
   std::vector<PrefPtr> i2p_;
-  std::map<std::string, PrefPtr> k2p_;
+  std::unordered_map<std::string, PrefPtr> k2p_;
 };
 
 PrefFactory* getPrefFactory()
