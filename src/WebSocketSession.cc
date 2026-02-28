@@ -290,8 +290,15 @@ void WebSocketSession::addTextMessage(const std::string& msg, bool delayed)
     return;
   }
 
-  // TODO Don't add text message if the size of outbound queue in
-  // wsctx_ exceeds certain limit.
+  // Drop messages when the outbound queue is too large to prevent
+  // unbounded memory growth under heavy RPC load.
+  static constexpr size_t MAX_QUEUED_MSGS = 1024;
+  static constexpr size_t MAX_QUEUED_BYTES = 8 * 1024 * 1024;
+  if (wslay_event_get_queued_msg_count(wsctx_) >= MAX_QUEUED_MSGS ||
+      wslay_event_get_queued_msg_length(wsctx_) >= MAX_QUEUED_BYTES) {
+    A2_LOG_WARN("WebSocket outbound queue full, dropping message");
+    return;
+  }
   wslay_event_msg arg = {WSLAY_TEXT_FRAME,
                          reinterpret_cast<const uint8_t*>(msg.c_str()),
                          msg.size()};
