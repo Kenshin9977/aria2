@@ -45,6 +45,10 @@ jobs:
       run: |
         brew install cppunit gettext openssl libssh2 c-ares sqlite3 \
           autoconf automake pkg-config libtool
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.crypto }}-${{ matrix.bittorrent }}
     - name: Setup clang (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'clang'
       run: |
@@ -77,6 +81,7 @@ jobs:
 
         echo 'CPPFLAGS='"$CPPFLAGS" >> $GITHUB_ENV
         echo 'LDFLAGS='"$LDFLAGS" >> $GITHUB_ENV
+        echo "/usr/lib/ccache:/opt/homebrew/opt/ccache/libexec" >> $GITHUB_PATH
     - name: Disable BitTorrent
       if: matrix.bittorrent == 'without-bt'
       run: |
@@ -131,6 +136,10 @@ jobs:
           make
           pkg-config
           gettext-devel
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: windows-${{ matrix.bittorrent }}
     - name: Disable BitTorrent
       if: matrix.bittorrent == 'without-bt'
       run: |
@@ -143,3 +152,41 @@ jobs:
           --with-libcares --with-sqlite3 --with-libssh2 \
           $FEATURE_FLAGS
         make -j$(nproc) check
+
+  build-tsan:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Linux setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+          g++-14 \
+          autoconf \
+          automake \
+          autotools-dev \
+          autopoint \
+          libtool \
+          pkg-config \
+          libssl-dev \
+          libc-ares-dev \
+          zlib1g-dev \
+          libsqlite3-dev \
+          libssh2-1-dev \
+          libcppunit-dev
+    - name: Libtool
+      run: |
+        autoreconf -i
+    - name: Configure
+      run: |
+        ./configure \
+          --without-gnutls --with-openssl \
+          CC=gcc-14 CXX=g++-14
+      env:
+        CPPFLAGS: "-fsanitize=thread -g3"
+        LDFLAGS: "-fsanitize=thread"
+    - name: Build and test
+      run: |
+        make -j"$(nproc)" check
+      env:
+        TSAN_OPTIONS: "halt_on_error=1"

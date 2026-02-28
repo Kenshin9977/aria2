@@ -1,0 +1,39 @@
+name: static-analysis
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+  cppcheck:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install cppcheck
+      run: |
+        sudo apt-get update
+        sudo apt-get install cppcheck
+    - name: Run cppcheck
+      run: |
+        cppcheck \
+          --enable=warning,performance,portability \
+          --suppress=missingIncludeSystem \
+          --error-exitcode=1 \
+          --inline-suppr \
+          -I src \
+          src/
+
+  clang-format-check:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install clang-format
+      run: |
+        sudo apt-get update
+        sudo apt-get install clang-format-18
+    - name: Check formatting
+      run: |
+        find src -name '*.cc' -o -name '*.h' -o -name '*.c' | \
+          xargs clang-format-18 --dry-run --Werror
