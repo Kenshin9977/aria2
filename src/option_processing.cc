@@ -146,12 +146,12 @@ void showCandidates(const std::string& unknownOption,
     // Use cost 0 for prefix match
     if (util::startsWith(pref->k, pref->k + strlen(pref->k), optstr,
                          optstr + optstrlen)) {
-      cands.push_back(std::make_pair(0, pref));
+      cands.emplace_back(0, pref);
       continue;
     }
     // cost values are borrowed from git, help.c.
     int sim = levenshtein(optstr, pref->k, 0, 2, 1, 3);
-    cands.push_back(std::make_pair(sim, pref));
+    cands.emplace_back(sim, pref);
   }
   if (cands.empty()) {
     return;

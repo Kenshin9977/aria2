@@ -118,7 +118,7 @@ void SpeedCalc::update(size_t bytes)
   if (timeSlots_.empty() ||
       std::chrono::duration_cast<std::chrono::seconds>(
           timeSlots_.back().first.difference(now)) >= 1_s) {
-    timeSlots_.push_back(std::make_pair(now, bytes));
+    timeSlots_.emplace_back(now, bytes);
   }
   else {
     timeSlots_.back().second += bytes;

@@ -95,7 +95,7 @@ bool parseDate(time_t& time, std::string::const_iterator first,
     std::string::const_iterator s = i;
     for (; s != eoi && !isDelimiter(static_cast<unsigned char>(*s)); ++s)
       ;
-    dateTokens.push_back(std::string(i, s));
+    dateTokens.emplace_back(i, s);
     i = s;
   }
   int dayOfMonth = 0;

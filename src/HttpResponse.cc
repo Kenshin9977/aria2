@@ -34,6 +34,7 @@
 /* copyright --> */
 
 #include "HttpResponse.h"
+#include <algorithm>
 #include <ranges>
 #include "Request.h"
 #include "Segment.h"
@@ -197,12 +198,9 @@ bool hasToken(std::string_view field, std::string_view token)
       tokens;
   util::splitIter(field.begin(), field.end(), std::back_inserter(tokens),
                   ',', true);
-  for (const auto& t : tokens) {
-    if (util::strieq(t.first, t.second, token.begin(), token.end())) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(tokens, [&token](const auto& t) {
+    return util::strieq(t.first, t.second, token.begin(), token.end());
+  });
 }
 } // namespace
 
@@ -431,7 +429,7 @@ void HttpResponse::getDigest(std::vector<Checksum>& result) const
         continue;
       }
 
-      result.push_back(Checksum(hashType, digest));
+      result.emplace_back(hashType, digest);
     }
   }
 

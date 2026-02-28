@@ -162,7 +162,7 @@ void BtSeederStateChoke::executeChoke(const PeerSet& peerSet)
 
     p->chokingRequired(true);
     if (p->peerInterested()) {
-      peerEntries.push_back(PeerEntry(p));
+      peerEntries.emplace_back(p);
       continue;
     }
 

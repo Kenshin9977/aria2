@@ -269,9 +269,8 @@ bool HttpRequestCommand::createHttp2Command()
   }
 
   std::vector<std::pair<std::string, std::string>> headers;
-  headers.push_back(
-      std::make_pair("user-agent", getOption()->get(PREF_USER_AGENT)));
-  headers.push_back(std::make_pair("accept", "*/*"));
+  headers.emplace_back("user-agent", getOption()->get(PREF_USER_AGENT));
+  headers.emplace_back("accept", "*/*");
 
   int32_t streamId =
       h2session->submitRequest(method, scheme, authority, path, headers);

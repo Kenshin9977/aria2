@@ -105,7 +105,7 @@ void extractPieceHash(const std::shared_ptr<DownloadContext>& ctx,
   pieceHashes.reserve(numPieces);
   for (size_t i = 0; i < numPieces; ++i) {
     const char* p = hashData.data() + i * hashLength;
-    pieceHashes.push_back(std::string(p, p + hashLength));
+    pieceHashes.emplace_back(p, p + hashLength);
   }
   ctx->setPieceHashes("sha-1", pieceHashes.begin(), pieceHashes.end());
 }
@@ -403,7 +403,7 @@ void extractNodes(TorrentAttribute* torrent, const ValueBase* nodesListSrc)
       if (!port || !(0 < port->i() && port->i() < 65536)) {
         continue;
       }
-      torrent->nodes.push_back(std::make_pair(utf8Hostname, port->i()));
+      torrent->nodes.emplace_back(utf8Hostname, port->i());
     }
   }
 }

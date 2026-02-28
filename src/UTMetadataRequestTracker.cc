@@ -47,7 +47,7 @@ UTMetadataRequestTracker::UTMetadataRequestTracker() {}
 
 void UTMetadataRequestTracker::add(size_t index)
 {
-  trackedRequests_.push_back(RequestEntry(index));
+  trackedRequests_.emplace_back(index);
 }
 
 bool UTMetadataRequestTracker::tracks(size_t index)

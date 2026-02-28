@@ -309,7 +309,7 @@ std::shared_ptr<Request> FileEntry::findFasterRequest(
       if ((basestat &&
            ss->getDownloadSpeed() > basestat->calculateDownloadSpeed() * 1.5) ||
           (!basestat && ss->getDownloadSpeed() > SPEED_THRESHOLD)) {
-        fastCands.push_back(std::make_pair(ss, *i));
+        fastCands.emplace_back(ss, *i);
       }
     }
   }
@@ -384,7 +384,7 @@ void FileEntry::removeIdenticalURI(std::string_view uri)
 
 void FileEntry::addURIResult(std::string uri, error_code::Value result)
 {
-  uriResults_.push_back(URIResult(uri, result));
+  uriResults_.emplace_back(uri, result);
 }
 
 namespace {

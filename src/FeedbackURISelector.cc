@@ -104,7 +104,7 @@ std::string FeedbackURISelector::selectRarer(
       A2_LOG_DEBUG(fmt("Error not considered: %s", u.c_str()));
       continue;
     }
-    cands.push_back(std::make_pair(host, u));
+    cands.emplace_back(host, u);
   }
   for (const auto& [count, usedHost] : usedHosts) {
     for (const auto& [candHost, candUri] : cands) {
@@ -148,7 +148,7 @@ std::string FeedbackURISelector::selectFaster(
     }
     else if (ss->isOK()) {
       if (ss->getDownloadSpeed() > SPEED_THRESHOLD) {
-        fastCands.push_back(std::make_pair(ss, u));
+        fastCands.emplace_back(ss, u);
       }
       else {
         normCands.push_back(u);

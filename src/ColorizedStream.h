@@ -85,12 +85,12 @@ class ColorizedStreamBuf : public std::basic_streambuf<char, traits_t> {
   elems_t elems;
 
 public:
-  ColorizedStreamBuf() { elems.push_back(std::make_pair(eString, "")); }
+  ColorizedStreamBuf() { elems.emplace_back(eString, ""); }
 
   void setColor(const colors::Color& color)
   {
-    elems.push_back(std::make_pair(eColor, color.str()));
-    elems.push_back(std::make_pair(eString, ""));
+    elems.emplace_back(eColor, color.str());
+    elems.emplace_back(eString, "");
   }
 
   traits_t::int_type overflow(traits_t::int_type c) override

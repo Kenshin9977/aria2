@@ -224,7 +224,7 @@ void BtLeecherStateChoke::executeChoke(const PeerSet& peerSet)
       continue;
     }
 
-    peerEntries.push_back(PeerEntry(p));
+    peerEntries.emplace_back(p);
   }
 
   // planned optimistic unchoke

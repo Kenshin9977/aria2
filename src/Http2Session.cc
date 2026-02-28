@@ -358,7 +358,7 @@ int Http2Session::onHeaderCallback(nghttp2_session* /* session */,
     stream.statusCode = std::stoi(v);
   }
   else {
-    stream.headers.push_back(std::make_pair(std::move(n), std::move(v)));
+    stream.headers.emplace_back(std::move(n), std::move(v));
   }
   return 0;
 }

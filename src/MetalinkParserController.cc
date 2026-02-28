@@ -429,7 +429,7 @@ void MetalinkParserController::addHashOfChunkChecksum(size_t order,
     return;
   }
   if (MessageDigest::isValidHash(tChunkChecksum_->getHashType(), md)) {
-    tempChunkChecksums_.push_back(std::make_pair(order, std::move(md)));
+    tempChunkChecksums_.emplace_back(order, std::move(md));
   }
   else {
     cancelChunkChecksumTransaction();

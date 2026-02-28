@@ -33,6 +33,9 @@
  */
 /* copyright --> */
 #include "DNSCache.h"
+
+#include <algorithm>
+
 #include "A2STR.h"
 
 namespace aria2 {
@@ -78,35 +81,29 @@ DNSCache::CacheEntry& DNSCache::CacheEntry::operator=(const CacheEntry& c)
 
 bool DNSCache::CacheEntry::add(const std::string& addr)
 {
-  for (auto& entry : addrEntries_) {
-    if (entry.addr_ == addr) {
-      return false;
-    }
+  if (std::ranges::any_of(addrEntries_, [&addr](const auto& entry) {
+        return entry.addr_ == addr;
+      })) {
+    return false;
   }
-  addrEntries_.push_back(AddrEntry(addr));
+  addrEntries_.emplace_back(addr);
   return true;
 }
 
 std::vector<DNSCache::AddrEntry>::iterator
 DNSCache::CacheEntry::find(const std::string& addr)
 {
-  for (auto i = addrEntries_.begin(), eoi = addrEntries_.end(); i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
-      return i;
-    }
-  }
-  return addrEntries_.end();
+  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
+    return entry.addr_ == addr;
+  });
 }
 
 std::vector<DNSCache::AddrEntry>::const_iterator
 DNSCache::CacheEntry::find(const std::string& addr) const
 {
-  for (auto i = addrEntries_.begin(), eoi = addrEntries_.end(); i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
-      return i;
-    }
-  }
-  return addrEntries_.end();
+  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
+    return entry.addr_ == addr;
+  });
 }
 
 bool DNSCache::CacheEntry::contains(const std::string& addr) const
@@ -116,12 +113,9 @@ bool DNSCache::CacheEntry::contains(const std::string& addr) const
 
 const std::string& DNSCache::CacheEntry::getGoodAddr() const
 {
-  for (auto& elem : addrEntries_) {
-    if (elem.good_) {
-      return elem.addr_;
-    }
-  }
-  return A2STR::NIL;
+  auto it = std::ranges::find_if(
+      addrEntries_, [](const auto& elem) { return elem.good_; });
+  return it != addrEntries_.end() ? it->addr_ : A2STR::NIL;
 }
 
 void DNSCache::CacheEntry::markBad(const std::string& addr)
