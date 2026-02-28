@@ -102,7 +102,8 @@ aria2c_SOURCES = AllTest.cc\
 	FtpCommandIntegrationTest.cc \
 	SmallClassCoverageTest.cc \
 	SlowStartControllerTest.cc \
-	Socks5CommandTest.cc
+	Socks5CommandTest.cc \
+	HstsStoreTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
@@ -247,6 +248,10 @@ aria2c_SOURCES += MetalinkerTest.cc\
 	MetalinkParserControllerTest.cc\
 	MetalinkProcessorTest.cc
 endif # ENABLE_METALINK
+
+if HAVE_LIBNGHTTP2
+aria2c_SOURCES += Http2SessionTest.cc
+endif # HAVE_LIBNGHTTP2
 
 if ENABLE_ASYNC_DNS
 aria2c_SOURCES += AsyncNameResolverTest.cc
