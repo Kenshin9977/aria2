@@ -45,7 +45,7 @@
 
 namespace aria2 {
 
-enum class Protocol { HTTP, HTTPS, FTP, SFTP, UNKNOWN };
+enum class Protocol { HTTP, HTTPS, FTP, FTPS, SFTP, UNKNOWN };
 
 Protocol toProtocol(const std::string& s);
 std::string_view protocolToString(Protocol p);

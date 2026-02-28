@@ -661,9 +661,10 @@ OptimizeConcurrentDownloadsOptionHandler::createPossibleValuesString() const
 }
 
 DeprecatedOptionHandler::DeprecatedOptionHandler(
-    OptionHandler* depOptHandler, const OptionHandler* repOptHandler,
-    bool stillWork, std::string additionalMessage)
-    : depOptHandler_(depOptHandler),
+    std::unique_ptr<OptionHandler> depOptHandler,
+    const OptionHandler* repOptHandler, bool stillWork,
+    std::string additionalMessage)
+    : depOptHandler_(std::move(depOptHandler)),
       repOptHandler_(repOptHandler),
       stillWork_(stillWork),
       additionalMessage_(std::move(additionalMessage))
@@ -671,11 +672,7 @@ DeprecatedOptionHandler::DeprecatedOptionHandler(
   depOptHandler_->addTag(TAG_DEPRECATED);
 }
 
-DeprecatedOptionHandler::~DeprecatedOptionHandler()
-{
-  delete depOptHandler_;
-  // We don't delete repOptHandler_.
-}
+DeprecatedOptionHandler::~DeprecatedOptionHandler() = default;
 
 void DeprecatedOptionHandler::parse(Option& option,
                                     const std::string& arg) const

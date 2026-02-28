@@ -37,6 +37,7 @@ class UriTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testSwap);
   CPPUNIT_TEST(testJoinUri);
   CPPUNIT_TEST(testJoinPath);
+  CPPUNIT_TEST(testSetUri_ftps);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -68,6 +69,7 @@ public:
   void testSwap();
   void testJoinUri();
   void testJoinPath();
+  void testSetUri_ftps();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(UriTest);
@@ -510,6 +512,43 @@ void UriTest::testJoinPath()
   CPPUNIT_ASSERT_EQUAL(std::string("alpha/bravo"), joinPath("alpha", "bravo"));
   CPPUNIT_ASSERT_EQUAL(std::string("bravo/"),
                        joinPath("alpha", "../../bravo/"));
+}
+
+void UriTest::testSetUri_ftps()
+{
+  {
+    auto us = parse("ftps://ftp.example.com/pub/file.tar.gz");
+    CPPUNIT_ASSERT(us.has_value());
+    CPPUNIT_ASSERT(us->protocol == Protocol::FTPS);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)21, us->port);
+    CPPUNIT_ASSERT_EQUAL(std::string("ftp.example.com"), us->host);
+    CPPUNIT_ASSERT_EQUAL(std::string("/pub/"), us->dir);
+    CPPUNIT_ASSERT_EQUAL(std::string("file.tar.gz"), us->file);
+  }
+  {
+    auto us = parse("ftps://user:pass@host:990/dir/file");
+    CPPUNIT_ASSERT(us.has_value());
+    CPPUNIT_ASSERT(us->protocol == Protocol::FTPS);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)990, us->port);
+    CPPUNIT_ASSERT_EQUAL(std::string("host"), us->host);
+    CPPUNIT_ASSERT_EQUAL(std::string("/dir/"), us->dir);
+    CPPUNIT_ASSERT_EQUAL(std::string("file"), us->file);
+    CPPUNIT_ASSERT_EQUAL(std::string("user"), us->username);
+    CPPUNIT_ASSERT_EQUAL(std::string("pass"), us->password);
+  }
+  {
+    CPPUNIT_ASSERT_EQUAL(std::string("ftps"),
+                         std::string(protocolToString(Protocol::FTPS)));
+  }
+  {
+    CPPUNIT_ASSERT(Protocol::FTPS == toProtocol("ftps"));
+  }
+  {
+    auto us = parse("ftps://host/dir/file");
+    CPPUNIT_ASSERT(us.has_value());
+    CPPUNIT_ASSERT_EQUAL(std::string("ftps://host/dir/file"),
+                         construct(*us));
+  }
 }
 
 } // namespace uri

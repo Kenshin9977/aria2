@@ -53,7 +53,7 @@ class OptionHandler;
 
 class OptionParser {
 private:
-  std::vector<OptionHandler*> handlers_;
+  std::vector<std::unique_ptr<OptionHandler>> handlers_;
   // Index of handler in handlers_ for option who has short option name.
   std::vector<size_t> shortOpts_;
   static std::shared_ptr<OptionParser> optionParser_;
@@ -74,9 +74,10 @@ public:
 
   void parseDefaultValues(Option& option) const;
 
-  void setOptionHandlers(const std::vector<OptionHandler*>& handlers);
+  void setOptionHandlers(
+      std::vector<std::unique_ptr<OptionHandler>> handlers);
 
-  void addOptionHandler(OptionHandler* handler);
+  void addOptionHandler(std::unique_ptr<OptionHandler> handler);
 
   // Hidden options are not returned.
   std::vector<const OptionHandler*> findByTag(uint32_t tag) const;

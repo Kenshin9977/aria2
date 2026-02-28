@@ -58,11 +58,11 @@
 namespace aria2 {
 
 OptionParser::OptionParser()
-    : handlers_(option::countOption(), nullptr), shortOpts_(256)
+    : handlers_(option::countOption()), shortOpts_(256)
 {
 }
 
-OptionParser::~OptionParser() { std::ranges::for_each(handlers_, Deleter()); }
+OptionParser::~OptionParser() = default;
 
 namespace {
 template <typename InputIterator>
@@ -268,21 +268,21 @@ void OptionParser::parse(Option& option, const KeyVals& options) const
 }
 
 void OptionParser::setOptionHandlers(
-    const std::vector<OptionHandler*>& handlers)
+    std::vector<std::unique_ptr<OptionHandler>> handlers)
 {
-  for (const auto& h : handlers) {
-    addOptionHandler(h);
+  for (auto& h : handlers) {
+    addOptionHandler(std::move(h));
   }
 }
 
-void OptionParser::addOptionHandler(OptionHandler* handler)
+void OptionParser::addOptionHandler(std::unique_ptr<OptionHandler> handler)
 {
   size_t optId = handler->getPref()->i;
   assert(optId < handlers_.size());
-  handlers_[optId] = handler;
   if (handler->getShortName()) {
     shortOpts_[static_cast<unsigned char>(handler->getShortName())] = optId;
   }
+  handlers_[optId] = std::move(handler);
 }
 
 void OptionParser::parseDefaultValues(Option& option) const
@@ -299,7 +299,7 @@ std::vector<const OptionHandler*> OptionParser::findByTag(uint32_t tag) const
   std::vector<const OptionHandler*> result;
   for (const auto& h : handlers_) {
     if (h && !h->isHidden() && h->hasTag(tag)) {
-      result.push_back(h);
+      result.push_back(h.get());
     }
   }
   return result;
@@ -314,7 +314,7 @@ OptionParser::findByNameSubstring(const std::string& substring) const
       size_t nameLen = strlen(h->getName());
       if (std::search(h->getName(), h->getName() + nameLen, substring.begin(),
                       substring.end()) != h->getName() + nameLen) {
-        result.push_back(h);
+        result.push_back(h.get());
       }
     }
   }
@@ -326,7 +326,7 @@ std::vector<const OptionHandler*> OptionParser::findAll() const
   std::vector<const OptionHandler*> result;
   for (const auto& h : handlers_) {
     if (h && !h->isHidden()) {
-      result.push_back(h);
+      result.push_back(h.get());
     }
   }
   return result;
@@ -340,11 +340,11 @@ const OptionHandler* OptionParser::find(PrefPtr pref) const
 const OptionHandler* OptionParser::findById(size_t id) const
 {
   if (id >= handlers_.size()) {
-    return handlers_[0];
+    return handlers_[0].get();
   }
-  const OptionHandler* h = handlers_[id];
+  const OptionHandler* h = handlers_[id].get();
   if (!h || h->isHidden()) {
-    return handlers_[0];
+    return handlers_[0].get();
   }
   else {
     return h;

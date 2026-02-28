@@ -326,6 +326,10 @@ if HAVE_EPOLL
 SRCS += EpollEventPoll.cc EpollEventPoll.h
 endif # HAVE_EPOLL
 
+if HAVE_IOURING
+SRCS += IouringEventPoll.cc IouringEventPoll.h
+endif # HAVE_IOURING
+
 if ENABLE_SSL
 SRCS += TLSContext.h TLSSession.h
 endif # ENABLE_SSL
@@ -425,6 +429,11 @@ SRCS += SSHSession.cc SSHSession.h \
 	SftpDownloadCommand.cc SftpDownloadCommand.h \
 	SftpFinishDownloadCommand.cc SftpFinishDownloadCommand.h
 endif # HAVE_LIBSSH2
+
+if HAVE_LIBNGHTTP2
+SRCS += Http2Session.cc Http2Session.h \
+	Http2RequestCommand.cc Http2RequestCommand.h
+endif # HAVE_LIBNGHTTP2
 
 if ENABLE_ASYNC_DNS
 SRCS += \
@@ -717,7 +726,9 @@ AM_CPPFLAGS = \
 	@LIBGMP_CFLAGS@ \
 	@LIBGCRYPT_CFLAGS@ \
 	@LIBSSH2_CFLAGS@ \
+	@LIBNGHTTP2_CFLAGS@ \
 	@LIBCARES_CFLAGS@ \
+	@LIBURING_CFLAGS@ \
 	@WSLAY_CFLAGS@ \
 	@TCMALLOC_CFLAGS@ \
 	@JEMALLOC_CFLAGS@
@@ -740,7 +751,9 @@ EXTLDADD = @ALLOCA@ \
 	@LIBGMP_LIBS@ \
 	@LIBGCRYPT_LIBS@ \
 	@LIBSSH2_LIBS@ \
+	@LIBNGHTTP2_LIBS@ \
 	@LIBCARES_LIBS@ \
+	@LIBURING_LIBS@ \
 	@WSLAY_LIBS@ \
 	@TCMALLOC_LIBS@ \
 	@JEMALLOC_LIBS@ \

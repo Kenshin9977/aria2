@@ -5,6 +5,7 @@
 #include "Option.h"
 #include "prefs.h"
 #include "Exception.h"
+#include "a2functional.h"
 #include "help_tags.h"
 #include "Request.h"
 #include "a2io.h"
@@ -320,15 +321,16 @@ void OptionHandlerTest::testHttpProxyOptionHandler()
 void OptionHandlerTest::testDeprecatedOptionHandler()
 {
   {
-    DeprecatedOptionHandler handler(new DefaultOptionHandler(PREF_TIMEOUT));
+    DeprecatedOptionHandler handler(
+        make_unique<DefaultOptionHandler>(PREF_TIMEOUT));
     Option option;
     handler.parse(option, "foo");
     CPPUNIT_ASSERT(!option.defined(PREF_TIMEOUT));
   }
   {
     DefaultOptionHandler dir(PREF_DIR);
-    DeprecatedOptionHandler handler(new DefaultOptionHandler(PREF_TIMEOUT),
-                                    &dir);
+    DeprecatedOptionHandler handler(
+        make_unique<DefaultOptionHandler>(PREF_TIMEOUT), &dir);
     Option option;
     handler.parse(option, "foo");
     CPPUNIT_ASSERT(!option.defined(PREF_TIMEOUT));

@@ -47,6 +47,8 @@ Protocol toProtocol(const std::string& s)
     return Protocol::HTTPS;
   if (s == "ftp")
     return Protocol::FTP;
+  if (s == "ftps")
+    return Protocol::FTPS;
   if (s == "sftp")
     return Protocol::SFTP;
   return Protocol::UNKNOWN;
@@ -61,6 +63,8 @@ std::string_view protocolToString(Protocol p)
     return "https";
   case Protocol::FTP:
     return "ftp";
+  case Protocol::FTPS:
+    return "ftps";
   case Protocol::SFTP:
     return "sftp";
   default:

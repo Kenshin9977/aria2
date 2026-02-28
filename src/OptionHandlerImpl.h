@@ -257,7 +257,7 @@ public:
 // option value using replacing option.
 class DeprecatedOptionHandler : public OptionHandler {
 private:
-  OptionHandler* depOptHandler_;
+  std::unique_ptr<OptionHandler> depOptHandler_;
   const OptionHandler* repOptHandler_;
   bool stillWork_;
   std::string additionalMessage_;
@@ -267,7 +267,7 @@ public:
   // new option. If there is no replacing option, specify nullptr.  If
   // there is no replacing option, but the option still lives, give
   // true to stillWork. Set additional message to additionalMessage.
-  DeprecatedOptionHandler(OptionHandler* depOptHandler,
+  DeprecatedOptionHandler(std::unique_ptr<OptionHandler> depOptHandler,
                           const OptionHandler* repOptHandler = nullptr,
                           bool stillWork = false,
                           std::string additionalMessage = "");

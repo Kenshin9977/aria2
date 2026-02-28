@@ -138,7 +138,7 @@ std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
         getDownloadEngine(), getSocket());
   }
 
-  if (protocol == Protocol::FTP) {
+  if (protocol == Protocol::FTP || protocol == Protocol::FTPS) {
     return make_unique<FtpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket(),

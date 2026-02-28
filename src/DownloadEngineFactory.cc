@@ -61,6 +61,9 @@
 #ifdef HAVE_LIBUV
 #  include "LibuvEventPoll.h"
 #endif // HAVE_LIBUV
+#ifdef HAVE_IOURING
+#  include "IouringEventPoll.h"
+#endif // HAVE_IOURING
 #ifdef HAVE_EPOLL
 #  include "EpollEventPoll.h"
 #endif // HAVE_EPOLL
@@ -98,6 +101,17 @@ std::unique_ptr<EventPoll> createEventPoll(Option* op)
   }
   else
 #endif // HAVE_LIBUV
+#ifdef HAVE_IOURING
+      if (pollMethod == V_IOURING) {
+    auto ep = make_unique<IouringEventPoll>();
+    if (!ep->good()) {
+      throw DL_ABORT_EX("Initializing IouringEventPoll failed."
+                        " Try --event-poll=epoll");
+    }
+    return std::move(ep);
+  }
+  else
+#endif // HAVE_IOURING
 #ifdef HAVE_EPOLL
       if (pollMethod == V_EPOLL) {
     auto ep = make_unique<EpollEventPoll>();

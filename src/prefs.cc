@@ -136,6 +136,7 @@ const std::string A2_V_RANDOM("random");
 const std::string V_FEEDBACK("feedback");
 const std::string V_ADAPTIVE("adaptive");
 const std::string V_LIBUV("libuv");
+const std::string V_IOURING("io-uring");
 const std::string V_EPOLL("epoll");
 const std::string V_KQUEUE("kqueue");
 const std::string V_PORT("port");

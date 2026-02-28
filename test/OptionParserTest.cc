@@ -9,6 +9,7 @@
 #include "Exception.h"
 #include "util.h"
 #include "Option.h"
+#include "a2functional.h"
 #include "array_fun.h"
 #include "prefs.h"
 #include "help_tags.h"
@@ -38,30 +39,30 @@ public:
   {
     oparser_.reset(new OptionParser());
 
-    OptionHandler* timeout(
-        new DefaultOptionHandler(PREF_TIMEOUT, NO_DESCRIPTION, "ALPHA", "",
-                                 OptionHandler::REQ_ARG, 'A'));
+    auto timeout = make_unique<DefaultOptionHandler>(
+        PREF_TIMEOUT, NO_DESCRIPTION, "ALPHA", "",
+        OptionHandler::REQ_ARG, 'A');
     timeout->addTag(TAG_BASIC);
     timeout->setEraseAfterParse(true);
-    oparser_->addOptionHandler(timeout);
+    oparser_->addOptionHandler(std::move(timeout));
 
-    OptionHandler* dir(new DefaultOptionHandler(PREF_DIR));
+    auto dir = make_unique<DefaultOptionHandler>(PREF_DIR);
     dir->addTag(TAG_BASIC);
     dir->addTag(TAG_HTTP);
     dir->addTag(TAG_FILE);
-    oparser_->addOptionHandler(dir);
+    oparser_->addOptionHandler(std::move(dir));
 
-    DefaultOptionHandler* daemon(
-        new DefaultOptionHandler(PREF_DAEMON, NO_DESCRIPTION, "CHARLIE", "",
-                                 OptionHandler::REQ_ARG, 'C'));
+    auto daemon = make_unique<DefaultOptionHandler>(
+        PREF_DAEMON, NO_DESCRIPTION, "CHARLIE", "",
+        OptionHandler::REQ_ARG, 'C');
     daemon->hide();
     daemon->addTag(TAG_FILE);
-    oparser_->addOptionHandler(daemon);
+    oparser_->addOptionHandler(std::move(daemon));
 
-    OptionHandler* out(new UnitNumberOptionHandler(PREF_OUT, NO_DESCRIPTION,
-                                                   "1M", -1, -1, 'D'));
+    auto out = make_unique<UnitNumberOptionHandler>(
+        PREF_OUT, NO_DESCRIPTION, "1M", -1, -1, 'D');
     out->addTag(TAG_FILE);
-    oparser_->addOptionHandler(out);
+    oparser_->addOptionHandler(std::move(out));
   }
 
   void tearDown() {}
