@@ -36,7 +36,7 @@
 #define D_DHT_PEER_LOOKUP_TASK_H
 
 #include "DHTAbstractNodeLookupTask.h"
-#include <map>
+#include <unordered_map>
 
 namespace aria2 {
 
@@ -48,7 +48,7 @@ class DHTGetPeersReplyMessage;
 class DHTPeerLookupTask
     : public DHTAbstractNodeLookupTask<DHTGetPeersReplyMessage> {
 private:
-  std::map<std::string, std::string> tokenStorage_;
+  std::unordered_map<std::string, std::string> tokenStorage_;
 
   std::shared_ptr<PeerStorage> peerStorage_;
   uint16_t tcpPort_;

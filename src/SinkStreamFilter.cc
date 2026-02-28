@@ -44,7 +44,7 @@
 
 namespace aria2 {
 
-const std::string SinkStreamFilter::NAME("SinkStreamFilter");
+constexpr const char SinkStreamFilter::NAME[];
 
 SinkStreamFilter::SinkStreamFilter(WrDiskCache* wrDiskCache, bool hashUpdate)
     : wrDiskCache_(wrDiskCache), hashUpdate_(hashUpdate), bytesProcessed_(0)

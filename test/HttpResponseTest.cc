@@ -330,7 +330,7 @@ void HttpResponseTest::testGetContentEncodingStreamFilter()
         httpResponse.getContentEncodingStreamFilter();
     CPPUNIT_ASSERT(filter);
     CPPUNIT_ASSERT_EQUAL(std::string("GZipDecodingStreamFilter"),
-                         filter->getName());
+                         std::string(filter->getName()));
   }
   httpResponse.setHttpHeader(make_unique<HttpHeader>());
   httpResponse.getHttpHeader()->put(HttpHeader::CONTENT_ENCODING, "deflate");
@@ -339,7 +339,7 @@ void HttpResponseTest::testGetContentEncodingStreamFilter()
         httpResponse.getContentEncodingStreamFilter();
     CPPUNIT_ASSERT(filter);
     CPPUNIT_ASSERT_EQUAL(std::string("GZipDecodingStreamFilter"),
-                         filter->getName());
+                         std::string(filter->getName()));
   }
 #endif // HAVE_ZLIB
   httpResponse.setHttpHeader(make_unique<HttpHeader>());

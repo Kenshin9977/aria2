@@ -56,7 +56,7 @@
 
 namespace aria2 {
 
-const std::string HttpRequest::USER_AGENT("aria2");
+constexpr const char HttpRequest::USER_AGENT[];
 
 HttpRequest::HttpRequest()
     : cookieStorage_(nullptr),

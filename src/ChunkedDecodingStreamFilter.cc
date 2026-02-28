@@ -43,8 +43,7 @@
 
 namespace aria2 {
 
-const std::string
-    ChunkedDecodingStreamFilter::NAME("ChunkedDecodingStreamFilter");
+constexpr const char ChunkedDecodingStreamFilter::NAME[];
 
 namespace {
 enum {
@@ -222,6 +221,6 @@ bool ChunkedDecodingStreamFilter::finished()
 
 void ChunkedDecodingStreamFilter::release() {}
 
-const std::string& ChunkedDecodingStreamFilter::getName() const { return NAME; }
+const char* ChunkedDecodingStreamFilter::getName() const { return NAME; }
 
 } // namespace aria2

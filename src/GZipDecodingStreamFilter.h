@@ -68,11 +68,11 @@ public:
 
   void release() override;
 
-  const std::string& getName() const override;
+  const char* getName() const override;
 
   size_t getBytesProcessed() const override { return bytesProcessed_; }
 
-  static const std::string NAME;
+  static constexpr const char NAME[] = "GZipDecodingStreamFilter";
 };
 
 } // namespace aria2

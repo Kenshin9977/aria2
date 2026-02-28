@@ -39,7 +39,7 @@
 
 #include <string>
 #include <deque>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "TimerA2.h"
@@ -66,6 +66,16 @@ struct UDPTrackerConnection {
                        const Timer& lastUpdated)
       : state(state), connectionId(connectionId), lastUpdated(lastUpdated)
   {
+  }
+};
+
+struct PairHash {
+  size_t operator()(
+      const std::pair<std::string, uint16_t>& p) const
+  {
+    size_t h1 = std::hash<std::string>{}(p.first);
+    size_t h2 = std::hash<uint16_t>{}(p.second);
+    return h1 ^ (h2 << 16);
   }
 };
 
@@ -142,7 +152,8 @@ private:
   UDPTrackerConnection* getConnectionId(const std::string& remoteAddr,
                                         uint16_t remotePort, const Timer& now);
 
-  std::map<std::pair<std::string, uint16_t>, UDPTrackerConnection>
+  std::unordered_map<std::pair<std::string, uint16_t>,
+                     UDPTrackerConnection, PairHash>
       connectionIdCache_;
   std::deque<std::shared_ptr<UDPTrackerRequest>> inflightRequests_;
   std::deque<std::shared_ptr<UDPTrackerRequest>> pendingRequests_;

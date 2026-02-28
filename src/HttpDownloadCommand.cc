@@ -87,7 +87,7 @@ bool HttpDownloadCommand::prepareForNextSegment()
     return true;
   }
 
-  const std::string& streamFilterName = getStreamFilter()->getName();
+  const char* streamFilterName = getStreamFilter()->getName();
   if (getRequest()->isPipeliningEnabled() ||
       (getRequest()->isKeepAliveEnabled() &&
        (

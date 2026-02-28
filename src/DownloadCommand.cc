@@ -415,7 +415,7 @@ void DownloadCommand::installStreamFilter(
   }
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
-  const std::string& name = streamFilter_->getName();
+  const char* name = streamFilter_->getName();
   sinkFilterOnly_ = util::endsWith(name, SinkStreamFilter::NAME);
 }
 

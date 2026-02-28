@@ -175,7 +175,7 @@ public:
 
   static constexpr int MAX_REDIRECT = 20;
 
-  static const std::string DEFAULT_FILE;
+  static constexpr const char DEFAULT_FILE[] = "index.html";
 };
 
 } // namespace aria2

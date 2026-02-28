@@ -60,9 +60,9 @@ public:
 
   void release() override {}
 
-  const std::string& getName() const override { return NAME; }
+  const char* getName() const override { return NAME; }
 
-  static const std::string NAME;
+  static constexpr const char NAME[] = "NullSinkStreamFilter";
 
   size_t getBytesProcessed() const override { return bytesProcessed_; }
 

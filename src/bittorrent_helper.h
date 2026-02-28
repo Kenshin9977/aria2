@@ -313,8 +313,8 @@ void extractPeer(const ValueBase* peerData, int family, OutputIterator dest)
         if (!peerDict) {
           continue;
         }
-        static const std::string IP = "ip";
-        static const std::string PORT = "port";
+        static constexpr const char IP[] = "ip";
+        static constexpr const char PORT[] = "port";
         const String* ip = downcast<String>(peerDict->get(IP));
         const Integer* port = downcast<Integer>(peerDict->get(PORT));
         if (!ip || !port || !(0 < port->i() && port->i() < 65536)) {

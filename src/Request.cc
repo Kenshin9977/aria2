@@ -58,7 +58,7 @@ const char* httpMethodToString(HttpMethod m)
   }
 }
 
-const std::string Request::DEFAULT_FILE = "index.html";
+constexpr const char Request::DEFAULT_FILE[];
 
 Request::Request()
     : method_(HttpMethod::GET),

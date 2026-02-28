@@ -41,7 +41,7 @@
 
 namespace aria2 {
 
-const std::string GZipDecodingStreamFilter::NAME("GZipDecodingStreamFilter");
+constexpr const char GZipDecodingStreamFilter::NAME[];
 
 GZipDecodingStreamFilter::GZipDecodingStreamFilter(
     std::unique_ptr<StreamFilter> delegate)
@@ -125,6 +125,6 @@ bool GZipDecodingStreamFilter::finished()
   return finished_ && getDelegate()->finished();
 }
 
-const std::string& GZipDecodingStreamFilter::getName() const { return NAME; }
+const char* GZipDecodingStreamFilter::getName() const { return NAME; }
 
 } // namespace aria2

@@ -38,7 +38,7 @@
 #include "PeerStorage.h"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include "TimerA2.h"
 
@@ -71,7 +71,7 @@ private:
 
   Timer lastTransferStatMapUpdated_;
 
-  std::map<std::string, Timer> badPeers_;
+  std::unordered_map<std::string, Timer> badPeers_;
   Timer lastBadPeerCleaned_;
 
   bool isPeerAlreadyAdded(const std::shared_ptr<Peer>& peer);

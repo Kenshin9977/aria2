@@ -34,6 +34,9 @@
 /* copyright --> */
 
 #include "HttpResponseCommand.h"
+
+#include <cstring>
+
 #include "DownloadEngine.h"
 #include "DownloadContext.h"
 #include "FileEntry.h"
@@ -423,8 +426,10 @@ bool HttpResponseCommand::handleOtherEncoding(
       httpResponse.get(), getContentEncodingStreamFilter(httpResponse.get()));
   // If chunked transfer-encoding is specified, we have to read end of
   // chunk markers(0\r\n\r\n, for example).
-  bool chunkedUsed = streamFilter && streamFilter->getName() ==
-                                         ChunkedDecodingStreamFilter::NAME;
+  bool chunkedUsed =
+      streamFilter &&
+      strcmp(streamFilter->getName(),
+             ChunkedDecodingStreamFilter::NAME) == 0;
 
   // For zero-length file, check existing file comparing its size
   if (!chunkedUsed && getDownloadContext()->knowsTotalLength() &&
@@ -527,7 +532,7 @@ bool decideFileAllocation(StreamFilter* filter)
     // Since the compressed file's length are returned in the response header
     // and the decompressed file size is unknown at this point, disable file
     // allocation here.
-    if (f->getName() == GZipDecodingStreamFilter::NAME) {
+    if (strcmp(f->getName(), GZipDecodingStreamFilter::NAME) == 0) {
       return false;
     }
   }

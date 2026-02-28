@@ -267,7 +267,7 @@ void ChunkedDecodingStreamFilterTest::testTransform_chunkSizeMismatch()
 void ChunkedDecodingStreamFilterTest::testGetName()
 {
   CPPUNIT_ASSERT_EQUAL(std::string("ChunkedDecodingStreamFilter"),
-                       filter_->getName());
+                       std::string(filter_->getName()));
 }
 
 } // namespace aria2

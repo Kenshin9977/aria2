@@ -57,7 +57,7 @@ class AuthConfig;
 
 class HttpRequest {
 private:
-  static const std::string USER_AGENT;
+  static constexpr const char USER_AGENT[] = "aria2";
 
   std::shared_ptr<Request> request_;
 
