@@ -51,7 +51,7 @@ namespace bitfield {
 
 // Returns the bit mask for the last byte. For example, nbits = 9,
 // then 0x80u is returned. nbits = 12, then 0xf0u is returned.
-inline unsigned char lastByteMask(size_t nbits)
+constexpr unsigned char lastByteMask(size_t nbits)
 {
   if (nbits == 0) {
     return 0;
@@ -76,7 +76,7 @@ inline bool test(const Array& bitfield, size_t nbits, size_t index)
   return (bitfield[index / 8] & mask) != 0;
 }
 
-const int cntbits[] = {
+constexpr int cntbits[] = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
     2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
     2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
@@ -90,7 +90,7 @@ const int cntbits[] = {
     4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
 };
 
-inline size_t countBit32(uint32_t n)
+constexpr size_t countBit32(uint32_t n)
 {
   return cntbits[n & 0xffu] + cntbits[(n >> 8) & 0xffu] +
          cntbits[(n >> 16) & 0xffu] + cntbits[(n >> 24) & 0xffu];

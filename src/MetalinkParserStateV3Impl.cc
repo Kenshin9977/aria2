@@ -44,7 +44,7 @@
 
 namespace aria2 {
 
-const char METALINK3_NAMESPACE_URI[] = "http://www.metalinker.org/";
+constexpr char METALINK3_NAMESPACE_URI[] = "http://www.metalinker.org/";
 
 namespace {
 bool checkNsUri(const char* nsUri)

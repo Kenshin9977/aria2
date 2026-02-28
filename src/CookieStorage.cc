@@ -225,9 +225,9 @@ CookieStorage::CookieStorage() : rootNode_{std::make_unique<DomainNode>("", null
 
 namespace {
 // See CookieStorageTest::testDomainIsFull() in CookieStorageTest.cc
-const size_t DOMAIN_EVICTION_TRIGGER = 2000;
+constexpr size_t DOMAIN_EVICTION_TRIGGER = 2000;
 
-const double DOMAIN_EVICTION_RATE = 0.1;
+constexpr double DOMAIN_EVICTION_RATE = 0.1;
 } // namespace
 
 namespace {

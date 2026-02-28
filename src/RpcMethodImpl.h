@@ -132,7 +132,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.addUri"; }
+  static constexpr const char* getMethodName() { return "aria2.addUri"; }
 };
 
 class RemoveRpcMethod : public RpcMethod {
@@ -141,7 +141,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.remove"; }
+  static constexpr const char* getMethodName() { return "aria2.remove"; }
 };
 
 class ForceRemoveRpcMethod : public RpcMethod {
@@ -150,7 +150,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.forceRemove"; }
+  static constexpr const char* getMethodName() { return "aria2.forceRemove"; }
 };
 
 class PauseRpcMethod : public RpcMethod {
@@ -159,7 +159,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.pause"; }
+  static constexpr const char* getMethodName() { return "aria2.pause"; }
 };
 
 class ForcePauseRpcMethod : public RpcMethod {
@@ -168,7 +168,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.forcePause"; }
+  static constexpr const char* getMethodName() { return "aria2.forcePause"; }
 };
 
 class PauseAllRpcMethod : public RpcMethod {
@@ -177,7 +177,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.pauseAll"; }
+  static constexpr const char* getMethodName() { return "aria2.pauseAll"; }
 };
 
 class ForcePauseAllRpcMethod : public RpcMethod {
@@ -186,7 +186,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.forcePauseAll"; }
+  static constexpr const char* getMethodName() { return "aria2.forcePauseAll"; }
 };
 
 class UnpauseRpcMethod : public RpcMethod {
@@ -195,7 +195,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.unpause"; }
+  static constexpr const char* getMethodName() { return "aria2.unpause"; }
 };
 
 class UnpauseAllRpcMethod : public RpcMethod {
@@ -204,7 +204,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.unpauseAll"; }
+  static constexpr const char* getMethodName() { return "aria2.unpauseAll"; }
 };
 
 #ifdef ENABLE_BITTORRENT
@@ -214,7 +214,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.addTorrent"; }
+  static constexpr const char* getMethodName() { return "aria2.addTorrent"; }
 };
 #endif // ENABLE_BITTORRENT
 
@@ -225,7 +225,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.addMetalink"; }
+  static constexpr const char* getMethodName() { return "aria2.addMetalink"; }
 };
 #endif // ENABLE_METALINK
 
@@ -235,7 +235,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.purgeDownloadResult"; }
+  static constexpr const char* getMethodName() { return "aria2.purgeDownloadResult"; }
 };
 
 class RemoveDownloadResultRpcMethod : public RpcMethod {
@@ -244,7 +244,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.removeDownloadResult"; }
+  static constexpr const char* getMethodName() { return "aria2.removeDownloadResult"; }
 };
 
 class GetUrisRpcMethod : public RpcMethod {
@@ -253,7 +253,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getUris"; }
+  static constexpr const char* getMethodName() { return "aria2.getUris"; }
 };
 
 class GetFilesRpcMethod : public RpcMethod {
@@ -262,7 +262,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getFiles"; }
+  static constexpr const char* getMethodName() { return "aria2.getFiles"; }
 };
 
 #ifdef ENABLE_BITTORRENT
@@ -272,7 +272,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getPeers"; }
+  static constexpr const char* getMethodName() { return "aria2.getPeers"; }
 };
 #endif // ENABLE_BITTORRENT
 
@@ -282,7 +282,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getServers"; }
+  static constexpr const char* getMethodName() { return "aria2.getServers"; }
 };
 
 class TellStatusRpcMethod : public RpcMethod {
@@ -291,7 +291,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.tellStatus"; }
+  static constexpr const char* getMethodName() { return "aria2.tellStatus"; }
 };
 
 class TellActiveRpcMethod : public RpcMethod {
@@ -300,7 +300,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.tellActive"; }
+  static constexpr const char* getMethodName() { return "aria2.tellActive"; }
 };
 
 template <typename T> class AbstractPaginationRpcMethod : public RpcMethod {
@@ -387,7 +387,7 @@ protected:
                    const std::vector<std::string>& keys) const override;
 
 public:
-  static const char* getMethodName() { return "aria2.tellWaiting"; }
+  static constexpr const char* getMethodName() { return "aria2.tellWaiting"; }
 };
 
 class TellStoppedRpcMethod
@@ -400,7 +400,7 @@ protected:
                    const std::vector<std::string>& keys) const override;
 
 public:
-  static const char* getMethodName() { return "aria2.tellStopped"; }
+  static constexpr const char* getMethodName() { return "aria2.tellStopped"; }
 };
 
 class ChangeOptionRpcMethod : public RpcMethod {
@@ -409,7 +409,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.changeOption"; }
+  static constexpr const char* getMethodName() { return "aria2.changeOption"; }
 };
 
 class ChangeGlobalOptionRpcMethod : public RpcMethod {
@@ -418,7 +418,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.changeGlobalOption"; }
+  static constexpr const char* getMethodName() { return "aria2.changeGlobalOption"; }
 };
 
 class GetVersionRpcMethod : public RpcMethod {
@@ -427,7 +427,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getVersion"; }
+  static constexpr const char* getMethodName() { return "aria2.getVersion"; }
 };
 
 class GetOptionRpcMethod : public RpcMethod {
@@ -436,7 +436,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getOption"; }
+  static constexpr const char* getMethodName() { return "aria2.getOption"; }
 };
 
 class GetGlobalOptionRpcMethod : public RpcMethod {
@@ -445,7 +445,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getGlobalOption"; }
+  static constexpr const char* getMethodName() { return "aria2.getGlobalOption"; }
 };
 
 class ChangePositionRpcMethod : public RpcMethod {
@@ -454,7 +454,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.changePosition"; }
+  static constexpr const char* getMethodName() { return "aria2.changePosition"; }
 };
 
 class ChangeUriRpcMethod : public RpcMethod {
@@ -463,7 +463,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.changeUri"; }
+  static constexpr const char* getMethodName() { return "aria2.changeUri"; }
 };
 
 class GetSessionInfoRpcMethod : public RpcMethod {
@@ -472,7 +472,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getSessionInfo"; }
+  static constexpr const char* getMethodName() { return "aria2.getSessionInfo"; }
 };
 
 class ShutdownRpcMethod : public RpcMethod {
@@ -481,7 +481,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.shutdown"; }
+  static constexpr const char* getMethodName() { return "aria2.shutdown"; }
 };
 
 class GetGlobalStatRpcMethod : public RpcMethod {
@@ -490,7 +490,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.getGlobalStat"; }
+  static constexpr const char* getMethodName() { return "aria2.getGlobalStat"; }
 };
 
 class ForceShutdownRpcMethod : public RpcMethod {
@@ -499,7 +499,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.forceShutdown"; }
+  static constexpr const char* getMethodName() { return "aria2.forceShutdown"; }
 };
 
 class SaveSessionRpcMethod : public RpcMethod {
@@ -508,7 +508,7 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static const char* getMethodName() { return "aria2.saveSession"; }
+  static constexpr const char* getMethodName() { return "aria2.saveSession"; }
 };
 
 class SystemMulticallRpcMethod : public RpcMethod {
@@ -519,7 +519,7 @@ protected:
 public:
   RpcResponse execute(RpcRequest req, DownloadEngine* e) override;
 
-  static const char* getMethodName() { return "system.multicall"; }
+  static constexpr const char* getMethodName() { return "system.multicall"; }
 };
 
 class SystemListMethodsRpcMethod : public RpcMethod {
@@ -530,7 +530,7 @@ protected:
 public:
   RpcResponse execute(RpcRequest req, DownloadEngine* e) override;
 
-  static const char* getMethodName() { return "system.listMethods"; }
+  static constexpr const char* getMethodName() { return "system.listMethods"; }
 };
 
 class SystemListNotificationsRpcMethod : public RpcMethod {
@@ -541,7 +541,7 @@ protected:
 public:
   RpcResponse execute(RpcRequest req, DownloadEngine* e) override;
 
-  static const char* getMethodName() { return "system.listNotifications"; }
+  static constexpr const char* getMethodName() { return "system.listNotifications"; }
 };
 
 class NoSuchMethodRpcMethod : public RpcMethod {

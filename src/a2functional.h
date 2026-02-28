@@ -116,7 +116,7 @@ public:
   }
 };
 
-template <typename T, typename S> bool in(T x, S s, S t)
+template <typename T, typename S> constexpr bool in(T x, S s, S t)
 {
   return s <= x && x <= t;
 }

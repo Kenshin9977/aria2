@@ -162,7 +162,7 @@ std::string toForwardSlash(const std::string& src)
 
 namespace util {
 
-const char DEFAULT_STRIP_CHARSET[] = "\r\n\t ";
+constexpr char DEFAULT_STRIP_CHARSET[] = "\r\n\t ";
 
 std::string strip(const std::string& str, const char* chars)
 {
@@ -711,7 +711,7 @@ void parsePrioritizePieceRange(
     else if (util::startsWith(first, last, "head=")) {
       std::string sizestr(first + 5, last);
       computeHeadPieces(indexes, fileEntries, pieceLength,
-                        std::max((int64_t)0, getRealSize(sizestr)));
+                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
     else if (util::streq(first, last, "tail")) {
       computeTailPieces(indexes, fileEntries, pieceLength, defaultSize);
@@ -719,7 +719,7 @@ void parsePrioritizePieceRange(
     else if (util::startsWith(first, last, "tail=")) {
       std::string sizestr(first + 5, last);
       computeTailPieces(indexes, fileEntries, pieceLength,
-                        std::max((int64_t)0, getRealSize(sizestr)));
+                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
     else {
       throw DL_ABORT_EX(
@@ -1181,7 +1181,7 @@ static uint32_t utf8dfa(uint32_t* state, uint32_t* codep, uint32_t byte)
 
 /* End of utf8 dfa */
 
-typedef enum {
+enum content_disposition_parse_state {
   CD_BEFORE_DISPOSITION_TYPE,
   CD_AFTER_DISPOSITION_TYPE,
   CD_DISPOSITION_TYPE,
@@ -1198,18 +1198,18 @@ typedef enum {
   CD_VALUE_CHARS,
   CD_VALUE_CHARS_PCT_ENCODED1,
   CD_VALUE_CHARS_PCT_ENCODED2
-} content_disposition_parse_state;
+};
 
-typedef enum {
+enum content_disposition_parse_flag {
   CD_FILENAME_FOUND = 1,
   CD_EXT_FILENAME_FOUND = 1 << 1
-} content_disposition_parse_flag;
+};
 
-typedef enum {
+enum content_disposition_charset {
   CD_ENC_UNKNOWN,
   CD_ENC_UTF8,
   CD_ENC_ISO_8859_1
-} content_disposition_charset;
+};
 
 ssize_t parse_content_disposition(char* dest, size_t destlen,
                                   const char** charsetp, size_t* charsetlenp,
@@ -1362,7 +1362,7 @@ ssize_t parse_content_disposition(char* dest, size_t destlen,
            ISO-8859-1 chars, or UTF-8 if defaultUTF8 is set */
         quoted_seen = 0;
         if (defaultUTF8) {
-          if (utf8dfa(&dfa_state, &dfa_code, (unsigned char)*p) ==
+          if (utf8dfa(&dfa_state, &dfa_code, static_cast<unsigned char>(*p)) ==
               UTF8_REJECT) {
             return -1;
           }

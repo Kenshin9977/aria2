@@ -1607,8 +1607,8 @@ bool ipv6AddrConfigured = true;
 
 #ifdef __MINGW32__
 namespace {
-const uint32_t APIPA_IPV4_BEGIN = 2851995649u; // 169.254.0.1
-const uint32_t APIPA_IPV4_END = 2852061183u;   // 169.254.255.255
+constexpr uint32_t APIPA_IPV4_BEGIN = 2851995649u; // 169.254.0.1
+constexpr uint32_t APIPA_IPV4_END = 2852061183u;   // 169.254.255.255
 } // namespace
 #endif // __MINGW32__
 

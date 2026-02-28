@@ -69,27 +69,27 @@ namespace aria2 {
 namespace bittorrent {
 
 namespace {
-const char C_NAME[] = "name";
-const char C_NAME_UTF8[] = "name.utf-8";
-const char C_FILES[] = "files";
-const char C_LENGTH[] = "length";
-const char C_PATH[] = "path";
-const char C_PATH_UTF8[] = "path.utf-8";
-const char C_INFO[] = "info";
-const char C_PIECES[] = "pieces";
-const char C_PIECE_LENGTH[] = "piece length";
-const char C_PRIVATE[] = "private";
-const char C_URL_LIST[] = "url-list";
-const char C_ANNOUNCE[] = "announce";
-const char C_ANNOUNCE_LIST[] = "announce-list";
-const char C_NODES[] = "nodes";
-const char C_CREATION_DATE[] = "creation date";
-const char C_COMMENT[] = "comment";
-const char C_COMMENT_UTF8[] = "comment.utf-8";
-const char C_CREATED_BY[] = "created by";
+constexpr char C_NAME[] = "name";
+constexpr char C_NAME_UTF8[] = "name.utf-8";
+constexpr char C_FILES[] = "files";
+constexpr char C_LENGTH[] = "length";
+constexpr char C_PATH[] = "path";
+constexpr char C_PATH_UTF8[] = "path.utf-8";
+constexpr char C_INFO[] = "info";
+constexpr char C_PIECES[] = "pieces";
+constexpr char C_PIECE_LENGTH[] = "piece length";
+constexpr char C_PRIVATE[] = "private";
+constexpr char C_URL_LIST[] = "url-list";
+constexpr char C_ANNOUNCE[] = "announce";
+constexpr char C_ANNOUNCE_LIST[] = "announce-list";
+constexpr char C_NODES[] = "nodes";
+constexpr char C_CREATION_DATE[] = "creation date";
+constexpr char C_COMMENT[] = "comment";
+constexpr char C_COMMENT_UTF8[] = "comment.utf-8";
+constexpr char C_CREATED_BY[] = "created by";
 
-const char DEFAULT_PEER_ID_PREFIX[] = "aria2-";
-const char DEFAULT_PEER_AGENT[] = "aria2/" PACKAGE_VERSION;
+constexpr char DEFAULT_PEER_ID_PREFIX[] = "aria2-";
+constexpr char DEFAULT_PEER_AGENT[] = "aria2/" PACKAGE_VERSION;
 } // namespace
 
 const std::string MULTI("multi");

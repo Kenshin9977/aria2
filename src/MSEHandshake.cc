@@ -62,8 +62,8 @@ namespace aria2 {
 
 namespace {
 
-const size_t MAX_PAD_LENGTH = 512;
-const size_t CRYPTO_BITFIELD_LENGTH = 4;
+constexpr size_t MAX_PAD_LENGTH = 512;
+constexpr size_t CRYPTO_BITFIELD_LENGTH = 4;
 constexpr auto VC = std::array<unsigned char, MSEHandshake::VC_LENGTH>{};
 
 const unsigned char* PRIME = reinterpret_cast<const unsigned char*>(

@@ -81,7 +81,7 @@ void DHTReplaceNodeTask::onReceived(const DHTPingReplyMessage* message)
 }
 
 namespace {
-const int MAX_RETRY = 2;
+constexpr int MAX_RETRY = 2;
 } // namespace
 
 void DHTReplaceNodeTask::onTimeout(const std::shared_ptr<DHTNode>& node)

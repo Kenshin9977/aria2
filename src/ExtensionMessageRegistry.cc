@@ -47,7 +47,7 @@ ExtensionMessageRegistry::ExtensionMessageRegistry()
 ExtensionMessageRegistry::~ExtensionMessageRegistry() = default;
 
 namespace {
-const char* EXTENSION_NAMES[] = {"ut_metadata", "ut_pex", nullptr};
+constexpr const char* EXTENSION_NAMES[] = {"ut_metadata", "ut_pex", nullptr};
 } // namespace
 
 uint8_t ExtensionMessageRegistry::getExtensionMessageID(int key) const

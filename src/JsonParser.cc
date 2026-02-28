@@ -70,9 +70,9 @@ enum {
 } // namespace
 
 namespace {
-const char JSON_TRUE_STR[] = "true";
-const char JSON_FALSE_STR[] = "false";
-const char JSON_NULL_STR[] = "null";
+constexpr char JSON_TRUE_STR[] = "true";
+constexpr char JSON_FALSE_STR[] = "false";
+constexpr char JSON_NULL_STR[] = "null";
 } // namespace
 
 JsonParser::JsonParser(StructParserStateMachine* psm)
