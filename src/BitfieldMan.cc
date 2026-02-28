@@ -934,9 +934,9 @@ size_t BitfieldMan::Range::getMidIndex() const
   return (endIndex - startIndex) / 2 + startIndex;
 }
 
-bool BitfieldMan::Range::operator<(const Range& range) const
+std::strong_ordering BitfieldMan::Range::operator<=>(const Range& range) const
 {
-  return getSize() < range.getSize();
+  return getSize() <=> range.getSize();
 }
 
 bool BitfieldMan::Range::operator==(const Range& range) const

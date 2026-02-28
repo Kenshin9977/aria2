@@ -76,8 +76,6 @@ public:
 
   bool operator==(const Cookie& cookie) const;
 
-  bool operator!=(const Cookie& cookie) const;
-
   bool isExpired(time_t base) const;
 
   const std::string& getName() const { return name_; }

@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <compare>
 #include <optional>
 #include <span>
 #include <vector>
@@ -83,7 +84,7 @@ public:
     Range(size_t startIndex = 0, size_t endIndex = 0);
     size_t getSize() const;
     size_t getMidIndex() const;
-    bool operator<(const Range& range) const;
+    std::strong_ordering operator<=>(const Range& range) const;
     bool operator==(const Range& range) const;
   };
 

@@ -39,6 +39,8 @@
 
 #include <stdint.h>
 
+#include <compare>
+
 #include <string>
 
 #include "a2time.h"
@@ -59,10 +61,7 @@ public:
   Time& operator=(const Time& time) = default;
   Time& operator=(Time&& time) = default;
 
-  bool operator<(const Time& time) const { return tp_ < time.tp_; }
-  bool operator>(const Time& time) const { return time < *this; }
-  bool operator<=(const Time& time) const { return !(time < *this); }
-  bool operator>=(const Time& time) const { return !(*this < time); }
+  auto operator<=>(const Time& time) const { return tp_ <=> time.tp_; }
 
   // Makes this object's time value up to date.
   void reset();

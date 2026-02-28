@@ -37,6 +37,8 @@
 
 #include "EventPoll.h"
 
+#include <compare>
+
 #include <deque>
 #include <map>
 #include <unordered_map>
@@ -91,14 +93,14 @@ private:
     SocketEntry(const SocketEntry&) = delete;
     SocketEntry(SocketEntry&&) = default;
 
+    auto operator<=>(const SocketEntry& entry) const
+    {
+      return socket_ <=> entry.socket_;
+    }
+
     bool operator==(const SocketEntry& entry) const
     {
       return socket_ == entry.socket_;
-    }
-
-    bool operator<(const SocketEntry& entry) const
-    {
-      return socket_ < entry.socket_;
     }
 
     void addCommandEvent(Command* command, int events);

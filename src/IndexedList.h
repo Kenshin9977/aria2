@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <compare>
 #include <deque>
 #include <unordered_map>
 #include <vector>
@@ -125,140 +126,11 @@ struct IndexedListIterator {
 
   reference operator[](size_type n) const { return p[n].second; }
 
+  auto operator<=>(const SelfType& rhs) const { return p <=> rhs.p; }
+  bool operator==(const SelfType& rhs) const { return p == rhs.p; }
+
   SeqIteratorType p;
 };
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator==(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p == rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator==(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                          PointerTypeL, SeqIteratorTypeL>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                          PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p == rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator!=(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p != rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator!=(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                          PointerTypeL, SeqIteratorTypeL>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                          PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p != rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator<(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                         PointerType, SeqIteratorType>& lhs,
-               const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                         PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p < rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator<(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                         PointerTypeL, SeqIteratorTypeL>& lhs,
-               const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                         PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p < rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator>(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                         PointerType, SeqIteratorType>& lhs,
-               const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                         PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p > rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator>(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                         PointerTypeL, SeqIteratorTypeL>& lhs,
-               const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                         PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p > rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator<=(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p <= rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator<=(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                          PointerTypeL, SeqIteratorTypeL>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                          PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p <= rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceType,
-          typename PointerType, typename SeqIteratorType>
-bool operator>=(const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceType,
-                                          PointerType, SeqIteratorType>& rhs)
-{
-  return lhs.p >= rhs.p;
-}
-
-template <typename SeqType, typename ValueType, typename ReferenceTypeL,
-          typename PointerTypeL, typename SeqIteratorTypeL,
-          typename ReferenceTypeR, typename PointerTypeR,
-          typename SeqIteratorTypeR>
-bool operator>=(const IndexedListIterator<SeqType, ValueType, ReferenceTypeL,
-                                          PointerTypeL, SeqIteratorTypeL>& lhs,
-                const IndexedListIterator<SeqType, ValueType, ReferenceTypeR,
-                                          PointerTypeR, SeqIteratorTypeR>& rhs)
-{
-  return lhs.p >= rhs.p;
-}
 
 template <typename SeqType, typename ValueType, typename ReferenceType,
           typename PointerType, typename SeqIteratorType>

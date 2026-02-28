@@ -14,6 +14,7 @@
 #ifndef BIGNUM_H
 #define BIGNUM_H
 
+#include <compare>
 #include <cstring>
 #include <algorithm>
 #include <memory>
@@ -63,11 +64,7 @@ public:
   {
     return memcmp(buf_.get(), rhs.buf_.get(), dim) == 0;
   }
-  bool operator!=(const ulong<dim>& rhs) const
-  {
-    return memcmp(buf_.get(), rhs.buf_.get(), dim) != 0;
-  }
-  bool operator>(const ulong<dim>& rhs) const
+  std::strong_ordering operator<=>(const ulong<dim>& rhs) const
   {
     const auto b1 = buf_.get();
     const auto b2 = rhs.buf_.get();
@@ -76,20 +73,11 @@ public:
         uchar_t t = ((uchar_t)(b1[i] << 4 * (1 - j))) >> 4;
         uchar_t r = ((uchar_t)(b2[i] << 4 * (1 - j))) >> 4;
         if (t != r) {
-          return t > r;
+          return t <=> r;
         }
       }
     }
-    return false;
-  }
-  bool operator>=(const ulong<dim>& rhs) const
-  {
-    return *this == rhs || *this > rhs;
-  }
-  bool operator<(const ulong<dim>& rhs) const { return !(*this >= rhs); }
-  bool operator<=(const ulong<dim>& rhs) const
-  {
-    return *this == rhs || *this < rhs;
+    return std::strong_ordering::equal;
   }
 
   ulong<dim> operator+(const ulong<dim>& rhs) const

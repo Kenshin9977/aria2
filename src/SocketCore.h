@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <compare>
 #include <string>
 #include <cstdlib>
 #include <utility>
@@ -59,9 +60,6 @@ class SSHSession;
 #endif // HAVE_LIBSSH2
 
 class SocketCore : public ISocketCore {
-  friend bool operator==(const SocketCore& s1, const SocketCore& s2);
-  friend bool operator!=(const SocketCore& s1, const SocketCore& s2);
-  friend bool operator<(const SocketCore& s1, const SocketCore& s2);
 
 private:
   // socket type defined in <sys/socket.h>
@@ -334,11 +332,9 @@ public:
   bool sshGracefulShutdown();
 #endif // HAVE_LIBSSH2
 
-  bool operator==(const SocketCore& s) { return sockfd_ == s.sockfd_; }
+  auto operator<=>(const SocketCore& s) const { return sockfd_ <=> s.sockfd_; }
 
-  bool operator!=(const SocketCore& s) { return !(*this == s); }
-
-  bool operator<(const SocketCore& s) { return sockfd_ < s.sockfd_; }
+  bool operator==(const SocketCore& s) const { return sockfd_ == s.sockfd_; }
 
   std::string getSocketError() const override;
 

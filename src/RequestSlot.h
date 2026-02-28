@@ -70,11 +70,6 @@ public:
            length_ == requestSlot.length_;
   }
 
-  bool operator!=(const RequestSlot& requestSlot) const
-  {
-    return !(*this == requestSlot);
-  }
-
   bool operator<(const RequestSlot& requestSlot) const
   {
     if (index_ == requestSlot.index_) {

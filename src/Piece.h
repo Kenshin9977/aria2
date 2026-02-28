@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <memory>
 #include <optional>
+#include <compare>
 #include <span>
 #include <string>
 #include <vector>
@@ -81,9 +82,9 @@ public:
 
   ~Piece();
 
-  bool operator==(const Piece& piece) const { return index_ == piece.index_; }
+  auto operator<=>(const Piece& piece) const { return index_ <=> piece.index_; }
 
-  bool operator<(const Piece& piece) const { return index_ < piece.index_; }
+  bool operator==(const Piece& piece) const { return index_ == piece.index_; }
 
   // TODO This function only used by unit tests
   std::optional<size_t> getMissingUnusedBlockIndex() const;

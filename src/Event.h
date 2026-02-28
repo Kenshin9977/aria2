@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <compare>
 #include <deque>
 #include <algorithm>
 #include <memory>
@@ -198,14 +199,14 @@ public:
   SocketEntry(const SocketEntry&) = delete;
   SocketEntry(SocketEntry&&) = default;
 
+  auto operator<=>(const SocketEntry& entry) const
+  {
+    return socket_ <=> entry.socket_;
+  }
+
   bool operator==(const SocketEntry& entry) const
   {
     return socket_ == entry.socket_;
-  }
-
-  bool operator<(const SocketEntry& entry) const
-  {
-    return socket_ < entry.socket_;
   }
 
   void addCommandEvent(const CommandEvent& cev)

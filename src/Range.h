@@ -56,9 +56,7 @@ struct Range {
 
   Range& operator=(const Range& c);
 
-  bool operator==(const Range& range) const;
-
-  bool operator!=(const Range& range) const;
+  bool operator==(const Range& range) const = default;
 
   int64_t getContentLength() const;
 };

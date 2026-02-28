@@ -36,6 +36,7 @@
 
 #include <ostream>
 #include <algorithm>
+#include <tuple>
 
 #include "array_fun.h"
 #include "Logger.h"
@@ -183,11 +184,10 @@ void ServerStat::setOK() { setStatusInternal(OK); }
 
 void ServerStat::setError() { setStatusInternal(A2_ERROR); }
 
-bool ServerStat::operator<(const ServerStat& serverStat) const
+std::strong_ordering ServerStat::operator<=>(const ServerStat& serverStat) const
 {
-  return hostname_ < serverStat.hostname_ ||
-         (hostname_ == serverStat.hostname_ &&
-          protocol_ < serverStat.protocol_);
+  return std::tie(hostname_, protocol_)
+         <=> std::tie(serverStat.hostname_, serverStat.protocol_);
 }
 
 bool ServerStat::operator==(const ServerStat& serverStat) const

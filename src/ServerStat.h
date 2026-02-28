@@ -36,6 +36,8 @@
 #define D_SERVER_STAT_H
 #include "common.h"
 
+#include <compare>
+
 #include <string>
 #include <iosfwd>
 #include <memory>
@@ -108,7 +110,7 @@ public:
   // set status ERROR and update lastUpdated_
   void setError();
 
-  bool operator<(const ServerStat& serverStat) const;
+  std::strong_ordering operator<=>(const ServerStat& serverStat) const;
 
   bool operator==(const ServerStat& serverStat) const;
 
