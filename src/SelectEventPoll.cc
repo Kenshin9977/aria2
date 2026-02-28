@@ -288,13 +288,13 @@ void SelectEventPoll::updateFdSet()
 bool SelectEventPoll::addEvents(sock_t socket, Command* command,
                                 EventPoll::EventType events)
 {
-  auto i = socketEntries_.lower_bound(socket);
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    (*i).second.addCommandEvent(command, events);
+  auto i = socketEntries_.find(socket);
+  if (i != socketEntries_.end()) {
+    i->second.addCommandEvent(command, events);
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, SocketEntry(socket)));
-    (*i).second.addCommandEvent(command, events);
+    auto r = socketEntries_.emplace(socket, SocketEntry(socket));
+    r.first->second.addCommandEvent(command, events);
   }
   updateFdSet();
   return true;

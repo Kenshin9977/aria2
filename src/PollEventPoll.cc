@@ -147,9 +147,9 @@ int PollEventPoll::translateEvents(EventPoll::EventType events)
 
 bool PollEventPoll::addEvents(sock_t socket, const PollEventPoll::KEvent& event)
 {
-  auto i = socketEntries_.lower_bound(socket);
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    auto& socketEntry = (*i).second;
+  auto i = socketEntries_.find(socket);
+  if (i != socketEntries_.end()) {
+    auto& socketEntry = i->second;
     event.addSelf(&socketEntry);
     for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
          first != last; ++first) {
@@ -160,8 +160,8 @@ bool PollEventPoll::addEvents(sock_t socket, const PollEventPoll::KEvent& event)
     }
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, KSocketEntry(socket)));
-    auto& socketEntry = (*i).second;
+    auto p = socketEntries_.emplace(socket, KSocketEntry(socket));
+    auto& socketEntry = p.first->second;
     event.addSelf(&socketEntry);
     if (pollfdCapacity_ == pollfdNum_) {
       pollfdCapacity_ *= 2;

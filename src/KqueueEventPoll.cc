@@ -168,19 +168,19 @@ int translateEvents(EventPoll::EventType events)
 bool KqueueEventPoll::addEvents(sock_t socket,
                                 const KqueueEventPoll::KEvent& event)
 {
-  auto i = socketEntries_.lower_bound(socket);
+  auto i = socketEntries_.find(socket);
   int r = 0;
   struct timespec zeroTimeout = {0, 0};
   struct kevent changelist[2];
   size_t n;
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    auto& socketEntry = (*i).second;
+  if (i != socketEntries_.end()) {
+    auto& socketEntry = i->second;
     event.addSelf(&socketEntry);
     n = socketEntry.getEvents(changelist);
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, KSocketEntry(socket)));
-    auto& socketEntry = (*i).second;
+    auto p = socketEntries_.emplace(socket, KSocketEntry(socket));
+    auto& socketEntry = p.first->second;
     if (socketEntries_.size() > kqEventsSize_) {
       kqEventsSize_ *= 2;
       kqEvents_ = make_unique<struct kevent[]>(kqEventsSize_);

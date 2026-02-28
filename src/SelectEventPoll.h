@@ -39,6 +39,7 @@
 
 #include <deque>
 #include <map>
+#include <unordered_map>
 
 #include "a2functional.h"
 #ifdef ENABLE_ASYNC_DNS
@@ -157,7 +158,7 @@ private:
   sock_t dummySocket_;
 #endif // __MINGW32__
 
-  typedef std::map<sock_t, SocketEntry> SocketEntrySet;
+  typedef std::unordered_map<sock_t, SocketEntry> SocketEntrySet;
   SocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
   typedef std::map<std::pair<AsyncNameResolver*, Command*>,

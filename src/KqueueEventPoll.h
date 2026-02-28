@@ -42,6 +42,7 @@
 #include <sys/time.h>
 
 #include <map>
+#include <unordered_map>
 
 #include "Event.h"
 #include "a2functional.h"
@@ -77,7 +78,7 @@ private:
   friend int accumulateEvent(int events, const KEvent& event);
 
 private:
-  typedef std::map<sock_t, KSocketEntry> KSocketEntrySet;
+  typedef std::unordered_map<sock_t, KSocketEntry> KSocketEntrySet;
   KSocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
   typedef std::map<std::pair<AsyncNameResolver*, Command*>,
