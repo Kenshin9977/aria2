@@ -305,11 +305,11 @@ public:
   cuid_t newCUID();
 
   const std::string& findCachedIPAddress(const std::string& hostname,
-                                         uint16_t port) const;
+                                         uint16_t port);
 
   template <typename OutputIterator>
   void findAllCachedIPAddresses(OutputIterator out, const std::string& hostname,
-                                uint16_t port) const
+                                uint16_t port)
   {
     dnsCache_->findAll(out, hostname, port);
   }

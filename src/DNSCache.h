@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <vector>
 #include <utility>
+#include <chrono>
 
 namespace aria2 {
 
@@ -62,6 +63,7 @@ private:
     std::string hostname_;
     uint16_t port_;
     std::vector<AddrEntry> addrEntries_;
+    std::chrono::steady_clock::time_point createdAt_;
 
     CacheEntry(const std::string& hostname, uint16_t port);
     CacheEntry(const CacheEntry& c);
@@ -95,22 +97,30 @@ private:
 
   typedef std::pair<std::string, uint16_t> CacheKey;
   std::map<CacheKey, CacheEntry> entries_;
+  std::chrono::seconds ttl_;
+
+  bool isExpired(const CacheEntry& entry) const;
 
 public:
-  DNSCache();
+  // Default TTL: 5 minutes. Set to 0 to disable expiration.
+  DNSCache(std::chrono::seconds ttl = std::chrono::seconds(300));
   DNSCache(const DNSCache& c);
   ~DNSCache();
 
   DNSCache& operator=(const DNSCache& c);
 
-  const std::string& find(const std::string& hostname, uint16_t port) const;
+  const std::string& find(const std::string& hostname, uint16_t port);
 
   template <typename OutputIterator>
   void findAll(OutputIterator out, const std::string& hostname,
-               uint16_t port) const
+               uint16_t port)
   {
     auto i = entries_.find({hostname, port});
     if (i != entries_.end()) {
+      if (isExpired(i->second)) {
+        entries_.erase(i);
+        return;
+      }
       i->second.getAllGoodAddrs(out);
     }
   }
@@ -122,6 +132,10 @@ public:
                uint16_t port);
 
   void remove(const std::string& hostname, uint16_t port);
+
+  void setTTL(std::chrono::seconds ttl) { ttl_ = ttl; }
+
+  std::chrono::seconds getTTL() const { return ttl_; }
 };
 
 } // namespace aria2

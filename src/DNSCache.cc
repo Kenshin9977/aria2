@@ -56,7 +56,9 @@ DNSCache::AddrEntry& DNSCache::AddrEntry::operator=(const AddrEntry& c)
 }
 
 DNSCache::CacheEntry::CacheEntry(const std::string& hostname, uint16_t port)
-    : hostname_(hostname), port_(port)
+    : hostname_(hostname),
+      port_(port),
+      createdAt_(std::chrono::steady_clock::now())
 {
 }
 
@@ -130,7 +132,7 @@ void DNSCache::CacheEntry::markBad(const std::string& addr)
   }
 }
 
-DNSCache::DNSCache() {}
+DNSCache::DNSCache(std::chrono::seconds ttl) : ttl_(ttl) {}
 
 DNSCache::DNSCache(const DNSCache& c) = default;
 
@@ -140,15 +142,29 @@ DNSCache& DNSCache::operator=(const DNSCache& c)
 {
   if (this != &c) {
     entries_ = c.entries_;
+    ttl_ = c.ttl_;
   }
   return *this;
 }
 
+bool DNSCache::isExpired(const CacheEntry& entry) const
+{
+  if (ttl_.count() == 0) {
+    return false;
+  }
+  auto now = std::chrono::steady_clock::now();
+  return now - entry.createdAt_ > ttl_;
+}
+
 const std::string& DNSCache::find(const std::string& hostname,
-                                  uint16_t port) const
+                                  uint16_t port)
 {
   auto i = entries_.find({hostname, port});
   if (i == entries_.end()) {
+    return A2STR::NIL;
+  }
+  if (isExpired(i->second)) {
+    entries_.erase(i);
     return A2STR::NIL;
   }
   return i->second.getGoodAddr();
@@ -161,6 +177,7 @@ void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
   auto i = entries_.find(key);
   if (i != entries_.end()) {
     i->second.add(ipaddr);
+    i->second.createdAt_ = std::chrono::steady_clock::now();
   }
   else {
     CacheEntry entry(hostname, port);
