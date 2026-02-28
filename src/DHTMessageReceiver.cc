@@ -90,16 +90,17 @@ DHTMessageReceiver::receiveMessage(const std::string& remoteAddr,
       return handleUnknownMessage(data, length, remoteAddr, remotePort);
     }
     if (isReply) {
-      auto p = tracker_->messageArrived(dict, remoteAddr, remotePort);
-      if (!p.first) {
+      auto [message, callback] =
+          tracker_->messageArrived(dict, remoteAddr, remotePort);
+      if (!message) {
         // timeout or malicious? message
         return handleUnknownMessage(data, length, remoteAddr, remotePort);
       }
-      onMessageReceived(p.first.get());
-      if (p.second) {
-        p.second->onReceived(p.first.get());
+      onMessageReceived(message.get());
+      if (callback) {
+        callback->onReceived(message.get());
       }
-      return std::move(p.first);
+      return std::move(message);
     }
     else {
       auto message = factory_->createQueryMessage(dict, remoteAddr, remotePort);

@@ -381,15 +381,16 @@ ChecksumOptionHandler::~ChecksumOptionHandler() = default;
 void ChecksumOptionHandler::parseArg(Option& option,
                                      const std::string& optarg) const
 {
-  auto p = util::divide(std::begin(optarg), std::end(optarg), '=');
-  std::string hashType(p.first.first, p.first.second);
+  auto [hashPart, digestPart] =
+      util::divide(std::begin(optarg), std::end(optarg), '=');
+  std::string hashType(hashPart.first, hashPart.second);
   if (!acceptableTypes_.empty() &&
       std::ranges::find(acceptableTypes_, hashType) ==
           std::end(acceptableTypes_)) {
     throw DL_ABORT_EX(
         fmt("Checksum type %s is not acceptable", hashType.c_str()));
   }
-  std::string hexDigest(p.second.first, p.second.second);
+  std::string hexDigest(digestPart.first, digestPart.second);
   util::lowercase(hashType);
   util::lowercase(hexDigest);
   if (!MessageDigest::isValidHash(hashType, hexDigest)) {
@@ -620,9 +621,10 @@ void OptimizeConcurrentDownloadsOptionHandler::parseArg(
     option.put(pref_, A2_V_FALSE);
   }
   else {
-    auto p = util::divide(std::begin(optarg), std::end(optarg), ':');
+    auto [aPart, bPart] =
+        util::divide(std::begin(optarg), std::end(optarg), ':');
 
-    std::string coeff_b(p.second.first, p.second.second);
+    std::string coeff_b(bPart.first, bPart.second);
     if (coeff_b.empty()) {
       std::string msg = pref_->k;
       msg += " ";
@@ -631,7 +633,7 @@ void OptimizeConcurrentDownloadsOptionHandler::parseArg(
       throw DL_ABORT_EX(msg);
     }
 
-    std::string coeff_a(p.first.first, p.first.second);
+    std::string coeff_a(aPart.first, aPart.second);
 
     PrefPtr pref = PREF_OPTIMIZE_CONCURRENT_DOWNLOADS_COEFFA;
     std::string* sptr = &coeff_a;

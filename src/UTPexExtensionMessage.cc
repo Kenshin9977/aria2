@@ -68,22 +68,24 @@ UTPexExtensionMessage::UTPexExtensionMessage(uint8_t extensionMessageID)
 
 std::string UTPexExtensionMessage::getPayload()
 {
-  auto freshPeerPair = createCompactPeerListAndFlag(freshPeers_);
-  auto droppedPeerPair = createCompactPeerListAndFlag(droppedPeers_);
+  auto [freshV4, freshV6] =
+      createCompactPeerListAndFlag(freshPeers_);
+  auto [droppedV4, droppedV6] =
+      createCompactPeerListAndFlag(droppedPeers_);
   Dict dict;
-  if (!freshPeerPair.first.first.empty()) {
-    dict.put("added", freshPeerPair.first.first);
-    dict.put("added.f", freshPeerPair.first.second);
+  if (!freshV4.first.empty()) {
+    dict.put("added", freshV4.first);
+    dict.put("added.f", freshV4.second);
   }
-  if (!droppedPeerPair.first.first.empty()) {
-    dict.put("dropped", droppedPeerPair.first.first);
+  if (!droppedV4.first.empty()) {
+    dict.put("dropped", droppedV4.first);
   }
-  if (!freshPeerPair.second.first.empty()) {
-    dict.put("added6", freshPeerPair.second.first);
-    dict.put("added6.f", freshPeerPair.second.second);
+  if (!freshV6.first.empty()) {
+    dict.put("added6", freshV6.first);
+    dict.put("added6.f", freshV6.second);
   }
-  if (!droppedPeerPair.second.first.empty()) {
-    dict.put("dropped6", droppedPeerPair.second.first);
+  if (!droppedV6.first.empty()) {
+    dict.put("dropped6", droppedV6.first);
   }
 
   return bencode2::encode(&dict);

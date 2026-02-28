@@ -172,11 +172,11 @@ bool ServerStatMan::load(const std::string& filename)
     std::vector<Scip> items;
     util::splitIter(p.first, p.second, std::back_inserter(items), ',');
     std::vector<std::string> m(MAX_FIELD);
-    for (const auto& item : items) {
-      auto p = util::divide(item.first, item.second, '=');
-      int id = idField(p.first.first, p.first.second);
+    for (const auto& [ibegin, iend] : items) {
+      auto [keyPart, valPart] = util::divide(ibegin, iend, '=');
+      int id = idField(keyPart.first, keyPart.second);
       if (id != MAX_FIELD) {
-        m[id].assign(p.second.first, p.second.second);
+        m[id].assign(valPart.first, valPart.second);
       }
     }
     if (m[S_HOST].empty() || m[S_PROTOCOL].empty()) {

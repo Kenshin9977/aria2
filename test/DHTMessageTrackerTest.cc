@@ -64,9 +64,8 @@ void DHTMessageTrackerTest::testMessageArrived()
     Dict resDict;
     resDict.put("t", m2->getTransactionID());
 
-    auto p =
+    auto [reply, callback] =
         tracker.messageArrived(&resDict, r2->getIPAddress(), r2->getPort());
-    auto& reply = p.first;
 
     CPPUNIT_ASSERT(reply);
     CPPUNIT_ASSERT(!tracker.getEntryFor(m2.get()));
@@ -76,9 +75,8 @@ void DHTMessageTrackerTest::testMessageArrived()
     Dict resDict;
     resDict.put("t", m3->getTransactionID());
 
-    auto p =
+    auto [reply, callback] =
         tracker.messageArrived(&resDict, r3->getIPAddress(), r3->getPort());
-    auto& reply = p.first;
 
     CPPUNIT_ASSERT(reply);
     CPPUNIT_ASSERT(!tracker.getEntryFor(m3.get()));
@@ -88,8 +86,8 @@ void DHTMessageTrackerTest::testMessageArrived()
     Dict resDict;
     resDict.put("t", m1->getTransactionID());
 
-    auto p = tracker.messageArrived(&resDict, "192.168.1.100", 6889);
-    auto& reply = p.first;
+    auto [reply, callback] =
+        tracker.messageArrived(&resDict, "192.168.1.100", 6889);
 
     CPPUNIT_ASSERT(!reply);
   }

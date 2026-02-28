@@ -353,8 +353,7 @@ void RequestGroup::createInitialCommand(
          option_->getAsBool(PREF_ENABLE_DHT6))) {
 
       if (option_->getAsBool(PREF_ENABLE_DHT)) {
-        std::vector<std::unique_ptr<Command>> c, rc;
-        std::tie(c, rc) = DHTSetup().setup(e, AF_INET);
+        auto [c, rc] = DHTSetup().setup(e, AF_INET);
 
         e->addCommand(std::move(c));
         for (auto& a : rc) {
@@ -364,8 +363,7 @@ void RequestGroup::createInitialCommand(
 
       if (!e->getOption()->getAsBool(PREF_DISABLE_IPV6) &&
           option_->getAsBool(PREF_ENABLE_DHT6)) {
-        std::vector<std::unique_ptr<Command>> c, rc;
-        std::tie(c, rc) = DHTSetup().setup(e, AF_INET6);
+        auto [c, rc] = DHTSetup().setup(e, AF_INET6);
 
         e->addCommand(std::move(c));
         for (auto& a : rc) {
@@ -1189,9 +1187,9 @@ std::shared_ptr<DownloadResult> RequestGroup::createDownloadResult() const
   res->sessionTime = std::chrono::duration_cast<std::chrono::milliseconds>(
       downloadContext_->calculateSessionTime());
 
-  auto result = downloadResult();
-  res->result = result.first;
-  res->resultMessage = result.second;
+  auto [dlResult, dlMessage] = downloadResult();
+  res->result = dlResult;
+  res->resultMessage = dlMessage;
   res->followedBy = followedByGIDs_;
   res->following = followingGID_;
   res->belongsTo = belongsToGID_;

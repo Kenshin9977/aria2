@@ -136,10 +136,10 @@ std::string HttpResponse::determineFilename(bool contentDispositionUTF8) const
 void HttpResponse::retrieveCookie()
 {
   Time now;
-  auto r = httpHeader_->equalRange(HttpHeader::SET_COOKIE);
-  for (; r.first != r.second; ++r.first) {
+  auto [it, endIt] = httpHeader_->equalRange(HttpHeader::SET_COOKIE);
+  for (; it != endIt; ++it) {
     httpRequest_->getCookieStorage()->parseAndStore(
-        (*r.first).second, httpRequest_->getHost(), httpRequest_->getDir(),
+        (*it).second, httpRequest_->getHost(), httpRequest_->getDir(),
         now.getTimeFromEpoch());
   }
 }
@@ -317,12 +317,12 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
     return false;
   }
 
-  auto p = util::stripIter(first + 1, last);
-  if (p.first == p.second) {
+  auto [sbegin, send] = util::stripIter(first + 1, last);
+  if (sbegin == send) {
     return false;
   }
 
-  result.uri.assign(p.first, p.second);
+  result.uri.assign(sbegin, send);
   last = std::find(last, s.end(), ';');
   if (last != s.end()) {
     ++last;
@@ -330,10 +330,11 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
   bool ok = false;
   while (1) {
     std::string name, value;
-    auto r = util::nextParam(name, value, last, s.end(), ';');
-    last = r.first;
+    auto [nextItr, found] =
+        util::nextParam(name, value, last, s.end(), ';');
+    last = nextItr;
 
-    if (!r.second) {
+    if (!found) {
       break;
     }
 
@@ -379,10 +380,11 @@ void HttpResponse::getMetalinKHttpEntries(
     std::vector<MetalinkHttpEntry>& result,
     const std::shared_ptr<Option>& option) const
 {
-  auto p = httpHeader_->equalRange(HttpHeader::LINK);
-  for (; p.first != p.second; ++p.first) {
+  auto [linkIt, linkEnd] =
+      httpHeader_->equalRange(HttpHeader::LINK);
+  for (; linkIt != linkEnd; ++linkIt) {
     MetalinkHttpEntry e;
-    if (parseMetalinkHttpLink(e, (*p.first).second)) {
+    if (parseMetalinkHttpLink(e, (*linkIt).second)) {
       result.push_back(e);
     }
   }
@@ -410,15 +412,17 @@ void HttpResponse::getMetalinKHttpEntries(
 // http://tools.ietf.org/html/rfc3230.
 void HttpResponse::getDigest(std::vector<Checksum>& result) const
 {
-  auto p = httpHeader_->equalRange(HttpHeader::DIGEST);
-  for (; p.first != p.second; ++p.first) {
-    const std::string& s = (*p.first).second;
+  auto [digestIt, digestEnd] =
+      httpHeader_->equalRange(HttpHeader::DIGEST);
+  for (; digestIt != digestEnd; ++digestIt) {
+    const std::string& s = (*digestIt).second;
     std::string::const_iterator itr = s.begin();
     while (1) {
       std::string hashType, digest;
-      auto r = util::nextParam(hashType, digest, itr, s.end(), ',');
-      itr = r.first;
-      if (!r.second) {
+      auto [nextItr, found] =
+          util::nextParam(hashType, digest, itr, s.end(), ',');
+      itr = nextItr;
+      if (!found) {
         break;
       }
 

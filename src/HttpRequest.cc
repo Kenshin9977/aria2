@@ -307,10 +307,10 @@ std::string HttpRequest::createProxyRequest() const
   requestLine += "\r\n";
 
   if (!proxyRequest_->getUsername().empty()) {
-    auto auth = getProxyAuthString();
-    requestLine += auth.first;
+    auto [authName, authValue] = getProxyAuthString();
+    requestLine += authName;
     requestLine += ' ';
-    requestLine += auth.second;
+    requestLine += authValue;
     requestLine += "\r\n";
   }
 

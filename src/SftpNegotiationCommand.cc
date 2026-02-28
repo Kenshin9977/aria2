@@ -81,10 +81,11 @@ SftpNegotiationCommand::SftpNegotiationCommand(
 
   const std::string& checksum = getOption()->get(PREF_SSH_HOST_KEY_MD);
   if (!checksum.empty()) {
-    auto p = util::divide(std::begin(checksum), std::end(checksum), '=');
-    hashType_.assign(p.first.first, p.first.second);
+    auto [hashPart, digestPart] =
+        util::divide(std::begin(checksum), std::end(checksum), '=');
+    hashType_.assign(hashPart.first, hashPart.second);
     util::lowercase(hashType_);
-    digest_ = util::fromHex(p.second.first, p.second.second);
+    digest_ = util::fromHex(digestPart.first, digestPart.second);
   }
 }
 

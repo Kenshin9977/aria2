@@ -358,12 +358,12 @@ protected:
     std::vector<std::string> keys;
     toStringList(std::back_inserter(keys), keysParam);
     const ItemListType& items = getItems(e);
-    auto range =
+    auto [rangeIt, rangeEnd] =
         getPaginationRange(offset, num, std::begin(items), std::end(items));
     auto list = List::g();
-    for (; range.first != range.second; ++range.first) {
+    for (; rangeIt != rangeEnd; ++rangeIt) {
       auto entryDict = Dict::g();
-      createEntry(entryDict.get(), *range.first, e, keys);
+      createEntry(entryDict.get(), *rangeIt, e, keys);
       list->append(std::move(entryDict));
     }
     if (offset < 0) {

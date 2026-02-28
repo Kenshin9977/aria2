@@ -238,14 +238,15 @@ void OptionParser::parse(Option& option, std::istream& is) const
     if (line.empty() || line[0] == '#') {
       continue;
     }
-    auto nv = util::divide(std::begin(line), std::end(line), '=');
-    if (nv.first.first == nv.first.second) {
+    auto [name, value] =
+        util::divide(std::begin(line), std::end(line), '=');
+    if (name.first == name.second) {
       continue;
     }
-    PrefPtr pref = option::k2p(std::string(nv.first.first, nv.first.second));
+    PrefPtr pref = option::k2p(std::string(name.first, name.second));
     const OptionHandler* handler = find(pref);
     if (handler) {
-      handler->parse(option, std::string(nv.second.first, nv.second.second));
+      handler->parse(option, std::string(value.first, value.second));
     }
     else {
       A2_LOG_WARN(fmt("Unknown option: %s", line.c_str()));

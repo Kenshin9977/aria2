@@ -328,15 +328,18 @@ bool HttpServer::authenticate()
     return false;
   }
   std::string authHeader(*authHeaderOpt);
-  auto p = util::divide(std::begin(authHeader), std::end(authHeader), ' ');
-  if (!util::streq(p.first.first, p.first.second, "Basic")) {
+  auto [schemePart, credPart] =
+      util::divide(std::begin(authHeader), std::end(authHeader), ' ');
+  if (!util::streq(schemePart.first, schemePart.second, "Basic")) {
     return false;
   }
 
-  std::string userpass = base64::decode(p.second.first, p.second.second);
-  auto up = util::divide(std::begin(userpass), std::end(userpass), ':', false);
-  std::string username(up.first.first, up.first.second);
-  std::string password(up.second.first, up.second.second);
+  std::string userpass =
+      base64::decode(credPart.first, credPart.second);
+  auto [userPart, passPart] =
+      util::divide(std::begin(userpass), std::end(userpass), ':', false);
+  std::string username(userPart.first, userPart.second);
+  std::string password(passPart.first, passPart.second);
   return *username_ == hmac_->getResult(username) &&
          (!password_ || *password_ == hmac_->getResult(password));
 }

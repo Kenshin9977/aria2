@@ -2034,15 +2034,18 @@ std::string htmlEscape(std::string_view src)
 
 std::pair<size_t, std::string> parseIndexPath(std::string_view line)
 {
-  auto p = divide(std::begin(line), std::end(line), '=');
-  auto index = parseUIntNoThrow(std::string(p.first.first, p.first.second));
+  auto [indexPart, pathPart] =
+      divide(std::begin(line), std::end(line), '=');
+  auto index =
+      parseUIntNoThrow(std::string(indexPart.first, indexPart.second));
   if (!index) {
     throw DL_ABORT_EX("Bad path index");
   }
-  if (p.second.first == p.second.second) {
+  if (pathPart.first == pathPart.second) {
     throw DL_ABORT_EX(fmt("Path with index=%u is empty.", *index));
   }
-  return std::make_pair(*index, std::string(p.second.first, p.second.second));
+  return std::make_pair(*index,
+                        std::string(pathPart.first, pathPart.second));
 }
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i)

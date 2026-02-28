@@ -373,13 +373,13 @@ void DHTMessageFactoryImpl::extractNodes(
   }
   for (size_t offset = 0; offset < length; offset += unit) {
     auto node = std::make_shared<DHTNode>(src + offset);
-    auto addr =
+    auto [ip, port] =
         bittorrent::unpackcompact(src + offset + DHT_ID_LENGTH, family_);
-    if (addr.first.empty()) {
+    if (ip.empty()) {
       continue;
     }
-    node->setIPAddress(addr.first);
-    node->setPort(addr.second);
+    node->setIPAddress(ip);
+    node->setPort(port);
     nodes.push_back(std::move(node));
   }
 }
@@ -437,11 +437,11 @@ DHTMessageFactoryImpl::createGetPeersReplyMessage(
     for (auto& elem : *valuesList) {
       const String* data = downcast<String>(elem);
       if (data && data->s().size() == clen) {
-        auto addr = bittorrent::unpackcompact(data->uc(), family_);
-        if (addr.first.empty()) {
+        auto [ip, port] = bittorrent::unpackcompact(data->uc(), family_);
+        if (ip.empty()) {
           continue;
         }
-        peers.push_back(std::make_shared<Peer>(addr.first, addr.second));
+        peers.push_back(std::make_shared<Peer>(ip, port));
       }
     }
   }
