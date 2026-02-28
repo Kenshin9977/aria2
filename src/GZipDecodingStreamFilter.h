@@ -49,6 +49,8 @@ private:
 
   bool finished_;
 
+  bool rawMode_;
+
   size_t bytesProcessed_;
 
   static constexpr size_t OUTBUF_LENGTH = 16_k;
