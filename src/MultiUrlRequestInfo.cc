@@ -254,8 +254,10 @@ int MultiUrlRequestInfo::prepare()
     auto clTlsContext = std::shared_ptr<TLSContext>(
         TLSContext::make(TLS_CLIENT, minTLSVer));
     if (!option_->blank(PREF_CERTIFICATE)) {
-      clTlsContext->addCredentialFile(option_->get(PREF_CERTIFICATE),
-                                      option_->get(PREF_PRIVATE_KEY));
+      if (!clTlsContext->addCredentialFile(option_->get(PREF_CERTIFICATE),
+                                           option_->get(PREF_PRIVATE_KEY))) {
+        A2_LOG_WARN("Loading client certificate/private key failed.");
+      }
     }
 
     if (!option_->blank(PREF_CA_CERTIFICATE)) {

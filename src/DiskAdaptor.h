@@ -69,9 +69,9 @@ public:
 
   virtual void initAndOpenFile() = 0;
 
-  virtual bool fileExists() = 0;
+  [[nodiscard]] virtual bool fileExists() = 0;
 
-  virtual int64_t size() = 0;
+  [[nodiscard]] virtual int64_t size() = 0;
 
   template <typename InputIterator>
   void setFileEntries(InputIterator first, InputIterator last)
@@ -84,13 +84,14 @@ public:
     return fileEntries_;
   }
 
-  virtual std::unique_ptr<FileAllocationIterator> fileAllocationIterator() = 0;
+  [[nodiscard]] virtual std::unique_ptr<FileAllocationIterator>
+  fileAllocationIterator() = 0;
 
   virtual void enableReadOnly() {}
 
   virtual void disableReadOnly() {}
 
-  virtual bool isReadOnlyEnabled() const { return false; }
+  [[nodiscard]] virtual bool isReadOnlyEnabled() const { return false; }
 
   // Enables mmap feature. Some derived classes may require that files
   // have been opened before this method call.

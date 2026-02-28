@@ -221,7 +221,8 @@ public:
 
   SegmentMan* getSegmentMan() const { return segmentMan_.get(); }
 
-  std::unique_ptr<CheckIntegrityEntry> createCheckIntegrityEntry();
+  [[nodiscard]] std::unique_ptr<CheckIntegrityEntry>
+  createCheckIntegrityEntry();
 
   // Returns first bootstrap commands to initiate a download.
   // If this is HTTP/FTP download and file size is unknown, only 1 command
@@ -238,17 +239,17 @@ public:
   void createNextCommand(std::vector<std::unique_ptr<Command>>& commands,
                          DownloadEngine* e);
 
-  bool downloadFinished() const;
+  [[nodiscard]] bool downloadFinished() const;
 
-  bool allDownloadFinished() const;
+  [[nodiscard]] bool allDownloadFinished() const;
 
   void closeFile();
 
   std::string getFirstFilePath() const;
 
-  int64_t getTotalLength() const;
+  [[nodiscard]] int64_t getTotalLength() const;
 
-  int64_t getCompletedLength() const;
+  [[nodiscard]] int64_t getCompletedLength() const;
 
   inline int64_t getPendingLength() const
   {
@@ -341,9 +342,12 @@ public:
 
   void setForceHaltRequested(bool f, HaltReason = SHUTDOWN_SIGNAL);
 
-  bool isHaltRequested() const { return haltRequested_; }
+  [[nodiscard]] bool isHaltRequested() const { return haltRequested_; }
 
-  bool isForceHaltRequested() const { return forceHaltRequested_; }
+  [[nodiscard]] bool isForceHaltRequested() const
+  {
+    return forceHaltRequested_;
+  }
 
   void setPauseRequested(bool f);
 
@@ -392,7 +396,8 @@ public:
 
   void adjustFilename(BtProgressInfoFile* infoFile);
 
-  std::shared_ptr<DownloadResult> createDownloadResult() const;
+  [[nodiscard]] std::shared_ptr<DownloadResult>
+  createDownloadResult() const;
 
   const std::shared_ptr<Option>& getOption() const { return option_; }
 
@@ -507,7 +512,7 @@ public:
   void enableSeedOnly();
 
   // Returns true if this download is now seeding.
-  bool isSeeder() const;
+  [[nodiscard]] bool isSeeder() const;
 
   void setPendingOption(std::shared_ptr<Option> option);
   const std::shared_ptr<Option>& getPendingOption() const

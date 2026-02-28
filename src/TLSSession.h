@@ -58,7 +58,8 @@ enum TLSErrorCode {
 //
 class TLSSession {
 public:
-  static std::unique_ptr<TLSSession> make(TLSContext* ctx);
+  [[nodiscard]] static std::unique_ptr<TLSSession>
+  make(TLSContext* ctx);
 
   // MUST deallocate all resources
   virtual ~TLSSession() = default;
@@ -66,12 +67,12 @@ public:
   // Initializes SSL/TLS session. The |sockfd| is the underlying
   // transport socket. This function returns TLS_ERR_OK if it
   // succeeds, or TLS_ERR_ERROR.
-  virtual int init(sock_t sockfd) = 0;
+  [[nodiscard]] virtual int init(sock_t sockfd) = 0;
 
   // Sets |hostname| for TLS SNI extension. This is only meaningful for
   // client side session. This function returns TLS_ERR_OK if it
   // succeeds, or TLS_ERR_ERROR.
-  virtual int setSNIHostname(const std::string& hostname) = 0;
+  [[nodiscard]] virtual int setSNIHostname(const std::string& hostname) = 0;
 
   // Closes the SSL/TLS session. Don't close underlying transport
   // socket. This function returns TLS_ERR_OK if it succeeds, or
@@ -83,17 +84,17 @@ public:
   // needs to write more data to proceed. If SSL/TLS session needs
   // neither read nor write data at the moment, TLS_WANT_READ must be
   // returned.
-  virtual TLSDirection checkDirection() = 0;
+  [[nodiscard]] virtual TLSDirection checkDirection() = 0;
 
   // Sends |data| with length |len|. This function returns the number
   // of bytes sent if it succeeds, or TLS_ERR_WOULDBLOCK if the
   // underlying transport blocks, or TLS_ERR_ERROR.
-  virtual ssize_t writeData(const void* data, size_t len) = 0;
+  [[nodiscard]] virtual ssize_t writeData(const void* data, size_t len) = 0;
 
   // Receives data into |data| with length |len|. This function returns
   // the number of bytes received if it succeeds, or TLS_ERR_WOULDBLOCK
   // if the underlying transport blocks, or TLS_ERR_ERROR.
-  virtual ssize_t readData(void* data, size_t len) = 0;
+  [[nodiscard]] virtual ssize_t readData(void* data, size_t len) = 0;
 
   // Performs client side handshake. The |hostname| is the hostname of
   // the remote endpoint and is used to verify its certificate. This
@@ -101,16 +102,17 @@ public:
   // if the underlying transport blocks, or TLS_ERR_ERROR.
   // When returning TLS_ERR_ERROR, provide certificate validation error
   // in |handshakeErr|.
-  virtual int tlsConnect(const std::string& hostname, TLSVersion& version,
-                         std::string& handshakeErr) = 0;
+  [[nodiscard]] virtual int tlsConnect(const std::string& hostname,
+                                       TLSVersion& version,
+                                       std::string& handshakeErr) = 0;
 
   // Performs server side handshake. This function returns TLS_ERR_OK
   // if it succeeds, or TLS_ERR_WOULDBLOCK if the underlying transport
   // blocks, or TLS_ERR_ERROR.
-  virtual int tlsAccept(TLSVersion& version) = 0;
+  [[nodiscard]] virtual int tlsAccept(TLSVersion& version) = 0;
 
   // Returns last error string
-  virtual std::string getLastErrorString() = 0;
+  [[nodiscard]] virtual std::string getLastErrorString() = 0;
 
   // Sets ALPN protocols for negotiation. |protocols| is a list of
   // protocol names (e.g., "h2", "http/1.1"). Must be called after

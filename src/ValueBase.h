@@ -105,13 +105,15 @@ public:
   // Use s().size() to get length.
   const unsigned char* uc() const;
 
-  static std::unique_ptr<String> g(const ValueType& string);
-  static std::unique_ptr<String> g(ValueType&& string);
+  [[nodiscard]] static std::unique_ptr<String> g(const ValueType& string);
+  [[nodiscard]] static std::unique_ptr<String> g(ValueType&& string);
 
-  static std::unique_ptr<String> g(const unsigned char* data, size_t length);
+  [[nodiscard]] static std::unique_ptr<String> g(const unsigned char* data,
+                                                  size_t length);
 
   template <typename InputIterator>
-  static std::unique_ptr<String> g(InputIterator first, InputIterator last)
+  [[nodiscard]] static std::unique_ptr<String> g(InputIterator first,
+                                                  InputIterator last)
   {
     return make_unique<String>(first, last);
   }
@@ -137,7 +139,7 @@ public:
   // Returns Integer.
   ValueType i() const;
 
-  static std::unique_ptr<Integer> g(ValueType integer);
+  [[nodiscard]] static std::unique_ptr<Integer> g(ValueType integer);
 
   void accept(ValueBaseVisitor& visitor) const override;
 
@@ -147,8 +149,8 @@ private:
 
 class Bool : public ValueBase {
 public:
-  static std::unique_ptr<Bool> gTrue();
-  static std::unique_ptr<Bool> gFalse();
+  [[nodiscard]] static std::unique_ptr<Bool> gTrue();
+  [[nodiscard]] static std::unique_ptr<Bool> gFalse();
   Bool(bool val);
   bool val() const;
   void accept(ValueBaseVisitor& visitor) const override;
@@ -162,7 +164,7 @@ private:
 
 class Null : public ValueBase {
 public:
-  static std::unique_ptr<Null> g();
+  [[nodiscard]] static std::unique_ptr<Null> g();
   Null();
   void accept(ValueBaseVisitor& visitor) const override;
 
@@ -231,12 +233,12 @@ public:
   ValueType::const_iterator cend() const;
 
   // Returns size of list.
-  size_t size() const;
+  [[nodiscard]] size_t size() const;
 
   // Returns true if size of list is 0.
-  bool empty() const;
+  [[nodiscard]] bool empty() const;
 
-  static std::unique_ptr<List> g();
+  [[nodiscard]] static std::unique_ptr<List> g();
 
   void accept(ValueBaseVisitor& visitor) const override;
 
@@ -266,13 +268,13 @@ public:
   ValueBase* operator[](const std::string& key) const;
 
   // Returns true if the given key is found in dict.
-  bool containsKey(const std::string& key) const;
+  [[nodiscard]] bool containsKey(const std::string& key) const;
 
   // Removes specified key from dict.
   void removeKey(const std::string& key);
 
   // Removes specified key from dict and return its associated value.
-  std::unique_ptr<ValueBase> popValue(const std::string& key);
+  [[nodiscard]] std::unique_ptr<ValueBase> popValue(const std::string& key);
 
   // Returns a read/write iterator that points to the first pair in
   // the dict.
@@ -299,12 +301,12 @@ public:
   ValueType::const_iterator cend() const;
 
   // Returns size of Dict.
-  size_t size() const;
+  [[nodiscard]] size_t size() const;
 
   // Returns true if size of Dict is 0.
-  bool empty() const;
+  [[nodiscard]] bool empty() const;
 
-  static std::unique_ptr<Dict> g();
+  [[nodiscard]] static std::unique_ptr<Dict> g();
 
   void accept(ValueBaseVisitor& visitor) const override;
 

@@ -105,25 +105,25 @@ public:
 
   size_t countMissingBlock() const;
 
-  bool hasBlock(size_t blockIndex) const;
+  [[nodiscard]] bool hasBlock(size_t blockIndex) const;
 
   /**
    * Returns true if all blocks of this piece have been downloaded, otherwise
    * returns false.
    */
-  bool pieceComplete() const;
+  [[nodiscard]] bool pieceComplete() const;
 
-  size_t countBlock() const;
+  [[nodiscard]] size_t countBlock() const;
 
   int32_t getBlockLength(size_t index) const;
 
   int32_t getBlockLength() const;
 
-  size_t getIndex() const { return index_; }
+  [[nodiscard]] size_t getIndex() const { return index_; }
 
   void setIndex(size_t index) { index_ = index; }
 
-  int64_t getLength() const { return length_; }
+  [[nodiscard]] int64_t getLength() const { return length_; }
 
   void setLength(int64_t length) { length_ = length; }
 

@@ -63,19 +63,19 @@ public:
   // that even if the value is a empty string, this method returns
   // true.  If option is not defined in this object and parent_ is not
   // nullptr, lookup parent_ to check |pref| is defined.
-  bool defined(PrefPtr pref) const;
+  [[nodiscard]] bool defined(PrefPtr pref) const;
   // Just like defined(), but this function does not lookup parent_.
   bool definedLocal(PrefPtr pref) const;
   // Returns true if name is not defined or the value is a empty string.
   // Otherwise returns false.
-  bool blank(PrefPtr pref) const;
+  [[nodiscard]] bool blank(PrefPtr pref) const;
   // Returns option value for |pref|. If the |pref| is not defined in
   // this object, parent_ is looked up.
-  const std::string& get(PrefPtr pref) const;
-  int32_t getAsInt(PrefPtr pref) const;
-  int64_t getAsLLInt(PrefPtr pref) const;
-  bool getAsBool(PrefPtr pref) const;
-  double getAsDouble(PrefPtr pref) const;
+  [[nodiscard]] const std::string& get(PrefPtr pref) const;
+  [[nodiscard]] int32_t getAsInt(PrefPtr pref) const;
+  [[nodiscard]] int64_t getAsLLInt(PrefPtr pref) const;
+  [[nodiscard]] bool getAsBool(PrefPtr pref) const;
+  [[nodiscard]] double getAsDouble(PrefPtr pref) const;
   // Removes |pref| from this object. This function does not modify
   // parent_.
   void removeLocal(PrefPtr pref);
