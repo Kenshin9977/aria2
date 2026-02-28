@@ -246,7 +246,7 @@ void printProgressSummary(const RequestGroupList& groups, size_t cols,
     time_t now;
     struct tm* staticNowtmPtr;
     char buf[26];
-    if (time(&now) != (time_t)-1 &&
+    if (time(&now) != static_cast<time_t>(-1) &&
         (staticNowtmPtr = localtime(&now)) != nullptr &&
         asctime_r(staticNowtmPtr, buf) != nullptr) {
       char* lfptr = strchr(buf, '\n');

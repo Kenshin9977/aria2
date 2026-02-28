@@ -142,11 +142,11 @@ struct Endpoint {
 #endif
 
 #ifdef __MINGW32__
-typedef WSABUF a2iovec;
+using a2iovec = WSABUF;
 #  define A2IOVEC_BASE buf
 #  define A2IOVEC_LEN len
 #else // !__MINGW32__
-typedef struct iovec a2iovec;
+using a2iovec = struct iovec;
 #  define A2IOVEC_BASE iov_base
 #  define A2IOVEC_LEN iov_len
 #endif // !__MINGW32__

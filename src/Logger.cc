@@ -132,8 +132,9 @@ void writeHeader(Output& fp, Logger::LEVEL level, const char* sourceFile,
   localtime_r(&timesec, &tm);
   size_t dateLength =
       strftime(datestr, sizeof(datestr), "%Y-%m-%d %H:%M:%S", &tm);
-  assert(dateLength <= (size_t)20);
-  fp.printf("%s.%06ld [%s] [%s:%d] ", datestr, (unsigned long)tv.tv_usec,
+  assert(dateLength <= static_cast<size_t>(20));
+  fp.printf("%s.%06ld [%s] [%s:%d] ", datestr,
+            static_cast<unsigned long>(tv.tv_usec),
             levelToString(level), sourceFile, lineNum);
 }
 } // namespace
@@ -170,7 +171,7 @@ void writeHeaderConsole(Output& fp, Logger::LEVEL level, bool useColor)
   time_t timesec = tv.tv_sec;
   localtime_r(&timesec, &tm);
   size_t dateLength = strftime(datestr, sizeof(datestr), "%m/%d %H:%M:%S", &tm);
-  assert(dateLength <= (size_t)15);
+  assert(dateLength <= static_cast<size_t>(15));
   if (useColor) {
     fp.printf("%s [%s%s\033[0m] ", datestr, levelColor(level),
               levelToString(level));

@@ -91,7 +91,8 @@ bool LpdMessageDispatcher::sendMessage()
 {
   return socket_->writeData(request_.c_str(), request_.size(),
                             multicastAddress_,
-                            multicastPort_) == (ssize_t)request_.size();
+                            multicastPort_) ==
+         static_cast<ssize_t>(request_.size());
 }
 
 bool LpdMessageDispatcher::isAnnounceReady() const
