@@ -38,7 +38,7 @@
 #include "BtMessageDispatcher.h"
 
 #include <deque>
-#include <set>
+#include <unordered_set>
 #include <utility>
 
 #include "a2time.h"
@@ -59,7 +59,15 @@ private:
   cuid_t cuid_;
   std::deque<std::unique_ptr<BtMessage>> messageQueue_;
   std::deque<std::unique_ptr<RequestSlot>> requestSlots_;
-  std::set<std::pair<size_t, size_t>> outstandingIndex_;
+  struct PairHash {
+    size_t operator()(const std::pair<size_t, size_t>& p) const
+    {
+      size_t h = p.first;
+      h ^= p.second * 0x9e3779b9 + (h << 6) + (h >> 2);
+      return h;
+    }
+  };
+  std::unordered_set<std::pair<size_t, size_t>, PairHash> outstandingIndex_;
 
   void rebuildOutstandingIndex();
 

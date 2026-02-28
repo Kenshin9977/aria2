@@ -73,9 +73,10 @@ struct PairHash {
   size_t operator()(
       const std::pair<std::string, uint16_t>& p) const
   {
-    size_t h1 = std::hash<std::string>{}(p.first);
-    size_t h2 = std::hash<uint16_t>{}(p.second);
-    return h1 ^ (h2 << 16);
+    size_t h = std::hash<std::string>{}(p.first);
+    h ^= std::hash<uint16_t>{}(p.second) * 0x9e3779b9 +
+         (h << 6) + (h >> 2);
+    return h;
   }
 };
 
