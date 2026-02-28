@@ -307,7 +307,7 @@ void Piece::initWrCache(WrDiskCache* diskCache,
   }
   assert(!wrCache_);
   wrCache_ = make_unique<WrDiskCacheEntry>(diskAdaptor);
-  bool rv = diskCache->add(wrCache_.get());
+  [[maybe_unused]] bool rv = diskCache->add(wrCache_.get());
   assert(rv);
 }
 
@@ -348,7 +348,7 @@ void Piece::updateWrCache(WrDiskCache* diskCache, unsigned char* data,
   cell->offset = offset;
   cell->len = len;
   cell->capacity = capacity;
-  bool rv;
+  [[maybe_unused]] bool rv;
   rv = wrCache_->cacheData(cell.get());
   assert(rv);
   cell.release();
@@ -364,7 +364,7 @@ size_t Piece::appendWrCache(WrDiskCache* diskCache, int64_t goff,
   }
   assert(wrCache_);
   size_t delta = wrCache_->append(goff, data, len);
-  bool rv;
+  [[maybe_unused]] bool rv;
   if (delta > 0) {
     rv = diskCache->update(wrCache_.get(), delta);
     assert(rv);

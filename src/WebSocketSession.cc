@@ -226,7 +226,8 @@ WebSocketSession::WebSocketSession(const std::shared_ptr<SocketCore>& socket,
   callbacks.on_frame_recv_start_callback = onFrameRecvStartCallback;
   callbacks.on_frame_recv_chunk_callback = onFrameRecvChunkCallback;
 
-  int r = wslay_event_context_server_init(&wsctx_, &callbacks, this);
+  [[maybe_unused]] int r =
+      wslay_event_context_server_init(&wsctx_, &callbacks, this);
   assert(r == 0);
   wslay_event_config_set_no_buffering(wsctx_, 1);
 }

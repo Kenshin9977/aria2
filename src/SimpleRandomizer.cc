@@ -77,8 +77,9 @@ std::random_device rd;
 #ifdef __MINGW32__
 SimpleRandomizer::SimpleRandomizer()
 {
-  BOOL r = ::CryptAcquireContext(&provider_, 0, 0, PROV_RSA_FULL,
-                                 CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  [[maybe_unused]] BOOL r = ::CryptAcquireContext(
+      &provider_, 0, 0, PROV_RSA_FULL,
+      CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
   assert(r);
 }
 #else  // !__MINGW32__
@@ -107,7 +108,8 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
     abort();
   }
 #elif defined(HAVE_APPLETLS)
-  auto rv = SecRandomCopyBytes(kSecRandomDefault, len, buf);
+  [[maybe_unused]] auto rv =
+      SecRandomCopyBytes(kSecRandomDefault, len, buf);
   assert(errSecSuccess == rv);
 #elif defined(HAVE_LIBGNUTLS)
   auto rv = gnutls_rnd(GNUTLS_RND_RANDOM, buf, len);

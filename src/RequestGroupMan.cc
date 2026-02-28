@@ -920,7 +920,8 @@ void RequestGroupMan::addDownloadResult(
     const std::shared_ptr<DownloadResult>& dr)
 {
   ++numStoppedTotal_;
-  bool rv = downloadResults_.push_back(dr->gid->getNumericId(), dr);
+  [[maybe_unused]] bool rv =
+      downloadResults_.push_back(dr->gid->getNumericId(), dr);
   assert(rv);
   while (downloadResults_.size() > maxDownloadResult_) {
     // Save last encountered error code so that we can report it
