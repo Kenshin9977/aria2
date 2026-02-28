@@ -41,6 +41,7 @@
 #include <numeric>
 #include <algorithm>
 #include <ranges>
+#include <unordered_map>
 #include <utility>
 
 #include "BtProgressInfoFile.h"
@@ -1004,6 +1005,8 @@ void RequestGroupMan::getUsedHosts(
   // speed. We use -download speed so that we can sort them using
   // operator<().
   std::vector<std::tuple<size_t, int, std::string>> tempHosts;
+  // Map from hostname to index in tempHosts for O(1) lookup
+  std::unordered_map<std::string, size_t> hostIndex;
   for (const auto& rg : requestGroups_) {
     const auto& inFlightReqs =
         rg->getDownloadContext()->getFirstFileEntry()->getInFlightRequests();
@@ -1012,21 +1015,18 @@ void RequestGroupMan::getUsedHosts(
       if (uri_split(&us, req->getUri().c_str()) == 0) {
         std::string host =
             uri::getFieldString(us, USR_HOST, req->getUri().c_str());
-        auto k = tempHosts.begin();
-        auto eok = tempHosts.end();
-        for (; k != eok; ++k) {
-          if (std::get<2>(*k) == host) {
-            ++std::get<0>(*k);
-            break;
-          }
+        auto it = hostIndex.find(host);
+        if (it != hostIndex.end()) {
+          ++std::get<0>(tempHosts[it->second]);
         }
-        if (k == eok) {
+        else {
           std::string protocol =
               uri::getFieldString(us, USR_SCHEME, req->getUri().c_str());
           auto ss = findServerStat(host, protocol);
           int invDlSpeed = (ss && ss->isOK())
                                ? -(static_cast<int>(ss->getDownloadSpeed()))
                                : 0;
+          hostIndex.emplace(host, tempHosts.size());
           tempHosts.emplace_back(1, invDlSpeed, host);
         }
       }
