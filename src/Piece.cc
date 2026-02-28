@@ -342,20 +342,16 @@ void Piece::updateWrCache(WrDiskCache* diskCache, unsigned char* data,
   }
   assert(wrCache_);
   A2_LOG_DEBUG(fmt("updateWrCache entry=%p", wrCache_.get()));
-  auto cell = new WrDiskCacheEntry::DataCell();
+  auto cell = make_unique<WrDiskCacheEntry::DataCell>();
   cell->goff = goff;
   cell->data = data;
   cell->offset = offset;
   cell->len = len;
   cell->capacity = capacity;
   bool rv;
-  try {
-    rv = wrCache_->cacheData(cell);
-    assert(rv);
-  } catch (RecoverableException& e) {
-    delete cell;
-    throw;
-  }
+  rv = wrCache_->cacheData(cell.get());
+  assert(rv);
+  cell.release();
   rv = diskCache->update(wrCache_.get(), len);
   assert(rv);
 }
