@@ -306,6 +306,19 @@ void DownloadEngine::addRoutineCommand(std::unique_ptr<Command> command)
 
 void DownloadEngine::poolSocket(const std::string& key, SocketPoolEntry entry)
 {
+  static constexpr size_t MAX_POOL_SIZE = 256;
+  if (socketPool_.size() >= MAX_POOL_SIZE) {
+    // Evict the oldest entry (first timed out, or just first)
+    auto oldest = socketPool_.begin();
+    for (auto i = socketPool_.begin(); i != socketPool_.end(); ++i) {
+      if (i->second.isTimeout()) {
+        oldest = i;
+        break;
+      }
+    }
+    A2_LOG_DEBUG(A2_FMT("Pool full, evicting socket for {}", oldest->first));
+    socketPool_.erase(oldest);
+  }
   A2_LOG_INFO(A2_FMT("Pool socket for {}", key));
   socketPool_.emplace(key, std::move(entry));
 }
@@ -431,14 +444,20 @@ std::multimap<std::string, DownloadEngine::SocketPoolEntry>::iterator
 DownloadEngine::findSocketPoolEntry(const std::string& key)
 {
   auto [first, last] = socketPool_.equal_range(key);
-  for (auto i = first; i != last; ++i) {
+  for (auto i = first; i != last;) {
     const auto& [k, entry] = *i;
+    // Lazily evict expired entries while scanning
+    if (entry.isTimeout()) {
+      i = socketPool_.erase(i);
+      continue;
+    }
     // We assume that if socket is readable it means peer shutdowns
     // connection and the socket will receive EOF. So skip it.
-    if (!entry.isTimeout() && !entry.getSocket()->isReadable(0)) {
+    if (!entry.getSocket()->isReadable(0)) {
       A2_LOG_INFO(A2_FMT("Found socket for {}", key));
       return i;
     }
+    ++i;
   }
   return socketPool_.end();
 }
