@@ -53,7 +53,7 @@ private:
 public:
   StreamFilter(std::unique_ptr<StreamFilter> delegate = nullptr);
 
-  virtual ~StreamFilter();
+  virtual ~StreamFilter() = default;
 
   // init() must be called before calling decode().
   virtual void init() = 0;

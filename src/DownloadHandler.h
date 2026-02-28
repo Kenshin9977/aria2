@@ -48,7 +48,7 @@ class RequestGroup;
 
 class DownloadHandler {
 public:
-  virtual ~DownloadHandler();
+  virtual ~DownloadHandler() = default;
 
   bool canHandle(const RequestGroup* requestGroup) const;
 

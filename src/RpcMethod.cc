@@ -56,8 +56,6 @@ namespace rpc {
 
 RpcMethod::RpcMethod() : optionParser_(OptionParser::getInstance()) {}
 
-RpcMethod::~RpcMethod() = default;
-
 std::unique_ptr<ValueBase> RpcMethod::createErrorResponse(const Exception& e,
                                                           const RpcRequest& req)
 {
