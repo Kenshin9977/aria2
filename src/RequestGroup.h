@@ -70,6 +70,7 @@ struct DownloadResult;
 class URISelector;
 class URIResult;
 class RequestGroupMan;
+class RequestGroupContext;
 #ifdef ENABLE_BITTORRENT
 class BtRuntime;
 class PeerStorage;
@@ -115,7 +116,7 @@ private:
 
   std::shared_ptr<MetadataInfo> metadataInfo_;
 
-  RequestGroupMan* requestGroupMan_;
+  RequestGroupContext* groupContext_;
 
 #ifdef ENABLE_BITTORRENT
   BtRuntime* btRuntime_;
@@ -473,12 +474,13 @@ public:
 
   a2_gid_t belongsTo() const { return belongsToGID_; }
 
-  void setRequestGroupMan(RequestGroupMan* requestGroupMan)
-  {
-    requestGroupMan_ = requestGroupMan;
-  }
+  void setRequestGroupMan(RequestGroupMan* requestGroupMan);
 
-  RequestGroupMan* getRequestGroupMan() { return requestGroupMan_; }
+  RequestGroupMan* getRequestGroupMan() const;
+
+  void setGroupContext(RequestGroupContext* ctx) { groupContext_ = ctx; }
+
+  RequestGroupContext* getGroupContext() { return groupContext_; }
 
   int getResumeFailureCount() const { return resumeFailureCount_; }
 

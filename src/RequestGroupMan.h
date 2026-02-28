@@ -46,6 +46,7 @@
 #include "DownloadResult.h"
 #include "TransferStat.h"
 #include "RequestGroup.h"
+#include "RequestGroupContext.h"
 #include "NetStat.h"
 #include "IndexedList.h"
 
@@ -66,7 +67,7 @@ typedef IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>> RequestGroupList;
 typedef IndexedList<a2_gid_t, std::shared_ptr<DownloadResult>>
     DownloadResultList;
 
-class RequestGroupMan {
+class RequestGroupMan : public RequestGroupContext {
 private:
   RequestGroupList requestGroups_;
   RequestGroupList reservedGroups_;
@@ -216,7 +217,7 @@ public:
 
   void showDownloadResults(OutputFile& o, bool full) const;
 
-  bool isSameFileBeingDownloaded(RequestGroup* requestGroup) const;
+  bool isSameFileBeingDownloaded(RequestGroup* requestGroup) const override;
 
   TransferStat calculateStat();
 
@@ -321,7 +322,7 @@ public:
   // Call this function if requestGroups_ queue should be maintained.
   // This function is added to reduce the call of maintenance, but at
   // the same time, it provides fast maintenance reaction.
-  void requestQueueCheck() { queueCheck_ = true; }
+  void requestQueueCheck() override { queueCheck_ = true; }
 
   void clearQueueCheck() { queueCheck_ = false; }
 
@@ -341,7 +342,10 @@ public:
 
   NetStat& getNetStat() { return netStat_; }
 
-  WrDiskCache* getWrDiskCache() const { return wrDiskCache_.get(); }
+  WrDiskCache* getWrDiskCache() const override
+  {
+    return wrDiskCache_.get();
+  }
 
   // Initializes WrDiskCache according to PREF_DISK_CACHE option.  If
   // its value is 0, cache storage will not be initialized.
@@ -360,12 +364,13 @@ public:
 
   const std::string& getLastSessionHash() const { return lastSessionHash_; }
 
-  const std::shared_ptr<OpenedFileCounter>& getOpenedFileCounter() const
+  const std::shared_ptr<OpenedFileCounter>&
+  getOpenedFileCounter() const override
   {
     return openedFileCounter_;
   }
 
-  void decreaseNumActive();
+  void decreaseNumActive() override;
 };
 
 } // namespace aria2

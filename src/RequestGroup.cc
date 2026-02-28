@@ -59,6 +59,7 @@
 #include "DlAbortEx.h"
 #include "DownloadFailureException.h"
 #include "RequestGroupMan.h"
+#include "RequestGroupContext.h"
 #include "DefaultBtProgressInfoFile.h"
 #include "DefaultPieceStorage.h"
 #include "download_handlers.h"
@@ -126,7 +127,7 @@ RequestGroup::RequestGroup(const std::shared_ptr<GroupId>& gid,
       option_(option),
       progressInfoFile_(make_unique<NullProgressInfoFile>()),
       uriSelector_(make_unique<InorderURISelector>()),
-      requestGroupMan_(nullptr),
+      groupContext_(nullptr),
 #ifdef ENABLE_BITTORRENT
       btRuntime_(nullptr),
       peerStorage_(nullptr),
@@ -297,7 +298,7 @@ void RequestGroup::createInitialCommand(
       // Use UnknownLengthPieceStorage.
       initPieceStorage();
     }
-    else if (e->getRequestGroupMan()->isSameFileBeingDownloaded(this)) {
+    else if (groupContext_->isSameFileBeingDownloaded(this)) {
       throw DOWNLOAD_FAILURE_EXCEPTION2(
           fmt(EX_DUPLICATE_FILE_DOWNLOAD,
               downloadContext_->getBasePath().c_str()),
@@ -490,7 +491,7 @@ void RequestGroup::createInitialCommand(
 
   // In this context, multiple FileEntry objects are in
   // DownloadContext.
-  if (e->getRequestGroupMan()->isSameFileBeingDownloaded(this)) {
+  if (groupContext_->isSameFileBeingDownloaded(this)) {
     throw DOWNLOAD_FAILURE_EXCEPTION2(
         fmt(EX_DUPLICATE_FILE_DOWNLOAD,
             downloadContext_->getBasePath().c_str()),
@@ -595,8 +596,8 @@ void RequestGroup::initPieceStorage()
     auto ps =
         std::make_shared<DefaultPieceStorage>(downloadContext_, option_.get());
 #endif // !ENABLE_BITTORRENT
-    if (requestGroupMan_) {
-      ps->setWrDiskCache(requestGroupMan_->getWrDiskCache());
+    if (groupContext_) {
+      ps->setWrDiskCache(groupContext_->getWrDiskCache());
     }
     if (diskWriterFactory_) {
       ps->setDiskWriterFactory(diskWriterFactory_);
@@ -611,9 +612,9 @@ void RequestGroup::initPieceStorage()
     tempPieceStorage = ps;
   }
   tempPieceStorage->initStorage();
-  if (requestGroupMan_) {
+  if (groupContext_) {
     tempPieceStorage->getDiskAdaptor()->setOpenedFileCounter(
-        requestGroupMan_->getOpenedFileCounter());
+        groupContext_->getOpenedFileCounter());
   }
   segmentMan_ = make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
   pieceStorage_ = tempPieceStorage;
@@ -679,8 +680,8 @@ void RequestGroup::adjustFilename(BtProgressInfoFile* infoFile)
     return;
   }
   // TODO need this?
-  if (requestGroupMan_) {
-    if (requestGroupMan_->isSameFileBeingDownloaded(this)) {
+  if (groupContext_) {
+    if (groupContext_->isSameFileBeingDownloaded(this)) {
       // The file name must be renamed
       tryAutoFileRenaming();
       A2_LOG_NOTICE(fmt(MSG_FILE_RENAMED, getFirstFilePath().c_str()));
@@ -977,10 +978,20 @@ void RequestGroup::increaseNumCommand() { ++numCommand_; }
 void RequestGroup::decreaseNumCommand()
 {
   --numCommand_;
-  if (!numCommand_ && requestGroupMan_) {
+  if (!numCommand_ && groupContext_) {
     A2_LOG_DEBUG(fmt("GID#%s - Request queue check", gid_->toHex().c_str()));
-    requestGroupMan_->requestQueueCheck();
+    groupContext_->requestQueueCheck();
   }
+}
+
+void RequestGroup::setRequestGroupMan(RequestGroupMan* requestGroupMan)
+{
+  groupContext_ = requestGroupMan;
+}
+
+RequestGroupMan* RequestGroup::getRequestGroupMan() const
+{
+  return static_cast<RequestGroupMan*>(groupContext_);
 }
 
 TransferStat RequestGroup::calculateStat() const
@@ -1325,11 +1336,11 @@ void RequestGroup::enableSeedOnly()
     return;
   }
 
-  if (requestGroupMan_) {
+  if (groupContext_) {
     seedOnly_ = true;
 
-    requestGroupMan_->decreaseNumActive();
-    requestGroupMan_->requestQueueCheck();
+    groupContext_->decreaseNumActive();
+    groupContext_->requestQueueCheck();
   }
 }
 
