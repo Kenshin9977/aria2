@@ -76,16 +76,17 @@ namespace aria2 {
 
 uint16_t getDefaultPort(Protocol protocol)
 {
+  using enum Protocol;
   switch (protocol) {
-  case Protocol::HTTP:
+  case HTTP:
     return 80;
-  case Protocol::HTTPS:
+  case HTTPS:
     return 443;
-  case Protocol::FTP:
+  case FTP:
     return 21;
-  case Protocol::FTPS:
+  case FTPS:
     return 21;
-  case Protocol::SFTP:
+  case SFTP:
     return 22;
   default:
     return 0;

@@ -128,9 +128,10 @@ bool Socks5ConnectCommand::doRead(size_t expectedLen)
 
 std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
 {
+  using enum Protocol;
   Protocol protocol = getRequest()->getProtocol();
 
-  if (protocol == Protocol::HTTP || protocol == Protocol::HTTPS) {
+  if (protocol == HTTP || protocol == HTTPS) {
     auto b = std::make_shared<SocketRecvBuffer>(getSocket());
     auto k = std::make_shared<HttpConnection>(getCuid(), getSocket(), b);
     return std::make_unique<HttpRequestCommand>(
@@ -138,7 +139,7 @@ std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
         getDownloadEngine(), getSocket());
   }
 
-  if (protocol == Protocol::FTP || protocol == Protocol::FTPS) {
+  if (protocol == FTP || protocol == FTPS) {
     return std::make_unique<FtpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket(),
@@ -146,7 +147,7 @@ std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
   }
 
 #ifdef HAVE_LIBSSH2
-  if (protocol == Protocol::SFTP) {
+  if (protocol == SFTP) {
     return std::make_unique<SftpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket(),

@@ -1,0 +1,635 @@
+diff --git a/src/BitfieldMan.cc b/src/BitfieldMan.cc
+index 8d1d189b..308af69b 100644
+--- a/src/BitfieldMan.cc
++++ b/src/BitfieldMan.cc
+@@ -34,6 +34,7 @@
+ /* copyright --> */
+ #include "BitfieldMan.h"
+ 
++#include <algorithm>
+ #include <cassert>
+ #include <cstring>
+ 
+@@ -49,9 +50,6 @@ BitfieldMan::BitfieldMan(int32_t blockLength, int64_t totalLength)
+       cachedCompletedLength_(0),
+       cachedFilteredCompletedLength_(0),
+       cachedFilteredTotalLength_(0),
+-      bitfield_(nullptr),
+-      useBitfield_(nullptr),
+-      filterBitfield_(nullptr),
+       bitfieldLength_(0),
+       cachedNumMissingBlock_(0),
+       cachedNumFilteredBlock_(0),
+@@ -62,10 +60,8 @@ BitfieldMan::BitfieldMan(int32_t blockLength, int64_t totalLength)
+   if (blockLength_ > 0 && totalLength_ > 0) {
+     blocks_ = (totalLength_ + blockLength_ - 1) / blockLength_;
+     bitfieldLength_ = blocks_ / 8 + (blocks_ % 8 ? 1 : 0);
+-    bitfield_ = new unsigned char[bitfieldLength_];
+-    useBitfield_ = new unsigned char[bitfieldLength_];
+-    std::fill_n(bitfield_, bitfieldLength_, 0);
+-    std::fill_n(useBitfield_, bitfieldLength_, 0);
++    bitfield_.resize(bitfieldLength_, 0);
++    useBitfield_.resize(bitfieldLength_, 0);
+     updateCache();
+   }
+ }
+@@ -75,9 +71,9 @@ BitfieldMan::BitfieldMan(const BitfieldMan& bitfieldMan)
+       cachedCompletedLength_(0),
+       cachedFilteredCompletedLength_(0),
+       cachedFilteredTotalLength_(0),
+-      bitfield_(new unsigned char[bitfieldMan.bitfieldLength_]),
+-      useBitfield_(new unsigned char[bitfieldMan.bitfieldLength_]),
+-      filterBitfield_(nullptr),
++      bitfield_(bitfieldMan.bitfield_),
++      useBitfield_(bitfieldMan.useBitfield_),
++      filterBitfield_(bitfieldMan.filterBitfield_),
+       bitfieldLength_(bitfieldMan.bitfieldLength_),
+       cachedNumMissingBlock_(0),
+       cachedNumFilteredBlock_(0),
+@@ -85,12 +81,6 @@ BitfieldMan::BitfieldMan(const BitfieldMan& bitfieldMan)
+       blockLength_(bitfieldMan.blockLength_),
+       filterEnabled_(bitfieldMan.filterEnabled_)
+ {
+-  std::copy_n(bitfieldMan.bitfield_, bitfieldLength_, bitfield_);
+-  std::copy_n(bitfieldMan.useBitfield_, bitfieldLength_, useBitfield_);
+-  if (filterEnabled_) {
+-    filterBitfield_ = new unsigned char[bitfieldLength_];
+-    std::copy_n(bitfieldMan.filterBitfield_, bitfieldLength_, filterBitfield_);
+-  }
+   updateCache();
+ }
+ 
+@@ -103,35 +93,16 @@ BitfieldMan& BitfieldMan::operator=(const BitfieldMan& bitfieldMan)
+     bitfieldLength_ = bitfieldMan.bitfieldLength_;
+     filterEnabled_ = bitfieldMan.filterEnabled_;
+ 
+-    delete[] bitfield_;
+-    bitfield_ = new unsigned char[bitfieldLength_];
+-    std::copy_n(bitfieldMan.bitfield_, bitfieldLength_, bitfield_);
+-
+-    delete[] useBitfield_;
+-    useBitfield_ = new unsigned char[bitfieldLength_];
+-    std::copy_n(bitfieldMan.useBitfield_, bitfieldLength_, useBitfield_);
+-
+-    delete[] filterBitfield_;
+-    if (filterEnabled_) {
+-      filterBitfield_ = new unsigned char[bitfieldLength_];
+-      std::copy_n(bitfieldMan.filterBitfield_, bitfieldLength_,
+-                  filterBitfield_);
+-    }
+-    else {
+-      filterBitfield_ = nullptr;
+-    }
++    bitfield_ = bitfieldMan.bitfield_;
++    useBitfield_ = bitfieldMan.useBitfield_;
++    filterBitfield_ = bitfieldMan.filterBitfield_;
+ 
+     updateCache();
+   }
+   return *this;
+ }
+ 
+-BitfieldMan::~BitfieldMan()
+-{
+-  delete[] bitfield_;
+-  delete[] useBitfield_;
+-  delete[] filterBitfield_;
+-}
++BitfieldMan::~BitfieldMan() = default;
+ 
+ int32_t BitfieldMan::getLastBlockLength() const
+ {
+@@ -176,12 +147,12 @@ bool BitfieldMan::getFirstMissingUnusedIndex(size_t& index) const
+   if (filterEnabled_) {
+     return bitfield::getFirstSetBitIndex(
+         index,
+-        ~array(bitfield_) & ~array(useBitfield_) & array(filterBitfield_),
++        ~array(bitfield_.data()) & ~array(useBitfield_.data()) & array(filterBitfield_.data()),
+         blocks_);
+   }
+   else {
+     return bitfield::getFirstSetBitIndex(
+-        index, ~array(bitfield_) & ~array(useBitfield_), blocks_);
++        index, ~array(bitfield_.data()) & ~array(useBitfield_.data()), blocks_);
+   }
+ }
+ 
+@@ -191,12 +162,12 @@ size_t BitfieldMan::getFirstNMissingUnusedIndex(std::vector<size_t>& out,
+   if (filterEnabled_) {
+     return bitfield::getFirstNSetBitIndex(
+         std::back_inserter(out), n,
+-        ~array(bitfield_) & ~array(useBitfield_) & array(filterBitfield_),
++        ~array(bitfield_.data()) & ~array(useBitfield_.data()) & array(filterBitfield_.data()),
+         blocks_);
+   }
+   else {
+     return bitfield::getFirstNSetBitIndex(
+-        std::back_inserter(out), n, ~array(bitfield_) & ~array(useBitfield_),
++        std::back_inserter(out), n, ~array(bitfield_.data()) & ~array(useBitfield_.data()),
+         blocks_);
+   }
+ }
+@@ -205,10 +176,10 @@ bool BitfieldMan::getFirstMissingIndex(size_t& index) const
+ {
+   if (filterEnabled_) {
+     return bitfield::getFirstSetBitIndex(
+-        index, ~array(bitfield_) & array(filterBitfield_), blocks_);
++        index, ~array(bitfield_.data()) & array(filterBitfield_.data()), blocks_);
+   }
+   else {
+-    return bitfield::getFirstSetBitIndex(index, ~array(bitfield_), blocks_);
++    return bitfield::getFirstSetBitIndex(index, ~array(bitfield_.data()), blocks_);
+   }
+ }
+ 
+@@ -307,15 +278,15 @@ bool BitfieldMan::getSparseMissingUnusedIndex(
+   if (filterEnabled_) {
+     return aria2::getSparseMissingUnusedIndex(
+         index, minSplitSize,
+-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+-            array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | ~array(filterBitfield_.data()) | array(bitfield_.data()) |
++            array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+   else {
+     return aria2::getSparseMissingUnusedIndex(
+         index, minSplitSize,
+-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | array(bitfield_.data()) | array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+ }
+ 
+@@ -364,15 +335,15 @@ bool BitfieldMan::getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+   if (filterEnabled_) {
+     return aria2::getGeomMissingUnusedIndex(
+         index, minSplitSize,
+-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+-            array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_, base, offsetIndex);
++        array(ignoreBitfield) | ~array(filterBitfield_.data()) | array(bitfield_.data()) |
++            array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_, base, offsetIndex);
+   }
+   else {
+     return aria2::getGeomMissingUnusedIndex(
+         index, minSplitSize,
+-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_, base, offsetIndex);
++        array(ignoreBitfield) | array(bitfield_.data()) | array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_, base, offsetIndex);
+   }
+ }
+ 
+@@ -430,15 +401,15 @@ bool BitfieldMan::getInorderMissingUnusedIndex(
+   if (filterEnabled_) {
+     return aria2::getInorderMissingUnusedIndex(
+         index, 0, blocks_, minSplitSize,
+-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+-            array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | ~array(filterBitfield_.data()) | array(bitfield_.data()) |
++            array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+   else {
+     return aria2::getInorderMissingUnusedIndex(
+         index, 0, blocks_, minSplitSize,
+-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | array(bitfield_.data()) | array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+ }
+ 
+@@ -450,15 +421,15 @@ bool BitfieldMan::getInorderMissingUnusedIndex(
+   if (filterEnabled_) {
+     return aria2::getInorderMissingUnusedIndex(
+         index, startIndex, endIndex, minSplitSize,
+-        array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+-            array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | ~array(filterBitfield_.data()) | array(bitfield_.data()) |
++            array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+   else {
+     return aria2::getInorderMissingUnusedIndex(
+         index, startIndex, endIndex, minSplitSize,
+-        array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+-        useBitfield_, blockLength_, blocks_);
++        array(ignoreBitfield) | array(bitfield_.data()) | array(useBitfield_.data()),
++        useBitfield_.data(), blockLength_, blocks_);
+   }
+ }
+ 
+@@ -483,11 +454,11 @@ bool BitfieldMan::getAllMissingIndexes(unsigned char* misbitfield,
+ {
+   assert(len == bitfieldLength_);
+   if (filterEnabled_) {
+-    return copyBitfield(misbitfield, ~array(bitfield_) & array(filterBitfield_),
++    return copyBitfield(misbitfield, ~array(bitfield_.data()) & array(filterBitfield_.data()),
+                         blocks_);
+   }
+   else {
+-    return copyBitfield(misbitfield, ~array(bitfield_), blocks_);
++    return copyBitfield(misbitfield, ~array(bitfield_.data()), blocks_);
+   }
+ }
+ 
+@@ -501,12 +472,12 @@ bool BitfieldMan::getAllMissingIndexes(unsigned char* misbitfield, size_t len,
+   }
+   if (filterEnabled_) {
+     return copyBitfield(misbitfield,
+-                        ~array(bitfield_) & array(peerBitfield) &
+-                            array(filterBitfield_),
++                        ~array(bitfield_.data()) & array(peerBitfield) &
++                            array(filterBitfield_.data()),
+                         blocks_);
+   }
+   else {
+-    return copyBitfield(misbitfield, ~array(bitfield_) & array(peerBitfield),
++    return copyBitfield(misbitfield, ~array(bitfield_.data()) & array(peerBitfield),
+                         blocks_);
+   }
+ }
+@@ -522,13 +493,13 @@ bool BitfieldMan::getAllMissingUnusedIndexes(unsigned char* misbitfield,
+   }
+   if (filterEnabled_) {
+     return copyBitfield(misbitfield,
+-                        ~array(bitfield_) & ~array(useBitfield_) &
+-                            array(peerBitfield) & array(filterBitfield_),
++                        ~array(bitfield_.data()) & ~array(useBitfield_.data()) &
++                            array(peerBitfield) & array(filterBitfield_.data()),
+                         blocks_);
+   }
+   else {
+     return copyBitfield(misbitfield,
+-                        ~array(bitfield_) & ~array(useBitfield_) &
++                        ~array(bitfield_.data()) & ~array(useBitfield_.data()) &
+                             array(peerBitfield),
+                         blocks_);
+   }
+@@ -539,26 +510,27 @@ size_t BitfieldMan::countMissingBlock() const { return cachedNumMissingBlock_; }
+ size_t BitfieldMan::countMissingBlockNow() const
+ {
+   if (filterEnabled_) {
+-    return bitfield::countSetBit(filterBitfield_, blocks_) -
+-           bitfield::countSetBitSlow(array(bitfield_) & array(filterBitfield_),
++    return bitfield::countSetBit(filterBitfield_.data(), blocks_) -
++           bitfield::countSetBitSlow(array(bitfield_.data()) & array(filterBitfield_.data()),
+                                      blocks_);
+   }
+   else {
+-    return blocks_ - bitfield::countSetBit(bitfield_, blocks_);
++    return blocks_ - bitfield::countSetBit(bitfield_.data(), blocks_);
+   }
+ }
+ 
+ size_t BitfieldMan::countFilteredBlockNow() const
+ {
+   if (filterEnabled_) {
+-    return bitfield::countSetBit(filterBitfield_, blocks_);
++    return bitfield::countSetBit(filterBitfield_.data(), blocks_);
+   }
+   else {
+     return 0;
+   }
+ }
+ 
+-bool BitfieldMan::setBitInternal(unsigned char* bitfield, size_t index, bool on)
++bool BitfieldMan::setBitInternal(std::vector<unsigned char>& bitfield,
++                                  size_t index, bool on)
+ {
+   if (blocks_ <= index) {
+     return false;
+@@ -629,21 +601,21 @@ bool testAllBitSet(const unsigned char* bitfield, size_t length, size_t blocks)
+ 
+ bool BitfieldMan::isAllBitSet() const
+ {
+-  return testAllBitSet(bitfield_, bitfieldLength_, blocks_);
++  return testAllBitSet(bitfield_.data(), bitfieldLength_, blocks_);
+ }
+ 
+ bool BitfieldMan::isAllFilterBitSet() const
+ {
+-  if (!filterBitfield_) {
++  if (filterBitfield_.empty()) {
+     return false;
+   }
+-  return testAllBitSet(filterBitfield_, bitfieldLength_, blocks_);
++  return testAllBitSet(filterBitfield_.data(), bitfieldLength_, blocks_);
+ }
+ 
+ bool BitfieldMan::isFilterBitSet(size_t index) const
+ {
+-  if (filterBitfield_) {
+-    return bitfield::test(filterBitfield_, blocks_, index);
++  if (!filterBitfield_.empty()) {
++    return bitfield::test(filterBitfield_.data(), blocks_, index);
+   }
+   else {
+     return false;
+@@ -652,12 +624,12 @@ bool BitfieldMan::isFilterBitSet(size_t index) const
+ 
+ bool BitfieldMan::isBitSet(size_t index) const
+ {
+-  return bitfield::test(bitfield_, blocks_, index);
++  return bitfield::test(bitfield_.data(), blocks_, index);
+ }
+ 
+ bool BitfieldMan::isUseBitSet(size_t index) const
+ {
+-  return bitfield::test(useBitfield_, blocks_, index);
++  return bitfield::test(useBitfield_.data(), blocks_, index);
+ }
+ 
+ void BitfieldMan::setBitfield(const unsigned char* bitfield,
+@@ -666,14 +638,14 @@ void BitfieldMan::setBitfield(const unsigned char* bitfield,
+   if (bitfieldLength_ == 0 || bitfieldLength_ != bitfieldLength) {
+     return;
+   }
+-  std::copy_n(bitfield, bitfieldLength_, bitfield_);
+-  std::fill_n(useBitfield_, bitfieldLength_, 0);
++  std::copy_n(bitfield, bitfieldLength_, bitfield_.data());
++  std::fill(useBitfield_.begin(), useBitfield_.end(), 0);
+   updateCache();
+ }
+ 
+ void BitfieldMan::clearAllBit()
+ {
+-  std::fill_n(bitfield_, bitfieldLength_, 0);
++  std::fill(bitfield_.begin(), bitfield_.end(), 0);
+   updateCache();
+ }
+ 
+@@ -687,7 +659,7 @@ void BitfieldMan::setAllBit()
+ 
+ void BitfieldMan::clearAllUseBit()
+ {
+-  std::fill_n(useBitfield_, bitfieldLength_, 0);
++  std::fill(useBitfield_.begin(), useBitfield_.end(), 0);
+   updateCache();
+ }
+ 
+@@ -705,9 +677,8 @@ bool BitfieldMan::setFilterBit(size_t index)
+ 
+ void BitfieldMan::ensureFilterBitfield()
+ {
+-  if (!filterBitfield_) {
+-    filterBitfield_ = new unsigned char[bitfieldLength_];
+-    std::fill_n(filterBitfield_, bitfieldLength_, 0);
++  if (filterBitfield_.empty()) {
++    filterBitfield_.assign(bitfieldLength_, 0);
+   }
+ }
+ 
+@@ -771,24 +742,21 @@ void BitfieldMan::disableFilter()
+ 
+ void BitfieldMan::clearFilter()
+ {
+-  if (filterBitfield_) {
+-    delete[] filterBitfield_;
+-    filterBitfield_ = nullptr;
+-  }
++  filterBitfield_.clear();
+   filterEnabled_ = false;
+   updateCache();
+ }
+ 
+ int64_t BitfieldMan::getFilteredTotalLengthNow() const
+ {
+-  if (!filterBitfield_) {
++  if (filterBitfield_.empty()) {
+     return 0;
+   }
+-  size_t filteredBlocks = bitfield::countSetBit(filterBitfield_, blocks_);
++  size_t filteredBlocks = bitfield::countSetBit(filterBitfield_.data(), blocks_);
+   if (filteredBlocks == 0) {
+     return 0;
+   }
+-  if (bitfield::test(filterBitfield_, blocks_, blocks_ - 1)) {
++  if (bitfield::test(filterBitfield_.data(), blocks_, blocks_ - 1)) {
+     return ((int64_t)filteredBlocks - 1) * blockLength_ + getLastBlockLength();
+   }
+   else {
+@@ -824,12 +792,12 @@ int64_t computeCompletedLength(const Array& bitfield, const BitfieldMan* btman,
+ int64_t BitfieldMan::getCompletedLength(bool useFilter) const
+ {
+   if (useFilter && filterEnabled_) {
+-    auto arr = array(bitfield_) & array(filterBitfield_);
++    auto arr = array(bitfield_.data()) & array(filterBitfield_.data());
+     return computeCompletedLength(arr, this,
+                                   &bitfield::countSetBitSlow<decltype(arr)>);
+   }
+   else {
+-    return computeCompletedLength(bitfield_, this, &bitfield::countSetBit);
++    return computeCompletedLength(bitfield_.data(), this, &bitfield::countSetBit);
+   }
+ }
+ 
+diff --git a/src/BitfieldMan.h b/src/BitfieldMan.h
+index ffef7b0b..d71426e6 100644
+--- a/src/BitfieldMan.h
++++ b/src/BitfieldMan.h
+@@ -48,9 +48,9 @@ private:
+   int64_t cachedFilteredCompletedLength_;
+   int64_t cachedFilteredTotalLength_;
+ 
+-  unsigned char* bitfield_;
+-  unsigned char* useBitfield_;
+-  unsigned char* filterBitfield_;
++  std::vector<unsigned char> bitfield_;
++  std::vector<unsigned char> useBitfield_;
++  std::vector<unsigned char> filterBitfield_;
+ 
+   size_t bitfieldLength_;
+   size_t cachedNumMissingBlock_;
+@@ -61,7 +61,8 @@ private:
+ 
+   bool filterEnabled_;
+ 
+-  bool setBitInternal(unsigned char* bitfield, size_t index, bool on);
++  bool setBitInternal(std::vector<unsigned char>& bitfield, size_t index,
++                      bool on);
+   bool setFilterBit(size_t index);
+ 
+   size_t getStartIndex(size_t index) const;
+@@ -206,7 +207,7 @@ public:
+   // filterBitfield_ is NULL, returns false.
+   bool isFilterBitSet(size_t index) const;
+ 
+-  const unsigned char* getBitfield() const { return bitfield_; }
++  const unsigned char* getBitfield() const { return bitfield_.data(); }
+ 
+   size_t getBitfieldLength() const { return bitfieldLength_; }
+ 
+@@ -275,7 +276,10 @@ public:
+ 
+   int64_t getMissingUnusedLength(size_t startingIndex) const;
+ 
+-  const unsigned char* getFilterBitfield() const { return filterBitfield_; }
++  const unsigned char* getFilterBitfield() const
++  {
++    return filterBitfield_.empty() ? nullptr : filterBitfield_.data();
++  }
+ };
+ 
+ } // namespace aria2
+diff --git a/src/DHTUnknownMessage.cc b/src/DHTUnknownMessage.cc
+index 82729458..26759de0 100644
+--- a/src/DHTUnknownMessage.cc
++++ b/src/DHTUnknownMessage.cc
+@@ -51,21 +51,13 @@ DHTUnknownMessage::DHTUnknownMessage(const std::shared_ptr<DHTNode>& localNode,
+                                      const unsigned char* data, size_t length,
+                                      const std::string& ipaddr, uint16_t port)
+     : DHTMessage(localNode, std::shared_ptr<DHTNode>()),
++      data_(data, data + length),
+       length_(length),
+       ipaddr_(ipaddr),
+       port_(port)
+ {
+-  if (length_ == 0) {
+-    data_ = nullptr;
+-  }
+-  else {
+-    data_ = new unsigned char[length];
+-    memcpy(data_, data, length);
+-  }
+ }
+ 
+-DHTUnknownMessage::~DHTUnknownMessage() { delete[] data_; }
+-
+ void DHTUnknownMessage::doReceivedAction() {}
+ 
+ bool DHTUnknownMessage::send() { return true; }
+@@ -82,7 +74,7 @@ std::string DHTUnknownMessage::toString() const
+   }
+   return fmt("dht unknown Remote:%s(%u) length=%lu, first 8 bytes(hex)=%s",
+              ipaddr_.c_str(), port_, static_cast<unsigned long>(length_),
+-             util::toHex(data_, sampleLength).c_str());
++             util::toHex(data_.data(), sampleLength).c_str());
+ }
+ 
+ } // namespace aria2
+diff --git a/src/DHTUnknownMessage.h b/src/DHTUnknownMessage.h
+index 639e1d05..1d7a2c46 100644
+--- a/src/DHTUnknownMessage.h
++++ b/src/DHTUnknownMessage.h
+@@ -37,11 +37,13 @@
+ 
+ #include "DHTMessage.h"
+ 
++#include <vector>
++
+ namespace aria2 {
+ 
+ class DHTUnknownMessage : public DHTMessage {
+ private:
+-  unsigned char* data_;
++  std::vector<unsigned char> data_;
+   size_t length_;
+   std::string ipaddr_;
+   uint16_t port_;
+@@ -52,7 +54,7 @@ public:
+                     const unsigned char* data, size_t length,
+                     const std::string& ipaddr, uint16_t port);
+ 
+-  ~DHTUnknownMessage() override;
++  ~DHTUnknownMessage() override = default;
+ 
+   // do nothing
+   void doReceivedAction() override;
+diff --git a/src/ExpatXmlParser.cc b/src/ExpatXmlParser.cc
+index 7a38a2ee..7e080b60 100644
+--- a/src/ExpatXmlParser.cc
++++ b/src/ExpatXmlParser.cc
+@@ -36,6 +36,7 @@
+ 
+ #include <cstdio>
+ #include <cstring>
++#include <string>
+ 
+ #include "a2io.h"
+ #include "ParserStateMachine.h"
+@@ -48,19 +49,16 @@ namespace aria2 {
+ namespace xml {
+ 
+ namespace {
+-void splitNsName(const char** localname, const char** nsUri, const char* src)
++std::string splitNsName(const char** localname, const char* src)
+ {
+   const char* sep = strchr(src, '\t');
+   if (sep) {
+     *localname = sep + 1;
+-    size_t nsUriLen = sep - src;
+-    auto temp = new char[nsUriLen + 1];
+-    memcpy(temp, src, nsUriLen);
+-    temp[nsUriLen] = '\0';
+-    *nsUri = temp;
++    return std::string(src, sep - src);
+   }
+   else {
+     *localname = src;
++    return {};
+   }
+ }
+ } // namespace
+@@ -70,6 +68,7 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+ {
+   SessionData* sd = reinterpret_cast<SessionData*>(userData);
+   std::vector<XmlAttr> xmlAttrs;
++  std::vector<std::string> attrNsUris;
+   if (attrs) {
+     const char** p = attrs;
+     while (*p) {
+@@ -78,7 +77,10 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+       if (!*p) {
+         break;
+       }
+-      splitNsName(&xa.localname, &xa.nsUri, attrNsName);
++      attrNsUris.push_back(splitNsName(&xa.localname, attrNsName));
++      xa.nsUri = attrNsUris.back().empty()
++                     ? nullptr
++                     : attrNsUris.back().c_str();
+       const char* value = *p++;
+       xa.value = value;
+       xa.valueLength = strlen(value);
+@@ -87,13 +89,9 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+   }
+   const char* localname = nullptr;
+   const char* prefix = nullptr;
+-  const char* nsUri = nullptr;
+-  splitNsName(&localname, &nsUri, nsName);
++  std::string nsUriStr = splitNsName(&localname, nsName);
++  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
+   sd->psm->beginElement(localname, prefix, nsUri, xmlAttrs);
+-  delete[] nsUri;
+-  for (auto& a : xmlAttrs) {
+-    delete[] a.nsUri;
+-  }
+   if (sd->psm->needsCharactersBuffering()) {
+     sd->charactersStack.push_front(A2STR::NIL);
+   }
+@@ -105,8 +103,8 @@ void mlEndElement(void* userData, const char* nsName)
+ {
+   const char* localname = nullptr;
+   const char* prefix = nullptr;
+-  const char* nsUri = nullptr;
+-  splitNsName(&localname, &nsUri, nsName);
++  std::string nsUriStr = splitNsName(&localname, nsName);
++  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
+   SessionData* sd = reinterpret_cast<SessionData*>(userData);
+   std::string characters;
+   if (sd->psm->needsCharactersBuffering()) {
+@@ -114,7 +112,6 @@ void mlEndElement(void* userData, const char* nsName)
+     sd->charactersStack.pop_front();
+   }
+   sd->psm->endElement(localname, prefix, nsUri, std::move(characters));
+-  delete[] nsUri;
+ }
+ } // namespace
+ 

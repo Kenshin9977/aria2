@@ -124,10 +124,11 @@ createHttpRequest(const std::shared_ptr<Request>& req,
 
 bool HttpRequestCommand::executeInternal()
 {
+  using enum Protocol;
   // socket->setBlockingMode();
   if (httpConnection_->sendBufferIsEmpty()) {
 #ifdef ENABLE_SSL
-    if (getRequest()->getProtocol() == Protocol::HTTPS) {
+    if (getRequest()->getProtocol() == HTTPS) {
       auto sc = std::static_pointer_cast<SocketCore>(getSocket());
 #  ifdef HAVE_LIBNGHTTP2
       // Offer h2 + http/1.1 via ALPN (harmless if called repeatedly;
@@ -152,8 +153,8 @@ bool HttpRequestCommand::executeInternal()
           getRequest(), getFileEntry(), std::shared_ptr<Segment>(), getOption(),
           getRequestGroup(), getDownloadEngine(), proxyRequest_);
       if (getOption()->getAsBool(PREF_CONDITIONAL_GET) &&
-          (getRequest()->getProtocol() == Protocol::HTTP ||
-           getRequest()->getProtocol() == Protocol::HTTPS)) {
+          (getRequest()->getProtocol() == HTTP ||
+           getRequest()->getProtocol() == HTTPS)) {
 
         std::string path;
 
@@ -189,8 +190,8 @@ bool HttpRequestCommand::executeInternal()
         if (!httpConnection_->isIssued(segment)) {
           int64_t endOffset = 0;
           // FTP via HTTP proxy does not support end byte marker
-          if (getRequest()->getProtocol() != Protocol::FTP &&
-              getRequest()->getProtocol() != Protocol::FTPS &&
+          if (getRequest()->getProtocol() != FTP &&
+              getRequest()->getProtocol() != FTPS &&
               getRequestGroup()->getTotalLength() > 0 && getPieceStorage()) {
             size_t nextIndex =
                 getPieceStorage()->getNextUsedIndex(segment->getIndex());

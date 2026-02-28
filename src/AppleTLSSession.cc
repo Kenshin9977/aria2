@@ -618,22 +618,23 @@ int AppleTLSSession::closeConnection()
 
 TLSDirection AppleTLSSession::checkDirection()
 {
+  using enum TLSDirection;
   // See: https://github.com/aria2/aria2/pull/61#issuecomment-16051793
   if (state_ == st_connected) {
     // Need to check read first, as SocketCore kinda expects this
     size_t buffered;
     lastError_ = SSLGetBufferedReadSize(sslCtx_, &buffered);
     if (lastError_ == noErr && buffered) {
-      return TLSDirection::TLS_WANT_READ;
+      return TLS_WANT_READ;
     }
   }
 
   if (writeBuffered_) {
-    return TLSDirection::TLS_WANT_WRITE;
+    return TLS_WANT_WRITE;
   }
 
   // Default to WANT_READ, as SocketCore kinda expects this
-  return TLSDirection::TLS_WANT_READ;
+  return TLS_WANT_READ;
 }
 
 ssize_t AppleTLSSession::writeData(const void* data, size_t len)

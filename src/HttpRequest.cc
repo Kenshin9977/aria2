@@ -144,13 +144,14 @@ std::string getHostText(const std::string& host, uint16_t port)
 
 std::string HttpRequest::createRequest()
 {
+  using enum Protocol;
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
   std::string requestLine(httpMethodToString(request_->getMethod()));
   requestLine.reserve(512);
   requestLine += ' ';
   if (proxyRequest_) {
-    if ((getProtocol() == Protocol::FTP ||
-         getProtocol() == Protocol::FTPS) &&
+    if ((getProtocol() == FTP ||
+         getProtocol() == FTPS) &&
         request_->getUsername().empty() &&
         authConfig_) {
       // Insert user into URI, like ftp://USER@host/
@@ -240,7 +241,7 @@ std::string HttpRequest::createRequest()
     path += getFile();
     auto cookies =
         cookieStorage_->criteriaFind(getHost(), path, Time().getTimeFromEpoch(),
-                                     getProtocol() == Protocol::HTTPS);
+                                     getProtocol() == HTTPS);
     for (auto c : cookies) {
       cookiesValue += c->toString();
       cookiesValue += ';';

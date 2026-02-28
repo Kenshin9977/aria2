@@ -85,6 +85,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
     const std::vector<std::string>& resolvedAddresses,
     const std::shared_ptr<Request>& proxyRequest)
 {
+  using enum Protocol;
   std::string options;
   std::shared_ptr<SocketCore> pooledSocket;
   std::string proxyMethod = resolveProxyMethod(getRequest()->getProtocol());
@@ -139,7 +140,7 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
   setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
   if (proxyMethod == V_TUNNEL) {
 #ifdef HAVE_LIBSSH2
-    if (getRequest()->getProtocol() == Protocol::SFTP) {
+    if (getRequest()->getProtocol() == SFTP) {
       return std::make_unique<SftpNegotiationCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           getDownloadEngine(), pooledSocket,
@@ -154,8 +155,8 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
         FtpNegotiationCommand::SEQ_SEND_CWD_PREP, options);
   }
 
-  assert(getRequest()->getProtocol() == Protocol::FTP ||
-         getRequest()->getProtocol() == Protocol::FTPS);
+  assert(getRequest()->getProtocol() == FTP ||
+         getRequest()->getProtocol() == FTPS);
 
   if (proxyMethod != V_GET) {
     assert(0);

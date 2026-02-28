@@ -41,31 +41,33 @@ namespace aria2 {
 
 Protocol toProtocol(const std::string& s)
 {
+  using enum Protocol;
   if (s == "http")
-    return Protocol::HTTP;
+    return HTTP;
   if (s == "https")
-    return Protocol::HTTPS;
+    return HTTPS;
   if (s == "ftp")
-    return Protocol::FTP;
+    return FTP;
   if (s == "ftps")
-    return Protocol::FTPS;
+    return FTPS;
   if (s == "sftp")
-    return Protocol::SFTP;
-  return Protocol::UNKNOWN;
+    return SFTP;
+  return UNKNOWN;
 }
 
 std::string_view protocolToString(Protocol p)
 {
+  using enum Protocol;
   switch (p) {
-  case Protocol::HTTP:
+  case HTTP:
     return "http";
-  case Protocol::HTTPS:
+  case HTTPS:
     return "https";
-  case Protocol::FTP:
+  case FTP:
     return "ftp";
-  case Protocol::FTPS:
+  case FTPS:
     return "ftps";
-  case Protocol::SFTP:
+  case SFTP:
     return "sftp";
   default:
     return "";

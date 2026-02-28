@@ -60,8 +60,9 @@ std::unique_ptr<AuthConfig>
 AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
                                     const Option* op)
 {
-  if (request->getProtocol() == Protocol::HTTP ||
-      request->getProtocol() == Protocol::HTTPS) {
+  using enum Protocol;
+  if (request->getProtocol() == HTTP ||
+      request->getProtocol() == HTTPS) {
     if (op->getAsBool(PREF_HTTP_AUTH_CHALLENGE)) {
       if (!request->getUsername().empty()) {
         updateBasicCred(std::make_unique<BasicCred>(
@@ -90,9 +91,9 @@ AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
       }
     }
   }
-  else if (request->getProtocol() == Protocol::FTP ||
-           request->getProtocol() == Protocol::FTPS ||
-           request->getProtocol() == Protocol::SFTP) {
+  else if (request->getProtocol() == FTP ||
+           request->getProtocol() == FTPS ||
+           request->getProtocol() == SFTP) {
     if (!request->getUsername().empty()) {
       if (request->hasPassword()) {
         return AuthConfig::create(request->getUsername(),

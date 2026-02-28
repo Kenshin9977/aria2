@@ -392,7 +392,8 @@ bool HttpResponseCommand::handleDefaultEncoding(
   // we can't continue to use this socket because server sends all entity
   // body instead of a segment.
   // Therefore, we shutdown the socket here if pipelining is enabled.
-  if (getRequest()->getMethod() == HttpMethod::GET && segment &&
+  using enum HttpMethod;
+  if (getRequest()->getMethod() == GET && segment &&
       segment->getPositionToWrite() == 0 &&
       !getRequest()->isPipeliningEnabled()) {
     auto teFilter = getTransferEncodingStreamFilter(httpResponse.get());
@@ -406,9 +407,9 @@ bool HttpResponseCommand::handleDefaultEncoding(
 
   prepareForNextAction(std::move(checkEntry));
 
-  if (getRequest()->getMethod() == HttpMethod::HEAD) {
+  if (getRequest()->getMethod() == HEAD) {
     poolConnection();
-    getRequest()->setMethod(HttpMethod::GET);
+    getRequest()->setMethod(GET);
   }
 
   return true;

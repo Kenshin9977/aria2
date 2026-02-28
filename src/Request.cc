@@ -48,10 +48,11 @@ namespace aria2 {
 
 const char* httpMethodToString(HttpMethod m)
 {
+  using enum HttpMethod;
   switch (m) {
-  case HttpMethod::GET:
+  case GET:
     return "GET";
-  case HttpMethod::HEAD:
+  case HEAD:
     return "HEAD";
   default:
     return "GET";

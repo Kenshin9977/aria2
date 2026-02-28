@@ -690,24 +690,25 @@ void AbstractCommand::initConnectTimeout()
 // HTTP proxies.
 std::string getProxyUri(Protocol protocol, const Option* option)
 {
+  using enum Protocol;
   // SOCKS5 proxy overrides all protocol-specific proxies
   std::string socks5 = option->get(PREF_SOCKS5_PROXY);
   if (!socks5.empty()) {
     return socks5;
   }
 
-  if (protocol == Protocol::HTTP) {
+  if (protocol == HTTP) {
     return getProxyOptionFor(PREF_HTTP_PROXY, PREF_HTTP_PROXY_USER,
                              PREF_HTTP_PROXY_PASSWD, option);
   }
 
-  if (protocol == Protocol::HTTPS) {
+  if (protocol == HTTPS) {
     return getProxyOptionFor(PREF_HTTPS_PROXY, PREF_HTTPS_PROXY_USER,
                              PREF_HTTPS_PROXY_PASSWD, option);
   }
 
-  if (protocol == Protocol::FTP || protocol == Protocol::FTPS ||
-      protocol == Protocol::SFTP) {
+  if (protocol == FTP || protocol == FTPS ||
+      protocol == SFTP) {
     return getProxyOptionFor(PREF_FTP_PROXY, PREF_FTP_PROXY_USER,
                              PREF_FTP_PROXY_PASSWD, option);
   }
@@ -908,9 +909,10 @@ bool AbstractCommand::checkIfConnectionEstablished(
 
 const std::string& AbstractCommand::resolveProxyMethod(Protocol protocol) const
 {
+  using enum Protocol;
   if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL ||
-      protocol == Protocol::HTTPS || protocol == Protocol::FTPS ||
-      protocol == Protocol::SFTP) {
+      protocol == HTTPS || protocol == FTPS ||
+      protocol == SFTP) {
     return V_TUNNEL;
   }
   return V_GET;

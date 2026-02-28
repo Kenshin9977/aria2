@@ -822,6 +822,7 @@ void gatherStoppedDownload(Dict* entryDict,
                            const std::shared_ptr<DownloadResult>& ds,
                            const std::vector<std::string>& keys)
 {
+  using enum ContextAttributeType;
   if (requested_key(keys, KEY_GID)) {
     entryDict->put(KEY_GID, ds->gid->toHex());
   }
@@ -912,12 +913,12 @@ void gatherStoppedDownload(Dict* entryDict,
 
 #ifdef ENABLE_BITTORRENT
   if (ds->attrs.size() >
-          static_cast<size_t>(ContextAttributeType::CTX_ATTR_BT) &&
+          static_cast<size_t>(CTX_ATTR_BT) &&
       ds->attrs[static_cast<size_t>(
-          ContextAttributeType::CTX_ATTR_BT)]) {
+          CTX_ATTR_BT)]) {
     const auto attrs = static_cast<TorrentAttribute*>(
         ds->attrs[static_cast<size_t>(
-                      ContextAttributeType::CTX_ATTR_BT)]
+                      CTX_ATTR_BT)]
             .get());
     if (requested_key(keys, KEY_BITTORRENT)) {
       auto btDict = Dict::g();

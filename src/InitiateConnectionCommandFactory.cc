@@ -54,10 +54,11 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     DownloadEngine* e)
 {
-  if (req->getProtocol() == Protocol::HTTP
+  using enum Protocol;
+  if (req->getProtocol() == HTTP
 #ifdef ENABLE_SSL
       // for SSL
-      || req->getProtocol() == Protocol::HTTPS
+      || req->getProtocol() == HTTPS
 #endif // ENABLE_SSL
   ) {
 
@@ -71,12 +72,12 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     return std::make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                       requestGroup, e);
   }
-  else if (req->getProtocol() == Protocol::FTP
+  else if (req->getProtocol() == FTP
 #ifdef ENABLE_SSL
-           || req->getProtocol() == Protocol::FTPS
+           || req->getProtocol() == FTPS
 #endif // ENABLE_SSL
 #ifdef HAVE_LIBSSH2
-           || req->getProtocol() == Protocol::SFTP
+           || req->getProtocol() == SFTP
 #endif // HAVE_LIBSSH2
   ) {
     if (req->getFile().empty()) {

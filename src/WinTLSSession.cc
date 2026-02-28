@@ -230,19 +230,20 @@ int WinTLSSession::closeConnection()
 
 TLSDirection WinTLSSession::checkDirection()
 {
+  using enum TLSDirection;
   if (state_ == st_handshake_write || state_ == st_handshake_write_last) {
-    return TLSDirection::TLS_WANT_WRITE;
+    return TLS_WANT_WRITE;
   }
   if (state_ == st_handshake_read) {
-    return TLSDirection::TLS_WANT_READ;
+    return TLS_WANT_READ;
   }
   if (readBuf_.size() || decBuf_.size()) {
-    return TLSDirection::TLS_WANT_READ;
+    return TLS_WANT_READ;
   }
   if (getLeftTLSRecordSize() || writeBuf_.size()) {
-    return TLSDirection::TLS_WANT_WRITE;
+    return TLS_WANT_WRITE;
   }
-  return TLSDirection::TLS_WANT_READ;
+  return TLS_WANT_READ;
 }
 
 namespace {
