@@ -172,9 +172,8 @@ bool ServerStatMan::load(const std::string& filename)
     std::vector<Scip> items;
     util::splitIter(p.first, p.second, std::back_inserter(items), ',');
     std::vector<std::string> m(MAX_FIELD);
-    for (std::vector<Scip>::const_iterator i = items.begin(), eoi = items.end();
-         i != eoi; ++i) {
-      auto p = util::divide((*i).first, (*i).second, '=');
+    for (const auto& item : items) {
+      auto p = util::divide(item.first, item.second, '=');
       int id = idField(p.first.first, p.first.second);
       if (id != MAX_FIELD) {
         m[id].assign(p.second.first, p.second.second);

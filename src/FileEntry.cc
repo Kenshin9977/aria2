@@ -358,17 +358,15 @@ bool FileEntry::removeRequest(const std::shared_ptr<Request>& request)
 void FileEntry::removeURIWhoseHostnameIs(std::string_view hostname)
 {
   std::deque<std::string> newURIs;
-  for (std::deque<std::string>::const_iterator itr = uris_.begin(),
-                                               eoi = uris_.end();
-       itr != eoi; ++itr) {
+  for (const auto& uri : uris_) {
     uri_split_result us;
-    if (uri_split(&us, (*itr).c_str()) == -1) {
+    if (uri_split(&us, uri.c_str()) == -1) {
       continue;
     }
     if (us.fields[USR_HOST].len != hostname.size() ||
-        memcmp((*itr).c_str() + us.fields[USR_HOST].off, hostname.data(),
+        memcmp(uri.c_str() + us.fields[USR_HOST].off, hostname.data(),
                hostname.size()) != 0) {
-      newURIs.push_back(*itr);
+      newURIs.push_back(uri);
     }
   }
   A2_LOG_DEBUG(fmt("Removed %lu duplicate hostname URIs for path=%s",
@@ -428,10 +426,8 @@ void FileEntry::reuseUri(const std::vector<std::string>& ignore)
   std::ranges::sort(errorUris);
   errorUris.erase(std::ranges::unique(errorUris).begin(), errorUris.end());
   if (A2_LOG_DEBUG_ENABLED) {
-    for (std::vector<std::string>::const_iterator i = errorUris.begin(),
-                                                  eoi = errorUris.end();
-         i != eoi; ++i) {
-      A2_LOG_DEBUG(fmt("error URI=%s", (*i).c_str()));
+    for (const auto& uri : errorUris) {
+      A2_LOG_DEBUG(fmt("error URI=%s", uri.c_str()));
     }
   }
   std::vector<std::string> reusableURIs;
@@ -455,10 +451,8 @@ void FileEntry::reuseUri(const std::vector<std::string>& ignore)
   if (A2_LOG_DEBUG_ENABLED) {
     A2_LOG_DEBUG(
         fmt("Found %u reusable URIs", static_cast<unsigned int>(ininum)));
-    for (std::vector<std::string>::const_iterator i = reusableURIs.begin(),
-                                                  eoi = reusableURIs.end();
-         i != eoi; ++i) {
-      A2_LOG_DEBUG(fmt("URI=%s", (*i).c_str()));
+    for (const auto& uri : reusableURIs) {
+      A2_LOG_DEBUG(fmt("URI=%s", uri.c_str()));
     }
   }
   uris_.insert(uris_.end(), reusableURIs.begin(), reusableURIs.end());

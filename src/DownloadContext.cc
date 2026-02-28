@@ -193,12 +193,9 @@ DownloadContext::getAttributes() const
 
 void DownloadContext::releaseRuntimeResource()
 {
-  for (std::vector<std::shared_ptr<FileEntry>>::const_iterator
-           i = fileEntries_.begin(),
-           eoi = fileEntries_.end();
-       i != eoi; ++i) {
-    (*i)->putBackRequest();
-    (*i)->releaseRuntimeResource();
+  for (const auto& fe : fileEntries_) {
+    fe->putBackRequest();
+    fe->releaseRuntimeResource();
   }
 }
 

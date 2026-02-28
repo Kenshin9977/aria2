@@ -191,10 +191,7 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
 void SegmentMan::getInFlightSegment(
     std::vector<std::shared_ptr<Segment>>& segments, cuid_t cuid)
 {
-  for (SegmentEntries::const_iterator itr = usedSegmentEntries_.begin(),
-                                      eoi = usedSegmentEntries_.end();
-       itr != eoi; ++itr) {
-    const auto& segmentEntry = *itr;
+  for (const auto& segmentEntry : usedSegmentEntries_) {
     if (segmentEntry->cuid == cuid) {
       segments.push_back(segmentEntry->segment);
     }
@@ -235,11 +232,8 @@ void SegmentMan::getSegment(std::vector<std::shared_ptr<Segment>>& segments,
       segments.push_back(segment);
     }
   }
-  for (std::vector<std::shared_ptr<Segment>>::const_iterator
-           i = pending.begin(),
-           eoi = pending.end();
-       i != eoi; ++i) {
-    cancelSegment(cuid, *i);
+  for (const auto& seg : pending) {
+    cancelSegment(cuid, seg);
   }
 }
 

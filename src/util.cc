@@ -2102,9 +2102,9 @@ std::string applyDir(const std::string& dir, const std::string& relPath)
     }
   }
 #ifdef __MINGW32__
-  for (std::string::iterator i = s.begin(), eoi = s.end(); i != eoi; ++i) {
-    if (*i == '\\') {
-      *i = '/';
+  for (auto& c : s) {
+    if (c == '\\') {
+      c = '/';
     }
   }
 #endif // __MINGW32__
