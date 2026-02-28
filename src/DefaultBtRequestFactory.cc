@@ -192,6 +192,7 @@ std::vector<std::unique_ptr<BtRequestMessage>>
 DefaultBtRequestFactory::createRequestMessagesOnEndGame(size_t max)
 {
   auto requests = std::vector<std::unique_ptr<BtRequestMessage>>{};
+  auto missingBlockIndexes = std::vector<size_t>{};
   for (auto itr = std::begin(pieces_), eoi = std::end(pieces_);
        itr != eoi && requests.size() < max; ++itr) {
     auto& piece = *itr;
@@ -200,7 +201,7 @@ DefaultBtRequestFactory::createRequestMessagesOnEndGame(size_t max)
 
     piece->getAllMissingBlockIndexes(misbitfield.get(), mislen);
 
-    auto missingBlockIndexes = std::vector<size_t>{};
+    missingBlockIndexes.clear();
     size_t blockIndex = 0;
     for (size_t i = 0; i < mislen; ++i) {
       unsigned char bits = misbitfield[i];
