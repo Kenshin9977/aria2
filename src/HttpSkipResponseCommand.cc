@@ -57,6 +57,7 @@
 #include "StreamFilter.h"
 #include "BinaryStream.h"
 #include "NullSinkStreamFilter.h"
+#include "FileEntry.h"
 #include "SinkStreamFilter.h"
 #include "error_code.h"
 #include "SocketRecvBuffer.h"
@@ -214,6 +215,10 @@ bool HttpSkipResponseCommand::processResponse()
         return prepareForRetry(0);
       }
       throw DL_ABORT_EX2(EX_AUTH_FAILED, error_code::HTTP_AUTH_FAILED);
+    case 403:
+      getFileEntry()->getSlowStart().backOff();
+      throw DL_ABORT_EX2(fmt(EX_BAD_STATUS, statusCode),
+                         error_code::HTTP_PROTOCOL_ERROR);
     case 404:
       if (getOption()->getAsInt(PREF_MAX_FILE_NOT_FOUND) == 0) {
         throw DL_ABORT_EX2(MSG_RESOURCE_NOT_FOUND,

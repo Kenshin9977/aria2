@@ -100,7 +100,8 @@ aria2c_SOURCES = AllTest.cc\
 	RealtimeCommandTest.cc \
 	HttpCommandIntegrationTest.cc \
 	FtpCommandIntegrationTest.cc \
-	SmallClassCoverageTest.cc
+	SmallClassCoverageTest.cc \
+	SlowStartControllerTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc

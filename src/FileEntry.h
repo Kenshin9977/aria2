@@ -51,6 +51,7 @@
 #include "error_code.h"
 #include "A2STR.h"
 #include "TimerA2.h"
+#include "SlowStartController.h"
 #include "util.h"
 #include "a2functional.h"
 
@@ -92,6 +93,7 @@ private:
 
   Timer lastFasterReplace_;
   int maxConnectionPerServer_;
+  SlowStartController slowStart_;
 
   bool requested_;
   bool uniqueProtocol_;
@@ -229,9 +231,17 @@ public:
   // The extracted URIResults are removed from uriResults_.
   void extractURIResult(std::deque<URIResult>& res, error_code::Value r);
 
-  void setMaxConnectionPerServer(int n) { maxConnectionPerServer_ = n; }
+  void setMaxConnectionPerServer(int n)
+  {
+    maxConnectionPerServer_ = n;
+    slowStart_.setCeiling(n);
+  }
 
   int getMaxConnectionPerServer() const { return maxConnectionPerServer_; }
+
+  SlowStartController& getSlowStart() { return slowStart_; }
+
+  const SlowStartController& getSlowStart() const { return slowStart_; }
 
   // Reuse URIs which have not emitted error so far and whose host
   // component is not included in ignore. The reusable URIs are

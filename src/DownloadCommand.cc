@@ -301,10 +301,12 @@ bool DownloadCommand::shouldEnableWriteCheck()
 
 void DownloadCommand::checkLowestDownloadSpeed() const
 {
+  int nowSpeed = peerStat_->calculateDownloadSpeed();
+  getFileEntry()->getSlowStart().update(nowSpeed);
+
   if (lowestDownloadSpeedLimit_ > 0 &&
       peerStat_->getDownloadStartTime().difference(global::wallclock()) >=
           startupIdleTime_) {
-    int nowSpeed = peerStat_->calculateDownloadSpeed();
     if (nowSpeed <= lowestDownloadSpeedLimit_) {
       throw DL_ABORT_EX2(fmt(EX_TOO_SLOW_DOWNLOAD_SPEED, nowSpeed,
                              lowestDownloadSpeedLimit_,

@@ -75,6 +75,7 @@ FileEntry::FileEntry(std::string path, int64_t length, int64_t offset,
       path_(std::move(path)),
       lastFasterReplace_(Timer::zero()),
       maxConnectionPerServer_(1),
+      slowStart_(1),
       requested_(true),
       uniqueProtocol_(false)
 {
@@ -84,6 +85,7 @@ FileEntry::FileEntry()
     : length_(0),
       offset_(0),
       maxConnectionPerServer_(1),
+      slowStart_(1),
       requested_(false),
       uniqueProtocol_(false)
 {
@@ -144,8 +146,10 @@ std::shared_ptr<Request> FileEntry::getRequestWithInFlightHosts(
       }
       req = std::make_shared<Request>();
       if (req->setUri(uri)) {
+        int effectiveLimit = std::min(maxConnectionPerServer_,
+                                      slowStart_.getAllowedConnections());
         if (std::ranges::count(inFlightHosts, req->getHost()) >=
-            maxConnectionPerServer_) {
+            effectiveLimit) {
           pending.push_back(uri);
           ignoreHost.push_back(req->getHost());
           req.reset();
