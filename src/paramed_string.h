@@ -246,7 +246,7 @@ void expand(InputIterator first, InputIterator last, OutputIterator out)
     }
   }
   if (res.size() != 1 || !res[0].empty()) {
-    std::copy(res.begin(), res.end(), out);
+    std::ranges::copy(res, out);
   }
 }
 

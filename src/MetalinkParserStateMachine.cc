@@ -536,8 +536,8 @@ std::string MetalinkParserStateMachine::getErrorString() const
 {
   std::stringstream error;
   error << "Specification violation: ";
-  std::copy(errors_.begin(), errors_.end(),
-            std::ostream_iterator<std::string>(error, ", "));
+  std::ranges::copy(errors_,
+                     std::ostream_iterator<std::string>(error, ", "));
   return error.str();
 }
 

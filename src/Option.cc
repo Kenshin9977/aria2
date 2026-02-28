@@ -165,8 +165,8 @@ void Option::remove(PrefPtr pref)
 
 void Option::clear()
 {
-  std::fill(use_.begin(), use_.end(), 0);
-  std::fill(table_.begin(), table_.end(), "");
+  std::ranges::fill(use_, 0);
+  std::ranges::fill(table_, "");
 }
 
 void Option::merge(const Option& option)
