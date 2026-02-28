@@ -130,8 +130,7 @@ NsCookieParser::parse(const std::string& filename, time_t creationTime)
     if (line[0] == '#') {
       continue;
     }
-    auto c = parseNsCookie(line, creationTime);
-    if (c) {
+    if (auto c = parseNsCookie(line, creationTime)) {
       cookies.push_back(std::move(c));
     }
   }

@@ -174,19 +174,17 @@ HandshakeExtensionMessage::create(const unsigned char* data, size_t length)
         "Unexpected payload format for extended message handshake");
   }
   auto msg = make_unique<HandshakeExtensionMessage>();
-  const Integer* port = downcast<Integer>(dict->get("p"));
-  if (port && 0 < port->i() && port->i() < 65536) {
+  if (const auto* port = downcast<Integer>(dict->get("p"));
+      port && 0 < port->i() && port->i() < 65536) {
     msg->tcpPort_ = port->i();
   }
-  const String* version = downcast<String>(dict->get("v"));
-  if (version) {
+  if (const auto* version =
+          downcast<String>(dict->get("v"))) {
     msg->clientVersion_ = version->s();
   }
-  const Dict* extDict = downcast<Dict>(dict->get("m"));
-  if (extDict) {
+  if (const auto* extDict = downcast<Dict>(dict->get("m"))) {
     for (auto& [name, value] : *extDict) {
-      const Integer* extId = downcast<Integer>(value);
-      if (extId) {
+      if (const auto* extId = downcast<Integer>(value)) {
         if (extId->i() < 0 || extId->i() > 255) {
           A2_LOG_DEBUG(fmt("Extension ID=%" PRId64 " is invalid", extId->i()));
           continue;

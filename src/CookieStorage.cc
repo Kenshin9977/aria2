@@ -198,8 +198,7 @@ void DomainNode::removeNode(DomainNode* node) { next_.erase(node->getLabel()); }
 
 DomainNode* DomainNode::findNext(const std::string& label) const
 {
-  auto i = next_.find(label);
-  if (i == std::end(next_)) {
+  if (auto i = next_.find(label); i == std::end(next_)) {
     return nullptr;
   }
   else {
@@ -281,8 +280,7 @@ bool CookieStorage::store(std::unique_ptr<Cookie> cookie, time_t now)
   auto labels = splitDomainLabel(cookie->getDomain());
   auto node = rootNode_.get();
   for (auto i = labels.rbegin(), eoi = labels.rend(); i != eoi; ++i) {
-    auto nextNode = node->findNext(*i);
-    if (nextNode) {
+    if (auto nextNode = node->findNext(*i)) {
       node = nextNode;
     }
     else {

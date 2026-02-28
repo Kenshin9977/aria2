@@ -56,11 +56,12 @@ bool HttpHeader::defined(int hdKey) const { return table_.count(hdKey); }
 
 std::optional<std::string_view> HttpHeader::find(int hdKey) const
 {
-  auto itr = table_.find(hdKey);
-  if (itr == table_.end()) {
+  if (auto itr = table_.find(hdKey); itr == table_.end()) {
     return std::nullopt;
   }
-  return std::string_view(itr->second);
+  else {
+    return std::string_view(itr->second);
+  }
 }
 
 std::vector<std::string> HttpHeader::findAll(int hdKey) const

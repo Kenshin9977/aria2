@@ -202,27 +202,28 @@ UTPexExtensionMessage::create(const unsigned char* data, size_t len)
   auto msg = make_unique<UTPexExtensionMessage>(*data);
 
   auto decoded = bencode2::decode({data + 1, len - 1});
-  const Dict* dict = downcast<Dict>(decoded);
-  if (dict) {
-    const String* added = downcast<String>(dict->get("added"));
-    if (added) {
+  if (const auto* dict = downcast<Dict>(decoded)) {
+    if (const auto* added = downcast<String>(dict->get("added"))) {
       bittorrent::extractPeer(added, AF_INET,
                               std::back_inserter(msg->freshPeers_));
     }
-    const String* dropped = downcast<String>(dict->get("dropped"));
-    if (dropped) {
-      bittorrent::extractPeer(dropped, AF_INET,
-                              std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped =
+            downcast<String>(dict->get("dropped"))) {
+      bittorrent::extractPeer(
+          dropped, AF_INET,
+          std::back_inserter(msg->droppedPeers_));
     }
-    const String* added6 = downcast<String>(dict->get("added6"));
-    if (added6) {
-      bittorrent::extractPeer(added6, AF_INET6,
-                              std::back_inserter(msg->freshPeers_));
+    if (const auto* added6 =
+            downcast<String>(dict->get("added6"))) {
+      bittorrent::extractPeer(
+          added6, AF_INET6,
+          std::back_inserter(msg->freshPeers_));
     }
-    const String* dropped6 = downcast<String>(dict->get("dropped6"));
-    if (dropped6) {
-      bittorrent::extractPeer(dropped6, AF_INET6,
-                              std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped6 =
+            downcast<String>(dict->get("dropped6"))) {
+      bittorrent::extractPeer(
+          dropped6, AF_INET6,
+          std::back_inserter(msg->droppedPeers_));
     }
   }
   return msg;

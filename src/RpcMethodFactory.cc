@@ -271,8 +271,8 @@ std::unique_ptr<RpcMethod> createMethod(const std::string& methodName)
 
 RpcMethod* getMethod(const std::string& methodName)
 {
-  auto itr = cache.find(methodName);
-  if (itr == std::end(cache)) {
+  if (auto itr = cache.find(methodName);
+      itr == std::end(cache)) {
     auto m = createMethod(methodName);
     if (m) {
       auto [it, inserted] =
@@ -286,8 +286,9 @@ RpcMethod* getMethod(const std::string& methodName)
 
     return noSuchRpcMethod.get();
   }
-
-  return (*itr).second.get();
+  else {
+    return (*itr).second.get();
+  }
 }
 
 } // namespace rpc

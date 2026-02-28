@@ -120,8 +120,7 @@ void toStringList(OutputIterator out, const List* src)
     return;
   }
   for (auto& elem : *src) {
-    const String* s = downcast<String>(elem);
-    if (s) {
+    if (const auto* s = downcast<String>(elem)) {
       *out++ = s->s();
     }
   }

@@ -75,11 +75,12 @@ public:
   }
   PrefPtr k2p(const std::string& k) const
   {
-    auto i = k2p_.find(k);
-    if (i == k2p_.end()) {
+    if (auto i = k2p_.find(k); i == k2p_.end()) {
       return i2p_[0];
     }
-    return (*i).second;
+    else {
+      return (*i).second;
+    }
   }
 
 private:

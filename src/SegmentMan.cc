@@ -168,8 +168,9 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
                    segment->getWrittenLength()));
 
   if (piece->getLength() > 0) {
-    auto positr = segmentWrittenLengthMemo_.find(segment->getIndex());
-    if (positr != segmentWrittenLengthMemo_.end()) {
+    if (auto positr =
+            segmentWrittenLengthMemo_.find(segment->getIndex());
+        positr != segmentWrittenLengthMemo_.end()) {
       const auto writtenLength = (*positr).second;
       A2_LOG_DEBUG(fmt("writtenLength(in memo)=%" PRId64
                        ", writtenLength=%" PRId64,

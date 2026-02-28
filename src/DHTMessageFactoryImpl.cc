@@ -90,12 +90,12 @@ std::shared_ptr<DHTNode> DHTMessageFactoryImpl::getRemoteNode(
 namespace {
 const Dict* getDictionary(const Dict* dict, const std::string& key)
 {
-  const Dict* d = downcast<Dict>(dict->get(key));
-  if (d) {
+  if (const auto* d = downcast<Dict>(dict->get(key))) {
     return d;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -103,12 +103,12 @@ const Dict* getDictionary(const Dict* dict, const std::string& key)
 namespace {
 const String* getString(const Dict* dict, const std::string& key)
 {
-  const String* c = downcast<String>(dict->get(key));
-  if (c) {
+  if (const auto* c = downcast<String>(dict->get(key))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -116,12 +116,12 @@ const String* getString(const Dict* dict, const std::string& key)
 namespace {
 const Integer* getInteger(const Dict* dict, const std::string& key)
 {
-  const Integer* c = downcast<Integer>(dict->get(key));
-  if (c) {
+  if (const auto* c = downcast<Integer>(dict->get(key))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -129,13 +129,13 @@ const Integer* getInteger(const Dict* dict, const std::string& key)
 namespace {
 const String* getString(const List* list, size_t index)
 {
-  const String* c = downcast<String>(list->get(index));
-  if (c) {
+  if (const auto* c = downcast<String>(list->get(index))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. element[%lu] is not String.",
-                          static_cast<unsigned long>(index)));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. element[%lu] is not String.",
+            static_cast<unsigned long>(index)));
   }
 }
 } // namespace
@@ -143,13 +143,13 @@ const String* getString(const List* list, size_t index)
 namespace {
 const Integer* getInteger(const List* list, size_t index)
 {
-  const Integer* c = downcast<Integer>(list->get(index));
-  if (c) {
+  if (const auto* c = downcast<Integer>(list->get(index))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. element[%lu] is not Integer.",
-                          static_cast<unsigned long>(index)));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. element[%lu] is not Integer.",
+            static_cast<unsigned long>(index)));
   }
 }
 } // namespace
@@ -157,12 +157,12 @@ const Integer* getInteger(const List* list, size_t index)
 namespace {
 const List* getList(const Dict* dict, const std::string& key)
 {
-  const List* l = downcast<List>(dict->get(key));
-  if (l) {
+  if (const auto* l = downcast<List>(dict->get(key))) {
     return l;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -435,8 +435,8 @@ DHTMessageFactoryImpl::createGetPeersReplyMessage(
   size_t clen = bittorrent::getCompactLength(family_);
   if (valuesList) {
     for (auto& elem : *valuesList) {
-      const String* data = downcast<String>(elem);
-      if (data && data->s().size() == clen) {
+      if (const auto* data = downcast<String>(elem);
+          data && data->s().size() == clen) {
         auto [ip, port] = bittorrent::unpackcompact(data->uc(), family_);
         if (ip.empty()) {
           continue;

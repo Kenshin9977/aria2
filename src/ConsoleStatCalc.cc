@@ -179,8 +179,7 @@ void printProgress(ColorizedStream& o, const std::shared_ptr<RequestGroup>& rg,
   printSizeProgress(o, rg, stat, sizeFormatter);
   o << " CN:" << rg->getNumConnection();
 #ifdef ENABLE_BITTORRENT
-  auto btObj = e->getBtRegistry()->get(rg->getGID());
-  if (btObj) {
+  if (auto btObj = e->getBtRegistry()->get(rg->getGID())) {
     const PeerSet& peers = btObj->peerStorage->getUsedPeers();
     o << " SD:" << countSeeder(peers.begin(), peers.end());
   }

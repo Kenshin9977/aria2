@@ -96,8 +96,8 @@ void PollEventPoll::poll(const struct timeval& tv)
     for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
          first != last; ++first) {
       if (first->revents) {
-        auto itr = socketEntries_.find(first->fd);
-        if (itr == std::end(socketEntries_)) {
+        if (auto itr = socketEntries_.find(first->fd);
+            itr == std::end(socketEntries_)) {
           A2_LOG_DEBUG(
               fmt("Socket %d is not found in SocketEntries.", first->fd));
         }

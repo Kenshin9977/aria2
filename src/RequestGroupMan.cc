@@ -439,8 +439,7 @@ public:
         group->releaseRuntimeResource(e_);
         group->setForceHaltRequested(false);
 
-        auto pendingOption = group->getPendingOption();
-        if (pendingOption) {
+        if (auto pendingOption = group->getPendingOption()) {
           changeOption(group, *pendingOption, e_);
         }
 

@@ -153,15 +153,17 @@ bool DNSCache::isExpired(const CacheEntry& entry) const
 const std::string& DNSCache::find(const std::string& hostname,
                                   uint16_t port)
 {
-  auto i = entries_.find({hostname, port});
-  if (i == entries_.end()) {
+  if (auto i = entries_.find({hostname, port});
+      i == entries_.end()) {
     return A2STR::NIL;
   }
-  if (isExpired(i->second)) {
+  else if (isExpired(i->second)) {
     entries_.erase(i);
     return A2STR::NIL;
   }
-  return i->second.getGoodAddr();
+  else {
+    return i->second.getGoodAddr();
+  }
 }
 
 void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
@@ -183,8 +185,8 @@ void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
 void DNSCache::markBad(const std::string& hostname, const std::string& ipaddr,
                        uint16_t port)
 {
-  auto i = entries_.find({hostname, port});
-  if (i != entries_.end()) {
+  if (auto i = entries_.find({hostname, port});
+      i != entries_.end()) {
     i->second.markBad(ipaddr);
   }
 }

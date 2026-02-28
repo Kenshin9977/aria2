@@ -72,26 +72,29 @@ public:
   inline static std::unique_ptr<MessageDigestImpl>
   create(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    if (i == hashes.end()) {
+    if (auto i = hashes.find(hashType);
+        i == hashes.end()) {
       return nullptr;
     }
-    return std::get<0>(i->second)();
+    else {
+      return std::get<0>(i->second)();
+    }
   }
 
   inline static bool supports(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    return i != hashes.end();
+    return hashes.find(hashType) != hashes.end();
   }
 
   inline static size_t getDigestLength(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    if (i == hashes.end()) {
+    if (auto i = hashes.find(hashType);
+        i == hashes.end()) {
       return 0;
     }
-    return std::get<1>(i->second);
+    else {
+      return std::get<1>(i->second);
+    }
   }
 
 public:

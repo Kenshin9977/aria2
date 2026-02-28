@@ -303,8 +303,7 @@ void DownloadContext::updateDownload(size_t bytes)
 void DownloadContext::updateUploadSpeed(size_t bytes)
 {
   netStat_.updateUploadSpeed(bytes);
-  auto rgman = ownerRequestGroup_->getRequestGroupMan();
-  if (rgman) {
+  if (auto rgman = ownerRequestGroup_->getRequestGroupMan()) {
     rgman->getNetStat().updateUploadSpeed(bytes);
   }
 }
@@ -312,8 +311,7 @@ void DownloadContext::updateUploadSpeed(size_t bytes)
 void DownloadContext::updateUploadLength(size_t bytes)
 {
   netStat_.updateUploadLength(bytes);
-  auto rgman = ownerRequestGroup_->getRequestGroupMan();
-  if (rgman) {
+  if (auto rgman = ownerRequestGroup_->getRequestGroupMan()) {
     rgman->getNetStat().updateUploadLength(bytes);
   }
 }

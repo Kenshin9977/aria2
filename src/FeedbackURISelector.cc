@@ -142,8 +142,7 @@ std::string FeedbackURISelector::selectFaster(
       continue;
     }
     auto protocol = uri::getFieldString(us, USR_SCHEME, u.c_str());
-    auto ss = serverStatMan_->find(host, protocol);
-    if (!ss) {
+    if (auto ss = serverStatMan_->find(host, protocol); !ss) {
       normCands.push_back(u);
     }
     else if (ss->isOK()) {

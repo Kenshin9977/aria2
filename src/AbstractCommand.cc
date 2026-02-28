@@ -224,8 +224,8 @@ bool AbstractCommand::execute()
       // Find faster Request when no segment split is allowed.
       if (req_ && fileEntry_->countPooledRequest() > 0 &&
           requestGroup_->getPendingLength() < calculateMinSplitSize() * 2) {
-        auto fasterRequest = fileEntry_->findFasterRequest(req_);
-        if (fasterRequest) {
+        if (auto fasterRequest =
+                fileEntry_->findFasterRequest(req_)) {
           useFasterRequest(fasterRequest);
           return true;
         }
@@ -241,9 +241,9 @@ bool AbstractCommand::execute()
         if (getOption()->getAsBool(PREF_SELECT_LEAST_USED_HOST)) {
           getDownloadEngine()->getRequestGroupMan()->getUsedHosts(usedHosts);
         }
-        auto fasterRequest = fileEntry_->findFasterRequest(
-            req_, usedHosts, e_->getRequestGroupMan()->getServerStatMan());
-        if (fasterRequest) {
+        if (auto fasterRequest = fileEntry_->findFasterRequest(
+                req_, usedHosts,
+                e_->getRequestGroupMan()->getServerStatMan())) {
           useFasterRequest(fasterRequest);
           return true;
         }

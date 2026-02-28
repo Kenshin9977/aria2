@@ -63,9 +63,8 @@ void BtRejectMessage::doReceivedAction()
   }
   // TODO Current implementation does not close a connection even if
   // a request for this reject message has never sent.
-  auto slot = getBtMessageDispatcher()->getOutstandingRequest(
-      getIndex(), getBegin(), getLength());
-  if (slot) {
+  if (auto slot = getBtMessageDispatcher()->getOutstandingRequest(
+          getIndex(), getBegin(), getLength())) {
     getBtMessageDispatcher()->removeOutstandingRequest(slot);
   }
   else {

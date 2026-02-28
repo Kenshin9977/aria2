@@ -103,8 +103,7 @@ void DHTPeerAnnounceStorage::getPeers(std::vector<std::shared_ptr<Peer>>& peers,
 {
   auto entry = std::make_shared<DHTPeerAnnounceEntry>(infoHash);
 
-  auto i = entries_.find(entry);
-  if (i != entries_.end()) {
+  if (auto i = entries_.find(entry); i != entries_.end()) {
     (*i)->getPeers(peers);
   }
 }

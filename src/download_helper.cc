@@ -254,8 +254,7 @@ createBtMagnetRequestGroup(const std::string& magnetLink,
                        util::toHex(torrentAttrs->infoHash) + ".torrent");
 
     bittorrent::ValueBaseBencodeParser parser;
-    auto torrent = parseFile(parser, torrentFilename);
-    if (torrent) {
+    if (auto torrent = parseFile(parser, torrentFilename)) {
       auto rg = createBtRequestGroup(torrentFilename, optionTemplate, {},
                                      torrent.get());
       const auto& actualInfoHash =

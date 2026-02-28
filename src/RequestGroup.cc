@@ -473,8 +473,7 @@ void RequestGroup::createInitialCommand(
         downloadContext_, nullptr, option_.get());
     adjustFilename(progressInfoFile.get());
     initPieceStorage();
-    auto checkEntry = createCheckIntegrityEntry();
-    if (checkEntry) {
+    if (auto checkEntry = createCheckIntegrityEntry()) {
       processCheckIntegrityEntry(commands, std::move(checkEntry), e);
     }
     return;

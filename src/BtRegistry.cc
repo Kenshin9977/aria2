@@ -52,8 +52,7 @@ BtRegistry::BtRegistry() : tcpPort_{0}, udpPort_{0} {}
 const std::shared_ptr<DownloadContext>&
 BtRegistry::getDownloadContext(a2_gid_t gid) const
 {
-  auto res = get(gid);
-  if (res) {
+  if (auto res = get(gid)) {
     return res->downloadContext;
   }
   else {
@@ -80,8 +79,7 @@ void BtRegistry::put(a2_gid_t gid, std::unique_ptr<BtObject> obj)
 
 BtObject* BtRegistry::get(a2_gid_t gid) const
 {
-  auto i = pool_.find(gid);
-  if (i == std::end(pool_)) {
+  if (auto i = pool_.find(gid); i == std::end(pool_)) {
     return nullptr;
   }
   else {

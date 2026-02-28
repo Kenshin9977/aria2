@@ -1050,11 +1050,12 @@ const std::set<std::string>& crypto::hash::all() { return names; }
 
 Algorithms crypto::hash::lookup(const std::string& name)
 {
-  auto i = mapped.find(name);
-  if (unlikely(i == mapped_end)) {
+  if (auto i = mapped.find(name); unlikely(i == mapped_end)) {
     return algoNone;
   }
-  return i->second;
+  else {
+    return i->second;
+  }
 }
 
 std::unique_ptr<Algorithm> crypto::hash::create(Algorithms algo)

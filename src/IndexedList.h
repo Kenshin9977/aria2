@@ -332,8 +332,7 @@ public:
   // returns true if it succeeds. Complexity: O(1)
   bool push_back(KeyType key, ValuePtrType value)
   {
-    auto i = index_.find(key);
-    if (i == std::end(index_)) {
+    if (auto i = index_.find(key); i == std::end(index_)) {
       index_.insert({key, value});
       seq_.emplace_back(key, value);
       return true;
@@ -348,8 +347,7 @@ public:
   // returns true if it succeeds. Complexity: O(1)
   bool push_front(KeyType key, ValuePtrType value)
   {
-    auto i = index_.find(key);
-    if (i == std::end(index_)) {
+    if (auto i = index_.find(key); i == std::end(index_)) {
       index_.insert({key, value});
       seq_.emplace_front(key, value);
       return true;
@@ -368,8 +366,7 @@ public:
     if (dest > size()) {
       return std::end(seq_);
     }
-    auto i = index_.find(key);
-    if (i == std::end(index_)) {
+    if (auto i = index_.find(key); i == std::end(index_)) {
       auto j = std::begin(seq_);
       std::advance(j, dest);
       index_.insert({key, value});
@@ -387,8 +384,7 @@ public:
   // last, otherwise O(N)
   iterator insert(iterator dest, KeyType key, ValuePtrType value)
   {
-    auto i = index_.find(key);
-    if (i == std::end(index_)) {
+    if (auto i = index_.find(key); i == std::end(index_)) {
       index_.insert({key, value});
       return iterator(seq_.insert(dest.p, {key, value}));
     }
@@ -408,8 +404,7 @@ public:
     v.reserve(std::distance(first, last));
     for (; first != last; ++first) {
       auto key = keyFunc(*first);
-      auto i = index_.find(key);
-      if (i == std::end(index_)) {
+      if (auto i = index_.find(key); i == std::end(index_)) {
         index_.insert({key, *first});
         v.emplace_back(key, *first);
       }
@@ -428,8 +423,7 @@ public:
     v.reserve(std::distance(first, last));
     for (; first != last; ++first) {
       auto key = keyFunc(*first);
-      auto i = index_.find(key);
-      if (i == std::end(index_)) {
+      if (auto i = index_.find(key); i == std::end(index_)) {
         index_.insert({key, *first});
         v.emplace_back(key, *first);
       }
@@ -562,8 +556,8 @@ public:
   // returns ValuePtrType().  Complexity: O(1)
   ValuePtrType get(KeyType key) const
   {
-    auto idxent = index_.find(key);
-    if (idxent == std::end(index_)) {
+    if (auto idxent = index_.find(key);
+        idxent == std::end(index_)) {
       return ValuePtrType();
     }
     else {

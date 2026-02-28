@@ -115,8 +115,8 @@ public:
   void findAll(OutputIterator out, const std::string& hostname,
                uint16_t port)
   {
-    auto i = entries_.find({hostname, port});
-    if (i != entries_.end()) {
+    if (auto i = entries_.find({hostname, port});
+        i != entries_.end()) {
       if (isExpired(i->second)) {
         entries_.erase(i);
         return;

@@ -140,8 +140,7 @@ void extractUrlList(TorrentAttribute* torrent, std::vector<std::string>& uris,
     void visit(const List& v) override
     {
       for (auto& elem : v) {
-        const String* uri = downcast<String>(elem);
-        if (uri) {
+        if (const auto* uri = downcast<String>(elem)) {
           std::string utf8Uri = util::encodeNonUtf8(uri->s());
           uris_.push_back(utf8Uri);
           torrent_->urlList.push_back(utf8Uri);
@@ -262,8 +261,7 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
       auto pathelemOutItr = pathelem.begin();
       ++pathelemOutItr;
       for (auto& p : *pathList) {
-        const String* elem = downcast<String>(p);
-        if (elem) {
+        if (const auto* elem = downcast<String>(p)) {
           (*pathelemOutItr++) = elem->s();
         }
         else {
@@ -350,8 +348,8 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
 namespace {
 void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
 {
-  const List* announceList = downcast<List>(rootDict->get(C_ANNOUNCE_LIST));
-  if (announceList) {
+  if (const auto* announceList =
+          downcast<List>(rootDict->get(C_ANNOUNCE_LIST))) {
     for (auto& elem : *announceList) {
       const List* tier = downcast<List>(elem);
       if (!tier) {
@@ -359,9 +357,9 @@ void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
       }
       std::vector<std::string> ntier;
       for (auto& t : *tier) {
-        const String* uri = downcast<String>(t);
-        if (uri) {
-          ntier.push_back(util::encodeNonUtf8(util::strip(uri->s())));
+        if (const auto* uri = downcast<String>(t)) {
+          ntier.push_back(
+              util::encodeNonUtf8(util::strip(uri->s())));
         }
       }
       if (!ntier.empty()) {
@@ -383,8 +381,7 @@ void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
 namespace {
 void extractNodes(TorrentAttribute* torrent, const ValueBase* nodesListSrc)
 {
-  const List* nodesList = downcast<List>(nodesListSrc);
-  if (nodesList) {
+  if (const auto* nodesList = downcast<List>(nodesListSrc)) {
     for (auto& elem : *nodesList) {
       const List* addrPairList = downcast<List>(elem);
       if (!addrPairList || addrPairList->size() != 2) {

@@ -217,8 +217,7 @@ void extractUris(OutputIterator out, const List* src)
 {
   if (src) {
     for (auto& elem : *src) {
-      const String* uri = downcast<String>(elem);
-      if (uri) {
+      if (const auto* uri = downcast<String>(elem)) {
         out++ = uri->s();
       }
     }
@@ -1325,16 +1324,16 @@ std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
   auto& s = files[index];
   size_t delcount = 0;
   for (auto& elem : *delUrisParam) {
-    const String* uri = downcast<String>(elem);
-    if (uri && s->removeUri(uri->s())) {
+    if (const auto* uri = downcast<String>(elem);
+        uri && s->removeUri(uri->s())) {
       ++delcount;
     }
   }
   size_t addcount = 0;
   if (posGiven) {
     for (auto& elem : *addUrisParam) {
-      const String* uri = downcast<String>(elem);
-      if (uri && s->insertUri(uri->s(), pos)) {
+      if (const auto* uri = downcast<String>(elem);
+          uri && s->insertUri(uri->s(), pos)) {
         ++addcount;
         ++pos;
       }
@@ -1342,8 +1341,8 @@ std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
   }
   else {
     for (auto& elem : *addUrisParam) {
-      const String* uri = downcast<String>(elem);
-      if (uri && s->addUri(uri->s())) {
+      if (const auto* uri = downcast<String>(elem);
+          uri && s->addUri(uri->s())) {
         ++addcount;
       }
     }

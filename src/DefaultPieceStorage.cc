@@ -171,11 +171,12 @@ void DefaultPieceStorage::addUsedPiece(const std::shared_ptr<Piece>& piece)
 
 std::shared_ptr<Piece> DefaultPieceStorage::findUsedPiece(size_t index) const
 {
-  auto i = usedPieces_.find(index);
-  if (i == usedPieces_.end()) {
+  if (auto i = usedPieces_.find(index); i == usedPieces_.end()) {
     return nullptr;
   }
-  return i->second;
+  else {
+    return i->second;
+  }
 }
 
 #ifdef ENABLE_BITTORRENT
@@ -684,8 +685,7 @@ void DefaultPieceStorage::flushWrDiskCacheEntry(bool releaseEntries)
   // cache by non-decreasing offset, which is good to reduce disk seek
   // unless the file is heavily fragmented.
   for (auto& [idx, piece] : usedPieces_) {
-    auto ce = piece->getWrDiskCacheEntry();
-    if (ce) {
+    if (auto ce = piece->getWrDiskCacheEntry()) {
       piece->flushWrCache(wrDiskCache_);
       if (releaseEntries) {
         piece->releaseWrCache(wrDiskCache_);

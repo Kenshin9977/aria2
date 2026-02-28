@@ -60,11 +60,13 @@ std::shared_ptr<ServerStat>
 ServerStatMan::find(const std::string& hostname,
                     const std::string& protocol) const
 {
-  auto i = serverStats_.find({hostname, protocol});
-  if (i == serverStats_.end()) {
+  if (auto i = serverStats_.find({hostname, protocol});
+      i == serverStats_.end()) {
     return nullptr;
   }
-  return i->second;
+  else {
+    return i->second;
+  }
 }
 
 bool ServerStatMan::add(const std::shared_ptr<ServerStat>& serverStat)

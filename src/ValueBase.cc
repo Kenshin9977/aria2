@@ -176,8 +176,7 @@ void Dict::put(std::string key, String::ValueType string)
 
 ValueBase* Dict::get(const std::string& key) const
 {
-  auto itr = dict_.find(key);
-  if (itr == std::end(dict_)) {
+  if (auto itr = dict_.find(key); itr == std::end(dict_)) {
     return nullptr;
   }
   else {
@@ -196,8 +195,7 @@ void Dict::removeKey(const std::string& key) { dict_.erase(key); }
 
 std::unique_ptr<ValueBase> Dict::popValue(const std::string& key)
 {
-  auto i = dict_.find(key);
-  if (i == std::end(dict_)) {
+  if (auto i = dict_.find(key); i == std::end(dict_)) {
     return nullptr;
   }
   else {
