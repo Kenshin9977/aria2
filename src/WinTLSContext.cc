@@ -57,6 +57,12 @@
 #ifndef SP_PROT_TLS1_2_SERVER
 #  define SP_PROT_TLS1_2_SERVER 0x00000400
 #endif
+#ifndef SP_PROT_TLS1_3_CLIENT
+#  define SP_PROT_TLS1_3_CLIENT 0x00002000
+#endif
+#ifndef SP_PROT_TLS1_3_SERVER
+#  define SP_PROT_TLS1_3_SERVER 0x00001000
+#endif
 
 #ifndef SCH_USE_STRONG_CRYPTO
 #  define SCH_USE_STRONG_CRYPTO 0x00400000
@@ -80,6 +86,9 @@ WinTLSContext::WinTLSContext(TLSSessionSide side, TLSVersion ver)
     // fall through
     case TLS_PROTO_TLS12:
       credentials_.grbitEnabledProtocols |= SP_PROT_TLS1_2_CLIENT;
+    // fall through
+    case TLS_PROTO_TLS13:
+      credentials_.grbitEnabledProtocols |= SP_PROT_TLS1_3_CLIENT;
       break;
     default:
       assert(0);
@@ -93,6 +102,9 @@ WinTLSContext::WinTLSContext(TLSSessionSide side, TLSVersion ver)
     // fall through
     case TLS_PROTO_TLS12:
       credentials_.grbitEnabledProtocols |= SP_PROT_TLS1_2_SERVER;
+    // fall through
+    case TLS_PROTO_TLS13:
+      credentials_.grbitEnabledProtocols |= SP_PROT_TLS1_3_SERVER;
       break;
     default:
       assert(0);
@@ -150,8 +162,9 @@ void WinTLSContext::setVerifyPeer(bool verify)
 
   // Verify other side's cert chain.
   credentials_.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION |
-                          SCH_CRED_REVOCATION_CHECK_CHAIN |
-                          SCH_CRED_IGNORE_NO_REVOCATION_CHECK;
+                          SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT |
+                          SCH_CRED_IGNORE_NO_REVOCATION_CHECK |
+                          SCH_CRED_IGNORE_REVOCATION_OFFLINE;
 }
 
 CredHandle* WinTLSContext::getCredHandle()

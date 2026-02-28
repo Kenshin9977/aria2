@@ -794,9 +794,14 @@ restart:
     case 0x303:
       version = TLS_PROTO_TLS12;
       break;
+    case 0x304:
+      version = TLS_PROTO_TLS13;
+      break;
     default:
-      assert(0);
-      abort();
+      A2_LOG_WARN(fmt("WinTLS: unknown protocol version: 0x%x",
+                      getProtocolVersion(&handle_)));
+      version = TLS_PROTO_TLS12;
+      break;
     }
     return TLS_ERR_OK;
   }
