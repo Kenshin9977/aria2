@@ -103,9 +103,11 @@ bool HttpListenCommand::bindPort(uint16_t port)
     }
     serverSocket_->bind(nullptr, port, family_, flags);
     serverSocket_->beginListen();
-    A2_LOG_INFO(fmt(MSG_LISTENING_PORT, getCuid(), port));
+    auto actualPort = serverSocket_->getAddrInfo().port;
+    A2_LOG_INFO(fmt(MSG_LISTENING_PORT, getCuid(), actualPort));
     e_->addSocketForReadCheck(serverSocket_, this);
-    A2_LOG_NOTICE(fmt(_("IPv%d RPC: listening on TCP port %u"), ipv, port));
+    A2_LOG_NOTICE(
+        fmt(_("IPv%d RPC: listening on TCP port %u"), ipv, actualPort));
     return true;
   }
   catch (RecoverableException& e) {

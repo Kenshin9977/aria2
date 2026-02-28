@@ -843,7 +843,8 @@
     "                              on local loopback interface.")
 #define TEXT_RPC_LISTEN_PORT                                        \
   _(" --rpc-listen-port=PORT       Specify a port number for JSON-RPC/XML-RPC server\n" \
-    "                              to listen to.")
+    "                              to listen to.  If 0 is given, the operating\n" \
+    "                              system will choose an available port.")
 #define TEXT_SHOW_CONSOLE_READOUT                                       \
   _(" --show-console-readout[=true|false] Show console readout.")
 #define TEXT_METALINK_BASE_URI                  \
