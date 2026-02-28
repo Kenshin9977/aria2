@@ -71,9 +71,7 @@ HttpRequestCommand::HttpRequestCommand(
                       httpConnection->getSocketRecvBuffer()),
       httpConnection_(httpConnection)
 {
-  setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  initConnectTimeout();
 }
 
 HttpRequestCommand::~HttpRequestCommand() = default;

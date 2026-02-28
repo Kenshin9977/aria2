@@ -59,9 +59,7 @@ AbstractProxyRequestCommand::AbstractProxyRequestCommand(
       httpConnection_(std::make_shared<HttpConnection>(
           cuid, s, std::make_shared<SocketRecvBuffer>(s)))
 {
-  setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  initConnectTimeout();
 }
 
 AbstractProxyRequestCommand::~AbstractProxyRequestCommand() = default;

@@ -55,9 +55,7 @@ ConnectCommand::ConnectCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s),
       proxyRequest_(proxyRequest)
 {
-  setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  initConnectTimeout();
 }
 
 ConnectCommand::~ConnectCommand()

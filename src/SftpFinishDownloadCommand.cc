@@ -57,8 +57,7 @@ SftpFinishDownloadCommand::SftpFinishDownloadCommand(
     DownloadEngine* e, const std::shared_ptr<ISocketCore>& socket)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, socket)
 {
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  transitionToWriting();
 }
 
 SftpFinishDownloadCommand::~SftpFinishDownloadCommand() = default;

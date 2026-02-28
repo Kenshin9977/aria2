@@ -88,6 +88,11 @@ protected:
   void setWriteCheckSocket(const std::shared_ptr<ISocketCore>& socket);
   void disableReadCheckSocket();
   void disableWriteCheckSocket();
+
+  void transitionToWriting(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToWriting() { transitionToWriting(getSocket()); }
+  void transitionToReading(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToReading() { transitionToReading(getSocket()); }
   void setNoCheck(bool check);
   void updateKeepAlive();
   void addCommandSelf();

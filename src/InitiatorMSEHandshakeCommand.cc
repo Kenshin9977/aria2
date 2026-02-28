@@ -70,8 +70,7 @@ InitiatorMSEHandshakeCommand::InitiatorMSEHandshakeCommand(
       mseHandshake_(make_unique<MSEHandshake>(
           cuid, std::static_pointer_cast<SocketCore>(s), getOption().get()))
 {
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  transitionToWriting();
   setTimeout(std::chrono::seconds(
       getOption()->getAsInt(PREF_PEER_CONNECTION_TIMEOUT)));
 

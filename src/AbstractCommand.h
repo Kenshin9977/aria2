@@ -216,6 +216,17 @@ public:
   void addCommandSelf();
 
 protected:
+  // Sets write check on socket, disables read check.
+  void transitionToWriting(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToWriting() { transitionToWriting(getSocket()); }
+
+  // Sets read check on socket, disables write check.
+  void transitionToReading(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToReading() { transitionToReading(getSocket()); }
+
+  // Sets connect timeout and transitions to writing on the main socket.
+  void initConnectTimeout();
+
   virtual bool prepareForRetry(time_t wait);
 
   virtual void onAbort();

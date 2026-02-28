@@ -155,8 +155,7 @@ bool FtpNegotiationCommand::recvGreeting()
 {
   setTimeout(getRequestGroup()->getTimeout());
   // socket->setBlockingMode();
-  disableWriteCheckSocket();
-  setReadCheckSocket(getSocket());
+  transitionToReading();
 
   int status = ftp_->receiveResponse();
   if (status == 0) {
@@ -719,8 +718,7 @@ bool FtpNegotiationCommand::preparePasvConnect()
                     pasvPort_));
     dataSocket_ = std::make_shared<SocketCore>();
     dataSocket_->establishConnection(endpoint.addr, pasvPort_, false);
-    disableReadCheckSocket();
-    setWriteCheckSocket(dataSocket_);
+    transitionToWriting(dataSocket_);
     sequence_ = SEQ_SEND_REST_PASV;
     return false;
   }
@@ -738,8 +736,7 @@ bool FtpNegotiationCommand::resolveProxy()
                   proxyReq->getPort()));
   dataSocket_ = std::make_shared<SocketCore>();
   dataSocket_->establishConnection(proxyAddr_, proxyReq->getPort());
-  disableReadCheckSocket();
-  setWriteCheckSocket(dataSocket_);
+  transitionToWriting(dataSocket_);
   auto socketRecvBuffer = std::make_shared<SocketRecvBuffer>(dataSocket_);
   http_ = std::make_shared<HttpConnection>(getCuid(), dataSocket_,
                                            socketRecvBuffer);
@@ -796,8 +793,7 @@ bool FtpNegotiationCommand::sendTunnelRequest()
     http_->sendPendingData();
   }
   if (http_->sendBufferIsEmpty()) {
-    disableWriteCheckSocket();
-    setReadCheckSocket(dataSocket_);
+    transitionToReading(dataSocket_);
     sequence_ = SEQ_RECV_TUNNEL_RESPONSE;
     return false;
   }

@@ -107,8 +107,7 @@ PeerInteractionCommand::PeerInteractionCommand(
 {
   // TODO move following bunch of processing to separate method, like init()
   if (sequence_ == INITIATOR_SEND_HANDSHAKE) {
-    disableReadCheckSocket();
-    setWriteCheckSocket(getSocket());
+    transitionToWriting();
     setTimeout(std::chrono::seconds(
         getOption()->getAsInt(PREF_PEER_CONNECTION_TIMEOUT)));
   }
@@ -316,8 +315,7 @@ bool PeerInteractionCommand::executeInternal()
         done = true;
         break;
       }
-      disableWriteCheckSocket();
-      setReadCheckSocket(getSocket());
+      transitionToReading();
       // socket->setBlockingMode();
       setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_BT_TIMEOUT)));
       btInteractive_->initiateHandshake();

@@ -180,6 +180,20 @@ void PeerAbstractCommand::setWriteCheckSocket(
   }
 }
 
+void PeerAbstractCommand::transitionToWriting(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableReadCheckSocket();
+  setWriteCheckSocket(socket);
+}
+
+void PeerAbstractCommand::transitionToReading(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableWriteCheckSocket();
+  setReadCheckSocket(socket);
+}
+
 void PeerAbstractCommand::setNoCheck(bool check) { noCheck_ = check; }
 
 void PeerAbstractCommand::updateKeepAlive()

@@ -660,6 +660,27 @@ std::string getProxyOptionFor(PrefPtr proxyPref, PrefPtr proxyUser,
 }
 } // namespace
 
+void AbstractCommand::transitionToWriting(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableReadCheckSocket();
+  setWriteCheckSocket(socket);
+}
+
+void AbstractCommand::transitionToReading(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableWriteCheckSocket();
+  setReadCheckSocket(socket);
+}
+
+void AbstractCommand::initConnectTimeout()
+{
+  setTimeout(
+      std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
+  transitionToWriting();
+}
+
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
 std::string getProxyUri(Protocol protocol, const Option* option)
