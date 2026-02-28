@@ -158,7 +158,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 int *a = nullptr;
 ]])],
 [],
-[AC_MSG_FAILURE([C++ compiler does not understand nullptr, perhaps C++ compiler is too old.  Try again with new one (gcc >= 4.8.3 or clang >= 3.4)])])
+[AC_MSG_FAILURE([C++ compiler does not understand nullptr, perhaps C++ compiler is too old.  Try again with new one (gcc >= 14 or clang >= 18)])])
 
 CXXFLAGS=$save_CXXFLAGS
 

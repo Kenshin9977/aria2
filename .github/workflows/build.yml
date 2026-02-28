@@ -6,12 +6,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14]
+        os: [ubuntu-24.04, macos-26]
         compiler: [gcc, clang]
         crypto: [openssl, gnutls]
         bittorrent: [with-bt, without-bt]
         exclude:
-        - os: macos-14
+        - os: macos-26
           crypto: gnutls
         - crypto: openssl
           bittorrent: without-bt
@@ -25,8 +25,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install \
-          g++-12 \
-          clang-15 \
+          g++-14 \
+          clang-18 \
           autoconf \
           automake \
           autotools-dev \
@@ -48,8 +48,8 @@ jobs:
     - name: Setup clang (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'clang'
       run: |
-        echo 'CC=clang-15' >> $GITHUB_ENV
-        echo 'CXX=clang++-15' >> $GITHUB_ENV
+        echo 'CC=clang-18' >> $GITHUB_ENV
+        echo 'CXX=clang++-18' >> $GITHUB_ENV
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |
@@ -58,8 +58,8 @@ jobs:
     - name: Setup gcc (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       run: |
-        echo 'CC=gcc-12' >> $GITHUB_ENV
-        echo 'CXX=g++-12' >> $GITHUB_ENV
+        echo 'CC=gcc-14' >> $GITHUB_ENV
+        echo 'CXX=g++-14' >> $GITHUB_ENV
     - name: Setup gcc (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'gcc'
       run: |
@@ -143,4 +143,3 @@ jobs:
           --with-libcares --with-sqlite3 --with-libssh2 \
           $FEATURE_FLAGS
         make -j$(nproc) check
-
