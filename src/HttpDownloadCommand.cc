@@ -92,7 +92,8 @@ bool HttpDownloadCommand::prepareForNextSegment()
       (getRequest()->isKeepAliveEnabled() &&
        (
            // Make sure that all filters are finished to pool socket
-           (!streamFilterName.ends_with(SinkStreamFilter::NAME) &&
+           (!std::string_view(streamFilterName)
+                 .ends_with(SinkStreamFilter::NAME) &&
             getStreamFilter()->finished()) ||
            getRequestEndOffset() ==
                getFileEntry()->gtoloff(
