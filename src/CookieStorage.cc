@@ -82,7 +82,6 @@ void DomainNode::findCookie(std::vector<const Cookie*>& out,
 
 bool DomainNode::addCookie(std::unique_ptr<Cookie> cookie, time_t now)
 {
-  using namespace std::placeholders;
   setLastAccessTime(now);
   if (!cookies_) {
     if (cookie->isExpired(now)) {
@@ -105,7 +104,10 @@ bool DomainNode::addCookie(std::unique_ptr<Cookie> cookie, time_t now)
     }
     else {
       if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
-        std::erase_if(*cookies_, std::bind(&Cookie::isExpired, _1, now));
+        std::erase_if(*cookies_,
+                       [now](const std::unique_ptr<Cookie>& c) {
+                         return c->isExpired(now);
+                       });
         if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
           auto m = std::min_element(std::begin(*cookies_), std::end(*cookies_),
                                     [](const std::unique_ptr<Cookie>& lhs,

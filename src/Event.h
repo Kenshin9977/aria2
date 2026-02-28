@@ -39,7 +39,6 @@
 
 #include <deque>
 #include <algorithm>
-#include <functional>
 #include <memory>
 
 #include "a2netcompat.h"
@@ -271,12 +270,11 @@ public:
 
   void processEvents(int events)
   {
-    using namespace std::placeholders;
     std::ranges::for_each(commandEvents_,
-                          std::bind(&CommandEvent::processEvents, _1, events));
+                          [events](auto& e) { e.processEvents(events); });
 #ifdef ENABLE_ASYNC_DNS
     std::ranges::for_each(adnsEvents_,
-                          std::bind(&ADNSEvent::processEvents, _1, events));
+                          [events](auto& e) { e.processEvents(events); });
 #endif // ENABLE_ASYNC_DNS
   }
 };

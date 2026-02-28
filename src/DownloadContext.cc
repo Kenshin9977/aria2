@@ -135,11 +135,10 @@ void DownloadContext::setFilePathWithIndex(size_t index,
 
 void DownloadContext::setFileFilter(SegList<int> sgl)
 {
-  using namespace std::placeholders;
-
   if (!sgl.hasNext() || fileEntries_.size() == 1) {
-    std::ranges::for_each(fileEntries_,
-                          std::bind(&FileEntry::setRequested, _1, true));
+    std::ranges::for_each(
+        fileEntries_,
+        [](const auto& fe) { fe->setRequested(true); });
     return;
   }
   assert(sgl.peek() >= 1);
