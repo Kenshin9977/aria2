@@ -260,6 +260,7 @@ SRCS =  \
 	uri_split.c uri_split.h\
 	usage_text.h\
 	util.cc util.h\
+	util_string.cc util_string.h\
 	util_security.cc util_security.h\
 	ValueBase.cc ValueBase.h\
 	ValueBaseDiskWriter.h\

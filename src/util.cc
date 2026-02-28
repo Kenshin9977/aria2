@@ -162,15 +162,6 @@ std::string toForwardSlash(const std::string& src)
 
 namespace util {
 
-constexpr char DEFAULT_STRIP_CHARSET[] = "\r\n\t ";
-
-std::string strip(const std::string& str, const char* chars)
-{
-  std::pair<std::string::const_iterator, std::string::const_iterator> p =
-      stripIter(str.begin(), str.end(), chars);
-  return std::string(p.first, p.second);
-}
-
 std::string itos(int64_t value, bool comma)
 {
   bool flag = false;
@@ -213,42 +204,6 @@ int32_t difftvsec(struct timeval tv1, struct timeval tv2)
   return tv1.tv_sec - tv2.tv_sec;
 }
 
-std::string replace(const std::string& target, const std::string& oldstr,
-                    const std::string& newstr)
-{
-  if (target.empty() || oldstr.empty()) {
-    return target;
-  }
-  std::string result;
-  std::string::size_type p = 0;
-  std::string::size_type np = target.find(oldstr);
-  while (np != std::string::npos) {
-    result.append(target.begin() + p, target.begin() + np);
-    result += newstr;
-    p = np + oldstr.size();
-    np = target.find(oldstr, p);
-  }
-  result.append(target.begin() + p, target.end());
-  return result;
-}
-
-bool isAlpha(const char c)
-{
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-bool isDigit(const char c) { return '0' <= c && c <= '9'; }
-
-bool isHexDigit(const char c)
-{
-  return isDigit(c) || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f');
-}
-
-bool isHexDigit(std::string_view s)
-{
-  return std::ranges::all_of(
-      s, [](char c) { return isHexDigit(c); });
-}
 
 bool inRFC3986ReservedChars(const char c)
 {
@@ -290,9 +245,6 @@ bool isIso8859p1(unsigned char c)
 {
   return (0x20u <= c && c <= 0x7eu) || 0xa0u <= c;
 }
-
-bool isLws(const char c) { return c == ' ' || c == '\t'; }
-bool isCRLF(const char c) { return c == '\r' || c == '\n'; }
 
 namespace {
 
@@ -1581,44 +1533,6 @@ std::string getContentDispositionFilename(const std::string& header,
   return "";
 }
 
-std::string toUpper(std::string src)
-{
-  uppercase(src);
-  return src;
-}
-
-std::string toLower(std::string src)
-{
-  lowercase(src);
-  return src;
-}
-
-void uppercase(std::string& s)
-{
-  std::ranges::transform(s, s.begin(), toUpperChar);
-}
-
-void lowercase(std::string& s)
-{
-  std::ranges::transform(s, s.begin(), toLowerChar);
-}
-
-char toUpperChar(char c)
-{
-  if ('a' <= c && c <= 'z') {
-    c += 'A' - 'a';
-  }
-  return c;
-}
-
-char toLowerChar(char c)
-{
-  if ('A' <= c && c <= 'Z') {
-    c += 'a' - 'A';
-  }
-  return c;
-}
-
 bool isNumericHost(std::string_view name)
 {
   struct addrinfo hints;
@@ -2403,31 +2317,6 @@ bool tlsHostnameMatch(std::string_view pattern, std::string_view hostname)
                      ptWildcard) &&
          iendsWith(hostname.begin(), hnLeftLabelEnd, ptWildcard + 1,
                    ptLeftLabelEnd);
-}
-
-bool strieq(std::string_view a, std::string_view b)
-{
-  return strieq(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool startsWith(std::string_view a, std::string_view b)
-{
-  return startsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool istartsWith(std::string_view a, std::string_view b)
-{
-  return istartsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool endsWith(std::string_view a, std::string_view b)
-{
-  return endsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool iendsWith(std::string_view a, std::string_view b)
-{
-  return iendsWith(a.begin(), a.end(), b.begin(), b.end());
 }
 
 bool strless(const char* a, const char* b) { return strcmp(a, b) < 0; }
