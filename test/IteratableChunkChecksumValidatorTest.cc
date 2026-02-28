@@ -17,6 +17,8 @@ class IteratableChunkChecksumValidatorTest : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(IteratableChunkChecksumValidatorTest);
   CPPUNIT_TEST(testValidate);
   CPPUNIT_TEST(testValidate_readError);
+  CPPUNIT_TEST(testValidate_singlePiece);
+  CPPUNIT_TEST(testValidate_allFail);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -27,6 +29,8 @@ public:
 
   void testValidate();
   void testValidate_readError();
+  void testValidate_singlePiece();
+  void testValidate_allFail();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(IteratableChunkChecksumValidatorTest);
@@ -101,6 +105,62 @@ void IteratableChunkChecksumValidatorTest::testValidate_readError()
                                     // #bytes and raises error.
   CPPUNIT_ASSERT(!ps->hasPiece(3));
   CPPUNIT_ASSERT(!ps->hasPiece(4));
+}
+
+void IteratableChunkChecksumValidatorTest::testValidate_singlePiece()
+{
+  Option option;
+  // Single piece covering entire 250-byte file
+  std::shared_ptr<DownloadContext> dctx(
+      new DownloadContext(250, 250,
+                          A2_TEST_DIR "/chunkChecksumTestFile250.txt"));
+  std::string wholeSha1 =
+      fromHex("898a81b8e0181280ae2ee1b81e269196d91e869a");
+  dctx->setPieceHashes("sha-1", &wholeSha1, &wholeSha1 + 1);
+  std::shared_ptr<DefaultPieceStorage> ps(
+      new DefaultPieceStorage(dctx, &option));
+  ps->initStorage();
+  ps->getDiskAdaptor()->enableReadOnly();
+  ps->getDiskAdaptor()->openFile();
+
+  IteratableChunkChecksumValidator validator(dctx, ps);
+  validator.init();
+
+  while (!validator.finished()) {
+    validator.validateChunk();
+  }
+  CPPUNIT_ASSERT(ps->downloadFinished());
+}
+
+void IteratableChunkChecksumValidatorTest::testValidate_allFail()
+{
+  Option option;
+  std::shared_ptr<DownloadContext> dctx(new DownloadContext(
+      100, 250, A2_TEST_DIR "/chunkChecksumTestFile250.txt"));
+  std::deque<std::string> badHashes;
+  badHashes.push_back(
+      fromHex("ffffffffffffffffffffffffffffffffffffffff"));
+  badHashes.push_back(
+      fromHex("ffffffffffffffffffffffffffffffffffffffff"));
+  badHashes.push_back(
+      fromHex("ffffffffffffffffffffffffffffffffffffffff"));
+  dctx->setPieceHashes("sha-1", badHashes.begin(), badHashes.end());
+  std::shared_ptr<DefaultPieceStorage> ps(
+      new DefaultPieceStorage(dctx, &option));
+  ps->initStorage();
+  ps->getDiskAdaptor()->enableReadOnly();
+  ps->getDiskAdaptor()->openFile();
+
+  IteratableChunkChecksumValidator validator(dctx, ps);
+  validator.init();
+
+  while (!validator.finished()) {
+    validator.validateChunk();
+  }
+  CPPUNIT_ASSERT(!ps->downloadFinished());
+  CPPUNIT_ASSERT(!ps->hasPiece(0));
+  CPPUNIT_ASSERT(!ps->hasPiece(1));
+  CPPUNIT_ASSERT(!ps->hasPiece(2));
 }
 
 } // namespace aria2
