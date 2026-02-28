@@ -36,6 +36,9 @@
 #define D_GZIP_STREAM_FILTER_H
 
 #include "StreamFilter.h"
+
+#include <memory>
+
 #include <zlib.h>
 
 #include "a2functional.h"
@@ -45,7 +48,7 @@ namespace aria2 {
 // GZipDecodingStreamFilter can decode both gzip and deflate format.
 class GZipDecodingStreamFilter : public StreamFilter {
 private:
-  z_stream* strm_;
+  std::unique_ptr<z_stream> strm_;
 
   bool finished_;
 

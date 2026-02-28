@@ -46,7 +46,6 @@ constexpr const char GZipDecodingStreamFilter::NAME[];
 GZipDecodingStreamFilter::GZipDecodingStreamFilter(
     std::unique_ptr<StreamFilter> delegate)
     : StreamFilter{std::move(delegate)},
-      strm_{nullptr},
       finished_{false},
       rawMode_{false},
       bytesProcessed_{0}
@@ -59,7 +58,7 @@ void GZipDecodingStreamFilter::init()
 {
   finished_ = false;
   release();
-  strm_ = new z_stream();
+  strm_ = make_unique<z_stream>();
   strm_->zalloc = Z_NULL;
   strm_->zfree = Z_NULL;
   strm_->opaque = Z_NULL;
@@ -68,7 +67,7 @@ void GZipDecodingStreamFilter::init()
 
   // initialize z_stream with gzip/zlib format auto detection enabled.
   // negative windowBits enables raw mode support.
-  if (Z_OK != inflateInit2(strm_, rawMode_ ? -15 : 47)) {
+  if (Z_OK != inflateInit2(strm_.get(), rawMode_ ? -15 : 47)) {
     throw DL_ABORT_EX("Initializing z_stream failed.");
   }
 }
@@ -76,9 +75,8 @@ void GZipDecodingStreamFilter::init()
 void GZipDecodingStreamFilter::release()
 {
   if (strm_) {
-    inflateEnd(strm_);
-    delete strm_;
-    strm_ = nullptr;
+    inflateEnd(strm_.get());
+    strm_.reset();
   }
 }
 
@@ -101,7 +99,7 @@ GZipDecodingStreamFilter::transform(const std::shared_ptr<BinaryStream>& out,
     strm_->avail_out = OUTBUF_LENGTH;
     strm_->next_out = outbuf;
 
-    int ret = ::inflate(strm_, Z_NO_FLUSH);
+    int ret = ::inflate(strm_.get(), Z_NO_FLUSH);
 
     if (ret == Z_STREAM_END) {
       finished_ = true;
