@@ -85,7 +85,7 @@ BtPieceMessage::create(std::span<const unsigned char> data)
 {
   bittorrent::assertPayloadLengthGreater(9, data.size(), NAME);
   bittorrent::assertID(ID, data.data(), NAME);
-  return make_unique<BtPieceMessage>(bittorrent::getIntParam(data.data(), 1),
+  return std::make_unique<BtPieceMessage>(bittorrent::getIntParam(data.data(), 1),
                                      bittorrent::getIntParam(data.data(), 5),
                                      data.size() - 9);
 }
@@ -221,7 +221,7 @@ void BtPieceMessage::pushPieceData(int64_t offset, int32_t length) const
   if (r == length) {
     const auto& peer = getPeer();
     getPeerConnection()->pushBytes(
-        std::move(buf), make_unique<PieceSendUpdate>(downloadContext_, peer,
+        std::move(buf), std::make_unique<PieceSendUpdate>(downloadContext_, peer,
                                                      MESSAGE_HEADER_LENGTH));
     peer->updateUploadSpeed(length);
     downloadContext_->updateUploadSpeed(length);

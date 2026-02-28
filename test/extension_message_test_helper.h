@@ -10,7 +10,7 @@ public:
   std::unique_ptr<BtExtendedMessage>
   createBtExtendedMessage(std::unique_ptr<ExtensionMessage> extmsg) override
   {
-    return make_unique<BtExtendedMessage>(std::move(extmsg));
+    return std::make_unique<BtExtendedMessage>(std::move(extmsg));
   }
 };
 

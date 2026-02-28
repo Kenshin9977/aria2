@@ -159,7 +159,7 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
     segment = std::make_shared<PiecedSegment>(
         downloadContext_->getPieceLength(), piece);
   }
-  auto entry = make_unique<SegmentEntry>(cuid, segment);
+  auto entry = std::make_unique<SegmentEntry>(cuid, segment);
   usedSegmentEntries_.push_back(std::move(entry));
   A2_LOG_DEBUG(fmt("index=%lu, length=%" PRId64 ", segmentLength=%" PRId64 ","
                    " writtenLength=%" PRId64,

@@ -125,8 +125,8 @@ RequestGroup::RequestGroup(const std::shared_ptr<GroupId>& gid,
     : belongsToGID_(0),
       gid_(gid),
       option_(option),
-      progressInfoFile_(make_unique<NullProgressInfoFile>()),
-      uriSelector_(make_unique<InorderURISelector>()),
+      progressInfoFile_(std::make_unique<NullProgressInfoFile>()),
+      uriSelector_(std::make_unique<InorderURISelector>()),
       groupContext_(nullptr),
 #ifdef ENABLE_BITTORRENT
       btRuntime_(nullptr),
@@ -221,7 +221,7 @@ void RequestGroup::closeFile()
 // that this function open file.
 std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
 {
-  auto infoFile = make_unique<DefaultBtProgressInfoFile>(
+  auto infoFile = std::make_unique<DefaultBtProgressInfoFile>(
       downloadContext_, pieceStorage_, option_.get());
 
   if (option_->getAsBool(PREF_CHECK_INTEGRITY) &&
@@ -229,7 +229,7 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
     // When checking piece hash, we don't care file is downloaded and
     // infoFile exists.
     loadAndOpenFile(std::move(infoFile));
-    return make_unique<StreamCheckIntegrityEntry>(this);
+    return std::make_unique<StreamCheckIntegrityEntry>(this);
   }
 
   if (isPreLocalFileCheckEnabled() &&
@@ -244,7 +244,7 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
     if (downloadFinished()) {
       if (downloadContext_->isChecksumVerificationNeeded()) {
         A2_LOG_INFO(MSG_HASH_CHECK_NOT_DONE);
-        auto tempEntry = make_unique<ChecksumCheckIntegrityEntry>(this);
+        auto tempEntry = std::make_unique<ChecksumCheckIntegrityEntry>(this);
         tempEntry->setRedownload(true);
         return std::move(tempEntry);
       }
@@ -253,20 +253,20 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
                         downloadContext_->getBasePath().c_str()));
       return nullptr;
     }
-    return make_unique<StreamCheckIntegrityEntry>(this);
+    return std::make_unique<StreamCheckIntegrityEntry>(this);
   }
 
   if (downloadFinishedByFileLength() &&
       downloadContext_->isChecksumVerificationAvailable()) {
     pieceStorage_->markAllPiecesDone();
     loadAndOpenFile(std::move(infoFile));
-    auto tempEntry = make_unique<ChecksumCheckIntegrityEntry>(this);
+    auto tempEntry = std::make_unique<ChecksumCheckIntegrityEntry>(this);
     tempEntry->setRedownload(true);
     return std::move(tempEntry);
   }
 
   loadAndOpenFile(std::move(infoFile));
-  return make_unique<StreamCheckIntegrityEntry>(this);
+  return std::make_unique<StreamCheckIntegrityEntry>(this);
 }
 
 void RequestGroup::createInitialCommand(
@@ -313,7 +313,7 @@ void RequestGroup::createInitialCommand(
 
     std::unique_ptr<DefaultBtProgressInfoFile> progressInfoFile;
     if (!metadataGetMode) {
-      progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
+      progressInfoFile = std::make_unique<DefaultBtProgressInfoFile>(
           downloadContext_, pieceStorage_, option_.get());
     }
 
@@ -344,7 +344,7 @@ void RequestGroup::createInitialCommand(
     assert(!btRegistry->get(gid_->getNumericId()));
     btRegistry->put(
         gid_->getNumericId(),
-        make_unique<BtObject>(downloadContext_, pieceStorage_, peerStorage,
+        std::make_unique<BtObject>(downloadContext_, pieceStorage_, peerStorage,
                               btAnnounce, btRuntime,
                               std::shared_ptr<BtProgressInfoFile>{}));
 
@@ -373,7 +373,7 @@ void RequestGroup::createInitialCommand(
       const auto& nodes = torrentAttrs->nodes;
       if (!torrentAttrs->privateTorrent && !nodes.empty()) {
         if (DHTRegistry::isInitialized()) {
-          auto command = make_unique<DHTEntryPointNameResolveCommand>(
+          auto command = std::make_unique<DHTEntryPointNameResolveCommand>(
               e->newCUID(), e, AF_INET, nodes);
           const auto& data = DHTRegistry::getData();
           command->setTaskQueue(data.taskQueue.get());
@@ -384,7 +384,7 @@ void RequestGroup::createInitialCommand(
         }
 
         if (DHTRegistry::isInitialized6()) {
-          auto command = make_unique<DHTEntryPointNameResolveCommand>(
+          auto command = std::make_unique<DHTEntryPointNameResolveCommand>(
               e->newCUID(), e, AF_INET6, nodes);
           const auto& data = DHTRegistry::getData6();
           command->setTaskQueue(data.taskQueue.get());
@@ -447,7 +447,7 @@ void RequestGroup::createInitialCommand(
     }
     progressInfoFile_ = std::move(progressInfoFile);
 
-    auto entry = make_unique<BtCheckIntegrityEntry>(this);
+    auto entry = std::make_unique<BtCheckIntegrityEntry>(this);
     // --bt-seed-unverified=true is given and download has completed, skip
     // validation for piece hashes.
     if (option_->getAsBool(PREF_BT_SEED_UNVERIFIED) &&
@@ -469,7 +469,7 @@ void RequestGroup::createInitialCommand(
       createNextCommand(commands, e, 1);
       return;
     }
-    auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
+    auto progressInfoFile = std::make_unique<DefaultBtProgressInfoFile>(
         downloadContext_, nullptr, option_.get());
     adjustFilename(progressInfoFile.get());
     initPieceStorage();
@@ -498,7 +498,7 @@ void RequestGroup::createInitialCommand(
   if (downloadContext_->getFileEntries().size() > 1) {
     pieceStorage_->setupFileFilter();
   }
-  auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
+  auto progressInfoFile = std::make_unique<DefaultBtProgressInfoFile>(
       downloadContext_, pieceStorage_, option_.get());
   removeDefunctControlFile(progressInfoFile.get());
   // Call Load, Save and file allocation command here
@@ -521,7 +521,7 @@ void RequestGroup::createInitialCommand(
   }
   progressInfoFile_ = std::move(progressInfoFile);
   processCheckIntegrityEntry(commands,
-                             make_unique<StreamCheckIntegrityEntry>(this), e);
+                             std::make_unique<StreamCheckIntegrityEntry>(this), e);
 }
 
 void RequestGroup::processCheckIntegrityEntry(
@@ -571,7 +571,7 @@ void RequestGroup::initPieceStorage()
         // Use LongestSequencePieceSelector when HTTP/FTP/BitTorrent
         // integrated downloads.
         A2_LOG_DEBUG("Using LongestSequencePieceSelector");
-        ps->setPieceSelector(make_unique<LongestSequencePieceSelector>());
+        ps->setPieceSelector(std::make_unique<LongestSequencePieceSelector>());
       }
       if (option_->defined(PREF_BT_PRIORITIZE_PIECE)) {
         std::vector<size_t> result;
@@ -583,7 +583,7 @@ void RequestGroup::initPieceStorage()
           std::shuffle(std::begin(result), std::end(result),
                        *SimpleRandomizer::getInstance());
           auto priSelector =
-              make_unique<PriorityPieceSelector>(ps->popPieceSelector());
+              std::make_unique<PriorityPieceSelector>(ps->popPieceSelector());
           priSelector->setPriorityPiece(std::begin(result), std::end(result));
           ps->setPieceSelector(std::move(priSelector));
         }
@@ -613,7 +613,7 @@ void RequestGroup::initPieceStorage()
     tempPieceStorage->getDiskAdaptor()->setOpenedFileCounter(
         groupContext_->getOpenedFileCounter());
   }
-  segmentMan_ = make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
+  segmentMan_ = std::make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
   pieceStorage_ = tempPieceStorage;
 
 #ifdef __MINGW32__
@@ -871,7 +871,7 @@ void RequestGroup::createNextCommand(
 {
   for (; numCommand > 0; --numCommand) {
     commands.push_back(
-        make_unique<CreateRequestCommand>(e->newCUID(), this, e));
+        std::make_unique<CreateRequestCommand>(e->newCUID(), this, e));
   }
   if (!commands.empty()) {
     e->setNoWait(true);
@@ -1039,7 +1039,7 @@ void RequestGroup::releaseRuntimeResource(DownloadEngine* e)
   }
   // Don't reset segmentMan_ and pieceStorage_ here to provide
   // progress information via RPC
-  progressInfoFile_ = make_unique<NullProgressInfoFile>();
+  progressInfoFile_ = std::make_unique<NullProgressInfoFile>();
   downloadContext_->releaseRuntimeResource();
   // Reset seedOnly_, so that we can handle pause/unpause-ing seeding
   // torrent with --bt-detach-seed-only.

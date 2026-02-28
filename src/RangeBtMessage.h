@@ -57,7 +57,7 @@ protected:
   {
     bittorrent::assertPayloadLengthEqual(13, data.size(), T::NAME);
     bittorrent::assertID(T::ID, data.data(), T::NAME);
-    return make_unique<T>(bittorrent::getIntParam(data.data(), 1),
+    return std::make_unique<T>(bittorrent::getIntParam(data.data(), 1),
                           bittorrent::getIntParam(data.data(), 5),
                           bittorrent::getIntParam(data.data(), 9));
   }

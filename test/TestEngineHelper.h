@@ -41,14 +41,14 @@ createTestEngine(std::shared_ptr<Option>& option,
   option->put(PREF_PIECE_LENGTH, "1048576");
   File(option->get(PREF_DIR)).mkdirs();
 
-  auto e = make_unique<DownloadEngine>(make_unique<SelectEventPoll>());
+  auto e = std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
   e->setOption(option.get());
-  auto rgman = make_unique<RequestGroupMan>(
+  auto rgman = std::make_unique<RequestGroupMan>(
       std::vector<std::shared_ptr<RequestGroup>>{}, 1, option.get());
   rgman->setKeepRunning(keepRunning);
   e->setRequestGroupMan(std::move(rgman));
-  e->setCheckIntegrityMan(make_unique<CheckIntegrityMan>());
-  e->setFileAllocationMan(make_unique<FileAllocationMan>());
+  e->setCheckIntegrityMan(std::make_unique<CheckIntegrityMan>());
+  e->setFileAllocationMan(std::make_unique<FileAllocationMan>());
   return e;
 }
 

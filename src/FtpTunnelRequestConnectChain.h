@@ -47,7 +47,7 @@ struct FtpTunnelRequestConnectChain : public ControlChain<ConnectCommand*> {
   ~FtpTunnelRequestConnectChain() override {}
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
-    auto c = make_unique<FtpTunnelRequestCommand>(
+    auto c = std::make_unique<FtpTunnelRequestCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),
         t->getDownloadEngine(), t->getProxyRequest(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);

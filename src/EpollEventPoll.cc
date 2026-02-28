@@ -83,7 +83,7 @@ struct epoll_event EpollEventPoll::KSocketEntry::getEvents()
 
 EpollEventPoll::EpollEventPoll()
     : epEventsSize_(EPOLL_EVENTS_MAX),
-      epEvents_(make_unique<struct epoll_event[]>(epEventsSize_))
+      epEvents_(std::make_unique<struct epoll_event[]>(epEventsSize_))
 {
   epfd_ = epoll_create(EPOLL_EVENTS_MAX);
 }
@@ -188,7 +188,7 @@ bool EpollEventPoll::addEvents(sock_t socket,
     auto& socketEntry = p.first->second;
     if (socketEntries_.size() > epEventsSize_) {
       epEventsSize_ *= 2;
-      epEvents_ = make_unique<struct epoll_event[]>(epEventsSize_);
+      epEvents_ = std::make_unique<struct epoll_event[]>(epEventsSize_);
     }
 
     event.addSelf(&socketEntry);

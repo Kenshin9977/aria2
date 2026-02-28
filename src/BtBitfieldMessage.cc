@@ -66,7 +66,7 @@ BtBitfieldMessage::create(std::span<const unsigned char> data)
 {
   bittorrent::assertPayloadLengthGreater(1, data.size(), NAME);
   bittorrent::assertID(ID, data.data(), NAME);
-  auto message = make_unique<BtBitfieldMessage>();
+  auto message = std::make_unique<BtBitfieldMessage>();
   message->setBitfield(data.subspan(1));
   return message;
 }

@@ -42,7 +42,7 @@ public:
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(0),
                          dispatcher.countMessageInQueue());
 
-    auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
+    auto msg = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
     dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
                                  nullptr);
 
@@ -54,7 +54,7 @@ public:
   {
     DHTMessageDispatcherImpl dispatcher(tracker_);
 
-    auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
+    auto msg = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
     dispatcher.addMessageToQueue(std::move(msg), nullptr);
 
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1),
@@ -66,8 +66,8 @@ public:
     DHTMessageDispatcherImpl dispatcher(tracker_);
 
     // Add two non-reply messages
-    auto msg1 = make_unique<MockDHTMessage>(localNode_, remoteNode_);
-    auto msg2 = make_unique<MockDHTMessage>(localNode_, remoteNode_);
+    auto msg1 = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
+    auto msg2 = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
     dispatcher.addMessageToQueue(std::move(msg1), std::chrono::seconds(10),
                                  nullptr);
     dispatcher.addMessageToQueue(std::move(msg2), std::chrono::seconds(10),
@@ -89,7 +89,7 @@ public:
     DHTMessageDispatcherImpl dispatcher(tracker_);
 
     // Add a reply message
-    auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
+    auto msg = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
     msg->setReply(true);
     dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
                                  nullptr);
@@ -110,7 +110,7 @@ public:
                          dispatcher.countMessageInQueue());
 
     for (int i = 0; i < 5; ++i) {
-      auto msg = make_unique<MockDHTMessage>(localNode_, remoteNode_);
+      auto msg = std::make_unique<MockDHTMessage>(localNode_, remoteNode_);
       dispatcher.addMessageToQueue(std::move(msg), std::chrono::seconds(10),
                                    nullptr);
     }

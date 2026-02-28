@@ -53,7 +53,7 @@ namespace aria2 {
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
                                               TLSVersion ver)
 {
-  return make_unique<GnuTLSContext>(side, ver);
+  return std::make_unique<GnuTLSContext>(side, ver);
 }
 
 GnuTLSContext::GnuTLSContext(TLSSessionSide side, TLSVersion ver)

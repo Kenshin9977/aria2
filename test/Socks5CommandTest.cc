@@ -120,7 +120,7 @@ void Socks5HandshakeCommandTest::testGreetingNoAuth()
   // Pre-load server response: version=5, method=AUTH_NONE
   ctx_.mockSocket->readBuffer = std::string("\x05\x00", 2);
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -149,7 +149,7 @@ void Socks5HandshakeCommandTest::testGreetingWithAuth()
   serverResp += std::string("\x01\x00", 2);
   ctx_.mockSocket->readBuffer = serverResp;
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -180,7 +180,7 @@ void Socks5HandshakeCommandTest::testHandshakeNoAuth()
 {
   ctx_.mockSocket->readBuffer = std::string("\x05\x00", 2);
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -199,7 +199,7 @@ void Socks5HandshakeCommandTest::testHandshakeWithAuth()
   serverResp += std::string("\x01\x00", 2);
   ctx_.mockSocket->readBuffer = serverResp;
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -217,7 +217,7 @@ void Socks5HandshakeCommandTest::testHandshakeAuthRejected()
   // Server rejects all auth methods (0xFF)
   ctx_.mockSocket->readBuffer = std::string("\x05\xff", 2);
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -233,7 +233,7 @@ void Socks5HandshakeCommandTest::testHandshakeVersionError()
   // Server sends wrong version (0x04 instead of 0x05)
   ctx_.mockSocket->readBuffer = std::string("\x04\x00", 2);
 
-  auto cmd = make_unique<Socks5HandshakeCommand>(
+  auto cmd = std::make_unique<Socks5HandshakeCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -284,7 +284,7 @@ void Socks5ConnectCommandTest::testConnectRequestBytes()
                    10);
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -319,7 +319,7 @@ void Socks5ConnectCommandTest::testConnectRequestPort443()
                    10);
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -345,7 +345,7 @@ void Socks5ConnectCommandTest::testConnectSuccessIPv4()
                    10);
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -364,7 +364,7 @@ void Socks5ConnectCommandTest::testConnectSuccessIPv6()
   resp += std::string("\x00\x50", 2); // port 80
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -382,7 +382,7 @@ void Socks5ConnectCommandTest::testConnectSuccessDomain()
   resp += std::string("\x00\x50", 2); // port 80
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -400,7 +400,7 @@ void Socks5ConnectCommandTest::testConnectFailure()
                    10);
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));
@@ -418,7 +418,7 @@ void Socks5ConnectCommandTest::testConnectBadVersion()
                    10);
   ctx_.mockSocket->readBuffer = resp;
 
-  auto cmd = make_unique<Socks5ConnectCommand>(
+  auto cmd = std::make_unique<Socks5ConnectCommand>(
       ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
       ctx_.engine.get(), ctx_.proxyReq,
       std::static_pointer_cast<ISocketCore>(ctx_.mockSocket));

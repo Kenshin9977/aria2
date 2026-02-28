@@ -156,7 +156,7 @@ void OptionParser::parseArg(std::ostream& out,
   size_t numPublicOption =
       countPublicOption(handlers_.begin(), handlers_.end());
   int lopt;
-  auto longOpts = make_unique<struct option[]>(numPublicOption + 1);
+  auto longOpts = std::make_unique<struct option[]>(numPublicOption + 1);
   putOptions(longOpts.get(), &lopt, handlers_.begin(), handlers_.end());
   std::string optstring = createOptstring(handlers_.begin(), handlers_.end());
   while (1) {

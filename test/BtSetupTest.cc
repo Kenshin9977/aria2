@@ -50,7 +50,7 @@ struct BtSetupTestContext {
     peerStorage = std::make_shared<MockPeerStorage>();
     btAnnounce = std::make_shared<MockBtAnnounce>();
 
-    auto btObj = make_unique<BtObject>(
+    auto btObj = std::make_unique<BtObject>(
         dctx, pieceStorage, peerStorage, btAnnounce, btRuntime,
         std::make_shared<MockBtProgressInfoFile>());
     engine->getBtRegistry()->put(rg->getGID(), std::move(btObj));

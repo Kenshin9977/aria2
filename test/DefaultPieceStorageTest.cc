@@ -65,7 +65,7 @@ public:
     peer = std::make_shared<Peer>("192.168.0.1", 6889);
     peer->allocateSessionResource(dctx_->getPieceLength(),
                                   dctx_->getTotalLength());
-    pieceSelector_ = make_unique<InorderPieceSelector>();
+    pieceSelector_ = std::make_unique<InorderPieceSelector>();
   }
 
   void testGetTotalLength();

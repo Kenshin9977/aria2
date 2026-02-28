@@ -72,7 +72,7 @@ public:
 
 UTMetadataPostDownloadHandler::UTMetadataPostDownloadHandler()
 {
-  setCriteria(make_unique<Criteria>());
+  setCriteria(std::make_unique<Criteria>());
 }
 
 void UTMetadataPostDownloadHandler::getNextRequestGroups(

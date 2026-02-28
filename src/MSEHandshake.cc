@@ -113,7 +113,7 @@ MSEHandshake::HANDSHAKE_TYPE MSEHandshake::identifyHandshakeType()
 
 void MSEHandshake::initEncryptionFacility(bool initiator)
 {
-  dh_ = make_unique<DHKeyExchange>();
+  dh_ = std::make_unique<DHKeyExchange>();
   dh_->init(PRIME, PRIME_BITS, GENERATOR, 160);
   dh_->generatePublicKey();
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - DH initialized.", cuid_));
@@ -197,7 +197,7 @@ void MSEHandshake::initCipher(const unsigned char* infoHash)
   sha1_->reset();
   message_digest::digest(localCipherKey, sizeof(localCipherKey), sha1_.get(), s,
                          sizeof(s));
-  encryptor_ = make_unique<ARC4Encryptor>();
+  encryptor_ = std::make_unique<ARC4Encryptor>();
   encryptor_->init(localCipherKey, sizeof(localCipherKey));
 
   unsigned char peerCipherKey[20];
@@ -205,7 +205,7 @@ void MSEHandshake::initCipher(const unsigned char* infoHash)
   sha1_->reset();
   message_digest::digest(peerCipherKey, sizeof(peerCipherKey), sha1_.get(), s,
                          sizeof(s));
-  decryptor_ = make_unique<ARC4Encryptor>();
+  decryptor_ = std::make_unique<ARC4Encryptor>();
   decryptor_->init(peerCipherKey, sizeof(peerCipherKey));
 
   // discard first 1024 bytes ARC4 output.

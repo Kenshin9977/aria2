@@ -79,7 +79,7 @@ void BtRequestMessage::doReceivedAction()
 void BtRequestMessage::onQueued()
 {
   getBtMessageDispatcher()->addOutstandingRequest(
-      make_unique<RequestSlot>(getIndex(), getBegin(), getLength(), blockIndex_,
+      std::make_unique<RequestSlot>(getIndex(), getBegin(), getLength(), blockIndex_,
                                getPieceStorage()->getPiece(getIndex())));
 }
 

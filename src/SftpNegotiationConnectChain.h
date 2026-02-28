@@ -47,7 +47,7 @@ struct SftpNegotiationConnectChain : public ControlChain<ConnectCommand*> {
   ~SftpNegotiationConnectChain() override {}
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
-    auto c = make_unique<SftpNegotiationCommand>(
+    auto c = std::make_unique<SftpNegotiationCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),
         t->getDownloadEngine(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);

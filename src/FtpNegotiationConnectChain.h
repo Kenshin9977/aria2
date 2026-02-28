@@ -47,7 +47,7 @@ struct FtpNegotiationConnectChain : public ControlChain<ConnectCommand*> {
   ~FtpNegotiationConnectChain() override {}
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
-    auto c = make_unique<FtpNegotiationCommand>(
+    auto c = std::make_unique<FtpNegotiationCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),
         t->getDownloadEngine(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);

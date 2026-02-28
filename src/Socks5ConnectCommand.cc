@@ -133,13 +133,13 @@ std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
   if (protocol == Protocol::HTTP || protocol == Protocol::HTTPS) {
     auto b = std::make_shared<SocketRecvBuffer>(getSocket());
     auto k = std::make_shared<HttpConnection>(getCuid(), getSocket(), b);
-    return make_unique<HttpRequestCommand>(
+    return std::make_unique<HttpRequestCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(), k,
         getDownloadEngine(), getSocket());
   }
 
   if (protocol == Protocol::FTP || protocol == Protocol::FTPS) {
-    return make_unique<FtpNegotiationCommand>(
+    return std::make_unique<FtpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket(),
         FtpNegotiationCommand::SEQ_RECV_GREETING);
@@ -147,7 +147,7 @@ std::unique_ptr<Command> Socks5ConnectCommand::createNextCommand()
 
 #ifdef HAVE_LIBSSH2
   if (protocol == Protocol::SFTP) {
-    return make_unique<SftpNegotiationCommand>(
+    return std::make_unique<SftpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket(),
         SftpNegotiationCommand::SEQ_HANDSHAKE);

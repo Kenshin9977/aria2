@@ -35,7 +35,7 @@ struct HttpIntegrationContext {
   void setUp()
   {
     engine = createTestEngine(option, "aria2_HttpCmdIntTest", true);
-    engine->setAuthConfigFactory(make_unique<AuthConfigFactory>());
+    engine->setAuthConfigFactory(std::make_unique<AuthConfigFactory>());
 
     // Set prefs that the command/requestgroup constructors read
     option->put(PREF_CONNECT_TIMEOUT, "10");
@@ -89,7 +89,7 @@ public:
   void testSendRequest()
   {
     // Create HttpRequestCommand -- it registers the socket for write-check
-    auto cmd = make_unique<HttpRequestCommand>(
+    auto cmd = std::make_unique<HttpRequestCommand>(
         ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
         ctx_.httpConn, ctx_.engine.get(), ctx_.clientSocket);
 
@@ -123,7 +123,7 @@ public:
     // Drain the engine to clean up re-enqueued commands
     // (HttpResponseCommand etc.)
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }
@@ -135,7 +135,7 @@ public:
                                  "Content-Length: 0\r\n"
                                  "\r\n");
 
-    auto cmd = make_unique<HttpRequestCommand>(
+    auto cmd = std::make_unique<HttpRequestCommand>(
         ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
         ctx_.httpConn, ctx_.engine.get(), ctx_.clientSocket);
 
@@ -144,7 +144,7 @@ public:
     // Run engine — HttpRequestCommand sends request, creates
     // HttpResponseCommand which reads the 404 and handles the error.
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
 

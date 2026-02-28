@@ -76,9 +76,9 @@ public:
   void testExitOnHalt()
   {
     ctx_.btRuntime->setHalt(true);
-    auto cmd = make_unique<SeedCheckCommand>(ctx_.engine->newCUID(),
+    auto cmd = std::make_unique<SeedCheckCommand>(ctx_.engine->newCUID(),
                                              ctx_.rg.get(), ctx_.engine.get(),
-                                             make_unique<NeverSeedCriteria>());
+                                             std::make_unique<NeverSeedCriteria>());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
     CPPUNIT_ASSERT(cmd->execute());
@@ -88,7 +88,7 @@ public:
   {
     // SeedCheckCommand::execute() always re-enqueues via addCommand(this),
     // so release ownership before calling execute() to avoid double-free.
-    auto cmd = make_unique<SeedCheckCommand>(
+    auto cmd = std::make_unique<SeedCheckCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), nullptr);
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
@@ -97,7 +97,7 @@ public:
 
     ctx_.btRuntime->setHalt(true);
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }
@@ -105,9 +105,9 @@ public:
   void testCriteriaEvaluated()
   {
     ctx_.pieceStorage->setDownloadFinished(true);
-    auto cmd = make_unique<SeedCheckCommand>(
+    auto cmd = std::make_unique<SeedCheckCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
-        make_unique<CountdownSeedCriteria>(1));
+        std::make_unique<CountdownSeedCriteria>(1));
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
     auto* rawCmd = cmd.release();
@@ -115,7 +115,7 @@ public:
     CPPUNIT_ASSERT(ctx_.btRuntime->isHalt());
 
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }
@@ -139,7 +139,7 @@ public:
   void testExitOnHalt()
   {
     ctx_.btRuntime->setHalt(true);
-    auto cmd = make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
+    auto cmd = std::make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
                                              ctx_.engine.get());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPeerStorage(ctx_.peerStorage);
@@ -150,7 +150,7 @@ public:
   {
     // PeerChokeCommand::execute() always re-enqueues via addCommand(this),
     // so release ownership before calling execute() to avoid double-free.
-    auto cmd = make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
+    auto cmd = std::make_unique<PeerChokeCommand>(ctx_.engine->newCUID(),
                                              ctx_.engine.get());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPeerStorage(ctx_.peerStorage);
@@ -160,7 +160,7 @@ public:
 
     ctx_.btRuntime->setHalt(true);
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }
@@ -190,12 +190,12 @@ public:
   {
     ctx_.btRuntime->setHalt(true);
     ctx_.engine->setNoWait(true);
-    auto cmd = make_unique<BtStopDownloadCommand>(
+    auto cmd = std::make_unique<BtStopDownloadCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
         std::chrono::seconds(60));
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->addCommand(std::move(cmd));
     ctx_.engine->run(true);
@@ -206,12 +206,12 @@ public:
   {
     ctx_.pieceStorage->setDownloadFinished(true);
     ctx_.engine->setNoWait(true);
-    auto cmd = make_unique<BtStopDownloadCommand>(
+    auto cmd = std::make_unique<BtStopDownloadCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(),
         std::chrono::seconds(60));
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->addCommand(std::move(cmd));
     ctx_.engine->run(true);
@@ -241,7 +241,7 @@ public:
       bool noMoreAnnounce() override { return true; }
     };
     auto btAnnounce = std::make_shared<NoMoreAnnounce>();
-    auto cmd = make_unique<TrackerWatcherCommand>(
+    auto cmd = std::make_unique<TrackerWatcherCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);
@@ -253,7 +253,7 @@ public:
   void testExitOnForceHalt()
   {
     auto btAnnounce = std::make_shared<MockBtAnnounce>();
-    auto cmd = make_unique<TrackerWatcherCommand>(
+    auto cmd = std::make_unique<TrackerWatcherCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get());
     cmd->setBtRuntime(ctx_.btRuntime);
     cmd->setPieceStorage(ctx_.pieceStorage);

@@ -87,7 +87,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
           ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
-      auto c = make_unique<ConnectCommand>(
+      auto c = std::make_unique<ConnectCommand>(
           getCuid(), getRequest(), proxyRequest, getFileEntry(),
           getRequestGroup(), getDownloadEngine(), getSocket());
       if (isSocks5Proxy()) {
@@ -108,7 +108,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     }
     else {
       setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
-      auto c = make_unique<HttpRequestCommand>(
+      auto c = std::make_unique<HttpRequestCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           std::make_shared<HttpConnection>(
               getCuid(), pooledSocket,
@@ -131,7 +131,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
           ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
-      auto c = make_unique<ConnectCommand>(getCuid(), getRequest(),
+      auto c = std::make_unique<ConnectCommand>(getCuid(), getRequest(),
                                            proxyRequest, // must be null
                                            getFileEntry(), getRequestGroup(),
                                            getDownloadEngine(), getSocket());
@@ -143,7 +143,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
       setSocket(pooledSocket);
       setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
 
-      return make_unique<HttpRequestCommand>(
+      return std::make_unique<HttpRequestCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           std::make_shared<HttpConnection>(
               getCuid(), getSocket(),

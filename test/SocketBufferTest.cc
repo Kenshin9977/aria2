@@ -25,7 +25,7 @@ public:
   void setUp()
   {
     sock_ = std::make_shared<SocketCore>();
-    buf_ = make_unique<SocketBuffer>(sock_);
+    buf_ = std::make_unique<SocketBuffer>(sock_);
   }
   void tearDown() {}
 
@@ -88,7 +88,7 @@ public:
   void setUp()
   {
     sock_ = std::make_shared<SocketCore>();
-    buf_ = make_unique<SocketRecvBuffer>(sock_);
+    buf_ = std::make_unique<SocketRecvBuffer>(sock_);
   }
   void tearDown() {}
 

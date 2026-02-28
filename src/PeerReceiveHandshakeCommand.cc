@@ -66,7 +66,7 @@ PeerReceiveHandshakeCommand::PeerReceiveHandshakeCommand(
     const std::shared_ptr<ISocketCore>& s)
     : PeerAbstractCommand{cuid, peer, e, s}
 {
-  peerConnection_ = make_unique<PeerConnection>(cuid, getPeer(), getSocket());
+  peerConnection_ = std::make_unique<PeerConnection>(cuid, getPeer(), getSocket());
 }
 
 PeerReceiveHandshakeCommand::PeerReceiveHandshakeCommand(
@@ -83,7 +83,7 @@ PeerReceiveHandshakeCommand::PeerReceiveHandshakeCommand(
     }
   }
   else {
-    peerConnection_ = make_unique<PeerConnection>(cuid, getPeer(), getSocket());
+    peerConnection_ = std::make_unique<PeerConnection>(cuid, getPeer(), getSocket());
   }
 }
 
@@ -145,7 +145,7 @@ bool PeerReceiveHandshakeCommand::executeInternal()
       // TODO addPeer and checkoutPeer must be "atomic", in a sense
       // that the added peer must be checked out.
       if (peerStorage->addAndCheckoutPeer(getPeer(), getCuid())) {
-        getDownloadEngine()->addCommand(make_unique<PeerInteractionCommand>(
+        getDownloadEngine()->addCommand(std::make_unique<PeerInteractionCommand>(
             getCuid(), downloadContext->getOwnerRequestGroup(), getPeer(),
             getDownloadEngine(), btRuntime, pieceStorage, peerStorage,
             getSocket(), PeerInteractionCommand::RECEIVER_WAIT_HANDSHAKE,

@@ -124,9 +124,9 @@ public:
     option_->put(PREF_PIECE_LENGTH, "1048576");
     option_->put(PREF_MAX_DOWNLOAD_RESULT, "10");
     File(option_->get(PREF_DIR)).mkdirs();
-    e_ = make_unique<DownloadEngine>(make_unique<SelectEventPoll>());
+    e_ = std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
     e_->setOption(option_.get());
-    e_->setRequestGroupMan(make_unique<RequestGroupMan>(
+    e_->setRequestGroupMan(std::make_unique<RequestGroupMan>(
         std::vector<std::shared_ptr<RequestGroup>>{}, 1, option_.get()));
   }
 
@@ -673,7 +673,7 @@ void RpcMethodTest::testChangeOption()
   opt->put(PREF_MAX_UPLOAD_LIMIT->k, "50K");
 
   {
-    auto btObject = make_unique<BtObject>();
+    auto btObject = std::make_unique<BtObject>();
     btObject->btRuntime = std::make_shared<BtRuntime>();
     e_->getBtRegistry()->put(group->getGID(), std::move(btObject));
   }

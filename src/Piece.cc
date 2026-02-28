@@ -56,7 +56,7 @@ namespace aria2 {
 Piece::Piece() : index_(0), length_(0), nextBegin_(0), usedBySegment_(false) {}
 
 Piece::Piece(size_t index, int64_t length, int32_t blockLength)
-    : bitfield_(make_unique<BitfieldMan>(blockLength, length)),
+    : bitfield_(std::make_unique<BitfieldMan>(blockLength, length)),
       index_(index),
       length_(length),
       nextBegin_(0),
@@ -181,7 +181,7 @@ void Piece::reconfigure(int64_t length)
   // maximum block length for now to reduce the overhead.  Ideally, we
   // check the code thoroughly and remove bitfield_ if we can.
   bitfield_ =
-      make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
+      std::make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
 }
 
 void Piece::setBitfield(std::span<const unsigned char> bitfield)
@@ -306,7 +306,7 @@ void Piece::initWrCache(WrDiskCache* diskCache,
     return;
   }
   assert(!wrCache_);
-  wrCache_ = make_unique<WrDiskCacheEntry>(diskAdaptor);
+  wrCache_ = std::make_unique<WrDiskCacheEntry>(diskAdaptor);
   [[maybe_unused]] bool rv = diskCache->add(wrCache_.get());
   assert(rv);
 }
@@ -342,7 +342,7 @@ void Piece::updateWrCache(WrDiskCache* diskCache, unsigned char* data,
   }
   assert(wrCache_);
   A2_LOG_DEBUG(fmt("updateWrCache entry=%p", wrCache_.get()));
-  auto cell = make_unique<WrDiskCacheEntry::DataCell>();
+  auto cell = std::make_unique<WrDiskCacheEntry::DataCell>();
   cell->goff = goff;
   cell->data = data;
   cell->offset = offset;

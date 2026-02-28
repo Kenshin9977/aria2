@@ -389,7 +389,7 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
     cookiePath = defaultPath;
   }
 
-  auto cookie = make_unique<Cookie>();
+  auto cookie = std::make_unique<Cookie>();
   cookie->setName(cookieName.first, cookieName.second);
   cookie->setValue(cookieValue.first, cookieValue.second);
   cookie->setExpiryTime(expiryTime);

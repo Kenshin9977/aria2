@@ -102,12 +102,12 @@ DownloadEngine::DownloadEngine(std::unique_ptr<EventPoll> eventPoll)
       noWait_(true),
       refreshInterval_(DEFAULT_REFRESH_INTERVAL),
       lastRefresh_(Timer::zero()),
-      cookieStorage_(make_unique<CookieStorage>()),
-      hstsStore_(make_unique<HstsStore>()),
+      cookieStorage_(std::make_unique<CookieStorage>()),
+      hstsStore_(std::make_unique<HstsStore>()),
 #ifdef ENABLE_BITTORRENT
-      btRegistry_(make_unique<BtRegistry>()),
+      btRegistry_(std::make_unique<BtRegistry>()),
 #endif // ENABLE_BITTORRENT
-      dnsCache_(make_unique<DNSCache>()),
+      dnsCache_(std::make_unique<DNSCache>()),
       option_(nullptr)
 {
   unsigned char sessionId[20];
@@ -645,7 +645,7 @@ bool DownloadEngine::validateToken(const std::string& token)
       A2_LOG_ERROR("Failed to create HMAC");
       return false;
     }
-    tokenExpected_ = make_unique<HMACResult>(
+    tokenExpected_ = std::make_unique<HMACResult>(
         tokenHMAC_->getResult(option_->get(PREF_RPC_SECRET)));
   }
 

@@ -60,7 +60,7 @@ ReceiverMSEHandshakeCommand::ReceiverMSEHandshakeCommand(
 
       PeerAbstractCommand(cuid, peer, e, s),
       sequence_(RECEIVER_IDENTIFY_HANDSHAKE),
-      mseHandshake_(make_unique<MSEHandshake>(
+      mseHandshake_(std::make_unique<MSEHandshake>(
           cuid, std::static_pointer_cast<SocketCore>(s), e->getOption()))
 {
   setTimeout(std::chrono::seconds(
@@ -104,11 +104,11 @@ bool ReceiverMSEHandshakeCommand::executeInternal()
               " preference.");
         }
         auto peerConnection =
-            make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
+            std::make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
         peerConnection->presetBuffer(mseHandshake_->getBuffer(),
                                      mseHandshake_->getBufferLength());
         getDownloadEngine()->addCommand(
-            make_unique<PeerReceiveHandshakeCommand>(
+            std::make_unique<PeerReceiveHandshakeCommand>(
                 getCuid(), getPeer(), getDownloadEngine(), getSocket(),
                 std::move(peerConnection)));
         return true;
@@ -215,7 +215,7 @@ bool ReceiverMSEHandshakeCommand::executeInternal()
 void ReceiverMSEHandshakeCommand::createCommand()
 {
   auto peerConnection =
-      make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
+      std::make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
   if (mseHandshake_->getNegotiatedCryptoType() == MSEHandshake::CRYPTO_ARC4) {
     peerConnection->enableEncryption(mseHandshake_->popEncryptor(),
                                      mseHandshake_->popDecryptor());
@@ -227,7 +227,7 @@ void ReceiverMSEHandshakeCommand::createCommand()
   // TODO add mseHandshake_->getInfoHash() to PeerReceiveHandshakeCommand
   // as a hint. If this info hash and one in BitTorrent Handshake does not
   // match, then drop connection.
-  getDownloadEngine()->addCommand(make_unique<PeerReceiveHandshakeCommand>(
+  getDownloadEngine()->addCommand(std::make_unique<PeerReceiveHandshakeCommand>(
       getCuid(), getPeer(), getDownloadEngine(), getSocket(),
       std::move(peerConnection)));
 }

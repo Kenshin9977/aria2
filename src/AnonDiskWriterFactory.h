@@ -51,7 +51,7 @@ public:
   std::unique_ptr<DiskWriter>
   newDiskWriter(const std::string& filename) override
   {
-    return make_unique<DiskWriterType>();
+    return std::make_unique<DiskWriterType>();
   }
 };
 

@@ -63,7 +63,7 @@ void DHTMessageTracker::addMessage(DHTMessage* message,
                                    std::chrono::seconds timeout,
                                    std::unique_ptr<DHTMessageCallback> callback)
 {
-  entries_.push_back(make_unique<DHTMessageTrackerEntry>(
+  entries_.push_back(std::make_unique<DHTMessageTrackerEntry>(
       message->getRemoteNode(), message->getTransactionID(),
       message->getMessageType(), std::move(timeout), std::move(callback)));
 }

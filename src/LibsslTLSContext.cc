@@ -96,7 +96,7 @@ namespace aria2 {
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
                                               TLSVersion minVer)
 {
-  return make_unique<OpenSSLTLSContext>(side, minVer);
+  return std::make_unique<OpenSSLTLSContext>(side, minVer);
 }
 
 OpenSSLTLSContext::OpenSSLTLSContext(TLSSessionSide side, TLSVersion minVer)

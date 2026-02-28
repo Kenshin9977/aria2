@@ -145,7 +145,7 @@ void AbstractCommandTest::testExecute_haltReturnsTrue()
   ctx_.rg->setHaltRequested(true);
 
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
   CPPUNIT_ASSERT(cmd->execute());
   CPPUNIT_ASSERT_EQUAL(0, cmd->executeInternalCount);
@@ -156,7 +156,7 @@ void AbstractCommandTest::testExecute_noSocketCallsInternal()
   // No socket, no read/write checks → shouldProcess() returns true
   // → executeInternal() is called.
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
   CPPUNIT_ASSERT(cmd->execute());
   CPPUNIT_ASSERT_EQUAL(1, cmd->executeInternalCount);
@@ -176,7 +176,7 @@ void AbstractCommandTest::testExecute_noCheckFallthrough()
   // checkSocketIsWritable_==false (no socket check), which means
   // shouldProcess() returns true.  We verify executeInternal is called.
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get(), mockSocket);
 
   // The constructor registered the mock socket for read check.
@@ -194,7 +194,7 @@ void AbstractCommandTest::testExecute_mockSocketPassedToInternal()
   mockSocket->readBuffer = "hello";
 
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get(), mockSocket);
 
   // Verify getSocket() returns our mock.
@@ -240,7 +240,7 @@ void AbstractCommandTest::testExecute_downloadFinishedReturnsTrue()
   ctx_.rg->setPieceStorage(ps);
 
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
   // downloadFinished() returns true → execute() returns true early
   CPPUNIT_ASSERT(cmd->execute());
@@ -253,7 +253,7 @@ void AbstractCommandTest::testResolveProxyMethod()
   auto req = std::make_shared<Request>();
   req->setUri("http://example.com/file");
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
 
   // Default: GET for HTTP
@@ -279,7 +279,7 @@ void AbstractCommandTest::testCreateProxyRequest()
   auto req = std::make_shared<Request>();
   req->setUri("http://example.com/file");
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
 
   // No proxy defined — returns null
@@ -304,7 +304,7 @@ void AbstractCommandTest::testIsProxyDefined()
   auto req = std::make_shared<Request>();
   req->setUri("http://example.com/file");
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), req, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get());
 
   // No proxy — not defined
@@ -324,7 +324,7 @@ void AbstractCommandTest::testWriteCheckSocket()
   auto mockSocket = std::make_shared<MockSocketCore>();
 
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get(), mockSocket);
 
   // Disable the read check that constructor registered
@@ -350,7 +350,7 @@ void AbstractCommandTest::testSwapSocket()
   mockSocket2->readBuffer = "swapped";
 
   auto cmd =
-      make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
+      std::make_unique<StubCommand>(ctx_.engine->newCUID(), nullptr, ctx_.fileEntry,
                                ctx_.rg.get(), ctx_.engine.get(), mockSocket1);
 
   // Disable read check so destructor doesn't crash

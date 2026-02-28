@@ -98,7 +98,7 @@ DownloadCommand::DownloadCommand(
   peerStat_->downloadStart();
   getSegmentMan()->registerPeerStat(peerStat_);
 
-  streamFilter_ = make_unique<SinkStreamFilter>(
+  streamFilter_ = std::make_unique<SinkStreamFilter>(
       getPieceStorage()->getWrDiskCache(), pieceHashValidationEnabled_);
   streamFilter_->init();
   sinkFilterOnly_ = true;
@@ -330,7 +330,7 @@ bool DownloadCommand::prepareForNextSegment()
       }
     }
     if (getDownloadContext()->getPieceHashType().empty()) {
-      auto entry = make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+      auto entry = std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
       if (entry->isValidationReady()) {
         entry->initValidator();
         entry->cutTrailingGarbage();

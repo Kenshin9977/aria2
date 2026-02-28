@@ -123,7 +123,7 @@ WinTLSContext::WinTLSContext(TLSSessionSide side, TLSVersion ver)
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
                                               TLSVersion ver)
 {
-  return make_unique<WinTLSContext>(side, ver);
+  return std::make_unique<WinTLSContext>(side, ver);
 }
 
 WinTLSContext::~WinTLSContext()
@@ -176,7 +176,7 @@ CredHandle* WinTLSContext::getCredHandle()
   }
 
   TimeStamp ts;
-  cred_ = make_unique<CredHandle>();
+  cred_ = std::make_unique<CredHandle>();
 
   const CERT_CONTEXT* ctx = nullptr;
   if (store_) {

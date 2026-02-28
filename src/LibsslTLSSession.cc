@@ -56,7 +56,7 @@ const unsigned char* ASN1_STRING_get0_data(ASN1_STRING* x)
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return make_unique<OpenSSLTLSSession>(
+  return std::make_unique<OpenSSLTLSSession>(
       static_cast<OpenSSLTLSContext*>(ctx));
 }
 

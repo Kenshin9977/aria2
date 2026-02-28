@@ -76,7 +76,7 @@ public:
                                      std::chrono::seconds(60), counters);
     cmd->exitOnProcess = true;
     e_->setNoWait(true);
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
+    e_->addCommand(std::make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
     e_->addCommand(std::unique_ptr<Command>(cmd));
     e_->run(true);
     // interval=60s didn't elapse, so process() was never called
@@ -105,7 +105,7 @@ public:
                                      std::chrono::seconds(60), counters);
     cmd->exitOnProcess = false;
     e_->setNoWait(true);
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
+    e_->addCommand(std::make_unique<TestHaltCommand>(e_->newCUID(), e_.get()));
     e_->addCommand(std::unique_ptr<Command>(cmd));
     e_->run(true);
     CPPUNIT_ASSERT(counters.preProcess >= 1);
@@ -115,7 +115,7 @@ public:
   void testAutoSaveCommand_exitOnHalt()
   {
     e_->requestHalt();
-    auto cmd = make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
+    auto cmd = std::make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
                                             std::chrono::seconds(60));
     e_->addCommand(std::move(cmd));
     e_->run(false);
@@ -126,7 +126,7 @@ public:
   {
     // keepRunning=false so engine exits when downloads finish
     e_ = createTestEngine(option_, "aria2_TimeBasedCommandTest", false);
-    auto cmd = make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
+    auto cmd = std::make_unique<AutoSaveCommand>(e_->newCUID(), e_.get(),
                                             std::chrono::seconds(60));
     e_->addCommand(std::move(cmd));
     e_->run(false);
@@ -137,7 +137,7 @@ public:
   void testTimedHaltCommand()
   {
     e_->setNoWait(true);
-    auto cmd = make_unique<TimedHaltCommand>(e_->newCUID(), e_.get(),
+    auto cmd = std::make_unique<TimedHaltCommand>(e_->newCUID(), e_.get(),
                                              std::chrono::seconds(0));
     e_->addCommand(std::move(cmd));
     e_->run(false);

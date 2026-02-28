@@ -47,7 +47,7 @@ struct Socks5RequestConnectChain : public ControlChain<ConnectCommand*> {
   ~Socks5RequestConnectChain() override {}
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
-    auto c = make_unique<Socks5HandshakeCommand>(
+    auto c = std::make_unique<Socks5HandshakeCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(),
         t->getRequestGroup(), e, t->getProxyRequest(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);

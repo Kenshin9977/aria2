@@ -82,8 +82,8 @@ public:
   {
     UnionSeedCriteria uc;
     // TimeSeedCriteria with a very long duration won't evaluate to true
-    auto tc1 = make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
-    auto tc2 = make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
+    auto tc1 = std::make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
+    auto tc2 = std::make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
     uc.addSeedCriteria(std::move(tc1));
     uc.addSeedCriteria(std::move(tc2));
     // Neither should be satisfied
@@ -94,8 +94,8 @@ public:
   {
     UnionSeedCriteria uc;
     // Duration 0 means immediately satisfied
-    auto tc1 = make_unique<TimeSeedCriteria>(std::chrono::seconds(0));
-    auto tc2 = make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
+    auto tc1 = std::make_unique<TimeSeedCriteria>(std::chrono::seconds(0));
+    auto tc2 = std::make_unique<TimeSeedCriteria>(std::chrono::seconds(9999));
     uc.addSeedCriteria(std::move(tc1));
     uc.addSeedCriteria(std::move(tc2));
     // First one should be satisfied → union returns true

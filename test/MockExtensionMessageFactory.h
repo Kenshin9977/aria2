@@ -13,7 +13,7 @@ public:
   std::unique_ptr<ExtensionMessage> createMessage(const unsigned char* data,
                                                   size_t length) override
   {
-    return make_unique<MockExtensionMessage>("a2_mock", *data, data + 1,
+    return std::make_unique<MockExtensionMessage>("a2_mock", *data, data + 1,
                                              length - 1, nullptr);
   }
 };

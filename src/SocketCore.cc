@@ -1082,7 +1082,7 @@ bool SocketCore::sshHandshake(const std::string& hashType,
   wantWrite_ = false;
 
   if (!sshSession_) {
-    sshSession_ = make_unique<SSHSession>();
+    sshSession_ = std::make_unique<SSHSession>();
     if (sshSession_->init(sockfd_) == SSH_ERR_ERROR) {
       throw DL_ABORT_EX("Could not create SSH session");
     }

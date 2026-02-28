@@ -66,7 +66,7 @@ BtPortMessage::create(std::span<const unsigned char> data)
   bittorrent::assertPayloadLengthEqual(3, data.size(), NAME);
   bittorrent::assertID(ID, data.data(), NAME);
   uint16_t port = bittorrent::getShortIntParam(data.data(), 1);
-  return make_unique<BtPortMessage>(port);
+  return std::make_unique<BtPortMessage>(port);
 }
 
 void BtPortMessage::doReceivedAction()

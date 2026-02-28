@@ -78,7 +78,7 @@ BtHandshakeMessage::create(std::span<const unsigned char> data)
             static_cast<unsigned long>(data.size()),
             static_cast<unsigned long>(MESSAGE_LENGTH)));
   }
-  auto msg = make_unique<BtHandshakeMessage>();
+  auto msg = std::make_unique<BtHandshakeMessage>();
   msg->pstrlen_ = data[0];
   std::copy_n(&data[1], msg->pstr_.size(), std::begin(msg->pstr_));
   std::copy_n(&data[20], msg->reserved_.size(), std::begin(msg->reserved_));

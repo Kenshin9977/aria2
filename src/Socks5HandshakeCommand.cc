@@ -232,7 +232,7 @@ bool Socks5HandshakeCommand::executeInternal()
                   "connecting to %s:%d",
                   getCuid(), getRequest()->getHost().c_str(),
                   getRequest()->getPort()));
-  auto connectCmd = make_unique<Socks5ConnectCommand>(
+  auto connectCmd = std::make_unique<Socks5ConnectCommand>(
       getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
       getDownloadEngine(), proxyRequest_, getSocket());
   connectCmd->setStatus(Command::STATUS_ONESHOT_REALTIME);

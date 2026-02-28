@@ -204,7 +204,7 @@ bool HttpServerCommand::execute()
         httpServer_->disableKeepAlive();
         httpServer_->feedResponse(
             401, "WWW-Authenticate: Basic realm=\"aria2\"\r\n");
-        e_->addCommand(make_unique<HttpServerResponseCommand>(
+        e_->addCommand(std::make_unique<HttpServerResponseCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;
@@ -220,7 +220,7 @@ bool HttpServerCommand::execute()
           httpServer_->feedUpgradeResponse(
               "websocket",
               fmt("Sec-WebSocket-Accept: %s\r\n", serverKey.c_str()));
-          e_->addCommand(make_unique<rpc::WebSocketResponseCommand>(
+          e_->addCommand(std::make_unique<rpc::WebSocketResponseCommand>(
               getCuid(), httpServer_, e_, socket_));
         }
         else {
@@ -230,14 +230,14 @@ bool HttpServerCommand::execute()
           else {
             httpServer_->feedResponse(status);
           }
-          e_->addCommand(make_unique<HttpServerResponseCommand>(
+          e_->addCommand(std::make_unique<HttpServerResponseCommand>(
               getCuid(), httpServer_, e_, socket_));
         }
         e_->setNoWait(true);
         return true;
 #else  // !ENABLE_WEBSOCKET
         httpServer_->feedResponse(400);
-        e_->addCommand(make_unique<HttpServerResponseCommand>(
+        e_->addCommand(std::make_unique<HttpServerResponseCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;
@@ -252,7 +252,7 @@ bool HttpServerCommand::execute()
                           httpServer_->getContentLength()));
           return true;
         }
-        e_->addCommand(make_unique<HttpServerBodyCommand>(
+        e_->addCommand(std::make_unique<HttpServerBodyCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;

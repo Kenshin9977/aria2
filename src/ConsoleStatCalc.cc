@@ -276,10 +276,10 @@ ConsoleStatCalc::ConsoleStatCalc(std::chrono::seconds summaryInterval,
       colorOutput_(colorOutput)
 {
   if (humanReadable) {
-    sizeFormatter_ = make_unique<AbbrevSizeFormatter>();
+    sizeFormatter_ = std::make_unique<AbbrevSizeFormatter>();
   }
   else {
-    sizeFormatter_ = make_unique<PlainSizeFormatter>();
+    sizeFormatter_ = std::make_unique<PlainSizeFormatter>();
   }
 }
 

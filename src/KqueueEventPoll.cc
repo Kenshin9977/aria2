@@ -89,7 +89,7 @@ size_t KqueueEventPoll::KSocketEntry::getEvents(struct kevent* eventlist)
 
 KqueueEventPoll::KqueueEventPoll()
     : kqEventsSize_(KQUEUE_EVENTS_MAX),
-      kqEvents_(make_unique<struct kevent[]>(kqEventsSize_))
+      kqEvents_(std::make_unique<struct kevent[]>(kqEventsSize_))
 {
   kqfd_ = kqueue();
 }
@@ -183,7 +183,7 @@ bool KqueueEventPoll::addEvents(sock_t socket,
     auto& socketEntry = p.first->second;
     if (socketEntries_.size() > kqEventsSize_) {
       kqEventsSize_ *= 2;
-      kqEvents_ = make_unique<struct kevent[]>(kqEventsSize_);
+      kqEvents_ = std::make_unique<struct kevent[]>(kqEventsSize_);
     }
     event.addSelf(&socketEntry);
     n = socketEntry.getEvents(changelist);

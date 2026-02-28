@@ -68,7 +68,7 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
       req->setPipeliningHint(true);
     }
 
-    return make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
+    return std::make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                       requestGroup, e);
   }
   else if (req->getProtocol() == Protocol::FTP
@@ -83,7 +83,7 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
       throw DL_ABORT_EX(fmt("FTP/SFTP URI %s doesn't contain file path.",
                             req->getUri().c_str()));
     }
-    return make_unique<FtpInitiateConnectionCommand>(cuid, req, fileEntry,
+    return std::make_unique<FtpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                      requestGroup, e);
   }
   else {

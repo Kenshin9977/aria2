@@ -26,7 +26,7 @@ public:
                     const std::string& transactionID = "") override
   {
     // DHTPingMessage constructor needs localNode, remoteNode, transactionID
-    return make_unique<DHTPingMessage>(localNode_, remoteNode, transactionID);
+    return std::make_unique<DHTPingMessage>(localNode_, remoteNode, transactionID);
   }
 };
 

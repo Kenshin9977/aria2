@@ -106,7 +106,7 @@ MetalinkParserState* MetalinkParserStateMachine::metaurlStateV4_ =
     new MetaurlMetalinkParserStateV4();
 
 MetalinkParserStateMachine::MetalinkParserStateMachine()
-    : ctrl_{make_unique<MetalinkParserController>()}
+    : ctrl_{std::make_unique<MetalinkParserController>()}
 {
   stateStack_.push(initialState_);
 }

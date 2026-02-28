@@ -104,7 +104,7 @@ BtExtendedMessage::create(ExtensionMessageFactory* factory,
   bittorrent::assertPayloadLengthGreater(1, data.size(), NAME);
   bittorrent::assertID(ID, data.data(), NAME);
   assert(factory);
-  return make_unique<BtExtendedMessage>(
+  return std::make_unique<BtExtendedMessage>(
       factory->createMessage(data.data() + 1, data.size() - 1));
 }
 

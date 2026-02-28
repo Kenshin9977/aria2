@@ -127,13 +127,13 @@ PeerInteractionCommand::PeerInteractionCommand(
       bittorrent::getTorrentAttrs(requestGroup_->getDownloadContext());
   bool metadataGetMode = torrentAttrs->metadata.empty();
 
-  auto exMsgRegistry = make_unique<ExtensionMessageRegistry>();
+  auto exMsgRegistry = std::make_unique<ExtensionMessageRegistry>();
   exMsgRegistry->setExtensionMessageID(ExtensionMessageRegistry::UT_PEX, 8);
   // http://www.bittorrent.org/beps/bep_0009.html
   exMsgRegistry->setExtensionMessageID(ExtensionMessageRegistry::UT_METADATA,
                                        9);
 
-  auto extensionMessageFactory = make_unique<DefaultExtensionMessageFactory>(
+  auto extensionMessageFactory = std::make_unique<DefaultExtensionMessageFactory>(
       getPeer(), exMsgRegistry.get());
   auto extensionMessageFactoryPtr = extensionMessageFactory.get();
   extensionMessageFactory->setPeerStorage(peerStorage.get());
@@ -141,7 +141,7 @@ PeerInteractionCommand::PeerInteractionCommand(
       requestGroup_->getDownloadContext().get());
   // PieceStorage will be set later.
 
-  auto factory = make_unique<DefaultBtMessageFactory>();
+  auto factory = std::make_unique<DefaultBtMessageFactory>();
   auto factoryPtr = factory.get();
   factory->setCuid(cuid);
   factory->setDownloadContext(requestGroup_->getDownloadContext().get());
@@ -166,7 +166,7 @@ PeerInteractionCommand::PeerInteractionCommand(
   }
 
   if (!peerConnection) {
-    peerConnection = make_unique<PeerConnection>(cuid, getPeer(), getSocket());
+    peerConnection = std::make_unique<PeerConnection>(cuid, getPeer(), getSocket());
   }
   else {
     if (sequence_ == RECEIVER_WAIT_HANDSHAKE &&
@@ -184,7 +184,7 @@ PeerInteractionCommand::PeerInteractionCommand(
       1 + (requestGroup_->getDownloadContext()->getNumPieces() + 7) / 8;
   peerConnection->reserveBuffer(bitfieldPayloadSize);
 
-  auto dispatcher = make_unique<DefaultBtMessageDispatcher>();
+  auto dispatcher = std::make_unique<DefaultBtMessageDispatcher>();
   auto dispatcherPtr = dispatcher.get();
   dispatcher->setCuid(cuid);
   dispatcher->setPeer(getPeer());
@@ -196,13 +196,13 @@ PeerInteractionCommand::PeerInteractionCommand(
       getDownloadEngine()->getRequestGroupMan().get());
   dispatcher->setPeerConnection(peerConnection.get());
 
-  auto receiver = make_unique<DefaultBtMessageReceiver>();
+  auto receiver = std::make_unique<DefaultBtMessageReceiver>();
   receiver->setDownloadContext(requestGroup_->getDownloadContext().get());
   receiver->setPeerConnection(peerConnection.get());
   receiver->setDispatcher(dispatcher.get());
   receiver->setBtMessageFactory(factory.get());
 
-  auto reqFactory = make_unique<DefaultBtRequestFactory>();
+  auto reqFactory = std::make_unique<DefaultBtRequestFactory>();
   reqFactory->setPeer(getPeer());
   reqFactory->setPieceStorage(pieceStorage.get());
   reqFactory->setBtMessageDispatcher(dispatcher.get());
@@ -222,7 +222,7 @@ PeerInteractionCommand::PeerInteractionCommand(
       requestGroup_->getDownloadContext()->getTotalLength());
   getPeer()->setBtMessageDispatcher(dispatcher.get());
 
-  auto btInteractive = make_unique<DefaultBtInteractive>(
+  auto btInteractive = std::make_unique<DefaultBtInteractive>(
       requestGroup_->getDownloadContext(), getPeer());
   btInteractive->setBtRuntime(btRuntime_);
   btInteractive->setPieceStorage(pieceStorage_);
@@ -261,8 +261,8 @@ PeerInteractionCommand::PeerInteractionCommand(
   }
 
   if (metadataGetMode) {
-    auto utMetadataRequestFactory = make_unique<UTMetadataRequestFactory>();
-    auto utMetadataRequestTracker = make_unique<UTMetadataRequestTracker>();
+    auto utMetadataRequestFactory = std::make_unique<UTMetadataRequestFactory>();
+    auto utMetadataRequestTracker = std::make_unique<UTMetadataRequestTracker>();
 
     utMetadataRequestFactory->setCuid(cuid);
     utMetadataRequestFactory->setDownloadContext(
@@ -393,7 +393,7 @@ bool PeerInteractionCommand::prepareForNextPeer(time_t wait)
     std::shared_ptr<Peer> peer = peerStorage_->checkoutPeer(ncuid);
     // sanity check
     if (peer) {
-      auto command = make_unique<PeerInitiateConnectionCommand>(
+      auto command = std::make_unique<PeerInitiateConnectionCommand>(
           ncuid, requestGroup_, peer, getDownloadEngine(), btRuntime_);
       command->setPeerStorage(peerStorage_);
       command->setPieceStorage(pieceStorage_);

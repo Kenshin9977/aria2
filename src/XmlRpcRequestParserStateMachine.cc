@@ -77,7 +77,7 @@ auto arrayValueState = new ArrayValueXmlRpcRequestParserState();
 } // namespace
 
 XmlRpcRequestParserStateMachine::XmlRpcRequestParserStateMachine()
-    : controller_(make_unique<XmlRpcRequestParserController>())
+    : controller_(std::make_unique<XmlRpcRequestParserController>())
 {
   stateStack_.push(initialState);
 }

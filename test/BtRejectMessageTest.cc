@@ -136,7 +136,7 @@ void BtRejectMessageTest::testCreateMessage()
 void BtRejectMessageTest::testDoReceivedAction()
 {
   peer->setFastExtensionEnabled(true);
-  dispatcher->setRequestSlot(make_unique<RequestSlot>(1, 16, 32, 2));
+  dispatcher->setRequestSlot(std::make_unique<RequestSlot>(1, 16, 32, 2));
 
   CPPUNIT_ASSERT(dispatcher->getOutstandingRequest(1, 16, 32));
 
@@ -148,7 +148,7 @@ void BtRejectMessageTest::testDoReceivedAction()
 void BtRejectMessageTest::testDoReceivedActionNoMatch()
 {
   peer->setFastExtensionEnabled(true);
-  dispatcher->setRequestSlot(make_unique<RequestSlot>(2, 16, 32, 2));
+  dispatcher->setRequestSlot(std::make_unique<RequestSlot>(2, 16, 32, 2));
 
   CPPUNIT_ASSERT(dispatcher->getOutstandingRequest(2, 16, 32));
 
@@ -160,7 +160,7 @@ void BtRejectMessageTest::testDoReceivedActionNoMatch()
 void BtRejectMessageTest::testDoReceivedActionFastExtensionDisabled()
 {
   RequestSlot slot(1, 16, 32, 2);
-  dispatcher->setRequestSlot(make_unique<RequestSlot>(1, 16, 32, 2));
+  dispatcher->setRequestSlot(std::make_unique<RequestSlot>(1, 16, 32, 2));
 
   CPPUNIT_ASSERT(dispatcher->getOutstandingRequest(1, 16, 32));
   try {

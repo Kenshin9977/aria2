@@ -119,7 +119,7 @@ std::wstring utf8ToWChar(const char* src)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<wchar_t[]>(static_cast<size_t>(len));
+  auto buf = std::make_unique<wchar_t[]>(static_cast<size_t>(len));
   len = utf8ToWChar(buf.get(), len, src);
   if (len <= 0) {
     abort();
@@ -140,7 +140,7 @@ std::string wCharToUtf8(const std::wstring& wsrc)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<char[]>(static_cast<size_t>(len));
+  auto buf = std::make_unique<char[]>(static_cast<size_t>(len));
   len = wCharToUtf8(buf.get(), len, wsrc.c_str());
   if (len <= 0) {
     abort();
@@ -2287,7 +2287,7 @@ void executeHook(const std::string& command, a2_gid_t gid, size_t numFiles,
   }
   int cmdlineLen = utf8ToWChar(nullptr, 0, cmdline.c_str());
   assert(cmdlineLen > 0);
-  auto wcharCmdline = make_unique<wchar_t[]>(cmdlineLen);
+  auto wcharCmdline = std::make_unique<wchar_t[]>(cmdlineLen);
   cmdlineLen = utf8ToWChar(wcharCmdline.get(), cmdlineLen, cmdline.c_str());
   assert(cmdlineLen > 0);
   A2_LOG_INFO(fmt("Executing user command: %s", cmdline.c_str()));
@@ -2527,7 +2527,7 @@ bool gainPrivilege(LPCTSTR privName)
     return false;
   }
 
-  auto buf = make_unique<char[]>(bufsize);
+  auto buf = std::make_unique<char[]>(bufsize);
   if (!GetTokenInformation(token, TokenPrivileges, buf.get(), bufsize,
                            &bufsize)) {
     auto errNum = GetLastError();

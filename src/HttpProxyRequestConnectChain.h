@@ -47,7 +47,7 @@ struct HttpProxyRequestConnectChain : public ControlChain<ConnectCommand*> {
   ~HttpProxyRequestConnectChain() override {}
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
-    auto c = make_unique<HttpProxyRequestCommand>(
+    auto c = std::make_unique<HttpProxyRequestCommand>(
         t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),
         e, t->getProxyRequest(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);

@@ -491,14 +491,14 @@ void RequestGroupMan::configureRequestGroup(
       requestGroup->getOption()->get(PREF_URI_SELECTOR);
   if (uriSelectorValue == V_FEEDBACK) {
     requestGroup->setURISelector(
-        make_unique<FeedbackURISelector>(serverStatMan_));
+        std::make_unique<FeedbackURISelector>(serverStatMan_));
   }
   else if (uriSelectorValue == V_INORDER) {
-    requestGroup->setURISelector(make_unique<InorderURISelector>());
+    requestGroup->setURISelector(std::make_unique<InorderURISelector>());
   }
   else if (uriSelectorValue == V_ADAPTIVE) {
     requestGroup->setURISelector(
-        make_unique<AdaptiveURISelector>(serverStatMan_, requestGroup.get()));
+        std::make_unique<AdaptiveURISelector>(serverStatMan_, requestGroup.get()));
   }
 }
 
@@ -1051,7 +1051,7 @@ void RequestGroupMan::initWrDiskCache()
   assert(!wrDiskCache_);
   size_t limit = option_->getAsInt(PREF_DISK_CACHE);
   if (limit > 0) {
-    wrDiskCache_ = make_unique<WrDiskCache>(limit);
+    wrDiskCache_ = std::make_unique<WrDiskCache>(limit);
   }
 }
 

@@ -90,7 +90,7 @@ createHttpRequest(const std::shared_ptr<Request>& req,
                   const std::shared_ptr<Request>& proxyRequest,
                   int64_t endOffset = 0)
 {
-  auto httpRequest = make_unique<HttpRequest>();
+  auto httpRequest = std::make_unique<HttpRequest>();
   httpRequest->setUserAgent(option->get(PREF_USER_AGENT));
   httpRequest->setRequest(req);
   httpRequest->setFileEntry(fileEntry);
@@ -212,7 +212,7 @@ bool HttpRequestCommand::executeInternal()
     httpConnection_->sendPendingData();
   }
   if (httpConnection_->sendBufferIsEmpty()) {
-    getDownloadEngine()->addCommand(make_unique<HttpResponseCommand>(
+    getDownloadEngine()->addCommand(std::make_unique<HttpResponseCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         httpConnection_, getDownloadEngine(), getSocket()));
     return true;
@@ -278,7 +278,7 @@ bool HttpRequestCommand::createHttp2Command()
     throw DL_ABORT_EX("HTTP2: Failed to submit request");
   }
 
-  auto cmd = make_unique<Http2RequestCommand>(
+  auto cmd = std::make_unique<Http2RequestCommand>(
       getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
       getDownloadEngine(), getSocket(), h2session, streamId);
   cmd->setStatus(Command::STATUS_ONESHOT_REALTIME);

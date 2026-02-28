@@ -115,7 +115,7 @@ public:
   [[nodiscard]] static std::unique_ptr<String> g(InputIterator first,
                                                   InputIterator last)
   {
-    return make_unique<String>(first, last);
+    return std::make_unique<String>(first, last);
   }
 
   void accept(ValueBaseVisitor& visitor) const override;

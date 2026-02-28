@@ -108,9 +108,9 @@ void BtChokeMessageTest::testDoReceivedAction()
   BtChokeMessage msg;
   msg.setPeer(peer);
 
-  auto dispatcher = make_unique<MockBtMessageDispatcher2>();
+  auto dispatcher = std::make_unique<MockBtMessageDispatcher2>();
   msg.setBtMessageDispatcher(dispatcher.get());
-  auto requestFactory = make_unique<MockBtRequestFactory2>();
+  auto requestFactory = std::make_unique<MockBtRequestFactory2>();
   msg.setBtRequestFactory(requestFactory.get());
 
   msg.doReceivedAction();

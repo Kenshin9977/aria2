@@ -89,7 +89,7 @@ bool DomainNode::addCookie(std::unique_ptr<Cookie> cookie, time_t now)
       return false;
     }
     else {
-      cookies_ = make_unique<std::deque<std::unique_ptr<Cookie>>>();
+      cookies_ = std::make_unique<std::deque<std::unique_ptr<Cookie>>>();
       cookies_->push_back(std::move(cookie));
       return true;
     }
@@ -219,7 +219,7 @@ bool DomainNode::getInLru() const { return inLru_; }
 
 void DomainNode::setInLru(bool f) { inLru_ = f; }
 
-CookieStorage::CookieStorage() : rootNode_{make_unique<DomainNode>("", nullptr)}
+CookieStorage::CookieStorage() : rootNode_{std::make_unique<DomainNode>("", nullptr)}
 {
 }
 
@@ -284,7 +284,7 @@ bool CookieStorage::store(std::unique_ptr<Cookie> cookie, time_t now)
       node = nextNode;
     }
     else {
-      node = node->addNext(*i, make_unique<DomainNode>(*i, node));
+      node = node->addNext(*i, std::make_unique<DomainNode>(*i, node));
     }
   }
   bool ok = node->addCookie(std::move(cookie), now);

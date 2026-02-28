@@ -219,7 +219,7 @@ void DownloadContextTest::testSignature()
   DownloadContext ctx(1_k, 1_k, "file");
   CPPUNIT_ASSERT(!ctx.getSignature());
 
-  auto sig = make_unique<Signature>();
+  auto sig = std::make_unique<Signature>();
   sig->setBody("signature-data");
   ctx.setSignature(std::move(sig));
   CPPUNIT_ASSERT(ctx.getSignature());

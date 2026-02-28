@@ -77,12 +77,12 @@ bool SessionSerializer::save(const std::string& filename) const
     std::unique_ptr<IOFile> fp;
 #if HAVE_ZLIB
     if (filename.ends_with(".gz")) {
-      fp = make_unique<GZipFile>(tempFilename.c_str(), IOFile::WRITE);
+      fp = std::make_unique<GZipFile>(tempFilename.c_str(), IOFile::WRITE);
     }
     else
 #endif
     {
-      fp = make_unique<BufferedFile>(tempFilename.c_str(), IOFile::WRITE);
+      fp = std::make_unique<BufferedFile>(tempFilename.c_str(), IOFile::WRITE);
     }
     if (!*fp) {
       return false;

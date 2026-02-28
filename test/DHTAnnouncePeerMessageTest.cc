@@ -40,7 +40,7 @@ public:
     createAnnouncePeerReplyMessage(const std::shared_ptr<DHTNode>& remoteNode,
                                    const std::string& transactionID) override
     {
-      return make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
+      return std::make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
                                                       transactionID);
     }
   };

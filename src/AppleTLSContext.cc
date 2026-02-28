@@ -138,7 +138,7 @@ std::string errToString(OSStatus err)
     return rv;
   }
   size_t len = CFStringGetLength(cerr.get()) * 4;
-  auto buf = make_unique<char[]>(len);
+  auto buf = std::make_unique<char[]>(len);
   if (CFStringGetCString(cerr.get(), buf.get(), len, kCFStringEncodingUTF8)) {
     rv = buf.get();
   }
@@ -180,7 +180,7 @@ namespace aria2 {
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
                                               TLSVersion ver)
 {
-  return make_unique<AppleTLSContext>(side, ver);
+  return std::make_unique<AppleTLSContext>(side, ver);
 }
 
 AppleTLSContext::~AppleTLSContext()

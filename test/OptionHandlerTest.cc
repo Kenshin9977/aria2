@@ -322,7 +322,7 @@ void OptionHandlerTest::testDeprecatedOptionHandler()
 {
   {
     DeprecatedOptionHandler handler(
-        make_unique<DefaultOptionHandler>(PREF_TIMEOUT));
+        std::make_unique<DefaultOptionHandler>(PREF_TIMEOUT));
     Option option;
     handler.parse(option, "foo");
     CPPUNIT_ASSERT(!option.defined(PREF_TIMEOUT));
@@ -330,7 +330,7 @@ void OptionHandlerTest::testDeprecatedOptionHandler()
   {
     DefaultOptionHandler dir(PREF_DIR);
     DeprecatedOptionHandler handler(
-        make_unique<DefaultOptionHandler>(PREF_TIMEOUT), &dir);
+        std::make_unique<DefaultOptionHandler>(PREF_TIMEOUT), &dir);
     Option option;
     handler.parse(option, "foo");
     CPPUNIT_ASSERT(!option.defined(PREF_TIMEOUT));

@@ -67,7 +67,7 @@ struct BtPeerIntegrationContext {
 
     // Register BtObject in the engine's BtRegistry so that
     // PeerInteractionCommand can look up tcpPort.
-    auto btObj = make_unique<BtObject>(
+    auto btObj = std::make_unique<BtObject>(
         dctx, pieceStorage, peerStorage, std::make_shared<MockBtAnnounce>(),
         btRuntime, std::make_shared<MockBtProgressInfoFile>());
     engine->getBtRegistry()->put(rg->getGID(), std::move(btObj));
@@ -102,7 +102,7 @@ public:
     // PeerInitiateConnectionCommand creates its own socket and calls
     // establishConnection() in executeInternal(), then hands off to
     // PeerInteractionCommand(INITIATOR_SEND_HANDSHAKE).
-    auto cmd = make_unique<PeerInitiateConnectionCommand>(
+    auto cmd = std::make_unique<PeerInitiateConnectionCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), peer, ctx_.engine.get(),
         ctx_.btRuntime, /* mseHandshakeEnabled */ false);
     cmd->setPeerStorage(ctx_.peerStorage);
@@ -152,7 +152,7 @@ public:
     // PeerInteractionCommand.
     ctx_.btRuntime->setHalt(true);
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }

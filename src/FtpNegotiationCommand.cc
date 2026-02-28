@@ -115,7 +115,7 @@ bool FtpNegotiationCommand::executeInternal()
     return prepareForRetry(0);
   }
   else if (sequence_ == SEQ_NEGOTIATION_COMPLETED) {
-    auto command = make_unique<FtpDownloadCommand>(
+    auto command = std::make_unique<FtpDownloadCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(), ftp_,
         getDownloadEngine(), dataSocket_,
         std::static_pointer_cast<SocketCore>(getSocket()));
@@ -537,7 +537,7 @@ bool FtpNegotiationCommand::onFileSizeDetermined(int64_t totalLength)
       if (getDownloadContext()->isChecksumVerificationNeeded()) {
         A2_LOG_DEBUG("Zero length file exists. Verify checksum.");
         auto entry =
-            make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+            std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
         entry->initValidator();
         getPieceStorage()->getDiskAdaptor()->openExistingFile();
         getDownloadEngine()->getCheckIntegrityMan()->pushEntry(
@@ -572,7 +572,7 @@ bool FtpNegotiationCommand::onFileSizeDetermined(int64_t totalLength)
       if (getDownloadContext()->isChecksumVerificationNeeded()) {
         A2_LOG_DEBUG("Verify checksum for zero-length file");
         auto entry =
-            make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+            std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
         entry->initValidator();
         getDownloadEngine()->getCheckIntegrityMan()->pushEntry(
             std::move(entry));
@@ -592,7 +592,7 @@ bool FtpNegotiationCommand::onFileSizeDetermined(int64_t totalLength)
     return true;
   }
   else {
-    auto progressInfoFile = make_unique<DefaultBtProgressInfoFile>(
+    auto progressInfoFile = std::make_unique<DefaultBtProgressInfoFile>(
         getDownloadContext(), nullptr, getOption().get());
     getRequestGroup()->adjustFilename(progressInfoFile.get());
     getRequestGroup()->initPieceStorage();
@@ -886,7 +886,7 @@ bool FtpNegotiationCommand::sendTunnelRequest()
         }
       }
     }
-    auto httpRequest = make_unique<HttpRequest>();
+    auto httpRequest = std::make_unique<HttpRequest>();
     httpRequest->setUserAgent(getOption()->get(PREF_USER_AGENT));
     auto req = std::make_shared<Request>();
     // Construct fake URI in order to use HttpRequest

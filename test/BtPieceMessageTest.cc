@@ -54,7 +54,7 @@ public:
     virtual std::unique_ptr<BtRejectMessage>
     createRejectMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtRejectMessage>(index, begin, length);
+      return std::make_unique<BtRejectMessage>(index, begin, length);
     }
   };
 
@@ -66,16 +66,16 @@ public:
 
   void setUp()
   {
-    dctx_ = make_unique<DownloadContext>(16_k, 256_k, "/path/to/file");
+    dctx_ = std::make_unique<DownloadContext>(16_k, 256_k, "/path/to/file");
 
     peer = std::make_shared<Peer>("host", 6969);
     peer->allocateSessionResource(dctx_->getPieceLength(),
                                   dctx_->getTotalLength());
 
-    btMessageDispatcher = make_unique<MockBtMessageDispatcher>();
-    btMessageFactory_ = make_unique<MockBtMessageFactory2>();
+    btMessageDispatcher = std::make_unique<MockBtMessageDispatcher>();
+    btMessageFactory_ = std::make_unique<MockBtMessageFactory2>();
 
-    msg = make_unique<BtPieceMessage>();
+    msg = std::make_unique<BtPieceMessage>();
     msg->setIndex(1);
     msg->setBegin(1_k);
     msg->setBlockLength(16_k);

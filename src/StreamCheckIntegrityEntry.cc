@@ -64,7 +64,7 @@ void StreamCheckIntegrityEntry::onDownloadIncomplete(
     return;
   }
   proceedFileAllocation(commands,
-                        make_unique<StreamFileAllocationEntry>(
+                        std::make_unique<StreamFileAllocationEntry>(
                             getRequestGroup(), popNextCommand()),
                         e);
 }

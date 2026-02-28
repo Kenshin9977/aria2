@@ -123,7 +123,7 @@ namespace aria2 {
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return make_unique<WinTLSSession>(
+  return std::make_unique<WinTLSSession>(
       static_cast<WinTLSContext*>(ctx));
 }
 
@@ -698,7 +698,7 @@ restart:
 
     // Need to copy the data, as Schannel is free to mess with it. But we
     // might later need unmodified data from the original read buffer.
-    auto bufcopy = make_unique<char[]>(readBuf_.size());
+    auto bufcopy = std::make_unique<char[]>(readBuf_.size());
     memcpy(bufcopy.get(), readBuf_.data(), readBuf_.size());
 
     // Set up buffers. inbufs will be the raw bytes the library has to decode.

@@ -64,13 +64,13 @@ public:
     virtual std::unique_ptr<BtPieceMessage>
     createPieceMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtPieceMessage>(index, begin, length);
+      return std::make_unique<BtPieceMessage>(index, begin, length);
     }
 
     virtual std::unique_ptr<BtRejectMessage>
     createRejectMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtRejectMessage>(index, begin, length);
+      return std::make_unique<BtRejectMessage>(index, begin, length);
     }
   };
 
@@ -82,16 +82,16 @@ public:
 
   void setUp()
   {
-    pieceStorage_ = make_unique<MockPieceStorage2>();
+    pieceStorage_ = std::make_unique<MockPieceStorage2>();
 
     peer_ = std::make_shared<Peer>("host", 6969);
     peer_->allocateSessionResource(16_k, 256_k);
 
-    dispatcher_ = make_unique<MockBtMessageDispatcher>();
+    dispatcher_ = std::make_unique<MockBtMessageDispatcher>();
 
-    messageFactory_ = make_unique<MockBtMessageFactory2>();
+    messageFactory_ = std::make_unique<MockBtMessageFactory2>();
 
-    msg = make_unique<BtRequestMessage>();
+    msg = std::make_unique<BtRequestMessage>();
     msg->setPeer(peer_);
     msg->setIndex(1);
     msg->setBegin(16);
@@ -258,7 +258,7 @@ void BtRequestMessageTest::testValidate()
 {
   BtRequestMessage msg(0, 0, 16_k);
   msg.setBtMessageValidator(
-      make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
+      std::make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
   msg.validate();
 }
 
@@ -266,7 +266,7 @@ void BtRequestMessageTest::testValidate_lengthTooLong()
 {
   BtRequestMessage msg(0, 0, MAX_BLOCK_LENGTH + 1);
   msg.setBtMessageValidator(
-      make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
+      std::make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
   try {
     msg.validate();
     CPPUNIT_FAIL("exception must be thrown.");

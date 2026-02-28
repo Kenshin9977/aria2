@@ -90,7 +90,7 @@ public:
 
   std::unique_ptr<FileAllocationIterator> fileAllocationIterator() override
   {
-    return make_unique<MockAllocIterator>(state);
+    return std::make_unique<MockAllocIterator>(state);
   }
 
   void openFile() override {}
@@ -162,8 +162,8 @@ public:
 
   void testExitOnHalt()
   {
-    auto entry = make_unique<MockCheckEntry>(ctx_.rg.get());
-    auto validator = make_unique<MockValidator>();
+    auto entry = std::make_unique<MockCheckEntry>(ctx_.rg.get());
+    auto validator = std::make_unique<MockValidator>();
     entry->installValidator(std::move(validator));
 
     auto& man = ctx_.engine->getCheckIntegrityMan();
@@ -173,15 +173,15 @@ public:
     auto* rawEntry = static_cast<MockCheckEntry*>(man->getPickedEntry().get());
 
     ctx_.rg->setHaltRequested(true);
-    auto cmd = make_unique<CheckIntegrityCommand>(
+    auto cmd = std::make_unique<CheckIntegrityCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), rawEntry);
     CPPUNIT_ASSERT(cmd->execute());
   }
 
   void testFinished_downloadComplete()
   {
-    auto entry = make_unique<MockCheckEntry>(ctx_.rg.get());
-    auto validator = make_unique<MockValidator>();
+    auto entry = std::make_unique<MockCheckEntry>(ctx_.rg.get());
+    auto validator = std::make_unique<MockValidator>();
     validator->finished_ = true;
     entry->installValidator(std::move(validator));
 
@@ -191,7 +191,7 @@ public:
 
     ctx_.pieceStorage->setDownloadFinished(true);
 
-    auto cmd = make_unique<CheckIntegrityCommand>(
+    auto cmd = std::make_unique<CheckIntegrityCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), rawEntry);
     CPPUNIT_ASSERT(cmd->execute());
     CPPUNIT_ASSERT_EQUAL(
@@ -202,8 +202,8 @@ public:
 
   void testFinished_downloadIncomplete()
   {
-    auto entry = make_unique<MockCheckEntry>(ctx_.rg.get());
-    auto validator = make_unique<MockValidator>();
+    auto entry = std::make_unique<MockCheckEntry>(ctx_.rg.get());
+    auto validator = std::make_unique<MockValidator>();
     validator->finished_ = true;
     entry->installValidator(std::move(validator));
 
@@ -213,7 +213,7 @@ public:
 
     ctx_.pieceStorage->setDownloadFinished(false);
 
-    auto cmd = make_unique<CheckIntegrityCommand>(
+    auto cmd = std::make_unique<CheckIntegrityCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), rawEntry);
     CPPUNIT_ASSERT(cmd->execute());
     CPPUNIT_ASSERT_EQUAL(
@@ -224,8 +224,8 @@ public:
 
   void testReenqueue()
   {
-    auto entry = make_unique<MockCheckEntry>(ctx_.rg.get());
-    auto validator = make_unique<MockValidator>();
+    auto entry = std::make_unique<MockCheckEntry>(ctx_.rg.get());
+    auto validator = std::make_unique<MockValidator>();
     validator->finished_ = false;
     auto* validatorPtr = validator.get();
     entry->installValidator(std::move(validator));
@@ -246,7 +246,7 @@ public:
     validatorPtr->finished_ = true;
     ctx_.pieceStorage->setDownloadFinished(true);
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }
@@ -280,7 +280,7 @@ public:
   void testExitOnHalt()
   {
     iteratorState_.finished = false;
-    auto entry = make_unique<MockAllocEntry>(ctx_.rg.get());
+    auto entry = std::make_unique<MockAllocEntry>(ctx_.rg.get());
 
     auto& man = ctx_.engine->getFileAllocationMan();
     man->pushEntry(std::move(entry));
@@ -289,7 +289,7 @@ public:
     auto* rawEntry = static_cast<MockAllocEntry*>(man->getPickedEntry().get());
 
     ctx_.rg->setHaltRequested(true);
-    auto cmd = make_unique<FileAllocationCommand>(
+    auto cmd = std::make_unique<FileAllocationCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), rawEntry);
     CPPUNIT_ASSERT(cmd->execute());
   }
@@ -297,13 +297,13 @@ public:
   void testFinished()
   {
     iteratorState_.finished = true;
-    auto entry = make_unique<MockAllocEntry>(ctx_.rg.get());
+    auto entry = std::make_unique<MockAllocEntry>(ctx_.rg.get());
 
     auto& man = ctx_.engine->getFileAllocationMan();
     man->pushEntry(std::move(entry));
     auto* rawEntry = static_cast<MockAllocEntry*>(man->pickNext());
 
-    auto cmd = make_unique<FileAllocationCommand>(
+    auto cmd = std::make_unique<FileAllocationCommand>(
         ctx_.engine->newCUID(), ctx_.rg.get(), ctx_.engine.get(), rawEntry);
     CPPUNIT_ASSERT(cmd->execute());
     CPPUNIT_ASSERT_EQUAL(1, rawEntry->prepareCount);
@@ -312,7 +312,7 @@ public:
   void testReenqueue()
   {
     iteratorState_.finished = false;
-    auto entry = make_unique<MockAllocEntry>(ctx_.rg.get());
+    auto entry = std::make_unique<MockAllocEntry>(ctx_.rg.get());
 
     auto& man = ctx_.engine->getFileAllocationMan();
     man->pushEntry(std::move(entry));
@@ -326,7 +326,7 @@ public:
     // Mark finished to let the command complete on next engine tick.
     iteratorState_.finished = true;
     ctx_.engine->setNoWait(true);
-    ctx_.engine->addCommand(make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
+    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
                                                          ctx_.engine.get()));
     ctx_.engine->run(true);
   }

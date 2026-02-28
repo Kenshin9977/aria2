@@ -51,7 +51,7 @@ GZipEncoder::~GZipEncoder() { release(); }
 void GZipEncoder::init()
 {
   release();
-  strm_ = make_unique<z_stream>();
+  strm_ = std::make_unique<z_stream>();
   strm_->zalloc = Z_NULL;
   strm_->zfree = Z_NULL;
   strm_->opaque = Z_NULL;

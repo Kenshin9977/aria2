@@ -39,27 +39,27 @@ public:
   {
     oparser_.reset(new OptionParser());
 
-    auto timeout = make_unique<DefaultOptionHandler>(
+    auto timeout = std::make_unique<DefaultOptionHandler>(
         PREF_TIMEOUT, NO_DESCRIPTION, "ALPHA", "",
         OptionHandler::REQ_ARG, 'A');
     timeout->addTag(TAG_BASIC);
     timeout->setEraseAfterParse(true);
     oparser_->addOptionHandler(std::move(timeout));
 
-    auto dir = make_unique<DefaultOptionHandler>(PREF_DIR);
+    auto dir = std::make_unique<DefaultOptionHandler>(PREF_DIR);
     dir->addTag(TAG_BASIC);
     dir->addTag(TAG_HTTP);
     dir->addTag(TAG_FILE);
     oparser_->addOptionHandler(std::move(dir));
 
-    auto daemon = make_unique<DefaultOptionHandler>(
+    auto daemon = std::make_unique<DefaultOptionHandler>(
         PREF_DAEMON, NO_DESCRIPTION, "CHARLIE", "",
         OptionHandler::REQ_ARG, 'C');
     daemon->hide();
     daemon->addTag(TAG_FILE);
     oparser_->addOptionHandler(std::move(daemon));
 
-    auto out = make_unique<UnitNumberOptionHandler>(
+    auto out = std::make_unique<UnitNumberOptionHandler>(
         PREF_OUT, NO_DESCRIPTION, "1M", -1, -1, 'D');
     out->addTag(TAG_FILE);
     oparser_->addOptionHandler(std::move(out));

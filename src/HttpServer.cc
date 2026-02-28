@@ -65,7 +65,7 @@ HttpServer::HttpServer(const std::shared_ptr<SocketCore>& socket)
       socketRecvBuffer_(std::make_shared<SocketRecvBuffer>(socket_)),
       socketBuffer_(socket),
       headerProcessor_(
-          make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::SERVER_PARSER)),
+          std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::SERVER_PARSER)),
       lastContentLength_(0),
       bodyConsumed_(0),
       reqType_(RPC_TYPE_NONE),
@@ -354,14 +354,14 @@ void HttpServer::setUsernamePassword(const std::string& username,
   }
 
   if (!username.empty()) {
-    username_ = make_unique<HMACResult>(hmac_->getResult(username));
+    username_ = std::make_unique<HMACResult>(hmac_->getResult(username));
   }
   else {
     username_.reset();
   }
 
   if (!password.empty()) {
-    password_ = make_unique<HMACResult>(hmac_->getResult(password));
+    password_ = std::make_unique<HMACResult>(hmac_->getResult(password));
   }
   else {
     password_.reset();
@@ -382,7 +382,7 @@ int HttpServer::setupResponseRecv()
     if (path == "/jsonrpc") {
       if (reqType_ != RPC_TYPE_JSON) {
         reqType_ = RPC_TYPE_JSON;
-        lastBody_ = make_unique<json::JsonDiskWriter>();
+        lastBody_ = std::make_unique<json::JsonDiskWriter>();
       }
       return 0;
     }
@@ -390,7 +390,7 @@ int HttpServer::setupResponseRecv()
     if (path == "/rpc") {
       if (reqType_ != RPC_TYPE_XML) {
         reqType_ = RPC_TYPE_XML;
-        lastBody_ = make_unique<rpc::XmlRpcDiskWriter>();
+        lastBody_ = std::make_unique<rpc::XmlRpcDiskWriter>();
       }
       return 0;
     }

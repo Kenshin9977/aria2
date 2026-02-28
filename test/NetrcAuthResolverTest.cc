@@ -26,8 +26,8 @@ public:
   {
     netrc_.reset(new Netrc());
     netrc_->addAuthenticator(
-        make_unique<Authenticator>("localhost", "name", "passwd", "account"));
-    netrc_->addAuthenticator(make_unique<DefaultAuthenticator>(
+        std::make_unique<Authenticator>("localhost", "name", "passwd", "account"));
+    netrc_->addAuthenticator(std::make_unique<DefaultAuthenticator>(
         "default", "defaultpasswd", "defaultaccount"));
 
     resolver_.reset(new NetrcAuthResolver());

@@ -87,7 +87,7 @@ AbstractCommand::AbstractCommand(
       socket_(s),
       socketRecvBuffer_(socketRecvBuffer),
 #ifdef ENABLE_ASYNC_DNS
-      asyncNameResolverMan_(make_unique<AsyncNameResolverMan>()),
+      asyncNameResolverMan_(std::make_unique<AsyncNameResolverMan>()),
 #endif // ENABLE_ASYNC_DNS
       requestGroup_(requestGroup),
       e_(e),
@@ -461,7 +461,7 @@ bool AbstractCommand::prepareForRetry(time_t wait)
   }
 
   auto command =
-      make_unique<CreateRequestCommand>(getCuid(), requestGroup_, e_);
+      std::make_unique<CreateRequestCommand>(getCuid(), requestGroup_, e_);
   if (wait == 0) {
     e_->setNoWait(true);
   }

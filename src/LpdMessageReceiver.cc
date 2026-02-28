@@ -138,7 +138,7 @@ std::unique_ptr<LpdMessage> LpdMessageReceiver::receiveMessage()
     if (util::inPrivateAddress(remoteEndpoint.addr)) {
       peer->setLocalPeer(true);
     }
-    return make_unique<LpdMessage>(peer, infoHash);
+    return std::make_unique<LpdMessage>(peer, infoHash);
   }
 }
 

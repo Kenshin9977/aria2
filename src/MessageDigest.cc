@@ -72,13 +72,13 @@ MessageDigest::~MessageDigest() = default;
 
 std::unique_ptr<MessageDigest> MessageDigest::sha1()
 {
-  return make_unique<MessageDigest>(MessageDigestImpl::sha1());
+  return std::make_unique<MessageDigest>(MessageDigestImpl::sha1());
 }
 
 std::unique_ptr<MessageDigest>
 MessageDigest::create(const std::string& hashType)
 {
-  return make_unique<MessageDigest>(MessageDigestImpl::create(hashType));
+  return std::make_unique<MessageDigest>(MessageDigestImpl::create(hashType));
 }
 
 bool MessageDigest::supports(const std::string& hashType)
@@ -175,7 +175,7 @@ void MessageDigest::digest(unsigned char* md) { pImpl_->digest(md); }
 std::string MessageDigest::digest()
 {
   size_t length = pImpl_->getDigestLength();
-  auto buf = make_unique<unsigned char[]>(length);
+  auto buf = std::make_unique<unsigned char[]>(length);
   pImpl_->digest(buf.get());
   return std::string(&buf[0], &buf[length]);
 }

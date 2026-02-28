@@ -28,7 +28,7 @@ void runCmdThenHalt(DownloadEngine* e, std::unique_ptr<Command> cmd)
 {
   e->setNoWait(true);
   e->addCommand(std::move(cmd));
-  e->addCommand(make_unique<TestHaltCommand>(e->newCUID(), e));
+  e->addCommand(std::make_unique<TestHaltCommand>(e->newCUID(), e));
   e->run(true);
 }
 
@@ -37,7 +37,7 @@ void runCmdThenHalt(DownloadEngine* e, std::unique_ptr<Command> cmd)
 void runHaltThenCmd(DownloadEngine* e, std::unique_ptr<Command> cmd)
 {
   e->setNoWait(true);
-  e->addCommand(make_unique<TestHaltCommand>(e->newCUID(), e));
+  e->addCommand(std::make_unique<TestHaltCommand>(e->newCUID(), e));
   e->addCommand(std::move(cmd));
   e->run(true);
 }
@@ -63,7 +63,7 @@ public:
   {
     e_ = createTestEngine(option_, "aria2_DHTCommandTest", true);
     localNode_ = std::make_shared<DHTNode>();
-    routingTable_ = make_unique<DHTRoutingTable>(localNode_);
+    routingTable_ = std::make_unique<DHTRoutingTable>(localNode_);
   }
 
   void tearDown() {}
@@ -72,7 +72,7 @@ public:
   createCmd(std::chrono::seconds interval)
   {
     auto cmd =
-        make_unique<DHTBucketRefreshCommand>(e_->newCUID(), e_.get(), interval);
+        std::make_unique<DHTBucketRefreshCommand>(e_->newCUID(), e_.get(), interval);
     cmd->setRoutingTable(routingTable_.get());
     cmd->setTaskQueue(&taskQueue_);
     cmd->setTaskFactory(&taskFactory_);
@@ -112,7 +112,7 @@ public:
   createCmd(std::chrono::seconds interval)
   {
     auto cmd =
-        make_unique<DHTTokenUpdateCommand>(e_->newCUID(), e_.get(), interval);
+        std::make_unique<DHTTokenUpdateCommand>(e_->newCUID(), e_.get(), interval);
     cmd->setTokenTracker(&tokenTracker_);
     return cmd;
   }
@@ -162,7 +162,7 @@ public:
   createCmd(std::chrono::seconds interval)
   {
     auto cmd =
-        make_unique<DHTPeerAnnounceCommand>(e_->newCUID(), e_.get(), interval);
+        std::make_unique<DHTPeerAnnounceCommand>(e_->newCUID(), e_.get(), interval);
     cmd->setPeerAnnounceStorage(&storage_);
     return cmd;
   }
@@ -204,7 +204,7 @@ public:
     auto localNode = std::make_shared<DHTNode>();
     DHTRoutingTable routingTable(localNode);
 
-    auto cmd = make_unique<DHTAutoSaveCommand>(e_->newCUID(), e_.get(), AF_INET,
+    auto cmd = std::make_unique<DHTAutoSaveCommand>(e_->newCUID(), e_.get(), AF_INET,
                                                std::chrono::seconds(60));
     cmd->setLocalNode(localNode);
     cmd->setRoutingTable(&routingTable);
@@ -246,7 +246,7 @@ public:
     MockDHTTaskFactory taskFactory;
 
     auto cmd =
-        make_unique<DHTGetPeersCommand>(e_->newCUID(), rg_.get(), e_.get());
+        std::make_unique<DHTGetPeersCommand>(e_->newCUID(), rg_.get(), e_.get());
     cmd->setBtRuntime(btRuntime_);
     cmd->setPeerStorage(peerStorage_);
     cmd->setTaskQueue(&taskQueue);

@@ -361,7 +361,7 @@ namespace aria2 {
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return make_unique<AppleTLSSession>(
+  return std::make_unique<AppleTLSSession>(
       static_cast<AppleTLSContext*>(ctx));
 }
 

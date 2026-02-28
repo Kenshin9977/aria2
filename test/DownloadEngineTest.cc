@@ -113,7 +113,7 @@ public:
   {
     // HaltCommand requests halt, then engine should stop
     e_->addCommand(
-        make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), false));
+        std::make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), false));
     e_->run(false);
     CPPUNIT_ASSERT(e_->isHaltRequested());
     CPPUNIT_ASSERT(!e_->isForceHaltRequested());
@@ -121,7 +121,7 @@ public:
 
   void testRun_forceHalt()
   {
-    e_->addCommand(make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), true));
+    e_->addCommand(std::make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), true));
     e_->run(false);
     CPPUNIT_ASSERT(e_->isHaltRequested());
     CPPUNIT_ASSERT(e_->isForceHaltRequested());
@@ -130,9 +130,9 @@ public:
   void testAddCommand()
   {
     std::vector<cuid_t> log;
-    e_->addCommand(make_unique<RecordingCommand>(1, log));
-    e_->addCommand(make_unique<RecordingCommand>(2, log));
-    e_->addCommand(make_unique<RecordingCommand>(3, log));
+    e_->addCommand(std::make_unique<RecordingCommand>(1, log));
+    e_->addCommand(std::make_unique<RecordingCommand>(2, log));
+    e_->addCommand(std::make_unique<RecordingCommand>(3, log));
     e_->run(false);
     CPPUNIT_ASSERT_EQUAL((size_t)3, log.size());
     // Commands execute in FIFO order (deque front)
@@ -147,8 +147,8 @@ public:
     // Routine commands are separate from regular commands
     // Add a regular command that halts (so run() eventually stops)
     e_->addCommand(
-        make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), false));
-    e_->addRoutineCommand(make_unique<RecordingCommand>(100, log));
+        std::make_unique<TestHaltCommand>(e_->newCUID(), e_.get(), false));
+    e_->addRoutineCommand(std::make_unique<RecordingCommand>(100, log));
     e_->run(false);
     // The routine command should have executed
     CPPUNIT_ASSERT(!log.empty());

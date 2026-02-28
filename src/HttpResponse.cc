@@ -213,7 +213,7 @@ HttpResponse::getTransferEncodingStreamFilter() const
   if (isTransferEncodingSpecified()) {
     auto te = getTransferEncoding();
     if (te && hasToken(*te, "chunked")) {
-      return make_unique<ChunkedDecodingStreamFilter>();
+      return std::make_unique<ChunkedDecodingStreamFilter>();
     }
   }
   return nullptr;
@@ -235,7 +235,7 @@ HttpResponse::getContentEncodingStreamFilter() const
 #ifdef HAVE_ZLIB
   auto ce = getContentEncoding();
   if (ce && (util::strieq(*ce, "gzip") || util::strieq(*ce, "deflate"))) {
-    return make_unique<GZipDecodingStreamFilter>();
+    return std::make_unique<GZipDecodingStreamFilter>();
   }
 #endif // HAVE_ZLIB
 

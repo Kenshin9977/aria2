@@ -47,7 +47,7 @@ class MessageDigestImpl;
 
 class MessageDigest {
 public:
-  // Made public for make_unique
+  // Made public for std::make_unique
   MessageDigest(std::unique_ptr<MessageDigestImpl> impl);
   // We don't implement copy ctor.
   MessageDigest(const MessageDigest&) = delete;

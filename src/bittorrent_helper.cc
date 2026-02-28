@@ -905,7 +905,7 @@ parseMagnet(const std::string& magnet)
   if (!xts) {
     return std::unexpected("Missing xt parameter in Magnet URI.");
   }
-  auto attrs = make_unique<TorrentAttribute>();
+  auto attrs = std::make_unique<TorrentAttribute>();
   std::string infoHash;
   for (auto xtiter = xts->begin(), eoi = xts->end();
        xtiter != eoi && infoHash.empty(); ++xtiter) {
