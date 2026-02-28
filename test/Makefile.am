@@ -360,5 +360,9 @@ EXTRA_DIST = 4096chunk.txt\
 	base_uri.xml\
 	local-metaurl.meta4
 
+check-e2e:
+	@echo "Running end-to-end tests..."
+	@$(SHELL) $(srcdir)/e2e/run_all.sh
+
 clean-local:
 	-rm -rf ${a2_test_outdir}

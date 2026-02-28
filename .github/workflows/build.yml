@@ -105,6 +105,8 @@ jobs:
     - name: Build aria2
       run: |
         make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check
+    - name: Run e2e tests
+      run: make -C test check-e2e
 
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
   build-windows:
