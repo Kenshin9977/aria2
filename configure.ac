@@ -138,11 +138,11 @@ AC_LANG([C++])
 # Check pkg-config is available
 PKG_PROG_PKG_CONFIG([0.20])
 
-# Check C++ compiler supports C++23
+# Check C++ compiler supports C++20
 save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS=
 
-AX_CXX_COMPILE_STDCXX([23], [], [mandatory])
+AX_CXX_COMPILE_STDCXX([20], [], [mandatory])
 
 CXX1XCXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$save_CXXFLAGS"

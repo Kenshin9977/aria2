@@ -116,7 +116,7 @@ bool Request::redirectUri(const std::string& uri)
     return false;
   }
   std::string redirectedUri;
-  if (util::startsWith(uri, "//")) {
+  if (uri.starts_with("//")) {
     // Network-path reference (according to RFC 3986, Section 4.2)
     // Just complement current protocol.
     redirectedUri = std::string(protocolToString(getProtocol()));

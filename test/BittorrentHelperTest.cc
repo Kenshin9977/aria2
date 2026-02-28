@@ -323,7 +323,7 @@ void BittorrentHelperTest::testGetInfoHashAsString()
 void BittorrentHelperTest::testGetPeerId()
 {
   std::string peerId = generatePeerId("aria2-");
-  CPPUNIT_ASSERT(peerId.find("aria2-") == 0);
+  CPPUNIT_ASSERT(peerId.starts_with("aria2-"));
   CPPUNIT_ASSERT_EQUAL((size_t)20, peerId.size());
 }
 

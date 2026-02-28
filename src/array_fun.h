@@ -68,7 +68,8 @@ namespace expr {
 
 template <typename L, typename R, typename Op> struct BinExpr {
   using value_type =
-      std::invoke_result_t<Op, typename L::value_type, typename R::value_type>;
+      std::invoke_result_t<Op, typename L::value_type,
+                           typename R::value_type>;
 
   BinExpr(L lhs, R rhs, Op op)
       : lhs(std::move(lhs)), rhs(std::move(rhs)), op(std::move(op))
@@ -97,7 +98,8 @@ BinExpr<L, R, Op> operator|(L lhs, R rhs)
 }
 
 template <typename Arg, typename Op> struct UnExpr {
-  using value_type = std::invoke_result_t<Op, typename Arg::value_type>;
+  using value_type =
+      std::invoke_result_t<Op, typename Arg::value_type>;
 
   UnExpr(Arg arg, Op op) : arg(std::move(arg)), op(std::move(op)) {}
 

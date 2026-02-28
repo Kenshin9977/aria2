@@ -76,7 +76,7 @@ bool SessionSerializer::save(const std::string& filename) const
   {
     std::unique_ptr<IOFile> fp;
 #if HAVE_ZLIB
-    if (util::endsWith(filename, ".gz")) {
+    if (filename.ends_with(".gz")) {
       fp = make_unique<GZipFile>(tempFilename.c_str(), IOFile::WRITE);
     }
     else

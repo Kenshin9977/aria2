@@ -93,7 +93,8 @@ void HttpSkipResponseCommand::installStreamFilter(
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
   const char* name = streamFilter_->getName();
-  sinkFilterOnly_ = util::endsWith(name, SinkStreamFilter::NAME);
+  sinkFilterOnly_ =
+      std::string_view(name).ends_with(SinkStreamFilter::NAME);
 }
 
 bool HttpSkipResponseCommand::executeInternal()

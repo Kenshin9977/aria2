@@ -174,7 +174,7 @@ bool File::mkdirs()
     }
   }
   std::string::iterator dbegin;
-  if (util::startsWith(path, "//")) {
+  if (path.starts_with("//")) {
     // UNC path
     std::string::size_type hostEnd = path.find('/', 2);
     if (hostEnd == std::string::npos) {

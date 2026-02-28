@@ -2132,11 +2132,11 @@ void generateRandomKey(unsigned char* key)
 // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
 bool inPrivateAddress(std::string_view ipv4addr)
 {
-  if (util::startsWith(ipv4addr, "10.") ||
-      util::startsWith(ipv4addr, "192.168.")) {
+  if (ipv4addr.starts_with("10.") ||
+      ipv4addr.starts_with("192.168.")) {
     return true;
   }
-  if (util::startsWith(ipv4addr, "172.")) {
+  if (ipv4addr.starts_with("172.")) {
     for (int i = 16; i <= 31; ++i) {
       std::string t(fmt("%d.", i));
       if (util::startsWith(ipv4addr.begin() + 4, ipv4addr.end(), t.begin(),
@@ -2159,11 +2159,12 @@ bool detectDirTraversal(std::string_view s)
       return true;
     }
   }
-  return s == "." || s == ".." || s[0] == '/' || util::startsWith(s, "./") ||
-         util::startsWith(s, "../") ||
+  return s == "." || s == ".." || s[0] == '/' || s.starts_with("./") ||
+         s.starts_with("../") ||
          s.find("/../") != std::string_view::npos ||
-         s.find("/./") != std::string_view::npos || s[s.size() - 1] == '/' ||
-         util::endsWith(s, "/.") || util::endsWith(s, "/..");
+         s.find("/./") != std::string_view::npos ||
+         s[s.size() - 1] == '/' ||
+         s.ends_with("/.") || s.ends_with("/..");
 }
 
 std::string escapePath(std::string_view s)
@@ -2359,7 +2360,7 @@ std::string safeStrerror(int errNum) { return makeString(strerror(errNum)); }
 bool noProxyDomainMatch(std::string_view hostname, std::string_view domain)
 {
   if (!domain.empty() && domain[0] == '.' && !util::isNumericHost(hostname)) {
-    return util::endsWith(hostname, domain);
+    return hostname.ends_with(domain);
   }
   return hostname == domain;
 }
