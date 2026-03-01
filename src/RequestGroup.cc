@@ -431,8 +431,7 @@ void RequestGroup::createInitialCommand(
       if (!option_->getAsBool(PREF_CHECK_INTEGRITY) &&
           !option_->getAsBool(PREF_ALLOW_OVERWRITE) &&
           !option_->getAsBool(PREF_BT_SEED_UNVERIFIED)) {
-        // TODO we need this->haltRequested = true?
-        throw DOWNLOAD_FAILURE_EXCEPTION2(
+          throw DOWNLOAD_FAILURE_EXCEPTION2(
             fmt(MSG_FILE_ALREADY_EXISTS,
                 downloadContext_->getBasePath().c_str()),
             error_code::FILE_ALREADY_EXISTS);
@@ -509,7 +508,6 @@ void RequestGroup::createInitialCommand(
   }
   else if (pieceStorage_->getDiskAdaptor()->fileExists()) {
     if (!isCheckIntegrityReady() && !option_->getAsBool(PREF_ALLOW_OVERWRITE)) {
-      // TODO we need this->haltRequested = true?
       throw DOWNLOAD_FAILURE_EXCEPTION2(
           fmt(MSG_FILE_ALREADY_EXISTS, downloadContext_->getBasePath().c_str()),
           error_code::FILE_ALREADY_EXISTS);
@@ -676,7 +674,7 @@ void RequestGroup::adjustFilename(BtProgressInfoFile* infoFile)
     // OK, no need to care about filename.
     return;
   }
-  // TODO need this?
+  // Rename file if another download in the group targets the same path.
   if (groupContext_) {
     if (groupContext_->isSameFileBeingDownloaded(this)) {
       // The file name must be renamed

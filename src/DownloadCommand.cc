@@ -247,7 +247,8 @@ bool DownloadCommand::executeInternal()
         if (pieceHashValidationEnabled_ && !expectedPieceHash.empty()) {
           if (
 #ifdef ENABLE_BITTORRENT
-              // TODO Is this necessary?
+              // Skip pre-calculated hash in BT end-game mode; pieces
+              // may be received from multiple peers simultaneously.
               (!getPieceStorage()->isEndGame() ||
                !getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) &&
 #endif // ENABLE_BITTORRENT

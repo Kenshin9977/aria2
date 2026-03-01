@@ -174,12 +174,9 @@ std::string Piece::toString() const
 void Piece::reconfigure(int64_t length)
 {
   length_ = length;
-  // TODO currently, this function is only called from
-  // GrowSegment::updateWrittenLength().  If we use default block
-  // length (16K), and length_ gets large (e.g., 4GB), creating
-  // BitfieldMan for each call is very expensive.  Therefore, we use
-  // maximum block length for now to reduce the overhead.  Ideally, we
-  // check the code thoroughly and remove bitfield_ if we can.
+  // Called from GrowSegment::updateWrittenLength().  Use maximum
+  // block length to avoid expensive BitfieldMan reallocation when
+  // length_ grows large (e.g. 4 GB with 16 KB blocks).
   bitfield_ =
       std::make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
 }

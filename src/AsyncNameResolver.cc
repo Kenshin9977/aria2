@@ -37,8 +37,10 @@
 #include <cstring>
 
 #include "A2STR.h"
+#include "DlAbortEx.h"
 #include "LogFactory.h"
 #include "SocketCore.h"
+#include "fmt.h"
 #include "util.h"
 #include "EventPoll.h"
 
@@ -119,8 +121,11 @@ AsyncNameResolver::AsyncNameResolver(int family, const std::string& servers)
   opts.sock_state_cb = sock_state_cb;
   opts.sock_state_cb_data = this;
 
-  // TODO evaluate return value
-  ares_init_options(&channel_, &opts, ARES_OPT_SOCK_STATE_CB);
+  int rv = ares_init_options(&channel_, &opts, ARES_OPT_SOCK_STATE_CB);
+  if (rv != ARES_SUCCESS) {
+    throw DL_ABORT_EX(fmt("ares_init_options() failed: %s",
+                          ares_strerror(rv)));
+  }
 
   if (!servers.empty()) {
     if (ares_set_servers_csv(channel_, servers.c_str()) != ARES_SUCCESS) {

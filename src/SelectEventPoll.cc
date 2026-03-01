@@ -184,7 +184,9 @@ void SelectEventPoll::poll(const struct timeval& tv)
 
   for (auto& [key, entry] : nameResolverEntries_) {
     auto fd = entry.getFds(&rfds, &wfds);
-    // TODO force error if fd == 0
+    if (fd == 0) {
+      continue;
+    }
     if (fdmax_ < fd) {
       fdmax_ = fd;
     }

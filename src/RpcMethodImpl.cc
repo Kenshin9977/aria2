@@ -1450,7 +1450,7 @@ RpcResponse SystemMulticallRpcMethod::execute(RpcRequest req, DownloadEngine* e)
             DL_ABORT_EX("Recursive system.multicall forbidden."), req));
         continue;
       }
-      // TODO what if params missing?
+      // Missing params are treated as an empty list (see else branch).
       auto tempParamsList = methodDict->get(KEY_PARAMS);
       std::unique_ptr<List> paramsList;
       if (downcast<List>(tempParamsList)) {
@@ -1684,7 +1684,7 @@ void changeGlobalOption(const Option& option, DownloadEngine* e)
       LogFactory::reconfigure();
     }
     catch (RecoverableException& e) {
-      // TODO no exception handling
+      A2_LOG_WARN_EX("Failed to reconfigure log file", e);
     }
   }
   if (option.defined(PREF_BT_MAX_OPEN_FILES)) {

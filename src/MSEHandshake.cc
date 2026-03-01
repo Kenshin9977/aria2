@@ -449,8 +449,8 @@ bool MSEHandshake::receiveReceiverHashAndPadCLength(
   // decrypt crypto_provide
   rbufptr += VC_LENGTH;
   decryptor_->encrypt(CRYPTO_BITFIELD_LENGTH, rbufptr, rbufptr);
-  // TODO choose the crypto type based on the preference.
-  // For now, choose ARC4.
+  // Select crypto type: prefer plaintext if allowed by policy,
+  // otherwise use ARC4 (the only encrypted option in MSE).
   if ((rbufptr[3] & CRYPTO_PLAIN_TEXT) &&
       !option_->getAsBool(PREF_BT_FORCE_ENCRYPTION) &&
       option_->get(PREF_BT_MIN_CRYPTO_LEVEL) == V_PLAIN) {

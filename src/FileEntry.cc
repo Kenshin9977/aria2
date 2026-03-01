@@ -252,12 +252,11 @@ FileEntry::findFasterRequest(const std::shared_ptr<Request>& base)
     return nullptr;
   }
   const std::shared_ptr<PeerStat>& basestat = base->getPeerStat();
-  // TODO hard coded value. See PREF_STARTUP_IDLE_TIME
+  // startupIdleTime matches PREF_STARTUP_IDLE_TIME default (10s).
   if (!basestat || (basestat->getDownloadStartTime().difference(
                         global::wallclock()) >= startupIdleTime &&
                     fastest->getAvgDownloadSpeed() * 0.8 >
                         basestat->calculateDownloadSpeed())) {
-    // TODO we should consider that "fastest" is very slow.
     std::shared_ptr<Request> fastestRequest = *requestPool_.begin();
     requestPool_.erase(requestPool_.begin());
     inFlightRequests_.insert(fastestRequest);

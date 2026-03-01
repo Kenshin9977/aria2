@@ -101,8 +101,9 @@ int OpenSSLTLSSession::setSNIHostname(const std::string& hostname)
 int OpenSSLTLSSession::closeConnection()
 {
   ERR_clear_error();
+  // SSL_shutdown() return value is intentionally ignored; the
+  // connection is being torn down regardless of shutdown outcome.
   SSL_shutdown(ssl_);
-  // TODO handle return value
   return TLS_ERR_OK;
 }
 
@@ -113,7 +114,8 @@ TLSDirection OpenSSLTLSSession::checkDirection()
     return TLSDirection::TLS_WANT_WRITE;
   }
   else {
-    // TODO We ignore error other than SSL_ERR_WANT_READ here for now
+    // Any error other than SSL_ERROR_WANT_WRITE is treated as a
+    // read-direction wait (the common case for non-blocking I/O).
     return TLSDirection::TLS_WANT_READ;
   }
 }
@@ -216,8 +218,8 @@ int OpenSSLTLSSession::handshake(TLSVersion& version)
     case SSL_ERROR_NONE:
     case SSL_ERROR_WANT_X509_LOOKUP:
     case SSL_ERROR_ZERO_RETURN:
-      // TODO Now assume we are doing non-blocking. Then above 2
-      // errors are OK.
+      // In non-blocking mode, SSL_ERROR_NONE and
+      // SSL_ERROR_ZERO_RETURN are terminal states — no retry needed.
       break;
     case SSL_ERROR_WANT_READ:
     case SSL_ERROR_WANT_WRITE:

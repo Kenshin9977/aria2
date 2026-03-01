@@ -142,8 +142,6 @@ void PortEventPoll::poll(const struct timeval& tv)
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 namespace {

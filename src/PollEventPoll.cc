@@ -123,8 +123,6 @@ void PollEventPoll::poll(const struct timeval& tv)
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 int PollEventPoll::translateEvents(EventPoll::EventType events)

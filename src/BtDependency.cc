@@ -128,7 +128,7 @@ bool BtDependency::resolve()
       // always assumed.
       if (fileEntries.size() == 1 && dependantFileEntries.size() == 1 &&
           dependantFileEntries[0]->getOriginalName().empty()) {
-        // TODO this may be dead code
+        // Single-file torrent with Metalink3 (no original name).
         copyValues(fileEntries[0], dependantFileEntries[0]);
       }
       else {

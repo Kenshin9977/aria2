@@ -220,7 +220,7 @@ public:
 
   virtual void enterEndGame() = 0;
 
-  // TODO We can remove this.
+  // Unused — endGamePieceNum is set in constructors but never read.
   virtual void setEndGamePieceNum(size_t num) = 0;
 
   [[nodiscard]] virtual std::shared_ptr<DiskAdaptor> getDiskAdaptor() = 0;

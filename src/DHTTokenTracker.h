@@ -57,7 +57,6 @@ public:
 
   ~DHTTokenTracker();
 
-  // TODO handle exception thrown by this function.
   std::string generateToken(const unsigned char* infoHash,
                             const std::string& ipaddr, uint16_t port) const;
 

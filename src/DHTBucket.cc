@@ -200,7 +200,6 @@ std::unique_ptr<DHTBucket> DHTBucket::split()
     }
   }
   nodes_ = lNodes;
-  // TODO create toString() and use it.
   A2_LOG_DEBUG(fmt("New bucket. prefixLength=%u, Range:%s-%s",
                    static_cast<unsigned int>(rBucket->getPrefixLength()),
                    util::toHex(rBucket->getMinID(), DHT_ID_LENGTH).c_str(),

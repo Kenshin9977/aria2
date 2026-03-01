@@ -272,9 +272,8 @@ bool AbstractCommand::execute()
           segments_.push_back(segment);
         }
         if (segments_.empty()) {
-          // TODO socket could be pooled here if pipelining is
-          // enabled...  Hmm, I don't think if pipelining is enabled
-          // it does not go here.
+          // With pipelining enabled, this path is not reachable
+          // because segments are always available.
           A2_LOG_INFO(fmt(MSG_NO_SEGMENT_AVAILABLE, getCuid()));
           // When all segments are ignored in SegmentMan, there are
           // no URIs available, so don't retry.
@@ -311,8 +310,9 @@ bool AbstractCommand::execute()
           req_->getHost(), std::string(protocolToString(req_->getProtocol())));
       ss->setError();
 
-      throw DL_RETRY_EX(
-          fmt(MSG_NETWORK_PROBLEM, socket_->getSocketError().c_str()));
+      throw DL_RETRY_EX2(
+          fmt(MSG_NETWORK_PROBLEM, socket_->getSocketError().c_str()),
+          error_code::NETWORK_PROBLEM);
     }
 
     if (checkPoint_.difference(global::wallclock()) >= timeout_) {
@@ -895,7 +895,9 @@ bool AbstractCommand::checkIfConnectionEstablished(
                                                        req_->getProtocol())))
           ->setError();
     }
-    throw DL_RETRY_EX(fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()));
+    throw DL_RETRY_EX2(
+        fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()),
+        error_code::NETWORK_PROBLEM);
   }
 
   A2_LOG_INFO(fmt(MSG_CONNECT_FAILED_AND_RETRY, getCuid(),
