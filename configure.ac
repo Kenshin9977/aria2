@@ -70,6 +70,8 @@ ARIA2_ARG_WITH([tcmalloc])
 ARIA2_ARG_WITH([jemalloc])
 ARIA2_ARG_WITHOUT([libssh2])
 ARIA2_ARG_WITH([libnghttp2])
+ARIA2_ARG_WITH([libngtcp2])
+ARIA2_ARG_WITH([libnghttp3])
 
 ARIA2_ARG_DISABLE([ssl])
 ARIA2_ARG_DISABLE([bittorrent])
@@ -544,6 +546,44 @@ if test "x$with_libnghttp2" = "xyes"; then
   fi
 fi
 
+have_libngtcp2=no
+if test "x$with_libngtcp2" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGTCP2], [libngtcp2 >= 1.0.0],
+                    [have_libngtcp2=yes], [have_libngtcp2=no])
+  if test "x$have_libngtcp2" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGTCP2], [1],
+              [Define to 1 if you have libngtcp2.])
+    PKG_CHECK_MODULES([LIBNGTCP2_CRYPTO_QUICTLS],
+                      [libngtcp2_crypto_quictls >= 1.0.0],
+                      [have_libngtcp2_crypto_quictls=yes],
+                      [have_libngtcp2_crypto_quictls=no])
+    if test "x$have_libngtcp2_crypto_quictls" = "xyes"; then
+      AC_DEFINE([HAVE_LIBNGTCP2_CRYPTO_QUICTLS], [1],
+                [Define to 1 if you have libngtcp2_crypto_quictls.])
+    fi
+  else
+    AC_MSG_WARN([$LIBNGTCP2_PKG_ERRORS])
+    if test "x$with_libngtcp2_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libngtcp2])
+    fi
+  fi
+fi
+
+have_libnghttp3=no
+if test "x$with_libnghttp3" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGHTTP3], [libnghttp3 >= 1.0.0],
+                    [have_libnghttp3=yes], [have_libnghttp3=no])
+  if test "x$have_libnghttp3" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGHTTP3], [1],
+              [Define to 1 if you have libnghttp3.])
+  else
+    AC_MSG_WARN([$LIBNGHTTP3_PKG_ERRORS])
+    if test "x$with_libnghttp3_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libnghttp3])
+    fi
+  fi
+fi
+
 have_libcares=no
 if test "x$with_libcares" = "xyes"; then
   PKG_CHECK_MODULES([LIBCARES], [libcares >= 1.16.0], [have_libcares=yes],
@@ -696,6 +736,12 @@ AM_CONDITIONAL([HAVE_LIBSSH2], [test "x$have_libssh2" = "xyes"])
 
 # Set conditional for libnghttp2
 AM_CONDITIONAL([HAVE_LIBNGHTTP2], [test "x$have_libnghttp2" = "xyes"])
+
+# Set conditional for libngtcp2
+AM_CONDITIONAL([HAVE_LIBNGTCP2], [test "x$have_libngtcp2" = "xyes"])
+
+# Set conditional for libnghttp3
+AM_CONDITIONAL([HAVE_LIBNGHTTP3], [test "x$have_libnghttp3" = "xyes"])
 
 case "$host" in
   *solaris*)
@@ -1169,6 +1215,8 @@ Brotli:         $have_libbrotlidec (CFLAGS='$LIBBROTLIDEC_CFLAGS' LIBS='$LIBBROT
 Zstd:           $have_libzstd (CFLAGS='$LIBZSTD_CFLAGS' LIBS='$LIBZSTD_LIBS')
 Libssh2:        $have_libssh2 (CFLAGS='$LIBSSH2_CFLAGS' LIBS='$LIBSSH2_LIBS')
 Libnghttp2:     $have_libnghttp2 (CFLAGS='$LIBNGHTTP2_CFLAGS' LIBS='$LIBNGHTTP2_LIBS')
+Libngtcp2:      $have_libngtcp2 (CFLAGS='$LIBNGTCP2_CFLAGS' LIBS='$LIBNGTCP2_LIBS')
+Libnghttp3:     $have_libnghttp3 (CFLAGS='$LIBNGHTTP3_CFLAGS' LIBS='$LIBNGHTTP3_LIBS')
 Tcmalloc:       $have_tcmalloc (CFLAGS='$TCMALLOC_CFLAGS' LIBS='$TCMALLOC_LIBS')
 Jemalloc:       $have_jemalloc (CFLAGS='$JEMALLOC_CFLAGS' LIBS='$JEMALLOC_LIBS')
 Epoll:          $have_epoll
