@@ -118,6 +118,7 @@ SRCS =  \
 	HaveEraseCommand.cc HaveEraseCommand.h\
 	help_tags.cc help_tags.h\
 	HttpConnection.cc HttpConnection.h\
+	HttpDigestAuth.cc HttpDigestAuth.h\
 	HttpDownloadCommand.cc HttpDownloadCommand.h\
 	HttpHeader.cc HttpHeader.h\
 	HttpHeaderProcessor.cc HttpHeaderProcessor.h\

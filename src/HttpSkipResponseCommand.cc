@@ -209,11 +209,25 @@ bool HttpSkipResponseCommand::processResponse()
     switch (statusCode) {
     case 401:
       if (getOption()->getAsBool(PREF_HTTP_AUTH_CHALLENGE) &&
-          !httpResponse_->getHttpRequest()->authenticationUsed() &&
-          getDownloadEngine()->getAuthConfigFactory()->activateBasicCred(
-              getRequest()->getHost(), getRequest()->getPort(),
-              getRequest()->getDir(), getOption().get())) {
-        return prepareForRetry(0);
+          !httpResponse_->getHttpRequest()->authenticationUsed()) {
+        auto* factory = getDownloadEngine()->getAuthConfigFactory().get();
+        // Try Digest auth first (RFC 7616)
+        auto wwwAuthHeaders =
+            httpResponse_->getHttpHeader()->findAll(
+                HttpHeader::WWW_AUTHENTICATE);
+        for (const auto& wwwAuth : wwwAuthHeaders) {
+          if (factory->activateDigestCred(
+                  getRequest()->getHost(), getRequest()->getPort(),
+                  wwwAuth, getOption().get())) {
+            return prepareForRetry(0);
+          }
+        }
+        // Fall back to Basic auth
+        if (factory->activateBasicCred(
+                getRequest()->getHost(), getRequest()->getPort(),
+                getRequest()->getDir(), getOption().get())) {
+          return prepareForRetry(0);
+        }
       }
       throw DL_ABORT_EX2(EX_AUTH_FAILED, error_code::HTTP_AUTH_FAILED);
     case 403:

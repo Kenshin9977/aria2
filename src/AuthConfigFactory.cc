@@ -44,6 +44,9 @@
 #include "prefs.h"
 #include "Request.h"
 #include "util.h"
+#include "HttpDigestAuth.h"
+#include "MessageDigest.h"
+#include "fmt.h"
 
 namespace aria2 {
 
@@ -246,6 +249,86 @@ AuthConfigFactory::findBasicCred(const std::string& host, uint16_t port,
     }
   }
   return std::end(basicCreds_);
+}
+
+std::string AuthConfigFactory::makeDigestKey(const std::string& host,
+                                             uint16_t port)
+{
+  return host + ":" + util::uitos(port);
+}
+
+void AuthConfigFactory::updateDigestCred(const std::string& host,
+                                         uint16_t port,
+                                         DigestChallenge challenge)
+{
+  auto key = makeDigestKey(host, port);
+  digestCreds_[key] = std::make_unique<DigestCred>(host, port,
+                                                   std::move(challenge));
+}
+
+DigestCred* AuthConfigFactory::findDigestCred(const std::string& host,
+                                              uint16_t port)
+{
+  auto key = makeDigestKey(host, port);
+  auto it = digestCreds_.find(key);
+  if (it != digestCreds_.end()) {
+    return it->second.get();
+  }
+  return nullptr;
+}
+
+bool AuthConfigFactory::activateDigestCred(const std::string& host,
+                                           uint16_t port,
+                                           const std::string& wwwAuth,
+                                           const Option* op)
+{
+  // Check if it's a Digest challenge
+  std::string prefix = "Digest ";
+  auto pos = wwwAuth.find(prefix);
+  if (pos == std::string::npos) {
+    // case-insensitive check
+    std::string lower = wwwAuth;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    pos = lower.find("digest ");
+    if (pos == std::string::npos) {
+      return false;
+    }
+  }
+
+  auto headerPart = wwwAuth.substr(pos + prefix.size());
+  DigestChallenge challenge;
+  if (!http_digest_auth::parseChallenge(headerPart, challenge)) {
+    return false;
+  }
+
+  // Verify we support the algorithm
+  auto algo = challenge.algorithm.empty() ? "MD5" : challenge.algorithm;
+  auto hashType = http_digest_auth::mapAlgorithm(algo);
+  if (hashType.empty() || !MessageDigest::supports(hashType)) {
+    return false;
+  }
+
+  updateDigestCred(host, port, std::move(challenge));
+
+  // Also need to ensure we have credentials. Try to activate
+  // BasicCred (which stores user/password regardless of scheme).
+  auto i = findBasicCred(host, port, "/");
+  if (i == std::end(basicCreds_)) {
+    auto authConfig =
+        createHttpAuthResolver(op)->resolveAuthConfig(host);
+    if (!authConfig) {
+      return false;
+    }
+    basicCreds_.insert(std::make_unique<BasicCred>(
+        authConfig->getUser(), authConfig->getPassword(), host, port,
+        "/", true));
+  }
+  else {
+    (*i)->activate();
+  }
+
+  return true;
 }
 
 } // namespace aria2

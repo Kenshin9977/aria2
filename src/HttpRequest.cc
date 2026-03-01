@@ -54,6 +54,7 @@
 #include "Request.h"
 #include "DownloadHandlerConstants.h"
 #include "MessageDigest.h"
+#include "HttpDigestAuth.h"
 
 namespace aria2 {
 
@@ -146,6 +147,11 @@ std::string HttpRequest::createRequest()
 {
   using enum Protocol;
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
+  if (authConfig_ &&
+      authConfigFactory_->findDigestCred(request_->getHost(),
+                                         request_->getPort())) {
+    authConfig_->setAuthScheme("digest");
+  }
   std::string requestLine(httpMethodToString(request_->getMethod()));
   requestLine.reserve(512);
   requestLine += ' ';
@@ -239,10 +245,27 @@ std::string HttpRequest::createRequest()
     builtinHds.push_back(getProxyAuthString());
   }
   if (authConfig_) {
-    auto authText = authConfig_->getAuthText();
-    std::string val = "Basic ";
-    val += base64::encode(std::begin(authText), std::end(authText));
-    builtinHds.emplace_back("Authorization:", val);
+    if (authConfig_->isDigest() && authConfigFactory_) {
+      auto* dc = authConfigFactory_->findDigestCred(
+          request_->getHost(), request_->getPort());
+      if (dc) {
+        ++dc->nc;
+        auto uri = getDir() + getFile();
+        std::string method =
+            getMethod() == HttpMethod::HEAD ? "HEAD" : "GET";
+        auto val = http_digest_auth::computeAuthHeader(
+            authConfig_->getUser(), authConfig_->getPassword(),
+            method, uri, dc->challenge, dc->nc);
+        builtinHds.emplace_back("Authorization:", val);
+      }
+    }
+    else {
+      auto authText = authConfig_->getAuthText();
+      std::string val = "Basic ";
+      val +=
+          base64::encode(std::begin(authText), std::end(authText));
+      builtinHds.emplace_back("Authorization:", val);
+    }
   }
   if (!request_->getReferer().empty()) {
     builtinHds.emplace_back("Referer:", request_->getReferer());

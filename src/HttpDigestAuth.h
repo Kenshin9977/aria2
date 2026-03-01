@@ -2,7 +2,7 @@
 /*
  * aria2 - The high speed download utility
  *
- * Copyright (C) 2006 Tatsuhiro Tsujikawa
+ * Copyright (C) 2024 Tatsuhiro Tsujikawa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,51 +32,51 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
-#ifndef D_AUTH_CONFIG_H
-#define D_AUTH_CONFIG_H
+#ifndef D_HTTP_DIGEST_AUTH_H
+#define D_HTTP_DIGEST_AUTH_H
 
 #include "common.h"
 
 #include <string>
-#include <iosfwd>
-#include <memory>
 
 namespace aria2 {
 
-class AuthConfig {
-private:
-  std::string authScheme_;
-  std::string user_;
-  std::string password_;
-
-public:
-  AuthConfig();
-  AuthConfig(std::string user, std::string password);
-  ~AuthConfig();
-
-  // Don't allow copying
-  AuthConfig(const AuthConfig&);
-  AuthConfig& operator=(const AuthConfig&);
-
-  std::string getAuthText() const;
-
-  const std::string& getUser() const { return user_; }
-
-  const std::string& getPassword() const { return password_; }
-
-  void setAuthScheme(std::string scheme) { authScheme_ = std::move(scheme); }
-
-  const std::string& getAuthScheme() const { return authScheme_; }
-
-  bool isDigest() const { return authScheme_ == "digest"; }
-
-  static std::unique_ptr<AuthConfig> create(std::string user,
-                                            std::string password);
+struct DigestChallenge {
+  std::string realm;
+  std::string nonce;
+  std::string opaque;
+  std::string qop;
+  std::string algorithm;
 };
 
-std::ostream& operator<<(std::ostream& o,
-                         const std::shared_ptr<AuthConfig>& authConfig);
+namespace http_digest_auth {
 
+// Parse a WWW-Authenticate: Digest ... header value (without the
+// "Digest " prefix). Returns true on success.
+bool parseChallenge(const std::string& header, DigestChallenge& result);
+
+// Compute H(data) using the given algorithm ("md5" or "sha-256").
+// Returns lowercase hex string. Empty string on unsupported algo.
+std::string hashHex(const std::string& algorithm,
+                    const std::string& data);
+
+// Generate a random cnonce (16 hex characters).
+std::string generateCnonce();
+
+// Compute the full Authorization header value for HTTP Digest auth
+// (RFC 7616). Returns the complete "Digest username=..., ..." string.
+std::string computeAuthHeader(const std::string& user,
+                              const std::string& password,
+                              const std::string& method,
+                              const std::string& uri,
+                              const DigestChallenge& challenge,
+                              uint32_t nc);
+
+// Map RFC 7616 algorithm names (e.g. "MD5", "SHA-256") to
+// MessageDigest hash type strings (e.g. "md5", "sha-256").
+std::string mapAlgorithm(const std::string& algorithm);
+
+} // namespace http_digest_auth
 } // namespace aria2
 
-#endif // D_AUTH_CONFIG_H
+#endif // D_HTTP_DIGEST_AUTH_H

@@ -246,6 +246,7 @@ constexpr const char* INTERESTING_HEADER_NAMES[] = {
     "strict-transport-security",
     "transfer-encoding",
     "upgrade",
+    "www-authenticate",
 };
 } // namespace
 
