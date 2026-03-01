@@ -203,8 +203,8 @@ public:
   [[nodiscard]] virtual bool allDownloadFinished() = 0;
 
   /**
-   * Initializes DiskAdaptor.
-   * TODO add better documentation here.
+   * Initializes the DiskAdaptor and opens/creates the output files.
+   * Must be called before any read/write operations on pieces.
    */
   virtual void initStorage() = 0;
 

@@ -217,8 +217,8 @@ void RequestGroup::closeFile()
   }
 }
 
-// TODO The function name is not intuitive at all.. it does not convey
-// that this function open file.
+// Note: despite the name, this function also opens the download file
+// (via pieceStorage_->getDiskAdaptor()->openFile()).
 std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
 {
   auto infoFile = std::make_unique<DefaultBtProgressInfoFile>(

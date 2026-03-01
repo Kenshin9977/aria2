@@ -86,7 +86,6 @@ public:
 
   bool operator==(const Piece& piece) const { return index_ == piece.index_; }
 
-  // TODO This function only used by unit tests
   std::optional<size_t> getMissingUnusedBlockIndex() const;
 
   // Appends at most n missing unused block index to indexes. For all
