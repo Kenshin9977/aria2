@@ -28,43 +28,78 @@ of improvements.
 What's New in This Fork
 -----------------------
 
-**New Features**
+**New Protocol & Feature Support**
 
-* HTTP/2 support via nghttp2
-* HTTP Digest authentication (RFC 7616)
+* HTTP/2 via libnghttp2
+* HTTP Digest authentication (RFC 7616, MD5 + SHA-256)
 * Brotli and Zstd content-encoding decompression
-* HTTP/3 build system support (ngtcp2 + nghttp3)
+* FTPS (explicit FTP over TLS: AUTH TLS, PBSZ, PROT P)
+* SOCKS5 proxy (RFC 1928/1929) with username/password auth
+* HSTS (RFC 6797) with automatic HTTP→HTTPS upgrade
+* Slow-start connection scaling (AIMD ramp-up: 1→2→4→...→max)
 * ``io_uring`` event poll backend for Linux
 * TTL-based DNS cache expiration
 * Cookie ``SameSite`` attribute support
+* ``NO_COLOR`` environment variable support
+* Max connections per server raised from 16 to 10,000
+* RPC port 0 for OS-assigned port (``--rpc-listen-port=0``)
+* Thread pool for parallel checksum verification
+* TLS 1.3 on Windows (WinTLS/Schannel)
+* Deflate raw mode fallback for broken servers
 * WebSocket outbound queue limits
 * Socket pool size limit with lazy eviction
+* HTTP/3 build system detection (ngtcp2 + nghttp3)
+* CMake build system (alternative to Autotools)
 
-**Performance & I/O**
+**Bug Fixes (vs upstream v1.37.0)**
 
-* ``pwrite``/``pread`` replacing seek+write/read for I/O operations
-* Transfer-Encoding parsed as comma-separated token list
-
-**Security Hardening**
-
+* CPU spin on unauthorised RPC response (upstream #2209)
+* Memory leak in Piece/SinkStreamFilter on exception (upstream #1777)
+* HTTP 404 now respects ``--retry-wait`` (upstream #1714)
 * BitTorrent handshake bounds checking
-* HTTP header injection sanitisation
-* Error handling for ``fcntl`` and MSE DH computation
+* HTTP header injection prevention (CR/LF in custom headers)
+* ``fcntl()`` and MSE Diffie-Hellman error handling
+* ``ares_init_options()`` return value checked
+* ``SSHSession::closeConnection()`` EAGAIN retry loops
+* ``Transfer-Encoding`` comma-separated token parsing (RFC 7230)
+* WinTLS certificate revocation offline fallback
 
-**Code Modernisation (C++23)**
+**Performance Optimisations**
+
+* ``pwrite``/``pread`` replacing seek+write/read for all disk I/O
+* O(1) event poll socket lookup (all backends: epoll, kqueue, poll, select)
+* O(1) BitTorrent endgame request and peer lookups
+* Eliminated heap allocations in DNS, piece, and server-stat lookups
+* Template inlining replacing ``std::function`` callbacks
+* HTTP request string capacity reservation
+* Hoisted vector allocation in BT endgame loop
+
+**C++23 Codebase Modernisation**
+
+Full migration from C++11 to C++23 (GCC 14+ / Clang 18+):
 
 * ``std::ranges``, ``operator<=>``, structured bindings, ``enum class``
+* ``std::expected`` for error handling (URI, magnet, metalink parsers)
+* ``std::span<const unsigned char>`` replacing ptr+len pairs
+* ``std::string_view`` throughout HTTP, FTP, and utility layers
 * ``std::make_unique``, ``[[nodiscard]]``, ``[[maybe_unused]]``
-* ``starts_with``/``ends_with``, ``constexpr``, ``= default`` destructors
-* ``std::unordered_map`` where ordering not needed
-* Lambdas replacing ``std::bind``
+* ``constexpr``, ``= default`` destructors, ``using enum``
+* Lambdas replacing ``std::bind``, ``using`` replacing ``typedef``
+* ``ISocketCore`` interface for hexagonal architecture / testability
 
-**Testing**
+**Testing & CI**
 
-* 310+ end-to-end tests across 79 test scripts
-* Extended unit test coverage (1300+ tests)
-* Integration tests for HTTP, FTP, BT, DHT command pipelines
-* ``ISocketCore`` interface with ``MockSocketCore`` for testability
+* 310+ end-to-end tests across 79 shell scripts
+* 1,300+ unit tests (up from ~1,100 upstream)
+* Integration tests for HTTP, FTP, BT, DHT command lifecycles
+* ``MockSocketCore`` for command-level unit testing without real sockets
+* GitHub Actions CI: Linux, macOS, Windows, with ASan/UBSan/TSan
+* Release workflow building static binaries for 5 platforms
+
+**Dropped**
+
+* FreeBSD CI job (source still compiles, but no longer tested)
+* ``std::print`` (reverted due to incomplete compiler support)
 
 Supported Protocols
 -------------------
