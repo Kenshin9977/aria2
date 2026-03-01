@@ -191,6 +191,18 @@ std::string HttpRequest::createRequest()
       acceptableEncodings += "deflate, gzip";
     }
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+    if (!acceptableEncodings.empty()) {
+      acceptableEncodings += ", ";
+    }
+    acceptableEncodings += "br";
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+    if (!acceptableEncodings.empty()) {
+      acceptableEncodings += ", ";
+    }
+    acceptableEncodings += "zstd";
+#endif // HAVE_LIBZSTD
     if (!acceptableEncodings.empty()) {
       builtinHds.emplace_back("Accept-Encoding:", acceptableEncodings);
     }

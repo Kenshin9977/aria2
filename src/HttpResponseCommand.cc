@@ -84,6 +84,12 @@
 #ifdef HAVE_ZLIB
 #  include "GZipDecodingStreamFilter.h"
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+#  include "BrotliDecodingStreamFilter.h"
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+#  include "ZstdDecodingStreamFilter.h"
+#endif // HAVE_LIBZSTD
 
 namespace aria2 {
 
@@ -360,8 +366,24 @@ bool HttpResponseCommand::shouldInflateContentEncoding(
   // because it is the original format of those files. Current
   // implementation just inflates these files nonetheless.
   auto ce = httpResponse->getContentEncoding();
-  return httpResponse->getHttpRequest()->acceptGZip() && ce &&
-         (*ce == "gzip" || *ce == "deflate");
+  if (!ce) {
+    return false;
+  }
+  if (httpResponse->getHttpRequest()->acceptGZip() &&
+      (*ce == "gzip" || *ce == "deflate")) {
+    return true;
+  }
+#ifdef HAVE_LIBBROTLIDEC
+  if (*ce == "br") {
+    return true;
+  }
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+  if (*ce == "zstd") {
+    return true;
+  }
+#endif // HAVE_LIBZSTD
+  return false;
 }
 
 bool HttpResponseCommand::handleDefaultEncoding(
@@ -539,16 +561,26 @@ namespace {
 
 bool decideFileAllocation(StreamFilter* filter)
 {
-#ifdef HAVE_ZLIB
   for (StreamFilter* f = filter; f; f = f->getDelegate().get()) {
-    // Since the compressed file's length are returned in the response header
-    // and the decompressed file size is unknown at this point, disable file
-    // allocation here.
+    // Since the compressed file's length are returned in the response
+    // header and the decompressed file size is unknown at this point,
+    // disable file allocation here.
+#ifdef HAVE_ZLIB
     if (strcmp(f->getName(), GZipDecodingStreamFilter::NAME) == 0) {
       return false;
     }
-  }
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+    if (strcmp(f->getName(), BrotliDecodingStreamFilter::NAME) == 0) {
+      return false;
+    }
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+    if (strcmp(f->getName(), ZstdDecodingStreamFilter::NAME) == 0) {
+      return false;
+    }
+#endif // HAVE_LIBZSTD
+  }
 
   return true;
 }

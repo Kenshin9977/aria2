@@ -619,15 +619,36 @@ void HttpRequestTest::testCreateRequest_wantDigest()
 
   std::string expectedText = "GET / HTTP/1.1\r\n"
                              "User-Agent: aria2\r\n"
-                             "Accept: */*\r\n"
-                             "Host: localhost\r\n"
-                             "Pragma: no-cache\r\n"
-                             "Cache-Control: no-cache\r\n"
-                             "Connection: close\r\n"
-                             "Want-Digest: " +
-                             wantDigest +
-                             "\r\n"
-                             "\r\n";
+                             "Accept: */*\r\n";
+  // Brotli/zstd are unconditionally advertised when compiled in.
+  {
+    std::string enc;
+#ifdef HAVE_LIBBROTLIDEC
+    if (!enc.empty()) {
+      enc += ", ";
+    }
+    enc += "br";
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+    if (!enc.empty()) {
+      enc += ", ";
+    }
+    enc += "zstd";
+#endif // HAVE_LIBZSTD
+    if (!enc.empty()) {
+      expectedText += "Accept-Encoding: ";
+      expectedText += enc;
+      expectedText += "\r\n";
+    }
+  }
+  expectedText += "Host: localhost\r\n"
+                  "Pragma: no-cache\r\n"
+                  "Cache-Control: no-cache\r\n"
+                  "Connection: close\r\n"
+                  "Want-Digest: " +
+                  wantDigest +
+                  "\r\n"
+                  "\r\n";
 
   CPPUNIT_ASSERT_EQUAL(expectedText, httpRequest.createRequest());
 }
@@ -867,6 +888,21 @@ void HttpRequestTest::testEnableAcceptEncoding()
 #ifdef HAVE_ZLIB
   acceptEncodings += "deflate, gzip";
 #endif // HAVE_ZLIB
+  // Brotli and zstd are unconditionally advertised (not gated by
+  // acceptGzip) because they don't share the .tgz confusion problem.
+  std::string alwaysEncodings;
+#ifdef HAVE_LIBBROTLIDEC
+  if (!alwaysEncodings.empty()) {
+    alwaysEncodings += ", ";
+  }
+  alwaysEncodings += "br";
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+  if (!alwaysEncodings.empty()) {
+    alwaysEncodings += ", ";
+  }
+  alwaysEncodings += "zstd";
+#endif // HAVE_LIBZSTD
 
   std::string expectedTextHead =
       "GET /archives/aria2-1.0.0.tar.bz2 HTTP/1.1\r\n"
@@ -879,14 +915,31 @@ void HttpRequestTest::testEnableAcceptEncoding()
                                  "\r\n";
 
   std::string expectedText = expectedTextHead;
+  if (!alwaysEncodings.empty()) {
+    expectedText += "Accept-Encoding: ";
+    expectedText += alwaysEncodings;
+    expectedText += "\r\n";
+  }
   expectedText += expectedTextTail;
   CPPUNIT_ASSERT_EQUAL(expectedText, httpRequest.createRequest());
 
   expectedText = expectedTextHead;
-  if (!acceptEncodings.empty()) {
-    expectedText += "Accept-Encoding: ";
-    expectedText += acceptEncodings;
-    expectedText += "\r\n";
+  {
+    std::string allEncodings;
+    if (!acceptEncodings.empty()) {
+      allEncodings += acceptEncodings;
+    }
+    if (!alwaysEncodings.empty()) {
+      if (!allEncodings.empty()) {
+        allEncodings += ", ";
+      }
+      allEncodings += alwaysEncodings;
+    }
+    if (!allEncodings.empty()) {
+      expectedText += "Accept-Encoding: ";
+      expectedText += allEncodings;
+      expectedText += "\r\n";
+    }
   }
   expectedText += expectedTextTail;
 

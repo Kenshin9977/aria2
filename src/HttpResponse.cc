@@ -65,6 +65,12 @@
 #ifdef HAVE_ZLIB
 #  include "GZipDecodingStreamFilter.h"
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+#  include "BrotliDecodingStreamFilter.h"
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+#  include "ZstdDecodingStreamFilter.h"
+#endif // HAVE_LIBZSTD
 
 namespace aria2 {
 
@@ -232,12 +238,25 @@ std::optional<std::string_view> HttpResponse::getContentEncoding() const
 std::unique_ptr<StreamFilter>
 HttpResponse::getContentEncodingStreamFilter() const
 {
-#ifdef HAVE_ZLIB
   auto ce = getContentEncoding();
-  if (ce && (util::strieq(*ce, "gzip") || util::strieq(*ce, "deflate"))) {
+  if (!ce) {
+    return nullptr;
+  }
+#ifdef HAVE_ZLIB
+  if (util::strieq(*ce, "gzip") || util::strieq(*ce, "deflate")) {
     return std::make_unique<GZipDecodingStreamFilter>();
   }
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+  if (util::strieq(*ce, "br")) {
+    return std::make_unique<BrotliDecodingStreamFilter>();
+  }
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+  if (util::strieq(*ce, "zstd")) {
+    return std::make_unique<ZstdDecodingStreamFilter>();
+  }
+#endif // HAVE_LIBZSTD
 
   return nullptr;
 }

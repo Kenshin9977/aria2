@@ -417,6 +417,16 @@ SRCS += \
 	Adler32MessageDigestImpl.cc Adler32MessageDigestImpl.h
 endif # HAVE_ZLIB
 
+if HAVE_LIBBROTLIDEC
+SRCS += \
+	BrotliDecodingStreamFilter.cc BrotliDecodingStreamFilter.h
+endif # HAVE_LIBBROTLIDEC
+
+if HAVE_LIBZSTD
+SRCS += \
+	ZstdDecodingStreamFilter.cc ZstdDecodingStreamFilter.h
+endif # HAVE_LIBZSTD
+
 if HAVE_SQLITE3
 SRCS += \
 	Sqlite3CookieParser.cc Sqlite3CookieParser.h\
@@ -717,6 +727,8 @@ AM_CPPFLAGS = \
 	-DLOCALEDIR=\"@localedir@\" @DEFS@ \
 	@EXTRACPPFLAGS@ \
 	@ZLIB_CFLAGS@ \
+	@LIBBROTLIDEC_CFLAGS@ \
+	@LIBZSTD_CFLAGS@ \
 	@LIBUV_CFLAGS@ \
 	@LIBXML2_CFLAGS@ \
 	@EXPAT_CFLAGS@ \
@@ -741,6 +753,8 @@ AM_LDFLAGS = \
 EXTLDADD = @ALLOCA@ \
 	@EXTRALIBS@ \
 	@ZLIB_LIBS@ \
+	@LIBBROTLIDEC_LIBS@ \
+	@LIBZSTD_LIBS@ \
 	@LIBUV_LIBS@ \
 	@LIBXML2_LIBS@ \
 	@EXPAT_LIBS@ \

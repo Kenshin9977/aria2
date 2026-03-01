@@ -64,6 +64,8 @@ ARIA2_ARG_WITHOUT([libxml2])
 ARIA2_ARG_WITHOUT([libexpat])
 ARIA2_ARG_WITHOUT([libcares])
 ARIA2_ARG_WITHOUT([libz])
+ARIA2_ARG_WITHOUT([libbrotlidec])
+ARIA2_ARG_WITHOUT([libzstd])
 ARIA2_ARG_WITH([tcmalloc])
 ARIA2_ARG_WITH([jemalloc])
 ARIA2_ARG_WITHOUT([libssh2])
@@ -213,6 +215,52 @@ if test "x$with_libz" = "xyes"; then
     AC_CHECK_FUNCS([gzbuffer gzsetparams])
     CPPFLAGS=$save_CPPFLAGS
     LIBS=$save_LIBS
+  fi
+fi
+
+have_libbrotlidec=no
+if test "x$with_libbrotlidec" = "xyes"; then
+  PKG_CHECK_MODULES([LIBBROTLIDEC], [libbrotlidec >= 1.0.0],
+                    [have_libbrotlidec=yes], [have_libbrotlidec=no])
+  if test "x$have_libbrotlidec" != "xyes"; then
+    AC_MSG_WARN([$LIBBROTLIDEC_PKG_ERRORS])
+    AC_CHECK_LIB([brotlidec], [BrotliDecoderCreateInstance],
+                 [have_libbrotlidec=yes], [have_libbrotlidec=no])
+    if test "x$have_libbrotlidec" = "xyes"; then
+      LIBBROTLIDEC_CFLAGS=
+      LIBBROTLIDEC_LIBS="-lbrotlidec"
+      AC_SUBST([LIBBROTLIDEC_CFLAGS])
+      AC_SUBST([LIBBROTLIDEC_LIBS])
+    elif test "x$with_libbrotlidec_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libbrotlidec])
+    fi
+  fi
+  if test "x$have_libbrotlidec" = "xyes"; then
+    AC_DEFINE([HAVE_LIBBROTLIDEC], [1],
+              [Define to 1 if you have libbrotlidec.])
+  fi
+fi
+
+have_libzstd=no
+if test "x$with_libzstd" = "xyes"; then
+  PKG_CHECK_MODULES([LIBZSTD], [libzstd >= 1.0.0],
+                    [have_libzstd=yes], [have_libzstd=no])
+  if test "x$have_libzstd" != "xyes"; then
+    AC_MSG_WARN([$LIBZSTD_PKG_ERRORS])
+    AC_CHECK_LIB([zstd], [ZSTD_createDStream],
+                 [have_libzstd=yes], [have_libzstd=no])
+    if test "x$have_libzstd" = "xyes"; then
+      LIBZSTD_CFLAGS=
+      LIBZSTD_LIBS="-lzstd"
+      AC_SUBST([LIBZSTD_CFLAGS])
+      AC_SUBST([LIBZSTD_LIBS])
+    elif test "x$with_libzstd_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libzstd])
+    fi
+  fi
+  if test "x$have_libzstd" = "xyes"; then
+    AC_DEFINE([HAVE_LIBZSTD], [1],
+              [Define to 1 if you have libzstd.])
   fi
 fi
 
@@ -632,6 +680,13 @@ fi
 
 # Set conditional for libz
 AM_CONDITIONAL([HAVE_ZLIB], [test "x$have_zlib" = "xyes"])
+
+# Set conditional for libbrotlidec
+AM_CONDITIONAL([HAVE_LIBBROTLIDEC],
+               [test "x$have_libbrotlidec" = "xyes"])
+
+# Set conditional for libzstd
+AM_CONDITIONAL([HAVE_LIBZSTD], [test "x$have_libzstd" = "xyes"])
 
 # Set conditional for sqlite3
 AM_CONDITIONAL([HAVE_SQLITE3], [test "x$have_sqlite3" = "xyes"])
@@ -1110,6 +1165,8 @@ LibXML2:        $have_libxml2 (CFLAGS='$LIBXML2_CFLAGS' LIBS='$LIBXML2_LIBS')
 LibExpat:       $have_libexpat (CFLAGS='$EXPAT_CFLAGS' LIBS='$EXPAT_LIBS')
 LibCares:       $have_libcares (CFLAGS='$LIBCARES_CFLAGS' LIBS='$LIBCARES_LIBS')
 Zlib:           $have_zlib (CFLAGS='$ZLIB_CFLAGS' LIBS='$ZLIB_LIBS')
+Brotli:         $have_libbrotlidec (CFLAGS='$LIBBROTLIDEC_CFLAGS' LIBS='$LIBBROTLIDEC_LIBS')
+Zstd:           $have_libzstd (CFLAGS='$LIBZSTD_CFLAGS' LIBS='$LIBZSTD_LIBS')
 Libssh2:        $have_libssh2 (CFLAGS='$LIBSSH2_CFLAGS' LIBS='$LIBSSH2_LIBS')
 Libnghttp2:     $have_libnghttp2 (CFLAGS='$LIBNGHTTP2_CFLAGS' LIBS='$LIBNGHTTP2_LIBS')
 Tcmalloc:       $have_tcmalloc (CFLAGS='$TCMALLOC_CFLAGS' LIBS='$TCMALLOC_LIBS')
