@@ -52,9 +52,11 @@ jobs:
     - name: Setup clang (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'clang'
       run: |
+        # clang-18 may pick gcc-13 libstdc++ which lacks full C++23;
+        # remove it so clang auto-detects gcc-14 headers instead.
+        sudo apt-get remove -y libstdc++-13-dev 2>/dev/null || true
         echo 'CC=clang-18' >> $GITHUB_ENV
         echo 'CXX=clang++-18' >> $GITHUB_ENV
-        echo 'CXXFLAGS=-nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14' >> $GITHUB_ENV
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |
@@ -154,7 +156,8 @@ jobs:
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \
           $FEATURE_FLAGS
-        make -j$(nproc) check
+        make -j$(nproc)
+        make -C test check
 
   build-tsan:
     runs-on: ubuntu-24.04
