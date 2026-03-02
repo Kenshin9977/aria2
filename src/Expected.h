@@ -2,7 +2,7 @@
 /*
  * aria2 - The high speed download utility
  *
- * Copyright (C) 2006 Tatsuhiro Tsujikawa
+ * Copyright (C) 2024 Tatsuhiro Tsujikawa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,48 +32,59 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
-#ifndef D_METALINK_HELPER_H
-#define D_METALINK_HELPER_H
+#ifndef D_EXPECTED_H
+#define D_EXPECTED_H
 
-#include "common.h"
-
-#include <string>
-#include <vector>
-#include <memory>
-
-#include "Expected.h"
-
-#include "A2STR.h"
+#include <type_traits>
+#include <variant>
+#include <utility>
 
 namespace aria2 {
 
-class Option;
-class MetalinkEntry;
-class BinaryStream;
-class Metalinker;
+template <typename E> struct Unexpected {
+  E error;
+  explicit Unexpected(E e) : error(std::move(e)) {}
+};
 
-namespace metalink {
+template <typename E> Unexpected<E> makeUnexpected(E e)
+{
+  return Unexpected<E>(std::move(e));
+}
 
-std::vector<std::unique_ptr<MetalinkEntry>>
-parseAndQuery(const std::string& filename, const Option* option,
-              const std::string& baseUri = A2STR::NIL);
+template <typename T, typename E> class Expected {
+public:
+  Expected(T val) : data_(std::move(val)) {}
+  Expected(Unexpected<E> err) : data_(std::move(err.error)) {}
 
-std::vector<std::unique_ptr<MetalinkEntry>>
-parseAndQuery(BinaryStream* bs, const Option* option,
-              const std::string& baseUri = A2STR::NIL);
+  template <typename U,
+            typename = std::enable_if_t<std::is_constructible_v<E, U>>>
+  Expected(Unexpected<U> err) : data_(E(std::move(err.error)))
+  {
+  }
 
-std::vector<std::pair<std::string, std::vector<MetalinkEntry*>>>
-groupEntryByMetaurlName(
-    const std::vector<std::unique_ptr<MetalinkEntry>>& entries);
+  explicit operator bool() const noexcept
+  {
+    return std::holds_alternative<T>(data_);
+  }
+  bool has_value() const noexcept { return std::holds_alternative<T>(data_); }
 
-Expected<std::unique_ptr<Metalinker>, std::string>
-parseFile(const std::string& filename, const std::string& baseUri = A2STR::NIL);
+  T& operator*() & { return std::get<T>(data_); }
+  const T& operator*() const& { return std::get<T>(data_); }
+  T&& operator*() && { return std::get<T>(std::move(data_)); }
 
-Expected<std::unique_ptr<Metalinker>, std::string>
-parseBinaryStream(BinaryStream* bs, const std::string& baseUri = A2STR::NIL);
+  T* operator->() { return &std::get<T>(data_); }
+  const T* operator->() const { return &std::get<T>(data_); }
 
-} // namespace metalink
+  T& value() & { return std::get<T>(data_); }
+  const T& value() const& { return std::get<T>(data_); }
+
+  E& error() & { return std::get<E>(data_); }
+  const E& error() const& { return std::get<E>(data_); }
+
+private:
+  std::variant<T, E> data_;
+};
 
 } // namespace aria2
 
-#endif // D_METALINK_HELPER_H
+#endif // D_EXPECTED_H

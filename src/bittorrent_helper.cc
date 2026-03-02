@@ -892,16 +892,16 @@ void assertID(uint8_t expected, const unsigned char* data, const char* msgName)
   }
 }
 
-std::expected<std::unique_ptr<TorrentAttribute>, std::string>
+Expected<std::unique_ptr<TorrentAttribute>, std::string>
 parseMagnet(const std::string& magnet)
 {
   auto r = magnet::parse(magnet);
   if (!r) {
-    return std::unexpected("Bad BitTorrent Magnet URI.");
+    return makeUnexpected("Bad BitTorrent Magnet URI.");
   }
   const List* xts = downcast<List>(r->get("xt"));
   if (!xts) {
-    return std::unexpected("Missing xt parameter in Magnet URI.");
+    return makeUnexpected("Missing xt parameter in Magnet URI.");
   }
   auto attrs = std::make_unique<TorrentAttribute>();
   std::string infoHash;
@@ -926,8 +926,8 @@ parseMagnet(const std::string& magnet)
     }
   }
   if (infoHash.empty()) {
-    return std::unexpected("Bad BitTorrent Magnet URI. "
-                           "No valid BitTorrent Info Hash found.");
+    return makeUnexpected("Bad BitTorrent Magnet URI. "
+                          "No valid BitTorrent Info Hash found.");
   }
   const List* trs = downcast<List>(r->get("tr"));
   if (trs) {

@@ -37,9 +37,10 @@
 
 #include "common.h"
 
-#include <expected>
 #include <string>
 #include <string_view>
+
+#include "Expected.h"
 
 #include "uri_split.h"
 
@@ -76,7 +77,7 @@ void swap(UriStruct& lhs, UriStruct& rhs);
 
 // Splits URI uri into components. On success returns UriStruct.
 // Otherwise returns an error string describing the failure.
-std::expected<UriStruct, std::string> parse(const std::string& uri);
+Expected<UriStruct, std::string> parse(const std::string& uri);
 
 // Returns string specified by field in res. The base pointer in res
 // is given as base. If the given field is not stored in res, returns

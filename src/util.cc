@@ -501,7 +501,7 @@ bool parseLong(T& res, F f, const std::string& s, int base)
 }
 } // namespace
 
-std::expected<int32_t, std::string> parseInt(std::string_view s, int base)
+Expected<int32_t, std::string> parseInt(std::string_view s, int base)
 {
   std::string str(s);
   long int t;
@@ -510,11 +510,10 @@ std::expected<int32_t, std::string> parseInt(std::string_view s, int base)
       t <= std::numeric_limits<int32_t>::max()) {
     return static_cast<int32_t>(t);
   }
-  return std::unexpected(std::string("parse error"));
+  return makeUnexpected(std::string("parse error"));
 }
 
-std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
-                                                      int base)
+Expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s, int base)
 {
   std::string str(s);
   long int t;
@@ -522,23 +521,23 @@ std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
       t <= std::numeric_limits<int32_t>::max()) {
     return static_cast<uint32_t>(t);
   }
-  return std::unexpected(std::string("parse error"));
+  return makeUnexpected(std::string("parse error"));
 }
 
-std::expected<int64_t, std::string> parseLLInt(std::string_view s, int base)
+Expected<int64_t, std::string> parseLLInt(std::string_view s, int base)
 {
   std::string str(s);
   int64_t t;
   if (parseLong(t, strtoll, str, base)) {
     return t;
   }
-  return std::unexpected(std::string("parse error"));
+  return makeUnexpected(std::string("parse error"));
 }
 
-std::expected<double, std::string> parseDouble(std::string_view s)
+Expected<double, std::string> parseDouble(std::string_view s)
 {
   if (s.empty()) {
-    return std::unexpected(std::string("empty string"));
+    return makeUnexpected(std::string("empty string"));
   }
 
   std::string str(s);
@@ -547,13 +546,13 @@ std::expected<double, std::string> parseDouble(std::string_view s)
   auto d = strtod(str.c_str(), &endptr);
 
   if (errno == ERANGE) {
-    return std::unexpected(std::string("out of range"));
+    return makeUnexpected(std::string("out of range"));
   }
 
   if (endptr != str.c_str() + str.size()) {
     for (auto i = str.begin() + (endptr - str.c_str()); i != str.end(); ++i) {
       if (!isspace(*i)) {
-        return std::unexpected(std::string("parse error"));
+        return makeUnexpected(std::string("parse error"));
       }
     }
   }

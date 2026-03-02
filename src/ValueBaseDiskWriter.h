@@ -36,6 +36,7 @@
 #define D_VALUE_BASE_DISK_WRITER_H
 
 #include "DiskWriter.h"
+#include "ValueBase.h"
 #include "ValueBaseStructParserStateMachine.h"
 
 namespace aria2 {
