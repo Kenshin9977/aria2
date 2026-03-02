@@ -53,8 +53,7 @@ bool ChunkChecksum::validateChunk(const std::string& actualDigest,
                                   size_t index) const
 {
   const std::string& digest = getPieceHash(index);
-  return !digest.empty() &&
-         util::security::compare(actualDigest, digest);
+  return !digest.empty() && util::security::compare(actualDigest, digest);
 }
 
 int64_t ChunkChecksum::getEstimatedDataLength() const

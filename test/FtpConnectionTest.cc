@@ -46,6 +46,8 @@ class FtpConnectionTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testBaseWorkingDir);
   CPPUNIT_TEST(testGetUser);
   CPPUNIT_TEST(testReceiveSizeResponse_negative);
+  CPPUNIT_TEST(testReceiveEpsvResponse_customDelimiter);
+  CPPUNIT_TEST(testReceivePasvResponse_octetValidation);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -111,6 +113,8 @@ public:
   void testBaseWorkingDir();
   void testGetUser();
   void testReceiveSizeResponse_negative();
+  void testReceiveEpsvResponse_customDelimiter();
+  void testReceivePasvResponse_octetValidation();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FtpConnectionTest);
@@ -480,6 +484,99 @@ void FtpConnectionTest::testReceiveSizeResponse_negative()
   }
   catch (DlAbortEx& e) {
     // success
+  }
+}
+
+void FtpConnectionTest::testReceiveEpsvResponse_customDelimiter()
+{
+  // RFC 2428: delimiter is the first char after '('
+  // Test with '!' as delimiter instead of '|'
+  {
+    serverSocket_->writeData("229 Success (!!!12000!)\r\n");
+    waitRead(clientSocket_);
+    uint16_t port = 0;
+    CPPUNIT_ASSERT_EQUAL(229, ftp_->receiveEpsvResponse(port));
+    CPPUNIT_ASSERT_EQUAL((uint16_t)12000, port);
+  }
+  // Test with '#' as delimiter
+  {
+    serverSocket_->writeData("229 Success (###8080#)\r\n");
+    waitRead(clientSocket_);
+    uint16_t port = 0;
+    CPPUNIT_ASSERT_EQUAL(229, ftp_->receiveEpsvResponse(port));
+    CPPUNIT_ASSERT_EQUAL((uint16_t)8080, port);
+  }
+  // Test with '@' as delimiter
+  {
+    serverSocket_->writeData("229 Success (@@@21@)\r\n");
+    waitRead(clientSocket_);
+    uint16_t port = 0;
+    CPPUNIT_ASSERT_EQUAL(229, ftp_->receiveEpsvResponse(port));
+    CPPUNIT_ASSERT_EQUAL((uint16_t)21, port);
+  }
+  // Inner too short — should return port=0
+  {
+    serverSocket_->writeData("229 Success (||)\r\n");
+    waitRead(clientSocket_);
+    uint16_t port = 0;
+    CPPUNIT_ASSERT_EQUAL(229, ftp_->receiveEpsvResponse(port));
+    CPPUNIT_ASSERT_EQUAL((uint16_t)0, port);
+  }
+}
+
+void FtpConnectionTest::testReceivePasvResponse_octetValidation()
+{
+  // Valid PASV with port 256*100 + 200 = 25800
+  {
+    serverSocket_->writeData(
+        "227 Entering Passive Mode (10,0,0,1,100,200).\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    CPPUNIT_ASSERT_EQUAL(227, ftp_->receivePasvResponse(dest));
+    CPPUNIT_ASSERT_EQUAL(std::string("10.0.0.1"), dest.first);
+    CPPUNIT_ASSERT_EQUAL((uint16_t)25800, dest.second);
+  }
+  // Octet > 255 in host — should throw
+  {
+    serverSocket_->writeData(
+        "227 Entering Passive Mode (256,0,0,1,4,1).\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    try {
+      ftp_->receivePasvResponse(dest);
+      CPPUNIT_FAIL("exception must be thrown for octet > 255.");
+    }
+    catch (DlRetryEx& e) {
+      // success
+    }
+  }
+  // Negative octet in host — should throw
+  {
+    serverSocket_->writeData(
+        "227 Entering Passive Mode (-1,0,0,1,4,1).\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    try {
+      ftp_->receivePasvResponse(dest);
+      CPPUNIT_FAIL("exception must be thrown for negative octet.");
+    }
+    catch (DlRetryEx& e) {
+      // success
+    }
+  }
+  // Port byte > 255 — should throw
+  {
+    serverSocket_->writeData(
+        "227 Entering Passive Mode (10,0,0,1,256,1).\r\n");
+    waitRead(clientSocket_);
+    std::pair<std::string, uint16_t> dest;
+    try {
+      ftp_->receivePasvResponse(dest);
+      CPPUNIT_FAIL("exception must be thrown for port byte > 255.");
+    }
+    catch (DlRetryEx& e) {
+      // success
+    }
   }
 }
 
