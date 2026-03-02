@@ -103,7 +103,8 @@ aria2c_SOURCES = AllTest.cc\
 	SmallClassCoverageTest.cc \
 	SlowStartControllerTest.cc \
 	Socks5CommandTest.cc \
-	HstsStoreTest.cc
+	HstsStoreTest.cc \
+	HttpDigestAuthTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
@@ -120,6 +121,14 @@ aria2c_SOURCES += \
 	GZipDecodingStreamFilterTest.cc\
 	GZipFileTest.cc
 endif # HAVE_ZLIB
+
+if HAVE_LIBBROTLIDEC
+aria2c_SOURCES += BrotliDecodingStreamFilterTest.cc
+endif # HAVE_LIBBROTLIDEC
+
+if HAVE_LIBZSTD
+aria2c_SOURCES += ZstdDecodingStreamFilterTest.cc
+endif # HAVE_LIBZSTD
 
 if HAVE_SQLITE3
 aria2c_SOURCES += Sqlite3CookieParserTest.cc
@@ -346,6 +355,8 @@ EXTRA_DIST = 4096chunk.txt\
 	filelist1.txt\
 	filelist2.txt\
 	gzip_decode_test.gz\
+	brotli_decode_test.br\
+	zstd_decode_test.zst\
 	load-nonBt.aria2\
 	load-nonBt-v0001.aria2\
 	load.aria2\
