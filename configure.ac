@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 #
 AC_PREREQ([2.67])
-AC_INIT([aria2],[1.37.0],[https://github.com/aria2/aria2/issues],[aria2],[https://aria2.github.io/])
+AC_INIT([aria2],[2.0.0],[https://github.com/Kenshin9977/aria2/issues],[aria2],[https://github.com/Kenshin9977/aria2])
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
@@ -64,9 +64,14 @@ ARIA2_ARG_WITHOUT([libxml2])
 ARIA2_ARG_WITHOUT([libexpat])
 ARIA2_ARG_WITHOUT([libcares])
 ARIA2_ARG_WITHOUT([libz])
+ARIA2_ARG_WITHOUT([libbrotlidec])
+ARIA2_ARG_WITHOUT([libzstd])
 ARIA2_ARG_WITH([tcmalloc])
 ARIA2_ARG_WITH([jemalloc])
 ARIA2_ARG_WITHOUT([libssh2])
+ARIA2_ARG_WITH([libnghttp2])
+ARIA2_ARG_WITH([libngtcp2])
+ARIA2_ARG_WITH([libnghttp3])
 
 ARIA2_ARG_DISABLE([ssl])
 ARIA2_ARG_DISABLE([bittorrent])
@@ -137,11 +142,11 @@ AC_LANG([C++])
 # Check pkg-config is available
 PKG_PROG_PKG_CONFIG([0.20])
 
-# Check C++ compiler supports C++0x/C++11 feature
+# Check C++ compiler supports C++23
 save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS=
 
-AX_CXX_COMPILE_STDCXX([11], [], [mandatory])
+AX_CXX_COMPILE_STDCXX([23], [], [mandatory])
 
 CXX1XCXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$save_CXXFLAGS"
@@ -158,28 +163,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 int *a = nullptr;
 ]])],
 [],
-[AC_MSG_FAILURE([C++ compiler does not understand nullptr, perhaps C++ compiler is too old.  Try again with new one (gcc >= 4.8.3 or clang >= 3.4)])])
-
-# i686-w64-mingw32-g++ 4.6 does not support override keyword. For
-# those compilers, define CXX11_OVERRIDE to empty string. Otherwise
-# define it as override. Use CXX11_OVERRIDE instead of override.
-AC_MSG_CHECKING([whether the C++ compiler supports `override` keyword])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-struct Base {
-virtual void f() = 0;
-};
-struct Derived : Base {
-virtual void f() override {}
-};
-]],
-[[
-Derived x;
-]])],
-    [cxx11_override=override
-     AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])])
-AC_DEFINE_UNQUOTED([CXX11_OVERRIDE], [$cxx11_override],
-                   [Define `override` keyword if the compiler supports it])
+[AC_MSG_FAILURE([C++ compiler does not understand nullptr, perhaps C++ compiler is too old.  Try again with new one (gcc >= 14 or clang >= 18)])])
 
 CXXFLAGS=$save_CXXFLAGS
 
@@ -233,6 +217,52 @@ if test "x$with_libz" = "xyes"; then
     AC_CHECK_FUNCS([gzbuffer gzsetparams])
     CPPFLAGS=$save_CPPFLAGS
     LIBS=$save_LIBS
+  fi
+fi
+
+have_libbrotlidec=no
+if test "x$with_libbrotlidec" = "xyes"; then
+  PKG_CHECK_MODULES([LIBBROTLIDEC], [libbrotlidec >= 1.0.0],
+                    [have_libbrotlidec=yes], [have_libbrotlidec=no])
+  if test "x$have_libbrotlidec" != "xyes"; then
+    AC_MSG_WARN([$LIBBROTLIDEC_PKG_ERRORS])
+    AC_CHECK_LIB([brotlidec], [BrotliDecoderCreateInstance],
+                 [have_libbrotlidec=yes], [have_libbrotlidec=no])
+    if test "x$have_libbrotlidec" = "xyes"; then
+      LIBBROTLIDEC_CFLAGS=
+      LIBBROTLIDEC_LIBS="-lbrotlidec"
+      AC_SUBST([LIBBROTLIDEC_CFLAGS])
+      AC_SUBST([LIBBROTLIDEC_LIBS])
+    elif test "x$with_libbrotlidec_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libbrotlidec])
+    fi
+  fi
+  if test "x$have_libbrotlidec" = "xyes"; then
+    AC_DEFINE([HAVE_LIBBROTLIDEC], [1],
+              [Define to 1 if you have libbrotlidec.])
+  fi
+fi
+
+have_libzstd=no
+if test "x$with_libzstd" = "xyes"; then
+  PKG_CHECK_MODULES([LIBZSTD], [libzstd >= 1.0.0],
+                    [have_libzstd=yes], [have_libzstd=no])
+  if test "x$have_libzstd" != "xyes"; then
+    AC_MSG_WARN([$LIBZSTD_PKG_ERRORS])
+    AC_CHECK_LIB([zstd], [ZSTD_createDStream],
+                 [have_libzstd=yes], [have_libzstd=no])
+    if test "x$have_libzstd" = "xyes"; then
+      LIBZSTD_CFLAGS=
+      LIBZSTD_LIBS="-lzstd"
+      AC_SUBST([LIBZSTD_CFLAGS])
+      AC_SUBST([LIBZSTD_LIBS])
+    elif test "x$with_libzstd_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libzstd])
+    fi
+  fi
+  if test "x$have_libzstd" = "xyes"; then
+    AC_DEFINE([HAVE_LIBZSTD], [1],
+              [Define to 1 if you have libzstd.])
   fi
 fi
 
@@ -501,6 +531,59 @@ if test "x$with_libssh2" = "xyes"; then
   fi
 fi
 
+have_libnghttp2=no
+if test "x$with_libnghttp2" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGHTTP2], [libnghttp2 >= 1.0.0],
+                    [have_libnghttp2=yes], [have_libnghttp2=no])
+  if test "x$have_libnghttp2" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGHTTP2], [1],
+              [Define to 1 if you have libnghttp2.])
+  else
+    AC_MSG_WARN([$LIBNGHTTP2_PKG_ERRORS])
+    if test "x$with_libnghttp2_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libnghttp2])
+    fi
+  fi
+fi
+
+have_libngtcp2=no
+if test "x$with_libngtcp2" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGTCP2], [libngtcp2 >= 1.0.0],
+                    [have_libngtcp2=yes], [have_libngtcp2=no])
+  if test "x$have_libngtcp2" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGTCP2], [1],
+              [Define to 1 if you have libngtcp2.])
+    PKG_CHECK_MODULES([LIBNGTCP2_CRYPTO_QUICTLS],
+                      [libngtcp2_crypto_quictls >= 1.0.0],
+                      [have_libngtcp2_crypto_quictls=yes],
+                      [have_libngtcp2_crypto_quictls=no])
+    if test "x$have_libngtcp2_crypto_quictls" = "xyes"; then
+      AC_DEFINE([HAVE_LIBNGTCP2_CRYPTO_QUICTLS], [1],
+                [Define to 1 if you have libngtcp2_crypto_quictls.])
+    fi
+  else
+    AC_MSG_WARN([$LIBNGTCP2_PKG_ERRORS])
+    if test "x$with_libngtcp2_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libngtcp2])
+    fi
+  fi
+fi
+
+have_libnghttp3=no
+if test "x$with_libnghttp3" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGHTTP3], [libnghttp3 >= 1.0.0],
+                    [have_libnghttp3=yes], [have_libnghttp3=no])
+  if test "x$have_libnghttp3" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGHTTP3], [1],
+              [Define to 1 if you have libnghttp3.])
+  else
+    AC_MSG_WARN([$LIBNGHTTP3_PKG_ERRORS])
+    if test "x$with_libnghttp3_requested" = "xyes"; then
+      ARIA2_DEP_NOT_MET([libnghttp3])
+    fi
+  fi
+fi
+
 have_libcares=no
 if test "x$with_libcares" = "xyes"; then
   PKG_CHECK_MODULES([LIBCARES], [libcares >= 1.16.0], [have_libcares=yes],
@@ -638,11 +721,27 @@ fi
 # Set conditional for libz
 AM_CONDITIONAL([HAVE_ZLIB], [test "x$have_zlib" = "xyes"])
 
+# Set conditional for libbrotlidec
+AM_CONDITIONAL([HAVE_LIBBROTLIDEC],
+               [test "x$have_libbrotlidec" = "xyes"])
+
+# Set conditional for libzstd
+AM_CONDITIONAL([HAVE_LIBZSTD], [test "x$have_libzstd" = "xyes"])
+
 # Set conditional for sqlite3
 AM_CONDITIONAL([HAVE_SQLITE3], [test "x$have_sqlite3" = "xyes"])
 
 # Set conditional for libssh2
 AM_CONDITIONAL([HAVE_LIBSSH2], [test "x$have_libssh2" = "xyes"])
+
+# Set conditional for libnghttp2
+AM_CONDITIONAL([HAVE_LIBNGHTTP2], [test "x$have_libnghttp2" = "xyes"])
+
+# Set conditional for libngtcp2
+AM_CONDITIONAL([HAVE_LIBNGTCP2], [test "x$have_libngtcp2" = "xyes"])
+
+# Set conditional for libnghttp3
+AM_CONDITIONAL([HAVE_LIBNGHTTP3], [test "x$have_libnghttp3" = "xyes"])
 
 case "$host" in
   *solaris*)
@@ -848,6 +947,14 @@ if test "x$enable_epoll" = "xyes"; then
   fi
 fi
 AM_CONDITIONAL([HAVE_EPOLL], [test "x$have_epoll" = "xyes"])
+
+have_iouring=no
+PKG_CHECK_MODULES([LIBURING], [liburing >= 2.0],
+                  [have_iouring=yes], [have_iouring=no])
+if test "x$have_iouring" = "xyes"; then
+  AC_DEFINE([HAVE_IOURING], [1], [Define to 1 if io_uring is available.])
+fi
+AM_CONDITIONAL([HAVE_IOURING], [test "x$have_iouring" = "xyes"])
 
 AC_CHECK_FUNCS([posix_fallocate],[have_posix_fallocate=yes])
 ARIA2_CHECK_FALLOCATE
@@ -1104,10 +1211,16 @@ LibXML2:        $have_libxml2 (CFLAGS='$LIBXML2_CFLAGS' LIBS='$LIBXML2_LIBS')
 LibExpat:       $have_libexpat (CFLAGS='$EXPAT_CFLAGS' LIBS='$EXPAT_LIBS')
 LibCares:       $have_libcares (CFLAGS='$LIBCARES_CFLAGS' LIBS='$LIBCARES_LIBS')
 Zlib:           $have_zlib (CFLAGS='$ZLIB_CFLAGS' LIBS='$ZLIB_LIBS')
+Brotli:         $have_libbrotlidec (CFLAGS='$LIBBROTLIDEC_CFLAGS' LIBS='$LIBBROTLIDEC_LIBS')
+Zstd:           $have_libzstd (CFLAGS='$LIBZSTD_CFLAGS' LIBS='$LIBZSTD_LIBS')
 Libssh2:        $have_libssh2 (CFLAGS='$LIBSSH2_CFLAGS' LIBS='$LIBSSH2_LIBS')
+Libnghttp2:     $have_libnghttp2 (CFLAGS='$LIBNGHTTP2_CFLAGS' LIBS='$LIBNGHTTP2_LIBS')
+Libngtcp2:      $have_libngtcp2 (CFLAGS='$LIBNGTCP2_CFLAGS' LIBS='$LIBNGTCP2_LIBS')
+Libnghttp3:     $have_libnghttp3 (CFLAGS='$LIBNGHTTP3_CFLAGS' LIBS='$LIBNGHTTP3_LIBS')
 Tcmalloc:       $have_tcmalloc (CFLAGS='$TCMALLOC_CFLAGS' LIBS='$TCMALLOC_LIBS')
 Jemalloc:       $have_jemalloc (CFLAGS='$JEMALLOC_CFLAGS' LIBS='$JEMALLOC_LIBS')
 Epoll:          $have_epoll
+io_uring:       $have_iouring (CFLAGS='$LIBURING_CFLAGS' LIBS='$LIBURING_LIBS')
 Bittorrent:     $enable_bittorrent
 Metalink:       $enable_metalink
 XML-RPC:        $enable_xml_rpc

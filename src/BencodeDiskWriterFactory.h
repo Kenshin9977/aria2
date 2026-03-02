@@ -42,7 +42,7 @@ namespace aria2 {
 
 namespace bittorrent {
 
-typedef AnonDiskWriterFactory<BencodeDiskWriter> BencodeDiskWriterFactory;
+using BencodeDiskWriterFactory = AnonDiskWriterFactory<BencodeDiskWriter>;
 
 } // namespace bittorrent
 

@@ -101,11 +101,6 @@ bool Cookie::operator==(const Cookie& cookie) const
          name_ == cookie.name_;
 }
 
-bool Cookie::operator!=(const Cookie& cookie) const
-{
-  return !(*this == cookie);
-}
-
 bool Cookie::isExpired(time_t base) const
 {
   return persistent_ && base > expiryTime_;

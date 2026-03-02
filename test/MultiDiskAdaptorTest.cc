@@ -34,7 +34,7 @@ private:
 public:
   void setUp()
   {
-    adaptor = make_unique<MultiDiskAdaptor>();
+    adaptor = std::make_unique<MultiDiskAdaptor>();
     adaptor->setPieceLength(2);
   }
 

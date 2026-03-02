@@ -74,21 +74,21 @@
 
 namespace aria2 {
 
-uint16_t getDefaultPort(const std::string& protocol)
+uint16_t getDefaultPort(Protocol protocol)
 {
-  if (protocol == "http") {
+  using enum Protocol;
+  switch (protocol) {
+  case HTTP:
     return 80;
-  }
-  else if (protocol == "https") {
+  case HTTPS:
     return 443;
-  }
-  else if (protocol == "ftp") {
+  case FTP:
     return 21;
-  }
-  else if (protocol == "sftp") {
+  case FTPS:
+    return 21;
+  case SFTP:
     return 22;
-  }
-  else {
+  default:
     return 0;
   }
 }
@@ -276,10 +276,10 @@ std::string usedCompilerAndPlatform()
 #  ifdef __MINGW32__
   rv << "mingw ";
 #    ifdef __MINGW32_MAJOR_VERSION
-  rv << (int)__MINGW32_MAJOR_VERSION;
+  rv << static_cast<int>(__MINGW32_MAJOR_VERSION);
 #    endif // __MINGW32_MAJOR_VERSION
 #    ifdef __MINGW32_MINOR_VERSION
-  rv << "." << (int)__MINGW32_MINOR_VERSION;
+  rv << "." << static_cast<int>(__MINGW32_MINOR_VERSION);
 #    endif // __MINGW32_MINOR_VERSION
   rv << " / ";
 #  endif   // __MINGW32__

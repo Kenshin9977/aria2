@@ -57,6 +57,7 @@
 #include "StreamFilter.h"
 #include "BinaryStream.h"
 #include "NullSinkStreamFilter.h"
+#include "FileEntry.h"
 #include "SinkStreamFilter.h"
 #include "error_code.h"
 #include "SocketRecvBuffer.h"
@@ -68,7 +69,7 @@ HttpSkipResponseCommand::HttpSkipResponseCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<HttpConnection>& httpConnection,
     std::unique_ptr<HttpResponse> httpResponse, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       httpConnection->getSocketRecvBuffer()),
       sinkFilterOnly_(true),
@@ -76,7 +77,7 @@ HttpSkipResponseCommand::HttpSkipResponseCommand(
       receivedBytes_(0),
       httpConnection_(httpConnection),
       httpResponse_(std::move(httpResponse)),
-      streamFilter_(make_unique<NullSinkStreamFilter>())
+      streamFilter_(std::make_unique<NullSinkStreamFilter>())
 {
   checkSocketRecvBuffer();
 }
@@ -91,19 +92,20 @@ void HttpSkipResponseCommand::installStreamFilter(
   }
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
-  const std::string& name = streamFilter_->getName();
-  sinkFilterOnly_ = util::endsWith(name, SinkStreamFilter::NAME);
+  const char* name = streamFilter_->getName();
+  sinkFilterOnly_ =
+      std::string_view(name).ends_with(SinkStreamFilter::NAME);
 }
 
 bool HttpSkipResponseCommand::executeInternal()
 {
-  if (getRequest()->getMethod() == Request::METHOD_HEAD ||
+  if (getRequest()->getMethod() == HttpMethod::HEAD ||
       (totalLength_ == 0 && sinkFilterOnly_)) {
     // If request method is HEAD or content-length header is present and
     // it's value is 0, then pool socket for reuse.
     // If content-length header is not present, then EOF is expected in the end.
     // In this case, the content is thrown away and socket cannot be pooled.
-    if (getRequest()->getMethod() == Request::METHOD_HEAD ||
+    if (getRequest()->getMethod() == HttpMethod::HEAD ||
         httpResponse_->getHttpHeader()->defined(HttpHeader::CONTENT_LENGTH)) {
       poolConnection();
     }
@@ -183,8 +185,9 @@ bool HttpSkipResponseCommand::executeInternal()
 void HttpSkipResponseCommand::poolConnection() const
 {
   if (getRequest()->supportsPersistentConnection()) {
-    getDownloadEngine()->poolSocket(getRequest(), createProxyRequest(),
-                                    getSocket());
+    getDownloadEngine()->poolSocket(
+        getRequest(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()));
   }
 }
 
@@ -206,13 +209,31 @@ bool HttpSkipResponseCommand::processResponse()
     switch (statusCode) {
     case 401:
       if (getOption()->getAsBool(PREF_HTTP_AUTH_CHALLENGE) &&
-          !httpResponse_->getHttpRequest()->authenticationUsed() &&
-          getDownloadEngine()->getAuthConfigFactory()->activateBasicCred(
-              getRequest()->getHost(), getRequest()->getPort(),
-              getRequest()->getDir(), getOption().get())) {
-        return prepareForRetry(0);
+          !httpResponse_->getHttpRequest()->authenticationUsed()) {
+        auto* factory = getDownloadEngine()->getAuthConfigFactory().get();
+        // Try Digest auth first (RFC 7616)
+        auto wwwAuthHeaders =
+            httpResponse_->getHttpHeader()->findAll(
+                HttpHeader::WWW_AUTHENTICATE);
+        for (const auto& wwwAuth : wwwAuthHeaders) {
+          if (factory->activateDigestCred(
+                  getRequest()->getHost(), getRequest()->getPort(),
+                  wwwAuth, getOption().get())) {
+            return prepareForRetry(0);
+          }
+        }
+        // Fall back to Basic auth
+        if (factory->activateBasicCred(
+                getRequest()->getHost(), getRequest()->getPort(),
+                getRequest()->getDir(), getOption().get())) {
+          return prepareForRetry(0);
+        }
       }
       throw DL_ABORT_EX2(EX_AUTH_FAILED, error_code::HTTP_AUTH_FAILED);
+    case 403:
+      getFileEntry()->getSlowStart().backOff();
+      throw DL_ABORT_EX2(fmt(EX_BAD_STATUS, statusCode),
+                         error_code::HTTP_PROTOCOL_ERROR);
     case 404:
       if (getOption()->getAsInt(PREF_MAX_FILE_NOT_FOUND) == 0) {
         throw DL_ABORT_EX2(MSG_RESOURCE_NOT_FOUND,

@@ -42,6 +42,7 @@
 namespace aria2 {
 
 class FtpConnection;
+class ISocketCore;
 class SocketCore;
 class HttpConnection;
 
@@ -49,6 +50,13 @@ class FtpNegotiationCommand : public AbstractCommand {
 public:
   enum Seq {
     SEQ_RECV_GREETING,
+    SEQ_SEND_AUTH_TLS,
+    SEQ_RECV_AUTH_TLS,
+    SEQ_TLS_HANDSHAKE,
+    SEQ_SEND_PBSZ,
+    SEQ_RECV_PBSZ,
+    SEQ_SEND_PROT_P,
+    SEQ_RECV_PROT_P,
     SEQ_SEND_USER,
     SEQ_RECV_USER,
     SEQ_SEND_PASS,
@@ -85,6 +93,7 @@ public:
     SEQ_SEND_RETR,
     SEQ_RECV_RETR,
     SEQ_WAIT_CONNECTION,
+    SEQ_DATA_TLS_HANDSHAKE,
     SEQ_NEGOTIATION_COMPLETED,
     SEQ_RETRY,
     SEQ_HEAD_OK,
@@ -95,6 +104,13 @@ public:
 
 private:
   bool recvGreeting();
+  bool sendAuthTls();
+  bool recvAuthTls();
+  bool tlsHandshake();
+  bool sendPbsz();
+  bool recvPbsz();
+  bool sendProtP();
+  bool recvProtP();
   bool sendUser();
   bool recvUser();
   bool sendPass();
@@ -132,6 +148,7 @@ private:
   bool sendRetr();
   bool recvRetr();
   bool waitConnection();
+  bool dataTlsHandshake();
   bool processSequence(const std::shared_ptr<Segment>& segment);
 
   void afterFileAllocation();
@@ -154,18 +171,19 @@ private:
   std::string proxyAddr_;
 
   std::deque<std::string> cwdDirs_;
+  bool dataProtected_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   FtpNegotiationCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                         const std::shared_ptr<FileEntry>& fileEntry,
                         RequestGroup* requestGroup, DownloadEngine* e,
-                        const std::shared_ptr<SocketCore>& s,
+                        const std::shared_ptr<ISocketCore>& s,
                         Seq seq = SEQ_RECV_GREETING,
                         const std::string& baseWorkingDir = "/");
-  virtual ~FtpNegotiationCommand();
+  ~FtpNegotiationCommand() override;
 };
 
 } // namespace aria2

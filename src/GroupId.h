@@ -43,18 +43,18 @@
 
 namespace aria2 {
 
-typedef uint64_t a2_gid_t;
+using a2_gid_t = uint64_t;
 
 class GroupId {
 public:
-  static std::shared_ptr<GroupId> create();
-  static std::shared_ptr<GroupId> import(a2_gid_t n);
+  [[nodiscard]] static std::shared_ptr<GroupId> create();
+  [[nodiscard]] static std::shared_ptr<GroupId> import(a2_gid_t n);
   static void clear();
   enum { ERR_NOT_UNIQUE = -1, ERR_NOT_FOUND = -2, ERR_INVALID = -3 };
   static int expandUnique(a2_gid_t& n, const char* hex);
   static int toNumericId(a2_gid_t& n, const char* hex);
-  static std::string toHex(a2_gid_t n);
-  static std::string toAbbrevHex(a2_gid_t n);
+  [[nodiscard]] static std::string toHex(a2_gid_t n);
+  [[nodiscard]] static std::string toAbbrevHex(a2_gid_t n);
 
   ~GroupId();
   a2_gid_t getNumericId() const { return gid_; }

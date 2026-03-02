@@ -38,6 +38,8 @@
 #include "BtMessageDispatcher.h"
 
 #include <deque>
+#include <unordered_set>
+#include <utility>
 
 #include "a2time.h"
 #include "Command.h"
@@ -57,6 +59,18 @@ private:
   cuid_t cuid_;
   std::deque<std::unique_ptr<BtMessage>> messageQueue_;
   std::deque<std::unique_ptr<RequestSlot>> requestSlots_;
+  struct PairHash {
+    size_t operator()(const std::pair<size_t, size_t>& p) const
+    {
+      size_t h = p.first;
+      h ^= p.second * 0x9e3779b9 + (h << 6) + (h >> 2);
+      return h;
+    }
+  };
+  std::unordered_set<std::pair<size_t, size_t>, PairHash> outstandingIndex_;
+
+  void rebuildOutstandingIndex();
+
   DownloadContext* downloadContext_;
   PeerConnection* peerConnection_;
   BtMessageFactory* messageFactory_;
@@ -67,56 +81,45 @@ private:
 public:
   DefaultBtMessageDispatcher();
 
-  virtual ~DefaultBtMessageDispatcher();
+  ~DefaultBtMessageDispatcher() override;
 
-  virtual void
-  addMessageToQueue(std::unique_ptr<BtMessage> btMessage) CXX11_OVERRIDE;
+  void addMessageToQueue(std::unique_ptr<BtMessage> btMessage) override;
 
-  virtual void sendMessages() CXX11_OVERRIDE;
+  void sendMessages() override;
 
   // For unit tests without PeerConnection
   void sendMessagesInternal();
 
-  virtual void doCancelSendingPieceAction(size_t index, int32_t begin,
-                                          int32_t length) CXX11_OVERRIDE;
+  void doCancelSendingPieceAction(size_t index, int32_t begin,
+                                  int32_t length) override;
 
-  virtual void doCancelSendingPieceAction(const std::shared_ptr<Piece>& piece)
-      CXX11_OVERRIDE;
+  void doCancelSendingPieceAction(const std::shared_ptr<Piece>& piece) override;
 
-  virtual void doAbortOutstandingRequestAction(
-      const std::shared_ptr<Piece>& piece) CXX11_OVERRIDE;
+  void
+  doAbortOutstandingRequestAction(const std::shared_ptr<Piece>& piece) override;
 
-  virtual void doChokedAction() CXX11_OVERRIDE;
+  void doChokedAction() override;
 
-  virtual void doChokingAction() CXX11_OVERRIDE;
+  void doChokingAction() override;
 
-  virtual void checkRequestSlotAndDoNecessaryThing() CXX11_OVERRIDE;
+  void checkRequestSlotAndDoNecessaryThing() override;
 
-  virtual bool isSendingInProgress() CXX11_OVERRIDE;
+  bool isSendingInProgress() override;
 
-  virtual size_t countMessageInQueue() CXX11_OVERRIDE
-  {
-    return messageQueue_.size();
-  }
+  size_t countMessageInQueue() override { return messageQueue_.size(); }
 
-  virtual size_t countOutstandingRequest() CXX11_OVERRIDE
-  {
-    return requestSlots_.size();
-  }
+  size_t countOutstandingRequest() override { return requestSlots_.size(); }
 
-  virtual bool isOutstandingRequest(size_t index,
-                                    size_t blockIndex) CXX11_OVERRIDE;
+  bool isOutstandingRequest(size_t index, size_t blockIndex) override;
 
-  virtual const RequestSlot*
-  getOutstandingRequest(size_t index, int32_t begin,
-                        int32_t length) CXX11_OVERRIDE;
+  const RequestSlot* getOutstandingRequest(size_t index, int32_t begin,
+                                           int32_t length) override;
 
-  virtual void removeOutstandingRequest(const RequestSlot* slot) CXX11_OVERRIDE;
+  void removeOutstandingRequest(const RequestSlot* slot) override;
 
-  virtual void addOutstandingRequest(std::unique_ptr<RequestSlot> requestSlot)
-      CXX11_OVERRIDE;
+  void addOutstandingRequest(std::unique_ptr<RequestSlot> requestSlot) override;
 
-  virtual size_t countOutstandingUpload() CXX11_OVERRIDE;
+  size_t countOutstandingUpload() override;
 
   const std::deque<std::unique_ptr<BtMessage>>& getMessageQueue() const
   {

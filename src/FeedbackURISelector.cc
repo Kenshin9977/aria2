@@ -36,6 +36,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 
 #include "ServerStatMan.h"
 #include "ServerStat.h"
@@ -62,9 +63,9 @@ std::string FeedbackURISelector::select(
     const std::vector<std::pair<size_t, std::string>>& usedHosts)
 {
   if (A2_LOG_DEBUG_ENABLED) {
-    for (const auto& h : usedHosts) {
-      A2_LOG_DEBUG(fmt("UsedHost=%lu, %s", static_cast<unsigned long>(h.first),
-                       h.second.c_str()));
+    for (const auto& [count, host] : usedHosts) {
+      A2_LOG_DEBUG(fmt("UsedHost=%lu, %s", static_cast<unsigned long>(count),
+                       host.c_str()));
     }
   }
   if (fileEntry->getRemainingUris().empty()) {
@@ -79,7 +80,7 @@ std::string FeedbackURISelector::select(
   }
   if (!uri.empty()) {
     std::deque<std::string>& uris = fileEntry->getRemainingUris();
-    uris.erase(std::find(uris.begin(), uris.end(), uri));
+    uris.erase(std::ranges::find(uris, uri));
   }
   A2_LOG_DEBUG(fmt("FeedbackURISelector selected %s", uri.c_str()));
   return uri;
@@ -103,12 +104,12 @@ std::string FeedbackURISelector::selectRarer(
       A2_LOG_DEBUG(fmt("Error not considered: %s", u.c_str()));
       continue;
     }
-    cands.push_back(std::make_pair(host, u));
+    cands.emplace_back(host, u);
   }
-  for (const auto& h : usedHosts) {
-    for (const auto& c : cands) {
-      if (h.second == c.first) {
-        return c.second;
+  for (const auto& [count, usedHost] : usedHosts) {
+    for (const auto& [candHost, candUri] : cands) {
+      if (usedHost == candHost) {
+        return candUri;
       }
     }
   }
@@ -141,13 +142,12 @@ std::string FeedbackURISelector::selectFaster(
       continue;
     }
     auto protocol = uri::getFieldString(us, USR_SCHEME, u.c_str());
-    auto ss = serverStatMan_->find(host, protocol);
-    if (!ss) {
+    if (auto ss = serverStatMan_->find(host, protocol); !ss) {
       normCands.push_back(u);
     }
     else if (ss->isOK()) {
       if (ss->getDownloadSpeed() > SPEED_THRESHOLD) {
-        fastCands.push_back(std::make_pair(ss, u));
+        fastCands.emplace_back(ss, u);
       }
       else {
         normCands.push_back(u);
@@ -165,7 +165,7 @@ std::string FeedbackURISelector::selectFaster(
   }
   else {
     A2_LOG_DEBUG("Selected from fastCands");
-    std::sort(fastCands.begin(), fastCands.end(), ServerStatFaster());
+    std::ranges::sort(fastCands, ServerStatFaster());
     return fastCands.front().second;
   }
 }

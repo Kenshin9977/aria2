@@ -60,9 +60,9 @@ public:
   SeedCheckCommand(cuid_t cuid, RequestGroup* requestGroup, DownloadEngine* e,
                    std::unique_ptr<SeedCriteria> seedCriteria);
 
-  virtual ~SeedCheckCommand();
+  ~SeedCheckCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setBtRuntime(const std::shared_ptr<BtRuntime>& btRuntime);
 

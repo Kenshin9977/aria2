@@ -37,27 +37,28 @@
 #include <array>
 #include <cstring>
 
+#include "a2functional.h"
 #include "fmt.h"
 #include "DlAbortEx.h"
 #include "util.h"
 
 namespace aria2 {
 
-GZipEncoder::GZipEncoder() : strm_(nullptr) {}
+GZipEncoder::GZipEncoder() {}
 
 GZipEncoder::~GZipEncoder() { release(); }
 
 void GZipEncoder::init()
 {
   release();
-  strm_ = new z_stream();
+  strm_ = std::make_unique<z_stream>();
   strm_->zalloc = Z_NULL;
   strm_->zfree = Z_NULL;
   strm_->opaque = Z_NULL;
   strm_->avail_in = 0;
   strm_->next_in = Z_NULL;
 
-  if (Z_OK != deflateInit2(strm_, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 9,
+  if (Z_OK != deflateInit2(strm_.get(), Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 9,
                            Z_DEFAULT_STRATEGY)) {
     throw DL_ABORT_EX("Initializing z_stream failed.");
   }
@@ -66,9 +67,8 @@ void GZipEncoder::init()
 void GZipEncoder::release()
 {
   if (strm_) {
-    deflateEnd(strm_);
-    delete strm_;
-    strm_ = nullptr;
+    deflateEnd(strm_.get());
+    strm_.reset();
   }
 }
 
@@ -82,7 +82,7 @@ std::string GZipEncoder::encode(const unsigned char* in, size_t length,
   while (1) {
     strm_->avail_out = outbuf.size();
     strm_->next_out = outbuf.data();
-    int ret = ::deflate(strm_, flush);
+    int ret = ::deflate(strm_.get(), flush);
     if (ret == Z_STREAM_ERROR) {
       throw DL_ABORT_EX(fmt("libz::deflate() failed. cause:%s", strm_->msg));
     }

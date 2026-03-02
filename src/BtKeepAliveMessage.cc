@@ -37,8 +37,6 @@
 
 namespace aria2 {
 
-const char BtKeepAliveMessage::NAME[] = "keep alive";
-
 std::vector<unsigned char> BtKeepAliveMessage::createMessage()
 {
   /**

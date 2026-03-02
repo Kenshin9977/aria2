@@ -41,6 +41,7 @@
 #  include <gnutls/pkcs12.h>
 #endif // HAVE_LIBGNUTLS
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
@@ -49,9 +50,10 @@
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion ver)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion ver)
 {
-  return new GnuTLSContext(side, ver);
+  return std::make_unique<GnuTLSContext>(side, ver);
 }
 
 GnuTLSContext::GnuTLSContext(TLSSessionSide side, TLSVersion ver)
@@ -106,8 +108,10 @@ bool GnuTLSContext::addP12CredentialFile(const std::string& p12file)
   std::stringstream ss;
   BufferedFile(p12file.c_str(), BufferedFile::READ).transfer(ss);
   auto datastr = ss.str();
-  const gnutls_datum_t data = {(unsigned char*)datastr.c_str(),
-                               (unsigned int)datastr.length()};
+  const gnutls_datum_t data = {
+      reinterpret_cast<unsigned char*>(
+          const_cast<char*>(datastr.c_str())),
+      static_cast<unsigned int>(datastr.length())};
   int err = gnutls_certificate_set_x509_simple_pkcs12_mem(
       certCred_, &data, GNUTLS_X509_FMT_DER, "");
   if (err != GNUTLS_E_SUCCESS) {

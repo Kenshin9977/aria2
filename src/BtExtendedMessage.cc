@@ -48,7 +48,10 @@
 
 namespace aria2 {
 
-const char BtExtendedMessage::NAME[] = "extended";
+BtExtendedMessage::BtExtendedMessage()
+    : SimpleBtMessage(ID, NAME), msgLength_(0)
+{
+}
 
 BtExtendedMessage::BtExtendedMessage(
     std::unique_ptr<ExtensionMessage> extensionMessage)
@@ -57,6 +60,8 @@ BtExtendedMessage::BtExtendedMessage(
       msgLength_(0)
 {
 }
+
+BtExtendedMessage::~BtExtendedMessage() = default;
 
 std::vector<unsigned char> BtExtendedMessage::createMessage()
 {
@@ -94,13 +99,13 @@ std::string BtExtendedMessage::toString() const
 std::unique_ptr<BtExtendedMessage>
 BtExtendedMessage::create(ExtensionMessageFactory* factory,
                           const std::shared_ptr<Peer>& peer,
-                          const unsigned char* data, size_t dataLength)
+                          std::span<const unsigned char> data)
 {
-  bittorrent::assertPayloadLengthGreater(1, dataLength, NAME);
-  bittorrent::assertID(ID, data, NAME);
+  bittorrent::assertPayloadLengthGreater(1, data.size(), NAME);
+  bittorrent::assertID(ID, data.data(), NAME);
   assert(factory);
-  return make_unique<BtExtendedMessage>(
-      factory->createMessage(data + 1, dataLength - 1));
+  return std::make_unique<BtExtendedMessage>(
+      factory->createMessage(data.data() + 1, data.size() - 1));
 }
 
 void BtExtendedMessage::doReceivedAction()

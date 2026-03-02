@@ -49,40 +49,37 @@ public:
 
   MockBtMessage(uint8_t id) : BtMessage(id) {}
 
-  virtual ~MockBtMessage() {}
+  ~MockBtMessage() override {}
 
-  virtual bool isInvalidate() CXX11_OVERRIDE { return invalidate; }
+  bool isInvalidate() override { return invalidate; }
 
   void setInvalidate(bool flag) { this->invalidate = flag; }
 
-  virtual bool isUploading() CXX11_OVERRIDE { return uploading; }
+  bool isUploading() override { return uploading; }
 
   void setUploading(bool flag) { this->uploading = flag; }
 
-  virtual void doReceivedAction() CXX11_OVERRIDE {}
+  void doReceivedAction() override {}
 
-  virtual void send() CXX11_OVERRIDE {}
+  void send() override {}
 
-  virtual void validate() CXX11_OVERRIDE {}
+  void validate() override {}
 
-  virtual void onAbortOutstandingRequestEvent(
-      const BtAbortOutstandingRequestEvent& event) CXX11_OVERRIDE
+  void onAbortOutstandingRequestEvent(
+      const BtAbortOutstandingRequestEvent& event) override
   {
   }
 
-  virtual void onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event)
-      CXX11_OVERRIDE
+  void
+  onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event) override
   {
   }
 
-  virtual void onChokingEvent(const BtChokingEvent& event) CXX11_OVERRIDE {}
+  void onChokingEvent(const BtChokingEvent& event) override {}
 
-  virtual void onQueued() CXX11_OVERRIDE {}
+  void onQueued() override {}
 
-  virtual std::string toString() const CXX11_OVERRIDE
-  {
-    return "MockBtMessage";
-  }
+  std::string toString() const override { return "MockBtMessage"; }
 };
 
 template <typename T> class WrapBtMessage : public MockBtMessage {

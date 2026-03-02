@@ -57,15 +57,15 @@ public:
   AdaptiveFileAllocationIterator(BinaryStream* stream, int64_t offset,
                                  int64_t totalLength);
 
-  virtual ~AdaptiveFileAllocationIterator();
+  ~AdaptiveFileAllocationIterator() override;
 
-  virtual void allocateChunk() CXX11_OVERRIDE;
+  void allocateChunk() override;
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
-  virtual int64_t getCurrentLength() CXX11_OVERRIDE;
+  int64_t getCurrentLength() override;
 
-  virtual int64_t getTotalLength() CXX11_OVERRIDE;
+  int64_t getTotalLength() override;
 };
 
 } // namespace aria2

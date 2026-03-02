@@ -38,6 +38,7 @@
 #include "SimpleBtMessage.h"
 
 #include <array>
+#include <span>
 
 #include "BtConstants.h"
 
@@ -68,20 +69,20 @@ public:
   BtHandshakeMessage(const unsigned char* infoHash,
                      const unsigned char* peerId);
 
-  static std::unique_ptr<BtHandshakeMessage> create(const unsigned char* data,
-                                                    size_t dataLength);
+  static std::unique_ptr<BtHandshakeMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual ~BtHandshakeMessage();
+  ~BtHandshakeMessage() override;
 
-  static const uint8_t ID = INT8_MAX;
+  static constexpr uint8_t ID = INT8_MAX;
 
-  const static char NAME[];
+  static constexpr char NAME[] = "handshake";
 
-  virtual void doReceivedAction() CXX11_OVERRIDE{};
+  void doReceivedAction() override {};
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   bool isFastExtensionSupported() const;
 

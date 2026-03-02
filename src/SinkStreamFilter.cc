@@ -41,10 +41,11 @@
 #include "Segment.h"
 #include "WrDiskCache.h"
 #include "Piece.h"
+#include "a2functional.h"
 
 namespace aria2 {
 
-const std::string SinkStreamFilter::NAME("SinkStreamFilter");
+constexpr const char SinkStreamFilter::NAME[];
 
 SinkStreamFilter::SinkStreamFilter(WrDiskCache* wrDiskCache, bool hashUpdate)
     : wrDiskCache_(wrDiskCache), hashUpdate_(hashUpdate), bytesProcessed_(0)
@@ -79,10 +80,11 @@ ssize_t SinkStreamFilter::transform(const std::shared_ptr<BinaryStream>& out,
       if (alen < wlen) {
         size_t len = wlen - alen;
         size_t capacity = std::max(len, static_cast<size_t>(4_k));
-        auto dataCopy = new unsigned char[capacity];
-        memcpy(dataCopy, inbuf + alen, len);
-        piece->updateWrCache(wrDiskCache_, dataCopy, 0, len, capacity,
+        auto dataCopy = std::make_unique<unsigned char[]>(capacity);
+        memcpy(dataCopy.get(), inbuf + alen, len);
+        piece->updateWrCache(wrDiskCache_, dataCopy.get(), 0, len, capacity,
                              segment->getPositionToWrite() + alen);
+        dataCopy.release();
       }
     }
     else {

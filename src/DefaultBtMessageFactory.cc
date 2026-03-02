@@ -89,55 +89,54 @@ DefaultBtMessageFactory::DefaultBtMessageFactory()
 }
 
 std::unique_ptr<BtMessage>
-DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
-                                         size_t dataLength)
+DefaultBtMessageFactory::createBtMessage(std::span<const unsigned char> data)
 {
   auto msg = std::unique_ptr<AbstractBtMessage>{};
-  if (dataLength == 0) {
+  if (data.empty()) {
     // keep-alive
-    msg = make_unique<BtKeepAliveMessage>();
+    msg = std::make_unique<BtKeepAliveMessage>();
   }
   else {
-    uint8_t id = bittorrent::getId(data);
+    uint8_t id = bittorrent::getId(data.data());
     switch (id) {
     case BtChokeMessage::ID:
-      msg = BtChokeMessage::create(data, dataLength);
+      msg = BtChokeMessage::create(data);
       break;
     case BtUnchokeMessage::ID:
-      msg = BtUnchokeMessage::create(data, dataLength);
+      msg = BtUnchokeMessage::create(data);
       break;
     case BtInterestedMessage::ID: {
-      auto m = BtInterestedMessage::create(data, dataLength);
+      auto m = BtInterestedMessage::create(data);
       m->setPeerStorage(peerStorage_);
       msg = std::move(m);
       break;
     }
     case BtNotInterestedMessage::ID: {
-      auto m = BtNotInterestedMessage::create(data, dataLength);
+      auto m = BtNotInterestedMessage::create(data);
       m->setPeerStorage(peerStorage_);
       msg = std::move(m);
       break;
     }
     case BtHaveMessage::ID:
-      msg = BtHaveMessage::create(data, dataLength);
+      msg = BtHaveMessage::create(data);
       if (!metadataGetMode_) {
-        msg->setBtMessageValidator(make_unique<IndexBtMessageValidator>(
+        msg->setBtMessageValidator(std::make_unique<IndexBtMessageValidator>(
             static_cast<BtHaveMessage*>(msg.get()),
             downloadContext_->getNumPieces()));
       }
       break;
     case BtBitfieldMessage::ID:
-      msg = BtBitfieldMessage::create(data, dataLength);
+      msg = BtBitfieldMessage::create(data);
       if (!metadataGetMode_) {
-        msg->setBtMessageValidator(make_unique<BtBitfieldMessageValidator>(
+        msg->setBtMessageValidator(std::make_unique<BtBitfieldMessageValidator>(
             static_cast<BtBitfieldMessage*>(msg.get()),
             downloadContext_->getNumPieces()));
       }
       break;
     case BtRequestMessage::ID: {
-      auto m = BtRequestMessage::create(data, dataLength);
+      auto m = BtRequestMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<RangeBtMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<RangeBtMessageValidator>(
             static_cast<BtRequestMessage*>(m.get()),
             downloadContext_->getNumPieces(),
             pieceStorage_->getPieceLength(m->getIndex())));
@@ -146,9 +145,9 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtPieceMessage::ID: {
-      auto m = BtPieceMessage::create(data, dataLength);
+      auto m = BtPieceMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<BtPieceMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<BtPieceMessageValidator>(
             static_cast<BtPieceMessage*>(m.get()),
             downloadContext_->getNumPieces(),
             pieceStorage_->getPieceLength(m->getIndex())));
@@ -159,9 +158,9 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtCancelMessage::ID: {
-      auto m = BtCancelMessage::create(data, dataLength);
+      auto m = BtCancelMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<RangeBtMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<RangeBtMessageValidator>(
             static_cast<BtCancelMessage*>(m.get()),
             downloadContext_->getNumPieces(),
             pieceStorage_->getPieceLength(m->getIndex())));
@@ -170,7 +169,7 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtPortMessage::ID: {
-      auto m = BtPortMessage::create(data, dataLength);
+      auto m = BtPortMessage::create(data);
       m->setLocalNode(localNode_);
       m->setRoutingTable(routingTable_);
       m->setTaskQueue(taskQueue_);
@@ -179,9 +178,9 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtSuggestPieceMessage::ID: {
-      auto m = BtSuggestPieceMessage::create(data, dataLength);
+      auto m = BtSuggestPieceMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<IndexBtMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<IndexBtMessageValidator>(
             static_cast<BtSuggestPieceMessage*>(m.get()),
             downloadContext_->getNumPieces()));
       }
@@ -189,15 +188,15 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtHaveAllMessage::ID:
-      msg = BtHaveAllMessage::create(data, dataLength);
+      msg = BtHaveAllMessage::create(data);
       break;
     case BtHaveNoneMessage::ID:
-      msg = BtHaveNoneMessage::create(data, dataLength);
+      msg = BtHaveNoneMessage::create(data);
       break;
     case BtRejectMessage::ID: {
-      auto m = BtRejectMessage::create(data, dataLength);
+      auto m = BtRejectMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<RangeBtMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<RangeBtMessageValidator>(
             static_cast<BtRejectMessage*>(m.get()),
             downloadContext_->getNumPieces(),
             pieceStorage_->getPieceLength(m->getIndex())));
@@ -206,9 +205,9 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
       break;
     }
     case BtAllowedFastMessage::ID: {
-      auto m = BtAllowedFastMessage::create(data, dataLength);
+      auto m = BtAllowedFastMessage::create(data);
       if (!metadataGetMode_) {
-        m->setBtMessageValidator(make_unique<IndexBtMessageValidator>(
+        m->setBtMessageValidator(std::make_unique<IndexBtMessageValidator>(
             static_cast<BtAllowedFastMessage*>(m.get()),
             downloadContext_->getNumPieces()));
       }
@@ -217,8 +216,7 @@ DefaultBtMessageFactory::createBtMessage(const unsigned char* data,
     }
     case BtExtendedMessage::ID: {
       if (peer_->isExtendedMessagingEnabled()) {
-        msg = BtExtendedMessage::create(extensionMessageFactory_, peer_, data,
-                                        dataLength);
+        msg = BtExtendedMessage::create(extensionMessageFactory_, peer_, data);
       }
       else {
         throw DL_ABORT_EX("Received extended message from peer during"
@@ -249,11 +247,11 @@ void DefaultBtMessageFactory::setCommonProperty(AbstractBtMessage* msg)
 }
 
 std::unique_ptr<BtHandshakeMessage>
-DefaultBtMessageFactory::createHandshakeMessage(const unsigned char* data,
-                                                size_t dataLength)
+DefaultBtMessageFactory::createHandshakeMessage(
+    std::span<const unsigned char> data)
 {
-  auto msg = BtHandshakeMessage::create(data, dataLength);
-  msg->setBtMessageValidator(make_unique<BtHandshakeMessageValidator>(
+  auto msg = BtHandshakeMessage::create(data);
+  msg->setBtMessageValidator(std::make_unique<BtHandshakeMessageValidator>(
       msg.get(), bittorrent::getInfoHash(downloadContext_)));
   setCommonProperty(msg.get());
   return msg;
@@ -263,7 +261,7 @@ std::unique_ptr<BtHandshakeMessage>
 DefaultBtMessageFactory::createHandshakeMessage(const unsigned char* infoHash,
                                                 const unsigned char* peerId)
 {
-  auto msg = make_unique<BtHandshakeMessage>(infoHash, peerId);
+  auto msg = std::make_unique<BtHandshakeMessage>(infoHash, peerId);
   msg->setDHTEnabled(dhtEnabled_);
   setCommonProperty(msg.get());
   return msg;
@@ -272,7 +270,7 @@ DefaultBtMessageFactory::createHandshakeMessage(const unsigned char* infoHash,
 std::unique_ptr<BtRequestMessage> DefaultBtMessageFactory::createRequestMessage(
     const std::shared_ptr<Piece>& piece, size_t blockIndex)
 {
-  auto msg = make_unique<BtRequestMessage>(
+  auto msg = std::make_unique<BtRequestMessage>(
       piece->getIndex(), blockIndex * piece->getBlockLength(),
       piece->getBlockLength(blockIndex), blockIndex);
   setCommonProperty(msg.get());
@@ -283,7 +281,7 @@ std::unique_ptr<BtCancelMessage>
 DefaultBtMessageFactory::createCancelMessage(size_t index, int32_t begin,
                                              int32_t length)
 {
-  auto msg = make_unique<BtCancelMessage>(index, begin, length);
+  auto msg = std::make_unique<BtCancelMessage>(index, begin, length);
   setCommonProperty(msg.get());
   return msg;
 }
@@ -292,7 +290,7 @@ std::unique_ptr<BtPieceMessage>
 DefaultBtMessageFactory::createPieceMessage(size_t index, int32_t begin,
                                             int32_t length)
 {
-  auto msg = make_unique<BtPieceMessage>(index, begin, length);
+  auto msg = std::make_unique<BtPieceMessage>(index, begin, length);
   msg->setDownloadContext(downloadContext_);
   setCommonProperty(msg.get());
   return msg;
@@ -301,14 +299,14 @@ DefaultBtMessageFactory::createPieceMessage(size_t index, int32_t begin,
 std::unique_ptr<BtHaveMessage>
 DefaultBtMessageFactory::createHaveMessage(size_t index)
 {
-  auto msg = make_unique<BtHaveMessage>(index);
+  auto msg = std::make_unique<BtHaveMessage>(index);
   setCommonProperty(msg.get());
   return msg;
 }
 
 std::unique_ptr<BtChokeMessage> DefaultBtMessageFactory::createChokeMessage()
 {
-  auto msg = make_unique<BtChokeMessage>();
+  auto msg = std::make_unique<BtChokeMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -316,7 +314,7 @@ std::unique_ptr<BtChokeMessage> DefaultBtMessageFactory::createChokeMessage()
 std::unique_ptr<BtUnchokeMessage>
 DefaultBtMessageFactory::createUnchokeMessage()
 {
-  auto msg = make_unique<BtUnchokeMessage>();
+  auto msg = std::make_unique<BtUnchokeMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -324,7 +322,7 @@ DefaultBtMessageFactory::createUnchokeMessage()
 std::unique_ptr<BtInterestedMessage>
 DefaultBtMessageFactory::createInterestedMessage()
 {
-  auto msg = make_unique<BtInterestedMessage>();
+  auto msg = std::make_unique<BtInterestedMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -332,7 +330,7 @@ DefaultBtMessageFactory::createInterestedMessage()
 std::unique_ptr<BtNotInterestedMessage>
 DefaultBtMessageFactory::createNotInterestedMessage()
 {
-  auto msg = make_unique<BtNotInterestedMessage>();
+  auto msg = std::make_unique<BtNotInterestedMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -340,7 +338,7 @@ DefaultBtMessageFactory::createNotInterestedMessage()
 std::unique_ptr<BtBitfieldMessage>
 DefaultBtMessageFactory::createBitfieldMessage()
 {
-  auto msg = make_unique<BtBitfieldMessage>(pieceStorage_->getBitfield(),
+  auto msg = std::make_unique<BtBitfieldMessage>(pieceStorage_->getBitfield(),
                                             pieceStorage_->getBitfieldLength());
   setCommonProperty(msg.get());
   return msg;
@@ -349,7 +347,7 @@ DefaultBtMessageFactory::createBitfieldMessage()
 std::unique_ptr<BtKeepAliveMessage>
 DefaultBtMessageFactory::createKeepAliveMessage()
 {
-  auto msg = make_unique<BtKeepAliveMessage>();
+  auto msg = std::make_unique<BtKeepAliveMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -357,7 +355,7 @@ DefaultBtMessageFactory::createKeepAliveMessage()
 std::unique_ptr<BtHaveAllMessage>
 DefaultBtMessageFactory::createHaveAllMessage()
 {
-  auto msg = make_unique<BtHaveAllMessage>();
+  auto msg = std::make_unique<BtHaveAllMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -365,7 +363,7 @@ DefaultBtMessageFactory::createHaveAllMessage()
 std::unique_ptr<BtHaveNoneMessage>
 DefaultBtMessageFactory::createHaveNoneMessage()
 {
-  auto msg = make_unique<BtHaveNoneMessage>();
+  auto msg = std::make_unique<BtHaveNoneMessage>();
   setCommonProperty(msg.get());
   return msg;
 }
@@ -374,7 +372,7 @@ std::unique_ptr<BtRejectMessage>
 DefaultBtMessageFactory::createRejectMessage(size_t index, int32_t begin,
                                              int32_t length)
 {
-  auto msg = make_unique<BtRejectMessage>(index, begin, length);
+  auto msg = std::make_unique<BtRejectMessage>(index, begin, length);
   setCommonProperty(msg.get());
   return msg;
 }
@@ -382,7 +380,7 @@ DefaultBtMessageFactory::createRejectMessage(size_t index, int32_t begin,
 std::unique_ptr<BtAllowedFastMessage>
 DefaultBtMessageFactory::createAllowedFastMessage(size_t index)
 {
-  auto msg = make_unique<BtAllowedFastMessage>(index);
+  auto msg = std::make_unique<BtAllowedFastMessage>(index);
   setCommonProperty(msg.get());
   return msg;
 }
@@ -390,7 +388,7 @@ DefaultBtMessageFactory::createAllowedFastMessage(size_t index)
 std::unique_ptr<BtPortMessage>
 DefaultBtMessageFactory::createPortMessage(uint16_t port)
 {
-  auto msg = make_unique<BtPortMessage>(port);
+  auto msg = std::make_unique<BtPortMessage>(port);
   setCommonProperty(msg.get());
   return msg;
 }
@@ -399,7 +397,7 @@ std::unique_ptr<BtExtendedMessage>
 DefaultBtMessageFactory::createBtExtendedMessage(
     std::unique_ptr<ExtensionMessage> exmsg)
 {
-  auto msg = make_unique<BtExtendedMessage>(std::move(exmsg));
+  auto msg = std::make_unique<BtExtendedMessage>(std::move(exmsg));
   setCommonProperty(msg.get());
   return msg;
 }

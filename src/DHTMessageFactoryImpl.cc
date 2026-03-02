@@ -90,12 +90,12 @@ std::shared_ptr<DHTNode> DHTMessageFactoryImpl::getRemoteNode(
 namespace {
 const Dict* getDictionary(const Dict* dict, const std::string& key)
 {
-  const Dict* d = downcast<Dict>(dict->get(key));
-  if (d) {
+  if (const auto* d = downcast<Dict>(dict->get(key))) {
     return d;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -103,12 +103,12 @@ const Dict* getDictionary(const Dict* dict, const std::string& key)
 namespace {
 const String* getString(const Dict* dict, const std::string& key)
 {
-  const String* c = downcast<String>(dict->get(key));
-  if (c) {
+  if (const auto* c = downcast<String>(dict->get(key))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -116,12 +116,12 @@ const String* getString(const Dict* dict, const std::string& key)
 namespace {
 const Integer* getInteger(const Dict* dict, const std::string& key)
 {
-  const Integer* c = downcast<Integer>(dict->get(key));
-  if (c) {
+  if (const auto* c = downcast<Integer>(dict->get(key))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -129,13 +129,13 @@ const Integer* getInteger(const Dict* dict, const std::string& key)
 namespace {
 const String* getString(const List* list, size_t index)
 {
-  const String* c = downcast<String>(list->get(index));
-  if (c) {
+  if (const auto* c = downcast<String>(list->get(index))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. element[%lu] is not String.",
-                          static_cast<unsigned long>(index)));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. element[%lu] is not String.",
+            static_cast<unsigned long>(index)));
   }
 }
 } // namespace
@@ -143,13 +143,13 @@ const String* getString(const List* list, size_t index)
 namespace {
 const Integer* getInteger(const List* list, size_t index)
 {
-  const Integer* c = downcast<Integer>(list->get(index));
-  if (c) {
+  if (const auto* c = downcast<Integer>(list->get(index))) {
     return c;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. element[%lu] is not Integer.",
-                          static_cast<unsigned long>(index)));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. element[%lu] is not Integer.",
+            static_cast<unsigned long>(index)));
   }
 }
 } // namespace
@@ -157,12 +157,12 @@ const Integer* getInteger(const List* list, size_t index)
 namespace {
 const List* getList(const Dict* dict, const std::string& key)
 {
-  const List* l = downcast<List>(dict->get(key));
-  if (l) {
+  if (const auto* l = downcast<List>(dict->get(key))) {
     return l;
   }
   else {
-    throw DL_ABORT_EX(fmt("Malformed DHT message. Missing %s", key.c_str()));
+    throw DL_ABORT_EX(
+        fmt("Malformed DHT message. Missing %s", key.c_str()));
   }
 }
 } // namespace
@@ -323,7 +323,7 @@ std::unique_ptr<DHTPingMessage> DHTMessageFactoryImpl::createPingMessage(
     const std::shared_ptr<DHTNode>& remoteNode,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTPingMessage>(localNode_, remoteNode, transactionID);
+  auto m = std::make_unique<DHTPingMessage>(localNode_, remoteNode, transactionID);
   setCommonProperty(m.get());
   return m;
 }
@@ -333,7 +333,7 @@ DHTMessageFactoryImpl::createPingReplyMessage(
     const std::shared_ptr<DHTNode>& remoteNode, const unsigned char* id,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTPingReplyMessage>(localNode_, remoteNode, id,
+  auto m = std::make_unique<DHTPingReplyMessage>(localNode_, remoteNode, id,
                                             transactionID);
   setCommonProperty(m.get());
   return m;
@@ -344,7 +344,7 @@ DHTMessageFactoryImpl::createFindNodeMessage(
     const std::shared_ptr<DHTNode>& remoteNode,
     const unsigned char* targetNodeID, const std::string& transactionID)
 {
-  auto m = make_unique<DHTFindNodeMessage>(localNode_, remoteNode, targetNodeID,
+  auto m = std::make_unique<DHTFindNodeMessage>(localNode_, remoteNode, targetNodeID,
                                            transactionID);
   setCommonProperty(m.get());
   return m;
@@ -356,7 +356,7 @@ DHTMessageFactoryImpl::createFindNodeReplyMessage(
     std::vector<std::shared_ptr<DHTNode>> closestKNodes,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTFindNodeReplyMessage>(family_, localNode_, remoteNode,
+  auto m = std::make_unique<DHTFindNodeReplyMessage>(family_, localNode_, remoteNode,
                                                 transactionID);
   m->setClosestKNodes(std::move(closestKNodes));
   setCommonProperty(m.get());
@@ -373,13 +373,13 @@ void DHTMessageFactoryImpl::extractNodes(
   }
   for (size_t offset = 0; offset < length; offset += unit) {
     auto node = std::make_shared<DHTNode>(src + offset);
-    auto addr =
+    auto [ip, port] =
         bittorrent::unpackcompact(src + offset + DHT_ID_LENGTH, family_);
-    if (addr.first.empty()) {
+    if (ip.empty()) {
       continue;
     }
-    node->setIPAddress(addr.first);
-    node->setPort(addr.second);
+    node->setIPAddress(ip);
+    node->setPort(port);
     nodes.push_back(std::move(node));
   }
 }
@@ -406,7 +406,7 @@ DHTMessageFactoryImpl::createGetPeersMessage(
     const std::shared_ptr<DHTNode>& remoteNode, const unsigned char* infoHash,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTGetPeersMessage>(localNode_, remoteNode, infoHash,
+  auto m = std::make_unique<DHTGetPeersMessage>(localNode_, remoteNode, infoHash,
                                            transactionID);
   m->setPeerAnnounceStorage(peerAnnounceStorage_);
   m->setTokenTracker(tokenTracker_);
@@ -435,13 +435,13 @@ DHTMessageFactoryImpl::createGetPeersReplyMessage(
   size_t clen = bittorrent::getCompactLength(family_);
   if (valuesList) {
     for (auto& elem : *valuesList) {
-      const String* data = downcast<String>(elem);
-      if (data && data->s().size() == clen) {
-        auto addr = bittorrent::unpackcompact(data->uc(), family_);
-        if (addr.first.empty()) {
+      if (const auto* data = downcast<String>(elem);
+          data && data->s().size() == clen) {
+        auto [ip, port] = bittorrent::unpackcompact(data->uc(), family_);
+        if (ip.empty()) {
           continue;
         }
-        peers.push_back(std::make_shared<Peer>(addr.first, addr.second));
+        peers.push_back(std::make_shared<Peer>(ip, port));
       }
     }
   }
@@ -458,7 +458,7 @@ DHTMessageFactoryImpl::createGetPeersReplyMessage(
     std::vector<std::shared_ptr<Peer>> values, const std::string& token,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTGetPeersReplyMessage>(family_, localNode_, remoteNode,
+  auto m = std::make_unique<DHTGetPeersReplyMessage>(family_, localNode_, remoteNode,
                                                 token, transactionID);
   m->setClosestKNodes(std::move(closestKNodes));
   m->setValues(std::move(values));
@@ -472,7 +472,7 @@ DHTMessageFactoryImpl::createAnnouncePeerMessage(
     uint16_t tcpPort, const std::string& token,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTAnnouncePeerMessage>(localNode_, remoteNode, infoHash,
+  auto m = std::make_unique<DHTAnnouncePeerMessage>(localNode_, remoteNode, infoHash,
                                                tcpPort, token, transactionID);
   m->setPeerAnnounceStorage(peerAnnounceStorage_);
   m->setTokenTracker(tokenTracker_);
@@ -485,7 +485,7 @@ DHTMessageFactoryImpl::createAnnouncePeerReplyMessage(
     const std::shared_ptr<DHTNode>& remoteNode,
     const std::string& transactionID)
 {
-  auto m = make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
+  auto m = std::make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
                                                     transactionID);
   setCommonProperty(m.get());
   return m;
@@ -496,7 +496,7 @@ std::unique_ptr<DHTUnknownMessage> DHTMessageFactoryImpl::createUnknownMessage(
     uint16_t port)
 
 {
-  return make_unique<DHTUnknownMessage>(localNode_, data, length, ipaddr, port);
+  return std::make_unique<DHTUnknownMessage>(localNode_, data, length, ipaddr, port);
 }
 
 void DHTMessageFactoryImpl::setRoutingTable(DHTRoutingTable* routingTable)

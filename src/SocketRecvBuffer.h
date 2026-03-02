@@ -44,11 +44,11 @@
 
 namespace aria2 {
 
-class SocketCore;
+class ISocketCore;
 
 class SocketRecvBuffer {
 public:
-  SocketRecvBuffer(std::shared_ptr<SocketCore> socket);
+  SocketRecvBuffer(std::shared_ptr<ISocketCore> socket);
   ~SocketRecvBuffer();
   // Reads data from socket as much as capacity allows. Returns the
   // number of bytes read.
@@ -60,7 +60,7 @@ public:
   // buffered data.
   void drain(size_t n);
 
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
+  const std::shared_ptr<ISocketCore>& getSocket() const { return socket_; }
 
   const unsigned char* getBuffer() const { return pos_; }
 
@@ -70,7 +70,7 @@ public:
 
 private:
   std::array<unsigned char, 16_k> buf_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   unsigned char* pos_;
   unsigned char* last_;
 };

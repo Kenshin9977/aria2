@@ -36,6 +36,6 @@
 
 namespace aria2 {
 
-const std::string NullSinkStreamFilter::NAME("NullSinkStreamFilter");
+constexpr const char NullSinkStreamFilter::NAME[];
 
 } // namespace aria2

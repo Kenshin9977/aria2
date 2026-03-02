@@ -43,7 +43,7 @@ class PreDownloadHandler : public DownloadHandler {
 public:
   PreDownloadHandler() {}
 
-  virtual ~PreDownloadHandler() {}
+  ~PreDownloadHandler() override {}
 
   virtual void execute(RequestGroup* requestGroup) const = 0;
 };

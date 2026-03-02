@@ -121,23 +121,23 @@ public:
 
   virtual void setTcpPort(uint16_t port) = 0;
 
-  static const std::string FAILURE_REASON;
+  static constexpr const char FAILURE_REASON[] = "failure reason";
 
-  static const std::string WARNING_MESSAGE;
+  static constexpr const char WARNING_MESSAGE[] = "warning message";
 
-  static const std::string TRACKER_ID;
+  static constexpr const char TRACKER_ID[] = "tracker id";
 
-  static const std::string INTERVAL;
+  static constexpr const char INTERVAL[] = "interval";
 
-  static const std::string MIN_INTERVAL;
+  static constexpr const char MIN_INTERVAL[] = "min interval";
 
-  static const std::string COMPLETE;
+  static constexpr const char COMPLETE[] = "complete";
 
-  static const std::string INCOMPLETE;
+  static constexpr const char INCOMPLETE[] = "incomplete";
 
-  static const std::string PEERS;
+  static constexpr const char PEERS[] = "peers";
 
-  static const std::string PEERS6;
+  static constexpr const char PEERS6[] = "peers6";
 
   constexpr static auto DEFAULT_ANNOUNCE_INTERVAL = 2_min;
 };

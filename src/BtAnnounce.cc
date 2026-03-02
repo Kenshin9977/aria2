@@ -36,23 +36,23 @@
 
 namespace aria2 {
 
-const std::string BtAnnounce::FAILURE_REASON("failure reason");
+constexpr const char BtAnnounce::FAILURE_REASON[];
 
-const std::string BtAnnounce::WARNING_MESSAGE("warning message");
+constexpr const char BtAnnounce::WARNING_MESSAGE[];
 
-const std::string BtAnnounce::TRACKER_ID("tracker id");
+constexpr const char BtAnnounce::TRACKER_ID[];
 
-const std::string BtAnnounce::INTERVAL("interval");
+constexpr const char BtAnnounce::INTERVAL[];
 
-const std::string BtAnnounce::MIN_INTERVAL("min interval");
+constexpr const char BtAnnounce::MIN_INTERVAL[];
 
-const std::string BtAnnounce::COMPLETE("complete");
+constexpr const char BtAnnounce::COMPLETE[];
 
-const std::string BtAnnounce::INCOMPLETE("incomplete");
+constexpr const char BtAnnounce::INCOMPLETE[];
 
-const std::string BtAnnounce::PEERS("peers");
+constexpr const char BtAnnounce::PEERS[];
 
-const std::string BtAnnounce::PEERS6("peers6");
+constexpr const char BtAnnounce::PEERS6[];
 
 constexpr std::chrono::minutes BtAnnounce::DEFAULT_ANNOUNCE_INTERVAL;
 

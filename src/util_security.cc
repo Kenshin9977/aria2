@@ -128,8 +128,8 @@ std::unique_ptr<HMAC> HMAC::createRandom(const std::string& algorithm)
   if (len == 0) {
     return nullptr;
   }
-  auto buf = make_unique<char[]>(len);
-  generateRandomData((unsigned char*)buf.get(), len);
+  auto buf = std::make_unique<char[]>(len);
+  generateRandomData(reinterpret_cast<unsigned char*>(buf.get()), len);
   return create(algorithm, buf.get(), len);
 }
 
@@ -154,7 +154,7 @@ HMACResult PBKDF2(HMAC* hmac, const char* salt, size_t salt_length,
     key_length = hmac_length;
   }
 
-  auto work = make_unique<char[]>(hmac_length);
+  auto work = std::make_unique<char[]>(hmac_length);
   char* p = work.get();
   std::string rv;
 
@@ -163,7 +163,7 @@ HMACResult PBKDF2(HMAC* hmac, const char* salt, size_t salt_length,
   for (uint32_t counter = 1; key_length; ++counter) {
     hmac->update(salt, salt_length);
     const uint32_t c = htonl(counter);
-    hmac->update((char*)&c, sizeof(c));
+    hmac->update(reinterpret_cast<const char*>(&c), sizeof(c));
 
     auto bytes = hmac->getResult().getBytes();
     memcpy(p, bytes.data(), bytes.length());

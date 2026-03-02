@@ -39,8 +39,6 @@
 
 namespace aria2 {
 
-const std::string DHTResponseMessage::R("r");
-
 DHTResponseMessage::DHTResponseMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode,
@@ -51,7 +49,7 @@ DHTResponseMessage::DHTResponseMessage(
 
 DHTResponseMessage::~DHTResponseMessage() = default;
 
-const std::string& DHTResponseMessage::getType() const { return R; }
+const char* DHTResponseMessage::getType() const { return R; }
 
 void DHTResponseMessage::fillMessage(Dict* msgDict)
 {
@@ -63,7 +61,7 @@ bool DHTResponseMessage::isReply() const { return true; }
 std::string DHTResponseMessage::toString() const
 {
   return fmt("dht response %s TransactionID=%s Remote:%s(%u), id=%s, v=%s, %s",
-             getMessageType().c_str(), util::toHex(getTransactionID()).c_str(),
+             getMessageType(), util::toHex(getTransactionID()).c_str(),
              getRemoteNode()->getIPAddress().c_str(),
              getRemoteNode()->getPort(),
              util::toHex(getRemoteNode()->getID(), DHT_ID_LENGTH).c_str(),

@@ -43,8 +43,6 @@
 
 namespace aria2 {
 
-const char BtRequestMessage::NAME[] = "request";
-
 BtRequestMessage::BtRequestMessage(size_t index, int32_t begin, int32_t length,
                                    size_t blockIndex)
     : RangeBtMessage(ID, NAME, index, begin, length), blockIndex_(blockIndex)
@@ -52,9 +50,9 @@ BtRequestMessage::BtRequestMessage(size_t index, int32_t begin, int32_t length,
 }
 
 std::unique_ptr<BtRequestMessage>
-BtRequestMessage::create(const unsigned char* data, size_t dataLength)
+BtRequestMessage::create(std::span<const unsigned char> data)
 {
-  return RangeBtMessage::create<BtRequestMessage>(data, dataLength);
+  return RangeBtMessage::create<BtRequestMessage>(data);
 }
 
 void BtRequestMessage::doReceivedAction()
@@ -81,7 +79,7 @@ void BtRequestMessage::doReceivedAction()
 void BtRequestMessage::onQueued()
 {
   getBtMessageDispatcher()->addOutstandingRequest(
-      make_unique<RequestSlot>(getIndex(), getBegin(), getLength(), blockIndex_,
+      std::make_unique<RequestSlot>(getIndex(), getBegin(), getLength(), blockIndex_,
                                getPieceStorage()->getPiece(getIndex())));
 }
 

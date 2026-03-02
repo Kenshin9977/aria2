@@ -136,11 +136,12 @@ std::string createWebSocketServerKey(const std::string& clientKey)
 namespace {
 int websocketHandshake(const HttpHeader* header)
 {
-  if (header->getMethod() != "GET" ||
-      header->find(HttpHeader::SEC_WEBSOCKET_KEY).empty()) {
+  auto wsKey = header->find(HttpHeader::SEC_WEBSOCKET_KEY);
+  if (header->getMethod() != "GET" || !wsKey || wsKey->empty()) {
     return 400;
   }
-  else if (header->find(HttpHeader::SEC_WEBSOCKET_VERSION) != "13") {
+  auto wsVer = header->find(HttpHeader::SEC_WEBSOCKET_VERSION);
+  if (!wsVer || *wsVer != "13") {
     return 426;
   }
   else if (header->getRequestPath() != "/jsonrpc") {
@@ -203,7 +204,7 @@ bool HttpServerCommand::execute()
         httpServer_->disableKeepAlive();
         httpServer_->feedResponse(
             401, "WWW-Authenticate: Basic realm=\"aria2\"\r\n");
-        e_->addCommand(make_unique<HttpServerResponseCommand>(
+        e_->addCommand(std::make_unique<HttpServerResponseCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;
@@ -215,11 +216,11 @@ bool HttpServerCommand::execute()
         int status = websocketHandshake(header.get());
         if (status == 101) {
           std::string serverKey = createWebSocketServerKey(
-              header->find(HttpHeader::SEC_WEBSOCKET_KEY));
+              std::string(*header->find(HttpHeader::SEC_WEBSOCKET_KEY)));
           httpServer_->feedUpgradeResponse(
               "websocket",
               fmt("Sec-WebSocket-Accept: %s\r\n", serverKey.c_str()));
-          e_->addCommand(make_unique<rpc::WebSocketResponseCommand>(
+          e_->addCommand(std::make_unique<rpc::WebSocketResponseCommand>(
               getCuid(), httpServer_, e_, socket_));
         }
         else {
@@ -229,14 +230,14 @@ bool HttpServerCommand::execute()
           else {
             httpServer_->feedResponse(status);
           }
-          e_->addCommand(make_unique<HttpServerResponseCommand>(
+          e_->addCommand(std::make_unique<HttpServerResponseCommand>(
               getCuid(), httpServer_, e_, socket_));
         }
         e_->setNoWait(true);
         return true;
 #else  // !ENABLE_WEBSOCKET
         httpServer_->feedResponse(400);
-        e_->addCommand(make_unique<HttpServerResponseCommand>(
+        e_->addCommand(std::make_unique<HttpServerResponseCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;
@@ -251,7 +252,7 @@ bool HttpServerCommand::execute()
                           httpServer_->getContentLength()));
           return true;
         }
-        e_->addCommand(make_unique<HttpServerBodyCommand>(
+        e_->addCommand(std::make_unique<HttpServerBodyCommand>(
             getCuid(), httpServer_, e_, socket_));
         e_->setNoWait(true);
         return true;

@@ -137,7 +137,7 @@ void ActivePeerConnectionCommand::makeNewConnections(int num)
     if (!peer) {
       break;
     }
-    auto command = make_unique<PeerInitiateConnectionCommand>(
+    auto command = std::make_unique<PeerInitiateConnectionCommand>(
         ncuid, requestGroup_, peer, e_, btRuntime_);
     command->setPeerStorage(peerStorage_);
     command->setPieceStorage(pieceStorage_);

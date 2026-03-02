@@ -106,7 +106,7 @@ MetalinkParserState* MetalinkParserStateMachine::metaurlStateV4_ =
     new MetaurlMetalinkParserStateV4();
 
 MetalinkParserStateMachine::MetalinkParserStateMachine()
-    : ctrl_{make_unique<MetalinkParserController>()}
+    : ctrl_{std::make_unique<MetalinkParserController>()}
 {
   stateStack_.push(initialState_);
 }
@@ -536,8 +536,8 @@ std::string MetalinkParserStateMachine::getErrorString() const
 {
   std::stringstream error;
   error << "Specification violation: ";
-  std::copy(errors_.begin(), errors_.end(),
-            std::ostream_iterator<std::string>(error, ", "));
+  std::ranges::copy(errors_,
+                     std::ostream_iterator<std::string>(error, ", "));
   return error.str();
 }
 

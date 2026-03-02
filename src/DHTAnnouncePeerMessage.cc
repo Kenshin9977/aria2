@@ -52,14 +52,6 @@
 
 namespace aria2 {
 
-const std::string DHTAnnouncePeerMessage::ANNOUNCE_PEER("announce_peer");
-
-const std::string DHTAnnouncePeerMessage::INFO_HASH("info_hash");
-
-const std::string DHTAnnouncePeerMessage::PORT("port");
-
-const std::string DHTAnnouncePeerMessage::TOKEN("token");
-
 DHTAnnouncePeerMessage::DHTAnnouncePeerMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode, const unsigned char* infoHash,
@@ -81,7 +73,8 @@ void DHTAnnouncePeerMessage::doReceivedAction()
 
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createAnnouncePeerReplyMessage(getRemoteNode(),
-                                                          getTransactionID()));
+                                                          getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTAnnouncePeerMessage::getArgument()
@@ -94,7 +87,7 @@ std::unique_ptr<Dict> DHTAnnouncePeerMessage::getArgument()
   return aDict;
 }
 
-const std::string& DHTAnnouncePeerMessage::getMessageType() const
+const char* DHTAnnouncePeerMessage::getMessageType() const
 {
   return ANNOUNCE_PEER;
 }

@@ -41,13 +41,13 @@
 
 namespace aria2 {
 
-const std::string GZipDecodingStreamFilter::NAME("GZipDecodingStreamFilter");
+constexpr const char GZipDecodingStreamFilter::NAME[];
 
 GZipDecodingStreamFilter::GZipDecodingStreamFilter(
     std::unique_ptr<StreamFilter> delegate)
     : StreamFilter{std::move(delegate)},
-      strm_{nullptr},
       finished_{false},
+      rawMode_{false},
       bytesProcessed_{0}
 {
 }
@@ -58,7 +58,7 @@ void GZipDecodingStreamFilter::init()
 {
   finished_ = false;
   release();
-  strm_ = new z_stream();
+  strm_ = std::make_unique<z_stream>();
   strm_->zalloc = Z_NULL;
   strm_->zfree = Z_NULL;
   strm_->opaque = Z_NULL;
@@ -66,7 +66,8 @@ void GZipDecodingStreamFilter::init()
   strm_->next_in = Z_NULL;
 
   // initialize z_stream with gzip/zlib format auto detection enabled.
-  if (Z_OK != inflateInit2(strm_, 47)) {
+  // negative windowBits enables raw mode support.
+  if (Z_OK != inflateInit2(strm_.get(), rawMode_ ? -15 : 47)) {
     throw DL_ABORT_EX("Initializing z_stream failed.");
   }
 }
@@ -74,9 +75,8 @@ void GZipDecodingStreamFilter::init()
 void GZipDecodingStreamFilter::release()
 {
   if (strm_) {
-    inflateEnd(strm_);
-    delete strm_;
-    strm_ = nullptr;
+    inflateEnd(strm_.get());
+    strm_.reset();
   }
 }
 
@@ -99,12 +99,18 @@ GZipDecodingStreamFilter::transform(const std::shared_ptr<BinaryStream>& out,
     strm_->avail_out = OUTBUF_LENGTH;
     strm_->next_out = outbuf;
 
-    int ret = ::inflate(strm_, Z_NO_FLUSH);
+    int ret = ::inflate(strm_.get(), Z_NO_FLUSH);
 
     if (ret == Z_STREAM_END) {
       finished_ = true;
     }
     else if (ret != Z_OK && ret != Z_BUF_ERROR) {
+      if (!rawMode_) {
+        // reset in raw mode
+        rawMode_ = true;
+        init();
+        return transform(out, segment, inbuf, inlen);
+      }
       throw DL_ABORT_EX(fmt("libz::inflate() failed. cause:%s", strm_->msg));
     }
 
@@ -125,6 +131,6 @@ bool GZipDecodingStreamFilter::finished()
   return finished_ && getDelegate()->finished();
 }
 
-const std::string& GZipDecodingStreamFilter::getName() const { return NAME; }
+const char* GZipDecodingStreamFilter::getName() const { return NAME; }
 
 } // namespace aria2

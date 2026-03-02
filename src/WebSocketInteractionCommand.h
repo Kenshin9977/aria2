@@ -60,9 +60,9 @@ public:
       cuid_t cuid, const std::shared_ptr<WebSocketSession>& wsSession,
       DownloadEngine* e, const std::shared_ptr<SocketCore>& socket);
 
-  virtual ~WebSocketInteractionCommand();
+  ~WebSocketInteractionCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   std::shared_ptr<WebSocketSession>& getSession() { return wsSession_; }
 

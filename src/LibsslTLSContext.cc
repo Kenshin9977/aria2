@@ -41,6 +41,7 @@
 #include <openssl/pkcs12.h>
 #include <openssl/bio.h>
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
@@ -55,7 +56,7 @@ struct bio_deleter {
       BIO_free(b);
   }
 };
-typedef std::unique_ptr<BIO, bio_deleter> bio_t;
+using bio_t = std::unique_ptr<BIO, bio_deleter>;
 struct p12_deleter {
   void operator()(PKCS12* p)
   {
@@ -63,7 +64,7 @@ struct p12_deleter {
       PKCS12_free(p);
   }
 };
-typedef std::unique_ptr<PKCS12, p12_deleter> p12_t;
+using p12_t = std::unique_ptr<PKCS12, p12_deleter>;
 struct pkey_deleter {
   void operator()(EVP_PKEY* x)
   {
@@ -71,7 +72,7 @@ struct pkey_deleter {
       EVP_PKEY_free(x);
   }
 };
-typedef std::unique_ptr<EVP_PKEY, pkey_deleter> pkey_t;
+using pkey_t = std::unique_ptr<EVP_PKEY, pkey_deleter>;
 struct x509_deleter {
   void operator()(X509* x)
   {
@@ -79,7 +80,7 @@ struct x509_deleter {
       X509_free(x);
   }
 };
-typedef std::unique_ptr<X509, x509_deleter> x509_t;
+using x509_t = std::unique_ptr<X509, x509_deleter>;
 struct x509_sk_deleter {
   void operator()(STACK_OF(X509) * x)
   {
@@ -87,20 +88,21 @@ struct x509_sk_deleter {
       sk_X509_pop_free(x, X509_free);
   }
 };
-typedef std::unique_ptr<STACK_OF(X509), x509_sk_deleter> x509_sk_t;
+using x509_sk_t = std::unique_ptr<STACK_OF(X509), x509_sk_deleter>;
 } // namespace
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion minVer)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion minVer)
 {
-  return new OpenSSLTLSContext(side, minVer);
+  return std::make_unique<OpenSSLTLSContext>(side, minVer);
 }
 
 OpenSSLTLSContext::OpenSSLTLSContext(TLSSessionSide side, TLSVersion minVer)
     : sslCtx_(nullptr), side_(side), verifyPeer_(true)
 {
-  sslCtx_ = SSL_CTX_new(SSLv23_method());
+  sslCtx_ = SSL_CTX_new(TLS_method());
   if (sslCtx_) {
     good_ = true;
   }

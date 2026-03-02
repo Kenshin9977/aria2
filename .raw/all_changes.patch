@@ -1,0 +1,1988 @@
+diff --git a/src/BitfieldMan.cc b/src/BitfieldMan.cc
+index 8d1d189b..8b32becd 100644
+--- a/src/BitfieldMan.cc
++++ b/src/BitfieldMan.cc
+@@ -171,17 +171,16 @@ bool BitfieldMan::hasMissingPiece(const unsigned char* peerBitfield,
+   return retval;
+ }
+ 
+-bool BitfieldMan::getFirstMissingUnusedIndex(size_t& index) const
++std::optional<size_t> BitfieldMan::getFirstMissingUnusedIndex() const
+ {
+   if (filterEnabled_) {
+     return bitfield::getFirstSetBitIndex(
+-        index,
+         ~array(bitfield_) & ~array(useBitfield_) & array(filterBitfield_),
+         blocks_);
+   }
+   else {
+     return bitfield::getFirstSetBitIndex(
+-        index, ~array(bitfield_) & ~array(useBitfield_), blocks_);
++        ~array(bitfield_) & ~array(useBitfield_), blocks_);
+   }
+ }
+ 
+@@ -201,14 +200,14 @@ size_t BitfieldMan::getFirstNMissingUnusedIndex(std::vector<size_t>& out,
+   }
+ }
+ 
+-bool BitfieldMan::getFirstMissingIndex(size_t& index) const
++std::optional<size_t> BitfieldMan::getFirstMissingIndex() const
+ {
+   if (filterEnabled_) {
+     return bitfield::getFirstSetBitIndex(
+-        index, ~array(bitfield_) & array(filterBitfield_), blocks_);
++        ~array(bitfield_) & array(filterBitfield_), blocks_);
+   }
+   else {
+-    return bitfield::getFirstSetBitIndex(index, ~array(bitfield_), blocks_);
++    return bitfield::getFirstSetBitIndex(~array(bitfield_), blocks_);
+   }
+ }
+ 
+@@ -241,10 +240,10 @@ size_t getEndIndex(size_t index, const Array& bitfield, size_t blocks)
+ 
+ namespace {
+ template <typename Array>
+-bool getSparseMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                                 const Array& bitfield,
+-                                 const unsigned char* useBitfield,
+-                                 int32_t blockLength, size_t blocks)
++std::optional<size_t>
++getSparseMissingUnusedIndex(int32_t minSplitSize, const Array& bitfield,
++                            const unsigned char* useBitfield,
++                            int32_t blockLength, size_t blocks)
+ {
+   BitfieldMan::Range maxRange;
+   BitfieldMan::Range currentRange;
+@@ -277,8 +276,7 @@ bool getSparseMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+   }
+   if (maxRange.getSize()) {
+     if (maxRange.startIndex == 0) {
+-      index = 0;
+-      return true;
++      return size_t{0};
+     }
+     else {
+       if ((!bitfield::test(useBitfield, blocks, maxRange.startIndex - 1) &&
+@@ -286,34 +284,33 @@ bool getSparseMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+           (static_cast<int64_t>(maxRange.endIndex - maxRange.startIndex) *
+                blockLength >=
+            minSplitSize)) {
+-        index = maxRange.startIndex;
+-        return true;
++        return maxRange.startIndex;
+       }
+       else {
+-        return false;
++        return std::nullopt;
+       }
+     }
+   }
+   else {
+-    return false;
++    return std::nullopt;
+   }
+ }
+ } // namespace
+ 
+-bool BitfieldMan::getSparseMissingUnusedIndex(
+-    size_t& index, int32_t minSplitSize, const unsigned char* ignoreBitfield,
++std::optional<size_t> BitfieldMan::getSparseMissingUnusedIndex(
++    int32_t minSplitSize, const unsigned char* ignoreBitfield,
+     size_t ignoreBitfieldLength) const
+ {
+   if (filterEnabled_) {
+     return aria2::getSparseMissingUnusedIndex(
+-        index, minSplitSize,
++        minSplitSize,
+         array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+             array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+   else {
+     return aria2::getSparseMissingUnusedIndex(
+-        index, minSplitSize,
++        minSplitSize,
+         array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+@@ -321,16 +318,16 @@ bool BitfieldMan::getSparseMissingUnusedIndex(
+ 
+ namespace {
+ template <typename Array>
+-bool getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                               const Array& bitfield,
+-                               const unsigned char* useBitfield,
+-                               int32_t blockLength, size_t blocks, double base,
+-                               size_t offsetIndex)
++std::optional<size_t>
++getGeomMissingUnusedIndex(int32_t minSplitSize, const Array& bitfield,
++                          const unsigned char* useBitfield,
++                          int32_t blockLength, size_t blocks, double base,
++                          size_t offsetIndex)
+ {
+   double start = 0;
+   double end = 1;
+   while (start + offsetIndex < blocks) {
+-    index = blocks;
++    size_t found = blocks;
+     for (size_t i = start + offsetIndex,
+                 eoi = std::min(blocks, static_cast<size_t>(end + offsetIndex));
+          i < eoi; ++i) {
+@@ -338,39 +335,37 @@ bool getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+         break;
+       }
+       else if (!bitfield::test(bitfield, blocks, i)) {
+-        index = i;
++        found = i;
+         break;
+       }
+     }
+-    if (index < blocks) {
+-      return true;
++    if (found < blocks) {
++      return found;
+     }
+     else {
+       start = end;
+       end *= base;
+     }
+   }
+-  return getSparseMissingUnusedIndex(index, minSplitSize, bitfield, useBitfield,
++  return getSparseMissingUnusedIndex(minSplitSize, bitfield, useBitfield,
+                                      blockLength, blocks);
+ }
+ } // namespace
+ 
+-bool BitfieldMan::getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                                            const unsigned char* ignoreBitfield,
+-                                            size_t ignoreBitfieldLength,
+-                                            double base,
+-                                            size_t offsetIndex) const
++std::optional<size_t> BitfieldMan::getGeomMissingUnusedIndex(
++    int32_t minSplitSize, const unsigned char* ignoreBitfield,
++    size_t ignoreBitfieldLength, double base, size_t offsetIndex) const
+ {
+   if (filterEnabled_) {
+     return aria2::getGeomMissingUnusedIndex(
+-        index, minSplitSize,
++        minSplitSize,
+         array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+             array(useBitfield_),
+         useBitfield_, blockLength_, blocks_, base, offsetIndex);
+   }
+   else {
+     return aria2::getGeomMissingUnusedIndex(
+-        index, minSplitSize,
++        minSplitSize,
+         array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+         useBitfield_, blockLength_, blocks_, base, offsetIndex);
+   }
+@@ -378,17 +373,16 @@ bool BitfieldMan::getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+ 
+ namespace {
+ template <typename Array>
+-bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
+-                                  size_t lastIndex, int32_t minSplitSize,
+-                                  const Array& bitfield,
+-                                  const unsigned char* useBitfield,
+-                                  int32_t blockLength, size_t blocks)
++std::optional<size_t>
++getInorderMissingUnusedIndex(size_t startIndex, size_t lastIndex,
++                             int32_t minSplitSize, const Array& bitfield,
++                             const unsigned char* useBitfield,
++                             int32_t blockLength, size_t blocks)
+ {
+   // We always return first piece if it is available.
+   if (!bitfield::test(bitfield, blocks, startIndex) &&
+       !bitfield::test(useBitfield, blocks, startIndex)) {
+-    index = startIndex;
+-    return true;
++    return startIndex;
+   }
+   for (size_t i = startIndex + 1; i < lastIndex;) {
+     if (!bitfield::test(bitfield, blocks, i) &&
+@@ -397,8 +391,7 @@ bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
+       // from this index.
+       if (!bitfield::test(useBitfield, blocks, i - 1) &&
+           bitfield::test(bitfield, blocks, i - 1)) {
+-        index = i;
+-        return true;
++        return i;
+       }
+       // Check free space of minSplitSize.  When checking this, we use
+       // blocks instead of lastIndex.
+@@ -409,8 +402,7 @@ bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
+           break;
+         }
+         if (static_cast<int64_t>(j - i + 1) * blockLength >= minSplitSize) {
+-          index = j;
+-          return true;
++          return j;
+         }
+       }
+       i = j + 1;
+@@ -419,44 +411,44 @@ bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
+       ++i;
+     }
+   }
+-  return false;
++  return std::nullopt;
+ }
+ } // namespace
+ 
+-bool BitfieldMan::getInorderMissingUnusedIndex(
+-    size_t& index, int32_t minSplitSize, const unsigned char* ignoreBitfield,
++std::optional<size_t> BitfieldMan::getInorderMissingUnusedIndex(
++    int32_t minSplitSize, const unsigned char* ignoreBitfield,
+     size_t ignoreBitfieldLength) const
+ {
+   if (filterEnabled_) {
+     return aria2::getInorderMissingUnusedIndex(
+-        index, 0, blocks_, minSplitSize,
++        0, blocks_, minSplitSize,
+         array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+             array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+   else {
+     return aria2::getInorderMissingUnusedIndex(
+-        index, 0, blocks_, minSplitSize,
++        0, blocks_, minSplitSize,
+         array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+ }
+ 
+-bool BitfieldMan::getInorderMissingUnusedIndex(
+-    size_t& index, size_t startIndex, size_t endIndex, int32_t minSplitSize,
++std::optional<size_t> BitfieldMan::getInorderMissingUnusedIndex(
++    size_t startIndex, size_t endIndex, int32_t minSplitSize,
+     const unsigned char* ignoreBitfield, size_t ignoreBitfieldLength) const
+ {
+   endIndex = std::min(endIndex, blocks_);
+   if (filterEnabled_) {
+     return aria2::getInorderMissingUnusedIndex(
+-        index, startIndex, endIndex, minSplitSize,
++        startIndex, endIndex, minSplitSize,
+         array(ignoreBitfield) | ~array(filterBitfield_) | array(bitfield_) |
+             array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+   else {
+     return aria2::getInorderMissingUnusedIndex(
+-        index, startIndex, endIndex, minSplitSize,
++        startIndex, endIndex, minSplitSize,
+         array(ignoreBitfield) | array(bitfield_) | array(useBitfield_),
+         useBitfield_, blockLength_, blocks_);
+   }
+diff --git a/src/BitfieldMan.h b/src/BitfieldMan.h
+index ffef7b0b..1937ddae 100644
+--- a/src/BitfieldMan.h
++++ b/src/BitfieldMan.h
+@@ -37,6 +37,7 @@
+ 
+ #include "common.h"
+ 
++#include <optional>
+ #include <vector>
+ 
+ namespace aria2 {
+@@ -107,7 +108,7 @@ public:
+   bool hasMissingPiece(const unsigned char* bitfield, size_t len) const;
+ 
+   // affected by filter
+-  bool getFirstMissingUnusedIndex(size_t& index) const;
++  std::optional<size_t> getFirstMissingUnusedIndex() const;
+ 
+   // Appends at most n missing unused index to out. This function
+   // doesn't delete existing elements in out.  Returns the number of
+@@ -120,7 +121,7 @@ public:
+   // index is found. Otherwise returns false.
+   //
+   // affected by filter
+-  bool getFirstMissingIndex(size_t& index) const;
++  std::optional<size_t> getFirstMissingIndex() const;
+ 
+   // Stores missing bit index to index. index is selected so that it
+   // divides longest missing bit subarray into 2 equally sized
+@@ -128,9 +129,9 @@ public:
+   // if such bit index is found. Otherwise returns false.
+   //
+   // affected by filter
+-  bool getSparseMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                                   const unsigned char* ignoreBitfield,
+-                                   size_t ignoreBitfieldLength) const;
++  std::optional<size_t> getSparseMissingUnusedIndex(
++      int32_t minSplitSize, const unsigned char* ignoreBitfield,
++      size_t ignoreBitfieldLength) const;
+ 
+   // Stores missing bit index to index. This function first try to
+   // select smallest index starting offsetIndex in the order:
+@@ -146,10 +147,10 @@ public:
+   // result.
+   //
+   // affected by filter
+-  bool getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                                 const unsigned char* ignoreBitfield,
+-                                 size_t ignoreBitfieldLength, double base,
+-                                 size_t offsetIndex) const;
++  std::optional<size_t> getGeomMissingUnusedIndex(
++      int32_t minSplitSize, const unsigned char* ignoreBitfield,
++      size_t ignoreBitfieldLength, double base,
++      size_t offsetIndex) const;
+ 
+   // Stores missing bit index to index. This function selects smallest
+   // index of missing piece, considering minSplitSize.  Set bits in
+@@ -157,19 +158,19 @@ public:
+   // found. Otherwise returns false.
+   //
+   // affected by filter
+-  bool getInorderMissingUnusedIndex(size_t& index, int32_t minSplitSize,
+-                                    const unsigned char* ignoreBitfield,
+-                                    size_t ignoreBitfieldLength) const;
++  std::optional<size_t> getInorderMissingUnusedIndex(
++      int32_t minSplitSize, const unsigned char* ignoreBitfield,
++      size_t ignoreBitfieldLength) const;
+ 
+   // Just like getInorderMissingUnusedIndex() above, but limit the
+   // search area in [startIndex, endIndex).  |endIndex| is normalized
+   // to min(|endIndex|, blocks_)
+   //
+   // affected by filter
+-  bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
+-                                    size_t endIndex, int32_t minSplitSize,
+-                                    const unsigned char* ignoreBitfield,
+-                                    size_t ignoreBitfieldLength) const;
++  std::optional<size_t> getInorderMissingUnusedIndex(
++      size_t startIndex, size_t endIndex, int32_t minSplitSize,
++      const unsigned char* ignoreBitfield,
++      size_t ignoreBitfieldLength) const;
+ 
+   // affected by filter
+   bool getAllMissingIndexes(unsigned char* misbitfield, size_t mislen) const;
+diff --git a/src/DHTUnknownMessage.cc b/src/DHTUnknownMessage.cc
+index 82729458..26759de0 100644
+--- a/src/DHTUnknownMessage.cc
++++ b/src/DHTUnknownMessage.cc
+@@ -51,21 +51,13 @@ DHTUnknownMessage::DHTUnknownMessage(const std::shared_ptr<DHTNode>& localNode,
+                                      const unsigned char* data, size_t length,
+                                      const std::string& ipaddr, uint16_t port)
+     : DHTMessage(localNode, std::shared_ptr<DHTNode>()),
++      data_(data, data + length),
+       length_(length),
+       ipaddr_(ipaddr),
+       port_(port)
+ {
+-  if (length_ == 0) {
+-    data_ = nullptr;
+-  }
+-  else {
+-    data_ = new unsigned char[length];
+-    memcpy(data_, data, length);
+-  }
+ }
+ 
+-DHTUnknownMessage::~DHTUnknownMessage() { delete[] data_; }
+-
+ void DHTUnknownMessage::doReceivedAction() {}
+ 
+ bool DHTUnknownMessage::send() { return true; }
+@@ -82,7 +74,7 @@ std::string DHTUnknownMessage::toString() const
+   }
+   return fmt("dht unknown Remote:%s(%u) length=%lu, first 8 bytes(hex)=%s",
+              ipaddr_.c_str(), port_, static_cast<unsigned long>(length_),
+-             util::toHex(data_, sampleLength).c_str());
++             util::toHex(data_.data(), sampleLength).c_str());
+ }
+ 
+ } // namespace aria2
+diff --git a/src/DHTUnknownMessage.h b/src/DHTUnknownMessage.h
+index 639e1d05..1d7a2c46 100644
+--- a/src/DHTUnknownMessage.h
++++ b/src/DHTUnknownMessage.h
+@@ -37,11 +37,13 @@
+ 
+ #include "DHTMessage.h"
+ 
++#include <vector>
++
+ namespace aria2 {
+ 
+ class DHTUnknownMessage : public DHTMessage {
+ private:
+-  unsigned char* data_;
++  std::vector<unsigned char> data_;
+   size_t length_;
+   std::string ipaddr_;
+   uint16_t port_;
+@@ -52,7 +54,7 @@ public:
+                     const unsigned char* data, size_t length,
+                     const std::string& ipaddr, uint16_t port);
+ 
+-  ~DHTUnknownMessage() override;
++  ~DHTUnknownMessage() override = default;
+ 
+   // do nothing
+   void doReceivedAction() override;
+diff --git a/src/DefaultPieceStorage.cc b/src/DefaultPieceStorage.cc
+index e08b1b18..96591a43 100644
+--- a/src/DefaultPieceStorage.cc
++++ b/src/DefaultPieceStorage.cc
+@@ -235,10 +235,9 @@ void DefaultPieceStorage::getMissingPiece(
+       return;
+     }
+     while (misBlock < minMissingBlocks) {
+-      size_t index;
+-      if (pieceSelector_->select(index, misbitfield.get(), blocks)) {
+-        pieces.push_back(checkOutPiece(index, cuid));
+-        bitfield::flipBit(misbitfield.get(), blocks, index);
++      if (auto index = pieceSelector_->select(misbitfield.get(), blocks)) {
++        pieces.push_back(checkOutPiece(*index, cuid));
++        bitfield::flipBit(misbitfield.get(), blocks, *index);
+         misBlock += pieces.back()->countMissingBlock();
+       }
+       else {
+@@ -379,8 +378,7 @@ std::shared_ptr<Piece> DefaultPieceStorage::getMissingFastPiece(
+ 
+ bool DefaultPieceStorage::hasMissingUnusedPiece()
+ {
+-  size_t index;
+-  return bitfieldMan_->getFirstMissingUnusedIndex(index);
++  return bitfieldMan_->getFirstMissingUnusedIndex().has_value();
+ }
+ 
+ std::shared_ptr<Piece>
+@@ -388,10 +386,9 @@ DefaultPieceStorage::getMissingPiece(size_t minSplitSize,
+                                      const unsigned char* ignoreBitfield,
+                                      size_t length, cuid_t cuid)
+ {
+-  size_t index;
+-  if (streamPieceSelector_->select(index, minSplitSize, ignoreBitfield,
+-                                   length)) {
+-    return checkOutPiece(index, cuid);
++  if (auto index = streamPieceSelector_->select(minSplitSize, ignoreBitfield,
++                                                   length)) {
++    return checkOutPiece(*index, cuid);
+   }
+   else {
+     return nullptr;
+diff --git a/src/DefaultStreamPieceSelector.cc b/src/DefaultStreamPieceSelector.cc
+index 100cd070..48cda8ef 100644
+--- a/src/DefaultStreamPieceSelector.cc
++++ b/src/DefaultStreamPieceSelector.cc
+@@ -44,11 +44,12 @@ DefaultStreamPieceSelector::DefaultStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ DefaultStreamPieceSelector::~DefaultStreamPieceSelector() = default;
+ 
+-bool DefaultStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                        const unsigned char* ignoreBitfield,
+-                                        size_t length)
++std::optional<size_t>
++DefaultStreamPieceSelector::select(size_t minSplitSize,
++                                   const unsigned char* ignoreBitfield,
++                                   size_t length)
+ {
+-  return bitfieldMan_->getSparseMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getSparseMissingUnusedIndex(minSplitSize,
+                                                    ignoreBitfield, length);
+ }
+ 
+diff --git a/src/DefaultStreamPieceSelector.h b/src/DefaultStreamPieceSelector.h
+index 45e7e09f..510c50dc 100644
+--- a/src/DefaultStreamPieceSelector.h
++++ b/src/DefaultStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   DefaultStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~DefaultStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/ExpatXmlParser.cc b/src/ExpatXmlParser.cc
+index 7a38a2ee..7e080b60 100644
+--- a/src/ExpatXmlParser.cc
++++ b/src/ExpatXmlParser.cc
+@@ -36,6 +36,7 @@
+ 
+ #include <cstdio>
+ #include <cstring>
++#include <string>
+ 
+ #include "a2io.h"
+ #include "ParserStateMachine.h"
+@@ -48,19 +49,16 @@ namespace aria2 {
+ namespace xml {
+ 
+ namespace {
+-void splitNsName(const char** localname, const char** nsUri, const char* src)
++std::string splitNsName(const char** localname, const char* src)
+ {
+   const char* sep = strchr(src, '\t');
+   if (sep) {
+     *localname = sep + 1;
+-    size_t nsUriLen = sep - src;
+-    auto temp = new char[nsUriLen + 1];
+-    memcpy(temp, src, nsUriLen);
+-    temp[nsUriLen] = '\0';
+-    *nsUri = temp;
++    return std::string(src, sep - src);
+   }
+   else {
+     *localname = src;
++    return {};
+   }
+ }
+ } // namespace
+@@ -70,6 +68,7 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+ {
+   SessionData* sd = reinterpret_cast<SessionData*>(userData);
+   std::vector<XmlAttr> xmlAttrs;
++  std::vector<std::string> attrNsUris;
+   if (attrs) {
+     const char** p = attrs;
+     while (*p) {
+@@ -78,7 +77,10 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+       if (!*p) {
+         break;
+       }
+-      splitNsName(&xa.localname, &xa.nsUri, attrNsName);
++      attrNsUris.push_back(splitNsName(&xa.localname, attrNsName));
++      xa.nsUri = attrNsUris.back().empty()
++                     ? nullptr
++                     : attrNsUris.back().c_str();
+       const char* value = *p++;
+       xa.value = value;
+       xa.valueLength = strlen(value);
+@@ -87,13 +89,9 @@ void mlStartElement(void* userData, const char* nsName, const char** attrs)
+   }
+   const char* localname = nullptr;
+   const char* prefix = nullptr;
+-  const char* nsUri = nullptr;
+-  splitNsName(&localname, &nsUri, nsName);
++  std::string nsUriStr = splitNsName(&localname, nsName);
++  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
+   sd->psm->beginElement(localname, prefix, nsUri, xmlAttrs);
+-  delete[] nsUri;
+-  for (auto& a : xmlAttrs) {
+-    delete[] a.nsUri;
+-  }
+   if (sd->psm->needsCharactersBuffering()) {
+     sd->charactersStack.push_front(A2STR::NIL);
+   }
+@@ -105,8 +103,8 @@ void mlEndElement(void* userData, const char* nsName)
+ {
+   const char* localname = nullptr;
+   const char* prefix = nullptr;
+-  const char* nsUri = nullptr;
+-  splitNsName(&localname, &nsUri, nsName);
++  std::string nsUriStr = splitNsName(&localname, nsName);
++  const char* nsUri = nsUriStr.empty() ? nullptr : nsUriStr.c_str();
+   SessionData* sd = reinterpret_cast<SessionData*>(userData);
+   std::string characters;
+   if (sd->psm->needsCharactersBuffering()) {
+@@ -114,7 +112,6 @@ void mlEndElement(void* userData, const char* nsName)
+     sd->charactersStack.pop_front();
+   }
+   sd->psm->endElement(localname, prefix, nsUri, std::move(characters));
+-  delete[] nsUri;
+ }
+ } // namespace
+ 
+diff --git a/src/GeomStreamPieceSelector.cc b/src/GeomStreamPieceSelector.cc
+index c6668c7f..fe5ae8dc 100644
+--- a/src/GeomStreamPieceSelector.cc
++++ b/src/GeomStreamPieceSelector.cc
+@@ -45,20 +45,19 @@ GeomStreamPieceSelector::GeomStreamPieceSelector(BitfieldMan* bitfieldMan,
+ 
+ GeomStreamPieceSelector::~GeomStreamPieceSelector() = default;
+ 
+-bool GeomStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                     const unsigned char* ignoreBitfield,
+-                                     size_t length)
++std::optional<size_t>
++GeomStreamPieceSelector::select(size_t minSplitSize,
++                                const unsigned char* ignoreBitfield,
++                                size_t length)
+ {
+   return bitfieldMan_->getGeomMissingUnusedIndex(
+-      index, minSplitSize, ignoreBitfield, length, base_, offsetIndex_);
++      minSplitSize, ignoreBitfield, length, base_, offsetIndex_);
+ }
+ 
+ void GeomStreamPieceSelector::onBitfieldInit()
+ {
+-  size_t index;
+-  bool r = bitfieldMan_->getFirstMissingIndex(index);
+-  if (r) {
+-    offsetIndex_ = index;
++  if (auto index = bitfieldMan_->getFirstMissingIndex()) {
++    offsetIndex_ = *index;
+   }
+ }
+ 
+diff --git a/src/GeomStreamPieceSelector.h b/src/GeomStreamPieceSelector.h
+index 225881af..c051dc20 100644
+--- a/src/GeomStreamPieceSelector.h
++++ b/src/GeomStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   GeomStreamPieceSelector(BitfieldMan* bitfieldMan, double base);
+   ~GeomStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/InorderStreamPieceSelector.cc b/src/InorderStreamPieceSelector.cc
+index 995838e8..e36e511c 100644
+--- a/src/InorderStreamPieceSelector.cc
++++ b/src/InorderStreamPieceSelector.cc
+@@ -44,11 +44,12 @@ InorderStreamPieceSelector::InorderStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ InorderStreamPieceSelector::~InorderStreamPieceSelector() = default;
+ 
+-bool InorderStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                        const unsigned char* ignoreBitfield,
+-                                        size_t length)
++std::optional<size_t>
++InorderStreamPieceSelector::select(size_t minSplitSize,
++                                   const unsigned char* ignoreBitfield,
++                                   size_t length)
+ {
+-  return bitfieldMan_->getInorderMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getInorderMissingUnusedIndex(minSplitSize,
+                                                     ignoreBitfield, length);
+ }
+ 
+diff --git a/src/InorderStreamPieceSelector.h b/src/InorderStreamPieceSelector.h
+index f134fe2f..c334254e 100644
+--- a/src/InorderStreamPieceSelector.h
++++ b/src/InorderStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   InorderStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~InorderStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/LongestSequencePieceSelector.cc b/src/LongestSequencePieceSelector.cc
+index 5686ad6b..6ada5eed 100644
+--- a/src/LongestSequencePieceSelector.cc
++++ b/src/LongestSequencePieceSelector.cc
+@@ -62,9 +62,9 @@ size_t getEndIndex(size_t from, const unsigned char* bitfield, size_t nbits)
+ }
+ } // namespace
+ 
+-bool LongestSequencePieceSelector::select(size_t& index,
+-                                          const unsigned char* bitfield,
+-                                          size_t nbits) const
++std::optional<size_t>
++LongestSequencePieceSelector::select(const unsigned char* bitfield,
++                                     size_t nbits) const
+ {
+   size_t mstartindex = 0;
+   size_t mendindex = 0;
+@@ -82,11 +82,10 @@ bool LongestSequencePieceSelector::select(size_t& index,
+     nextIndex = endindex;
+   }
+   if (mendindex - mstartindex > 0) {
+-    index = mendindex - 1;
+-    return true;
++    return mendindex - 1;
+   }
+   else {
+-    return false;
++    return std::nullopt;
+   }
+ }
+ 
+diff --git a/src/LongestSequencePieceSelector.h b/src/LongestSequencePieceSelector.h
+index 94b869bf..e777d55d 100644
+--- a/src/LongestSequencePieceSelector.h
++++ b/src/LongestSequencePieceSelector.h
+@@ -45,8 +45,8 @@ public:
+   // For example, if indexes of set bits in bitfield are
+   // { 1,2,3,4,7,10,11,12,13,14,15,100,112,113,114 }, then
+   // returns 15 because { 10, 11, 12, 13, 14, 15 } is the longest sequence.
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/Option.cc b/src/Option.cc
+index fb555bee..1f902d60 100644
+--- a/src/Option.cc
++++ b/src/Option.cc
+@@ -189,8 +189,7 @@ const std::shared_ptr<Option>& Option::getParent() const { return parent_; }
+ 
+ bool Option::emptyLocal() const
+ {
+-  size_t dst;
+-  return !bitfield::getFirstSetBitIndex(dst, use_, use_.size() * 8);
++  return !bitfield::getFirstSetBitIndex(use_, use_.size() * 8);
+ }
+ 
+ } // namespace aria2
+diff --git a/src/Piece.cc b/src/Piece.cc
+index eeefcad9..ebabd589 100644
+--- a/src/Piece.cc
++++ b/src/Piece.cc
+@@ -129,14 +129,14 @@ bool Piece::hasBlock(size_t blockIndex) const
+   return bitfield_->isBitSet(blockIndex);
+ }
+ 
+-bool Piece::getMissingUnusedBlockIndex(size_t& index) const
++std::optional<size_t> Piece::getMissingUnusedBlockIndex() const
+ {
+-  if (bitfield_->getFirstMissingUnusedIndex(index)) {
+-    bitfield_->setUseBit(index);
+-    return true;
++  if (auto index = bitfield_->getFirstMissingUnusedIndex()) {
++    bitfield_->setUseBit(*index);
++    return index;
+   }
+   else {
+-    return false;
++    return std::nullopt;
+   }
+ }
+ 
+@@ -154,9 +154,9 @@ size_t Piece::getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
+   return num;
+ }
+ 
+-bool Piece::getFirstMissingBlockIndexWithoutLock(size_t& index) const
++std::optional<size_t> Piece::getFirstMissingBlockIndexWithoutLock() const
+ {
+-  return bitfield_->getFirstMissingIndex(index);
++  return bitfield_->getFirstMissingIndex();
+ }
+ 
+ bool Piece::getAllMissingBlockIndexes(unsigned char* misbitfield,
+diff --git a/src/Piece.h b/src/Piece.h
+index 984ed496..345da716 100644
+--- a/src/Piece.h
++++ b/src/Piece.h
+@@ -38,9 +38,10 @@
+ #include "common.h"
+ 
+ #include <stdint.h>
+-#include <vector>
+-#include <string>
+ #include <memory>
++#include <optional>
++#include <string>
++#include <vector>
+ 
+ #include "Command.h"
+ #include "a2functional.h"
+@@ -84,7 +85,7 @@ public:
+   bool operator<(const Piece& piece) const { return index_ < piece.index_; }
+ 
+   // TODO This function only used by unit tests
+-  bool getMissingUnusedBlockIndex(size_t& index) const;
++  std::optional<size_t> getMissingUnusedBlockIndex() const;
+ 
+   // Appends at most n missing unused block index to indexes. For all
+   // i in retrieved indexes, call bitfield->setUseBit(i). This
+@@ -93,7 +94,7 @@ public:
+   size_t getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
+                                     size_t n) const;
+ 
+-  bool getFirstMissingBlockIndexWithoutLock(size_t& index) const;
++  std::optional<size_t> getFirstMissingBlockIndexWithoutLock() const;
+   bool getAllMissingBlockIndexes(unsigned char* misbitfield,
+                                  size_t mislen) const;
+   void completeBlock(size_t blockIndex);
+diff --git a/src/PieceSelector.h b/src/PieceSelector.h
+index 16e47da7..4ed37d5f 100644
+--- a/src/PieceSelector.h
++++ b/src/PieceSelector.h
+@@ -38,6 +38,7 @@
+ #include "common.h"
+ 
+ #include <cstdlib>
++#include <optional>
+ 
+ namespace aria2 {
+ 
+@@ -45,8 +46,8 @@ class PieceSelector {
+ public:
+   virtual ~PieceSelector() = default;
+ 
+-  virtual bool select(size_t& index, const unsigned char* bitfield,
+-                      size_t nbits) const = 0;
++  virtual std::optional<size_t> select(const unsigned char* bitfield,
++                                       size_t nbits) const = 0;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/PiecedSegment.cc b/src/PiecedSegment.cc
+index 6e13fbc3..a596287d 100644
+--- a/src/PiecedSegment.cc
++++ b/src/PiecedSegment.cc
+@@ -42,10 +42,9 @@ PiecedSegment::PiecedSegment(int32_t pieceLength,
+                              const std::shared_ptr<Piece>& piece)
+     : piece_(piece), pieceLength_(pieceLength)
+ {
+-  size_t index;
+-  bool t = piece_->getFirstMissingBlockIndexWithoutLock(index);
+-  assert(t);
+-  writtenLength_ = index * piece_->getBlockLength();
++  auto index = piece_->getFirstMissingBlockIndexWithoutLock();
++  assert(index);
++  writtenLength_ = *index * piece_->getBlockLength();
+ }
+ 
+ PiecedSegment::~PiecedSegment() = default;
+diff --git a/src/PriorityPieceSelector.cc b/src/PriorityPieceSelector.cc
+index d2a7c356..c49e3296 100644
+--- a/src/PriorityPieceSelector.cc
++++ b/src/PriorityPieceSelector.cc
+@@ -43,16 +43,16 @@ PriorityPieceSelector::PriorityPieceSelector(
+ {
+ }
+ 
+-bool PriorityPieceSelector::select(size_t& index, const unsigned char* bitfield,
+-                                   size_t nbits) const
++std::optional<size_t>
++PriorityPieceSelector::select(const unsigned char* bitfield,
++                              size_t nbits) const
+ {
+   for (auto& p : prioritizedPieces_) {
+     if (bitfield::test(bitfield, nbits, p)) {
+-      index = p;
+-      return true;
++      return p;
+     }
+   }
+-  return selector_->select(index, bitfield, nbits);
++  return selector_->select(bitfield, nbits);
+ }
+ 
+ } // namespace aria2
+diff --git a/src/PriorityPieceSelector.h b/src/PriorityPieceSelector.h
+index 5559d595..c8612926 100644
+--- a/src/PriorityPieceSelector.h
++++ b/src/PriorityPieceSelector.h
+@@ -51,8 +51,8 @@ private:
+ public:
+   PriorityPieceSelector(const std::shared_ptr<PieceSelector>& selector);
+ 
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ 
+   template <typename InputIterator>
+   void setPriorityPiece(InputIterator first, InputIterator last)
+diff --git a/src/RandomStreamPieceSelector.cc b/src/RandomStreamPieceSelector.cc
+index e630598c..38e97bef 100644
+--- a/src/RandomStreamPieceSelector.cc
++++ b/src/RandomStreamPieceSelector.cc
+@@ -45,27 +45,26 @@ RandomStreamPieceSelector::RandomStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ RandomStreamPieceSelector::~RandomStreamPieceSelector() = default;
+ 
+-bool RandomStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                       const unsigned char* ignoreBitfield,
+-                                       size_t length)
++std::optional<size_t>
++RandomStreamPieceSelector::select(size_t minSplitSize,
++                                  const unsigned char* ignoreBitfield,
++                                  size_t length)
+ {
+   size_t start = SimpleRandomizer::getInstance()->getRandomNumber(
+       bitfieldMan_->countBlock());
+ 
+-  auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
+-      index, start, bitfieldMan_->countBlock(), minSplitSize, ignoreBitfield,
+-      length);
+-  if (rv) {
+-    return true;
++  if (auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
++          start, bitfieldMan_->countBlock(), minSplitSize, ignoreBitfield,
++          length)) {
++    return rv;
+   }
+-  rv = bitfieldMan_->getInorderMissingUnusedIndex(index, 0, start, minSplitSize,
+-                                                  ignoreBitfield, length);
+-  if (rv) {
+-    return true;
++  if (auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
++          0, start, minSplitSize, ignoreBitfield, length)) {
++    return rv;
+   }
+   // Fall back to inorder search because randomized search may fail
+   // because of |minSplitSize| constraint.
+-  return bitfieldMan_->getInorderMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getInorderMissingUnusedIndex(minSplitSize,
+                                                     ignoreBitfield, length);
+ }
+ 
+diff --git a/src/RandomStreamPieceSelector.h b/src/RandomStreamPieceSelector.h
+index 24ce8732..7f1fea90 100644
+--- a/src/RandomStreamPieceSelector.h
++++ b/src/RandomStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   RandomStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~RandomStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/RarestPieceSelector.cc b/src/RarestPieceSelector.cc
+index d3fa703e..e851620a 100644
+--- a/src/RarestPieceSelector.cc
++++ b/src/RarestPieceSelector.cc
+@@ -48,8 +48,9 @@ RarestPieceSelector::RarestPieceSelector(
+ {
+ }
+ 
+-bool RarestPieceSelector::select(size_t& index, const unsigned char* bitfield,
+-                                 size_t nbits) const
++std::optional<size_t>
++RarestPieceSelector::select(const unsigned char* bitfield,
++                            size_t nbits) const
+ {
+   const std::vector<size_t>& order = pieceStatMan_->getOrder();
+   const std::vector<int>& counts = pieceStatMan_->getCounts();
+@@ -63,11 +64,10 @@ bool RarestPieceSelector::select(size_t& index, const unsigned char* bitfield,
+     }
+   }
+   if (bestIdx == nbits) {
+-    return false;
++    return std::nullopt;
+   }
+   else {
+-    index = bestIdx;
+-    return true;
++    return bestIdx;
+   }
+ }
+ 
+diff --git a/src/RarestPieceSelector.h b/src/RarestPieceSelector.h
+index a95081f7..a1a7fb16 100644
+--- a/src/RarestPieceSelector.h
++++ b/src/RarestPieceSelector.h
+@@ -50,8 +50,8 @@ private:
+ public:
+   RarestPieceSelector(const std::shared_ptr<PieceStatMan>& pieceStatMan);
+ 
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/StreamPieceSelector.h b/src/StreamPieceSelector.h
+index ccb49bed..87a4d691 100644
+--- a/src/StreamPieceSelector.h
++++ b/src/StreamPieceSelector.h
+@@ -38,6 +38,7 @@
+ #include "common.h"
+ 
+ #include <cstdlib>
++#include <optional>
+ 
+ namespace aria2 {
+ 
+@@ -55,8 +56,9 @@ public:
+   // is a advice to derived class not to select piece such which the
+   // distance between it and already selected piece is less than
+   // minSplitSize.
+-  virtual bool select(size_t& index, size_t minSplitSize,
+-                      const unsigned char* ignoreBitfield, size_t length) = 0;
++  virtual std::optional<size_t> select(
++      size_t minSplitSize, const unsigned char* ignoreBitfield,
++      size_t length) = 0;
+ 
+   // Called when initial bitfield was fixed. Optimize
+   // StreamPieceSelector to take advantages of the initial bitfield.
+diff --git a/src/bitfield.h b/src/bitfield.h
+index 9928d8bd..0e98ceed 100644
+--- a/src/bitfield.h
++++ b/src/bitfield.h
+@@ -40,6 +40,7 @@
+ #include <cassert>
+ #include <cstdlib>
+ #include <cstring>
++#include <optional>
+ 
+ #include "util.h"
+ 
+@@ -145,15 +146,14 @@ void flipBit(unsigned char* data, size_t length, size_t bitIndex);
+ // Stores first set bit index of bitfield to index.  bitfield contains
+ // nbits. Returns true if set bit is found. Otherwise returns false.
+ template <typename Array>
+-bool getFirstSetBitIndex(size_t& index, const Array& bitfield, size_t nbits)
++std::optional<size_t> getFirstSetBitIndex(const Array& bitfield, size_t nbits)
+ {
+   for (size_t i = 0; i < nbits; ++i) {
+     if (bitfield::test(bitfield, nbits, i)) {
+-      index = i;
+-      return true;
++      return i;
+     }
+   }
+-  return false;
++  return std::nullopt;
+ }
+ 
+ // Appends first at most n set bit index in bitfield to out.  bitfield
+diff --git a/test/BitfieldManTest.cc b/test/BitfieldManTest.cc
+index 21dd4ab2..37f185b6 100644
+--- a/test/BitfieldManTest.cc
++++ b/test/BitfieldManTest.cc
+@@ -107,27 +107,26 @@ void BitfieldManTest::testGetFirstMissingUnusedIndex()
+   {
+     BitfieldMan bt1(1_k, 10_k);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
+     }
+     bt1.setUseBit(0);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.unsetUseBit(0);
+     bt1.setBit(0);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.setAllBit();
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(!bt1.getFirstMissingUnusedIndex(index));
++      CPPUNIT_ASSERT(!bt1.getFirstMissingUnusedIndex().has_value());
+     }
+   }
+   {
+@@ -136,21 +135,21 @@ void BitfieldManTest::testGetFirstMissingUnusedIndex()
+     bt1.addFilter(1_k, 10_k);
+     bt1.enableFilter();
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.setUseBit(1);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
+     }
+     bt1.setBit(2);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingUnusedIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)3, index);
++      auto r = bt1.getFirstMissingUnusedIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)3, *r);
+     }
+   }
+ }
+@@ -160,27 +159,26 @@ void BitfieldManTest::testGetFirstMissingIndex()
+   {
+     BitfieldMan bt1(1_k, 10_k);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
+     }
+     bt1.setUseBit(0);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
+     }
+     bt1.unsetUseBit(0);
+     bt1.setBit(0);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.setAllBit();
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(!bt1.getFirstMissingIndex(index));
++      CPPUNIT_ASSERT(!bt1.getFirstMissingIndex().has_value());
+     }
+   }
+   {
+@@ -189,21 +187,21 @@ void BitfieldManTest::testGetFirstMissingIndex()
+     bt1.addFilter(1_k, 10_k);
+     bt1.enableFilter();
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.setUseBit(1);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+     }
+     bt1.setBit(1);
+     {
+-      size_t index;
+-      CPPUNIT_ASSERT(bt1.getFirstMissingIndex(index));
+-      CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++      auto r = bt1.getFirstMissingIndex();
++      CPPUNIT_ASSERT(r.has_value());
++      CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
+     }
+   }
+ }
+@@ -324,49 +322,78 @@ void BitfieldManTest::testGetSparseMissingUnusedIndex()
+   unsigned char ignoreBitfield[length];
+   memset(ignoreBitfield, 0, sizeof(ignoreBitfield));
+   size_t minSplitSize = 1_m;
+-  size_t index;
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
++  }
+   bitfield.setUseBit(0);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)5, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)5, *r);
++  }
+   bitfield.setUseBit(5);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)3, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)3, *r);
++  }
+   bitfield.setUseBit(3);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)8, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)8, *r);
++  }
+   bitfield.setUseBit(8);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+   bitfield.setUseBit(2);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   bitfield.setUseBit(1);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)4, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)4, *r);
++  }
+   bitfield.setUseBit(4);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)7, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)7, *r);
++  }
+   bitfield.setUseBit(7);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)6, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)6, *r);
++  }
+   bitfield.setUseBit(6);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)9, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)9, *r);
++  }
+   bitfield.setUseBit(9);
+-  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                       ignoreBitfield, length));
++  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(
++      minSplitSize, ignoreBitfield, length).has_value());
+ }
+ 
+ void BitfieldManTest::testGetSparseMissingUnusedIndex_setBit()
+@@ -376,49 +403,78 @@ void BitfieldManTest::testGetSparseMissingUnusedIndex_setBit()
+   unsigned char ignoreBitfield[length];
+   memset(ignoreBitfield, 0, sizeof(ignoreBitfield));
+   size_t minSplitSize = 1_m;
+-  size_t index;
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
++  }
+   bitfield.setBit(0);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   bitfield.setBit(1);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+   bitfield.setBit(2);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)3, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)3, *r);
++  }
+   bitfield.setBit(3);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)4, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)4, *r);
++  }
+   bitfield.setBit(4);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)5, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)5, *r);
++  }
+   bitfield.setBit(5);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)6, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)6, *r);
++  }
+   bitfield.setBit(6);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)7, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)7, *r);
++  }
+   bitfield.setBit(7);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)8, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)8, *r);
++  }
+   bitfield.setBit(8);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)9, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)9, *r);
++  }
+   bitfield.setBit(9);
+-  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                       ignoreBitfield, length));
++  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(
++      minSplitSize, ignoreBitfield, length).has_value());
+ }
+ 
+ void BitfieldManTest::testGetSparseMissingUnusedIndex_withMinSplitSize()
+@@ -428,30 +484,44 @@ void BitfieldManTest::testGetSparseMissingUnusedIndex_withMinSplitSize()
+   unsigned char ignoreBitfield[length];
+   memset(ignoreBitfield, 0, sizeof(ignoreBitfield));
+   size_t minSplitSize = 2_m;
+-  size_t index;
+   bitfield.setUseBit(1);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)6, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)6, *r);
++  }
+   bitfield.setBit(6);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)7, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)7, *r);
++  }
+   bitfield.setUseBit(7);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)4, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)4, *r);
++  }
+   bitfield.setBit(4);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
++  }
+   bitfield.setBit(0);
+-  CPPUNIT_ASSERT(bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                      ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)5, index);
++  {
++    auto r = bitfield.getSparseMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)5, *r);
++  }
+   bitfield.setBit(5);
+-  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(index, minSplitSize,
+-                                                       ignoreBitfield, length));
++  CPPUNIT_ASSERT(!bitfield.getSparseMissingUnusedIndex(minSplitSize,
++                                                       ignoreBitfield, length).has_value());
+ }
+ 
+ void BitfieldManTest::testIsBitSetOffsetRange()
+@@ -736,52 +806,72 @@ void BitfieldManTest::testGetInorderMissingUnusedIndex()
+   unsigned char ignoreBitfield[length];
+   memset(ignoreBitfield, 0, sizeof(ignoreBitfield));
+   size_t minSplitSize = 1_k;
+-  size_t index;
+   // 00000|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
++  }
+   bt.setUseBit(0);
+   // 10000|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   minSplitSize = 2_k;
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+   bt.unsetUseBit(0);
+   bt.setBit(0);
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   bt.setAllBit();
+   bt.unsetBit(10);
+   // 11111|11111|01111|11111
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)10, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)10, *r);
++  }
+   bt.setUseBit(10);
+-  CPPUNIT_ASSERT(!bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                  ignoreBitfield, length));
++  CPPUNIT_ASSERT(!bt.getInorderMissingUnusedIndex(minSplitSize,
++                                                  ignoreBitfield, length).has_value());
+   bt.unsetUseBit(10);
+   bt.setAllBit();
+   // 11111|11111|11111|11111
+-  CPPUNIT_ASSERT(!bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                  ignoreBitfield, length));
++  CPPUNIT_ASSERT(!bt.getInorderMissingUnusedIndex(minSplitSize,
++                                                  ignoreBitfield, length).has_value());
+   bt.clearAllBit();
+   // 00000|00000|00000|00000
+   for (int i = 0; i <= 1; ++i) {
+     bitfield::flipBit(ignoreBitfield, length, i);
+   }
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+   bt.addFilter(3_k, 3_k);
+   bt.enableFilter();
+-  CPPUNIT_ASSERT(bt.getInorderMissingUnusedIndex(index, minSplitSize,
+-                                                 ignoreBitfield, length));
+-  CPPUNIT_ASSERT_EQUAL((size_t)3, index);
++  {
++    auto r = bt.getInorderMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)3, *r);
++  }
+ }
+ 
+ void BitfieldManTest::testGetGeomMissingUnusedIndex()
+@@ -791,41 +881,61 @@ void BitfieldManTest::testGetGeomMissingUnusedIndex()
+   unsigned char ignoreBitfield[length];
+   memset(ignoreBitfield, 0, sizeof(ignoreBitfield));
+   size_t minSplitSize = 1_k;
+-  size_t index;
+   // 00000|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)0, *r);
++  }
+   bt.setUseBit(0);
+   // 10000|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   bt.setUseBit(1);
+   // 11000|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+   bt.setUseBit(2);
+   // 11100|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)4, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)4, *r);
++  }
+   bt.setUseBit(4);
+   // 11110|00000|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)8, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)8, *r);
++  }
+   bt.setUseBit(8);
+   // 11110|00010|00000|00000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)16, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)16, *r);
++  }
+   bt.setUseBit(16);
+   // 11110|00010|00000|01000
+-  CPPUNIT_ASSERT(bt.getGeomMissingUnusedIndex(index, minSplitSize,
+-                                              ignoreBitfield, length, 2, 0));
+-  CPPUNIT_ASSERT_EQUAL((size_t)12, index);
++  {
++    auto r = bt.getGeomMissingUnusedIndex(minSplitSize,
++        ignoreBitfield, length, 2, 0);
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)12, *r);
++  }
+   bt.setUseBit(12);
+ }
+ 
+@@ -856,8 +966,7 @@ void BitfieldManTest::testSetAllUseBit()
+     CPPUNIT_ASSERT(bt.isUseBitSet(i));
+   }
+   // Verify no missing unused index exists when all use bits are set
+-  size_t index;
+-  CPPUNIT_ASSERT(!bt.getFirstMissingUnusedIndex(index));
++  CPPUNIT_ASSERT(!bt.getFirstMissingUnusedIndex().has_value());
+ }
+ 
+ void BitfieldManTest::testUnsetBitRange()
+diff --git a/test/DefaultBtMessageDispatcherTest.cc b/test/DefaultBtMessageDispatcherTest.cc
+index d5b29cfc..4f28ddde 100644
+--- a/test/DefaultBtMessageDispatcherTest.cc
++++ b/test/DefaultBtMessageDispatcherTest.cc
+@@ -208,9 +208,9 @@ int MY_PIECE_LENGTH = 16_k;
+ void DefaultBtMessageDispatcherTest::testCheckRequestSlotAndDoNecessaryThing()
+ {
+   auto piece = std::make_shared<Piece>(0, MY_PIECE_LENGTH);
+-  size_t index;
+-  CPPUNIT_ASSERT(piece->getMissingUnusedBlockIndex(index));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  auto index = piece->getMissingUnusedBlockIndex();
++  CPPUNIT_ASSERT(index.has_value());
++  CPPUNIT_ASSERT_EQUAL((size_t)0, *index);
+ 
+   btMessageDispatcher->setRequestTimeout(1_min);
+   btMessageDispatcher->addOutstandingRequest(
+@@ -228,9 +228,9 @@ void DefaultBtMessageDispatcherTest::
+     testCheckRequestSlotAndDoNecessaryThing_timeout()
+ {
+   auto piece = std::make_shared<Piece>(0, MY_PIECE_LENGTH);
+-  size_t index;
+-  CPPUNIT_ASSERT(piece->getMissingUnusedBlockIndex(index));
+-  CPPUNIT_ASSERT_EQUAL((size_t)0, index);
++  auto index = piece->getMissingUnusedBlockIndex();
++  CPPUNIT_ASSERT(index.has_value());
++  CPPUNIT_ASSERT_EQUAL((size_t)0, *index);
+ 
+   btMessageDispatcher->setRequestTimeout(1_min);
+   auto slot = make_unique<RequestSlot>(0, 0, MY_PIECE_LENGTH, 0, piece);
+@@ -300,25 +300,25 @@ void DefaultBtMessageDispatcherTest::testGetOutstandingRequest()
+ void DefaultBtMessageDispatcherTest::testRemoveOutstandingRequest()
+ {
+   auto piece = std::make_shared<Piece>(1, 1_m);
+-  size_t blockIndex = 0;
+-  CPPUNIT_ASSERT(piece->getMissingUnusedBlockIndex(blockIndex));
+-  uint32_t begin = blockIndex * piece->getBlockLength();
+-  size_t length = piece->getBlockLength(blockIndex);
++  auto blockIndex = piece->getMissingUnusedBlockIndex();
++  CPPUNIT_ASSERT(blockIndex.has_value());
++  uint32_t begin = *blockIndex * piece->getBlockLength();
++  size_t length = piece->getBlockLength(*blockIndex);
+   RequestSlot slot;
+   btMessageDispatcher->addOutstandingRequest(make_unique<RequestSlot>(
+-      piece->getIndex(), begin, length, blockIndex, piece));
++      piece->getIndex(), begin, length, *blockIndex, piece));
+ 
+   auto s2 = btMessageDispatcher->getOutstandingRequest(piece->getIndex(), begin,
+                                                        length);
+   CPPUNIT_ASSERT(s2);
+-  CPPUNIT_ASSERT(piece->isBlockUsed(blockIndex));
++  CPPUNIT_ASSERT(piece->isBlockUsed(*blockIndex));
+ 
+   btMessageDispatcher->removeOutstandingRequest(s2);
+ 
+   auto s3 = btMessageDispatcher->getOutstandingRequest(piece->getIndex(), begin,
+                                                        length);
+   CPPUNIT_ASSERT(!s3);
+-  CPPUNIT_ASSERT(!piece->isBlockUsed(blockIndex));
++  CPPUNIT_ASSERT(!piece->isBlockUsed(*blockIndex));
+ }
+ 
+ } // namespace aria2
+diff --git a/test/GeomStreamPieceSelectorTest.cc b/test/GeomStreamPieceSelectorTest.cc
+index 2b68d872..a32b3dd8 100644
+--- a/test/GeomStreamPieceSelectorTest.cc
++++ b/test/GeomStreamPieceSelectorTest.cc
+@@ -30,22 +30,33 @@ void GeomStreamPieceSelectorTest::testOnBitfieldInit()
+   sel.onBitfieldInit();
+   unsigned char igbf[3];
+   memset(igbf, 0, 3);
+-  size_t index;
+   // 11111|11111|00000|00000
+-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
+-  CPPUNIT_ASSERT_EQUAL((size_t)11, index);
++  {
++    auto r = sel.select(20_k, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)11, *r);
++  }
+   bf.setUseBit(11);
+   // 11111|11111|10000|00000
+-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
+-  CPPUNIT_ASSERT_EQUAL((size_t)12, index);
++  {
++    auto r = sel.select(20_k, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)12, *r);
++  }
+   bf.setUseBit(12);
+   // 11111|11111|11000|00000
+-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
+-  CPPUNIT_ASSERT_EQUAL((size_t)13, index);
++  {
++    auto r = sel.select(20_k, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)13, *r);
++  }
+   bf.setUseBit(13);
+   // 11111|11111|11100|00000
+-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
+-  CPPUNIT_ASSERT_EQUAL((size_t)15, index);
++  {
++    auto r = sel.select(20_k, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)15, *r);
++  }
+ }
+ 
+ } // namespace aria2
+diff --git a/test/InorderPieceSelector.h b/test/InorderPieceSelector.h
+index b57bbe8f..5fc245cb 100644
+--- a/test/InorderPieceSelector.h
++++ b/test/InorderPieceSelector.h
+@@ -4,20 +4,22 @@
+ #include "PieceSelector.h"
+ #include "bitfield.h"
+ 
++#include <optional>
++
+ namespace aria2 {
+ 
+ class InorderPieceSelector : public PieceSelector {
+ public:
+-  virtual bool select(size_t& index, const unsigned char* bitfield,
+-                      size_t nbits) const override
++  virtual std::optional<size_t>
++  select(const unsigned char* bitfield,
++         size_t nbits) const override
+   {
+     for (size_t i = 0; i < nbits; ++i) {
+       if (bitfield::test(bitfield, nbits, i)) {
+-        index = i;
+-        return true;
++        return i;
+       }
+     }
+-    return false;
++    return std::nullopt;
+   }
+ };
+ 
+diff --git a/test/LongestSequencePieceSelectorTest.cc b/test/LongestSequencePieceSelectorTest.cc
+index 86c304b7..a3d9252d 100644
+--- a/test/LongestSequencePieceSelectorTest.cc
++++ b/test/LongestSequencePieceSelectorTest.cc
+@@ -33,18 +33,23 @@ void LongestSequencePieceSelectorTest::testSelect()
+   }
+ 
+   LongestSequencePieceSelector selector;
+-  size_t index;
+ 
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)15, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)15, *r);
++  }
+ 
+   bf.clearAllBit();
+-  CPPUNIT_ASSERT(!selector.select(index, bf.getBitfield(), bf.countBlock()));
++  CPPUNIT_ASSERT(!selector.select(bf.getBitfield(), bf.countBlock()).has_value());
+ 
+   // See it works in just one range
+   bf.setBitRange(1, 4);
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)4, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)4, *r);
++  }
+ }
+ 
+ } // namespace aria2
+diff --git a/test/MockPieceSelector.h b/test/MockPieceSelector.h
+index c1f9e3fc..20850b61 100644
+--- a/test/MockPieceSelector.h
++++ b/test/MockPieceSelector.h
+@@ -7,10 +7,10 @@ namespace aria2 {
+ 
+ class MockPieceSelector : public PieceSelector {
+ public:
+-  virtual bool select(size_t& index, const unsigned char* bitfield,
+-                      size_t nbits) const override
++  virtual std::optional<size_t> select(const unsigned char* bitfield,
++                                         size_t nbits) const override
+   {
+-    return false;
++    return std::nullopt;
+   }
+ };
+ 
+diff --git a/test/PriorityPieceSelectorTest.cc b/test/PriorityPieceSelectorTest.cc
+index 562e9365..18a1a0fd 100644
+--- a/test/PriorityPieceSelectorTest.cc
++++ b/test/PriorityPieceSelectorTest.cc
+@@ -33,14 +33,19 @@ void PriorityPieceSelectorTest::testSelect()
+       std::shared_ptr<PieceSelector>(new MockPieceSelector()));
+   selector.setPriorityPiece(std::begin(A), std::end(A));
+ 
+-  size_t index;
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+   bf.unsetBit(1);
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)200, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)200, *r);
++  }
+   bf.unsetBit(200);
+-  CPPUNIT_ASSERT(!selector.select(index, bf.getBitfield(), bf.countBlock()));
++  CPPUNIT_ASSERT(!selector.select(bf.getBitfield(), bf.countBlock()).has_value());
+ }
+ 
+ } // namespace aria2
+diff --git a/test/RarestPieceSelectorTest.cc b/test/RarestPieceSelectorTest.cc
+index f30605f3..1e885db5 100644
+--- a/test/RarestPieceSelectorTest.cc
++++ b/test/RarestPieceSelectorTest.cc
+@@ -34,17 +34,22 @@ void RarestPieceSelectorTest::testSelect()
+   RarestPieceSelector selector(pieceStatMan);
+   BitfieldMan bf(1_k, 10_k);
+   bf.setBitRange(0, 2);
+-  size_t index;
+ 
+   pieceStatMan->addPieceStats(0);
+ 
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
++  }
+ 
+   pieceStatMan->addPieceStats(1);
+ 
+-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
+-  CPPUNIT_ASSERT_EQUAL((size_t)2, index);
++  {
++    auto r = selector.select(bf.getBitfield(), bf.countBlock());
++    CPPUNIT_ASSERT(r.has_value());
++    CPPUNIT_ASSERT_EQUAL((size_t)2, *r);
++  }
+ }
+ 
+ } // namespace aria2
+diff --git a/test/StreamPieceSelectorTest.cc b/test/StreamPieceSelectorTest.cc
+index 518d79af..1c445091 100644
+--- a/test/StreamPieceSelectorTest.cc
++++ b/test/StreamPieceSelectorTest.cc
+@@ -33,10 +33,10 @@ public:
+ 
+     unsigned char igbf[2];
+     memset(igbf, 0, sizeof(igbf));
+-    size_t index;
+-    CPPUNIT_ASSERT(sel.select(index, 1024, igbf, sizeof(igbf)));
++    auto r = sel.select(1024, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
+     // First missing piece should be 5
+-    CPPUNIT_ASSERT_EQUAL((size_t)5, index);
++    CPPUNIT_ASSERT_EQUAL((size_t)5, *r);
+   }
+ 
+   void testInorderSelectAllUsed()
+@@ -47,9 +47,8 @@ public:
+ 
+     unsigned char igbf[2];
+     memset(igbf, 0, sizeof(igbf));
+-    size_t index;
+     // All pieces complete, nothing to select
+-    CPPUNIT_ASSERT(!sel.select(index, 1024, igbf, sizeof(igbf)));
++    CPPUNIT_ASSERT(!sel.select(1024, igbf, sizeof(igbf)).has_value());
+   }
+ 
+   void testRandomSelect()
+@@ -61,11 +60,11 @@ public:
+ 
+     unsigned char igbf[3];
+     memset(igbf, 0, sizeof(igbf));
+-    size_t index;
+-    CPPUNIT_ASSERT(sel.select(index, 1024, igbf, sizeof(igbf)));
++    auto r = sel.select(1024, igbf, sizeof(igbf));
++    CPPUNIT_ASSERT(r.has_value());
+     // Should select a piece in range [10, 19]
+-    CPPUNIT_ASSERT(index >= 10);
+-    CPPUNIT_ASSERT(index <= 19);
++    CPPUNIT_ASSERT(*r >= 10);
++    CPPUNIT_ASSERT(*r <= 19);
+   }
+ 
+   void testRandomSelectAllUsed()
+@@ -76,8 +75,7 @@ public:
+ 
+     unsigned char igbf[2];
+     memset(igbf, 0, sizeof(igbf));
+-    size_t index;
+-    CPPUNIT_ASSERT(!sel.select(index, 1024, igbf, sizeof(igbf)));
++    CPPUNIT_ASSERT(!sel.select(1024, igbf, sizeof(igbf)).has_value());
+   }
+ 
+   void testUnionSeedCriteriaAllFalse()

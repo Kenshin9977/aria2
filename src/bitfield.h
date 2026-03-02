@@ -40,6 +40,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
+#include <span>
 
 #include "util.h"
 
@@ -49,7 +51,7 @@ namespace bitfield {
 
 // Returns the bit mask for the last byte. For example, nbits = 9,
 // then 0x80u is returned. nbits = 12, then 0xf0u is returned.
-inline unsigned char lastByteMask(size_t nbits)
+constexpr unsigned char lastByteMask(size_t nbits)
 {
   if (nbits == 0) {
     return 0;
@@ -74,7 +76,7 @@ inline bool test(const Array& bitfield, size_t nbits, size_t index)
   return (bitfield[index / 8] & mask) != 0;
 }
 
-const int cntbits[] = {
+constexpr int cntbits[] = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
     2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
     2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
@@ -88,14 +90,14 @@ const int cntbits[] = {
     4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
 };
 
-inline size_t countBit32(uint32_t n)
+constexpr size_t countBit32(uint32_t n)
 {
   return cntbits[n & 0xffu] + cntbits[(n >> 8) & 0xffu] +
          cntbits[(n >> 16) & 0xffu] + cntbits[(n >> 24) & 0xffu];
 }
 
 // Counts set bit in bitfield.
-inline size_t countSetBit(const unsigned char* bitfield, size_t nbits)
+inline size_t countSetBit(std::span<const unsigned char> bitfield, size_t nbits)
 {
   if (nbits == 0) {
     return 0;
@@ -145,15 +147,14 @@ void flipBit(unsigned char* data, size_t length, size_t bitIndex);
 // Stores first set bit index of bitfield to index.  bitfield contains
 // nbits. Returns true if set bit is found. Otherwise returns false.
 template <typename Array>
-bool getFirstSetBitIndex(size_t& index, const Array& bitfield, size_t nbits)
+std::optional<size_t> getFirstSetBitIndex(const Array& bitfield, size_t nbits)
 {
   for (size_t i = 0; i < nbits; ++i) {
     if (bitfield::test(bitfield, nbits, i)) {
-      index = i;
-      return true;
+      return i;
     }
   }
-  return false;
+  return std::nullopt;
 }
 
 // Appends first at most n set bit index in bitfield to out.  bitfield

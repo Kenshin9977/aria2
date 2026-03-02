@@ -38,6 +38,8 @@
 #include "common.h"
 
 #include <stdint.h>
+#include <optional>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -81,17 +83,17 @@ public:
 
   void processRedirect();
 
-  const std::string& getRedirectURI() const;
+  std::optional<std::string_view> getRedirectURI() const;
 
   bool isTransferEncodingSpecified() const;
 
-  const std::string& getTransferEncoding() const;
+  std::optional<std::string_view> getTransferEncoding() const;
 
   std::unique_ptr<StreamFilter> getTransferEncodingStreamFilter() const;
 
   bool isContentEncodingSpecified() const;
 
-  const std::string& getContentEncoding() const;
+  std::optional<std::string_view> getContentEncoding() const;
 
   std::unique_ptr<StreamFilter> getContentEncodingStreamFilter() const;
 

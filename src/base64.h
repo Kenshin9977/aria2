@@ -44,7 +44,7 @@ namespace base64 {
 template <typename InputIterator>
 std::string encode(InputIterator first, InputIterator last)
 {
-  static const char CHAR_TABLE[] = {
+  static constexpr char CHAR_TABLE[] = {
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
       'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -103,7 +103,7 @@ InputIterator getNext(InputIterator first, InputIterator last, const int* tbl)
 template <typename InputIterator>
 std::string decode(InputIterator first, InputIterator last)
 {
-  static const int INDEX_TABLE[] = {
+  static constexpr int INDEX_TABLE[] = {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57,

@@ -64,7 +64,7 @@ private:
   void addLocalPeer(std::vector<std::shared_ptr<Peer>>& peers);
 
 protected:
-  virtual std::string toStringOptional() const CXX11_OVERRIDE;
+  std::string toStringOptional() const override;
 
 public:
   DHTGetPeersMessage(const std::shared_ptr<DHTNode>& localNode,
@@ -72,11 +72,11 @@ public:
                      const unsigned char* infoHash,
                      const std::string& transactionID = A2STR::NIL);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getArgument() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getArgument() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
   const unsigned char* getInfoHash() const { return infoHash_; }
 
@@ -88,9 +88,9 @@ public:
 
   void setFamily(int family);
 
-  static const std::string GET_PEERS;
+  static constexpr const char GET_PEERS[] = "get_peers";
 
-  static const std::string INFO_HASH;
+  static constexpr const char INFO_HASH[] = "info_hash";
 };
 
 } // namespace aria2

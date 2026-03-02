@@ -48,7 +48,7 @@ struct Pref {
   size_t i;
 };
 
-typedef const Pref* PrefPtr;
+using PrefPtr = const Pref*;
 
 namespace option {
 
@@ -93,6 +93,7 @@ extern const std::string A2_V_RANDOM;
 extern const std::string V_FEEDBACK;
 extern const std::string V_ADAPTIVE;
 extern const std::string V_LIBUV;
+extern const std::string V_IOURING;
 extern const std::string V_EPOLL;
 extern const std::string V_KQUEUE;
 extern const std::string V_PORT;
@@ -403,6 +404,9 @@ extern PrefPtr PREF_FTP_PROXY_USER;
 extern PrefPtr PREF_FTP_PROXY_PASSWD;
 extern PrefPtr PREF_ALL_PROXY_USER;
 extern PrefPtr PREF_ALL_PROXY_PASSWD;
+extern PrefPtr PREF_SOCKS5_PROXY;
+extern PrefPtr PREF_SOCKS5_PROXY_USER;
+extern PrefPtr PREF_SOCKS5_PROXY_PASSWD;
 
 /**
  * BitTorrent related preferences

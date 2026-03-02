@@ -90,7 +90,7 @@ DHTPeerLookupTask::createMessage(const std::shared_ptr<DHTNode>& remoteNode)
 
 std::unique_ptr<DHTMessageCallback> DHTPeerLookupTask::createCallback()
 {
-  return make_unique<DHTPeerLookupTaskCallback>(this);
+  return std::make_unique<DHTPeerLookupTaskCallback>(this);
 }
 
 void DHTPeerLookupTask::onFinish()
@@ -115,7 +115,8 @@ void DHTPeerLookupTask::onFinish()
         getMessageFactory()->createAnnouncePeerMessage(
             node,
             getTargetID(), // this is infoHash
-            tcpPort_, token));
+            tcpPort_, token),
+        nullptr);
     --num;
   }
 }

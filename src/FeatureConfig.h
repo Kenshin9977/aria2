@@ -39,10 +39,12 @@
 
 #include <string>
 
+#include "uri.h"
+
 namespace aria2 {
 
 // Returns default port for the given |protocol|.
-uint16_t getDefaultPort(const std::string& protocol);
+uint16_t getDefaultPort(Protocol protocol);
 
 enum FeatureType {
   FEATURE_ASYNC_DNS,
@@ -61,7 +63,7 @@ enum FeatureType {
 std::string featureSummary();
 
 // Returns the string representation of the given |feature| if it is
-// available in the build. If it is not available, returns NULL.
+// available in the build. If it is not available, returns nullptr.
 const char* strSupportedFeature(int feature);
 
 // Returns summary string of 3rd party libraries directly used by

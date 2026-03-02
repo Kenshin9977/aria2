@@ -33,6 +33,7 @@
  */
 /* copyright --> */
 #include "HttpServerBodyCommand.h"
+#include <ranges>
 #include "SocketCore.h"
 #include "DownloadEngine.h"
 #include "HttpServer.h"
@@ -146,11 +147,12 @@ void HttpServerBodyCommand::sendJsonRpcBatchResponse(
 
 void HttpServerBodyCommand::addHttpServerResponseCommand(bool delayed)
 {
-  auto resp = make_unique<HttpServerResponseCommand>(getCuid(), httpServer_, e_,
+  auto resp = std::make_unique<HttpServerResponseCommand>(getCuid(), httpServer_, e_,
                                                      socket_);
   if (delayed) {
+    e_->deleteSocketForWriteCheck(socket_, resp.get());
     e_->addCommand(
-        make_unique<DelayedCommand>(getCuid(), e_, 1_s, std::move(resp), true));
+        std::make_unique<DelayedCommand>(getCuid(), e_, 1_s, std::move(resp), true));
     return;
   }
 
@@ -186,10 +188,8 @@ bool HttpServerBodyCommand::execute()
 
       if (httpServer_->receiveBody()) {
         std::string reqPath = httpServer_->getRequestPath();
-        reqPath.erase(std::find(reqPath.begin(), reqPath.end(), '#'),
-                      reqPath.end());
-        std::string query(std::find(reqPath.begin(), reqPath.end(), '?'),
-                          reqPath.end());
+        reqPath.erase(std::ranges::find(reqPath, '#'), reqPath.end());
+        std::string query(std::ranges::find(reqPath, '?'), reqPath.end());
         reqPath.erase(reqPath.size() - query.size(), query.size());
 
         if (httpServer_->getMethod() == "OPTIONS") {
@@ -197,19 +197,20 @@ bool HttpServerBodyCommand::execute()
           // See http://www.w3.org/TR/cors/
           auto& header = httpServer_->getRequestHeader();
           std::string accessControlHeaders;
-          if (!header->find(HttpHeader::ORIGIN).empty() &&
-              !header->find(HttpHeader::ACCESS_CONTROL_REQUEST_METHOD)
-                   .empty() &&
+          auto origin = header->find(HttpHeader::ORIGIN);
+          auto acrm = header->find(HttpHeader::ACCESS_CONTROL_REQUEST_METHOD);
+          if (origin && !origin->empty() && acrm && !acrm->empty() &&
               !httpServer_->getAllowOrigin().empty()) {
             accessControlHeaders +=
                 "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n"
                 "Access-Control-Max-Age: 1728000\r\n";
-            const std::string& accReqHeaders =
+            auto accReqHeaders =
                 header->find(HttpHeader::ACCESS_CONTROL_REQUEST_HEADERS);
-            if (!accReqHeaders.empty()) {
+            if (accReqHeaders && !accReqHeaders->empty()) {
               // We allow all headers requested.
               accessControlHeaders += "Access-Control-Allow-Headers: ";
-              accessControlHeaders += accReqHeaders;
+              accessControlHeaders.append(accReqHeaders->data(),
+                                          accReqHeaders->size());
               accessControlHeaders += "\r\n";
             }
           }

@@ -43,14 +43,14 @@ class BtRejectMessage : public RangeBtMessage {
 public:
   BtRejectMessage(size_t index = 0, int32_t begin = 0, int32_t length = 0);
 
-  static const uint8_t ID = 16;
+  static constexpr uint8_t ID = 16;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "reject";
 
-  static std::unique_ptr<BtRejectMessage> create(const unsigned char* data,
-                                                 size_t dataLength);
+  static std::unique_ptr<BtRejectMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 };
 
 } // namespace aria2

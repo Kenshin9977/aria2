@@ -39,11 +39,11 @@ public:
     virtual std::unique_ptr<DHTPingReplyMessage>
     createPingReplyMessage(const std::shared_ptr<DHTNode>& remoteNode,
                            const unsigned char* remoteNodeID,
-                           const std::string& transactionID) CXX11_OVERRIDE
+                           const std::string& transactionID) override
     {
       unsigned char id[DHT_ID_LENGTH];
       std::fill(std::begin(id), std::end(id), '0');
-      return make_unique<DHTPingReplyMessage>(localNode_, remoteNode, id,
+      return std::make_unique<DHTPingReplyMessage>(localNode_, remoteNode, id,
                                               transactionID);
     }
   };
@@ -95,7 +95,8 @@ void DHTPingMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("ping"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("ping"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
 }
 

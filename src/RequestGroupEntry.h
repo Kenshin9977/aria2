@@ -50,9 +50,9 @@ private:
   std::unique_ptr<Command> nextCommand_;
 
 public:
-  RequestGroupEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  RequestGroupEntry(RequestGroup* requestGroup);
+  RequestGroupEntry(RequestGroup* requestGroup,
+                    std::unique_ptr<Command> nextCommand);
 
   virtual ~RequestGroupEntry();
 

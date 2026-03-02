@@ -38,11 +38,12 @@
 
 #include "util.h"
 #include "a2functional.h"
+#include "DlAbortEx.h"
+#include "fmt.h"
 
 namespace aria2 {
 
 const unsigned char BtHandshakeMessage::BT_PSTR[] = "BitTorrent protocol";
-const char BtHandshakeMessage::NAME[] = "handshake";
 
 BtHandshakeMessage::BtHandshakeMessage() : SimpleBtMessage(ID, NAME) { init(); }
 
@@ -69,9 +70,15 @@ void BtHandshakeMessage::init()
 }
 
 std::unique_ptr<BtHandshakeMessage>
-BtHandshakeMessage::create(const unsigned char* data, size_t dataLength)
+BtHandshakeMessage::create(std::span<const unsigned char> data)
 {
-  auto msg = make_unique<BtHandshakeMessage>();
+  if (data.size() < MESSAGE_LENGTH) {
+    throw DL_ABORT_EX(
+        fmt("BtHandshake message too short: %lu < %lu",
+            static_cast<unsigned long>(data.size()),
+            static_cast<unsigned long>(MESSAGE_LENGTH)));
+  }
+  auto msg = std::make_unique<BtHandshakeMessage>();
   msg->pstrlen_ = data[0];
   std::copy_n(&data[1], msg->pstr_.size(), std::begin(msg->pstr_));
   std::copy_n(&data[20], msg->reserved_.size(), std::begin(msg->reserved_));

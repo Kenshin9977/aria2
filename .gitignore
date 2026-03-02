@@ -44,3 +44,7 @@ compile
 main.log
 main.trs
 test-suite.log
+*.gcno
+*.gcda
+*.gcov
+coverage-report/

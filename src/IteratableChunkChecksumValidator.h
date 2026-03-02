@@ -39,6 +39,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace aria2 {
 
@@ -54,27 +55,35 @@ private:
   std::unique_ptr<BitfieldMan> bitfield_;
   size_t currentIndex_;
   std::unique_ptr<MessageDigest> ctx_;
+  size_t batchSize_;
 
   std::string calculateActualChecksum();
 
   std::string digest(int64_t offset, size_t length);
+
+  // Read piece data from disk into buffer
+  std::vector<unsigned char> readPiece(size_t index);
+
+  // Compute hash of pre-read buffer
+  static std::string hashData(const std::string& hashType,
+                              const unsigned char* data, size_t length);
 
 public:
   IteratableChunkChecksumValidator(
       const std::shared_ptr<DownloadContext>& dctx,
       const std::shared_ptr<PieceStorage>& pieceStorage);
 
-  virtual ~IteratableChunkChecksumValidator();
+  ~IteratableChunkChecksumValidator() override;
 
-  virtual void init() CXX11_OVERRIDE;
+  void init() override;
 
-  virtual void validateChunk() CXX11_OVERRIDE;
+  void validateChunk() override;
 
-  virtual bool finished() const CXX11_OVERRIDE;
+  bool finished() const override;
 
-  virtual int64_t getCurrentOffset() const CXX11_OVERRIDE;
+  int64_t getCurrentOffset() const override;
 
-  virtual int64_t getTotalLength() const CXX11_OVERRIDE;
+  int64_t getTotalLength() const override;
 };
 
 } // namespace aria2

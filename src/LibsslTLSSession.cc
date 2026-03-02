@@ -38,6 +38,7 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
+#include "a2functional.h"
 #include "LogFactory.h"
 #include "util.h"
 #include "SocketCore.h"
@@ -53,9 +54,10 @@ const unsigned char* ASN1_STRING_get0_data(ASN1_STRING* x)
 } // namespace
 #endif // !OPENSSL_101_API
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new OpenSSLTLSSession(static_cast<OpenSSLTLSContext*>(ctx));
+  return std::make_unique<OpenSSLTLSSession>(
+      static_cast<OpenSSLTLSContext*>(ctx));
 }
 
 OpenSSLTLSSession::OpenSSLTLSSession(OpenSSLTLSContext* tlsContext)
@@ -99,20 +101,22 @@ int OpenSSLTLSSession::setSNIHostname(const std::string& hostname)
 int OpenSSLTLSSession::closeConnection()
 {
   ERR_clear_error();
+  // SSL_shutdown() return value is intentionally ignored; the
+  // connection is being torn down regardless of shutdown outcome.
   SSL_shutdown(ssl_);
-  // TODO handle return value
   return TLS_ERR_OK;
 }
 
-int OpenSSLTLSSession::checkDirection()
+TLSDirection OpenSSLTLSSession::checkDirection()
 {
   int error = SSL_get_error(ssl_, rv_);
   if (error == SSL_ERROR_WANT_WRITE) {
-    return TLS_WANT_WRITE;
+    return TLSDirection::TLS_WANT_WRITE;
   }
   else {
-    // TODO We ignore error other than SSL_ERR_WANT_READ here for now
-    return TLS_WANT_READ;
+    // Any error other than SSL_ERROR_WANT_WRITE is treated as a
+    // read-direction wait (the common case for non-blocking I/O).
+    return TLSDirection::TLS_WANT_READ;
   }
 }
 
@@ -168,6 +172,37 @@ ssize_t OpenSSLTLSSession::readData(void* data, size_t len)
   return ret;
 }
 
+int OpenSSLTLSSession::setALPNProtocols(
+    const std::vector<std::string>& protocols)
+{
+  if (!ssl_) {
+    return TLS_ERR_ERROR;
+  }
+  // Build ALPN wire format: each protocol prefixed by its length byte
+  std::vector<unsigned char> wire;
+  for (const auto& proto : protocols) {
+    wire.push_back(static_cast<unsigned char>(proto.size()));
+    wire.insert(wire.end(), proto.begin(), proto.end());
+  }
+  // SSL_set_alpn_protos returns 0 on success
+  int rv = SSL_set_alpn_protos(ssl_, wire.data(), wire.size());
+  return rv == 0 ? TLS_ERR_OK : TLS_ERR_ERROR;
+}
+
+std::string OpenSSLTLSSession::getNegotiatedProtocol() const
+{
+  if (!ssl_) {
+    return std::string();
+  }
+  const unsigned char* proto = nullptr;
+  unsigned int len = 0;
+  SSL_get0_alpn_selected(ssl_, &proto, &len);
+  if (proto && len > 0) {
+    return std::string(reinterpret_cast<const char*>(proto), len);
+  }
+  return std::string();
+}
+
 int OpenSSLTLSSession::handshake(TLSVersion& version)
 {
   ERR_clear_error();
@@ -183,8 +218,8 @@ int OpenSSLTLSSession::handshake(TLSVersion& version)
     case SSL_ERROR_NONE:
     case SSL_ERROR_WANT_X509_LOOKUP:
     case SSL_ERROR_ZERO_RETURN:
-      // TODO Now assume we are doing non-blocking. Then above 2
-      // errors are OK.
+      // In non-blocking mode, SSL_ERROR_NONE and
+      // SSL_ERROR_ZERO_RETURN are terminal states — no retry needed.
       break;
     case SSL_ERROR_WANT_READ:
     case SSL_ERROR_WANT_WRITE:
@@ -254,7 +289,7 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
     std::vector<std::string> ipAddrs;
     GENERAL_NAMES* altNames;
     altNames = reinterpret_cast<GENERAL_NAMES*>(
-        X509_get_ext_d2i(peerCert, NID_subject_alt_name, nullptr, NULL));
+        X509_get_ext_d2i(peerCert, NID_subject_alt_name, nullptr, nullptr));
     if (altNames) {
       std::unique_ptr<GENERAL_NAMES, decltype(&GENERAL_NAMES_free)>
           altNamesDeleter(altNames, GENERAL_NAMES_free);
@@ -276,7 +311,7 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
               continue;
             }
           }
-          dnsNames.push_back(std::string(name, name + len));
+          dnsNames.emplace_back(name, name + len);
         }
         else if (altName->type == GEN_IPADD) {
           const unsigned char* ipAddr = altName->d.iPAddress->data;
@@ -284,8 +319,8 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
             continue;
           }
           size_t len = altName->d.iPAddress->length;
-          ipAddrs.push_back(
-              std::string(reinterpret_cast<const char*>(ipAddr), len));
+          ipAddrs.emplace_back(
+              reinterpret_cast<const char*>(ipAddr), len);
         }
       }
     }

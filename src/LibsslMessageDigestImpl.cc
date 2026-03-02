@@ -69,22 +69,24 @@ public:
     EVP_MD_CTX_reset(ctx_);
     reset();
   }
-  virtual ~MessageDigestBase() { EVP_MD_CTX_free(ctx_); }
+  ~MessageDigestBase() override { EVP_MD_CTX_free(ctx_); }
 
   static size_t length() { return EVP_MD_size(init_fn()); }
-  virtual size_t getDigestLength() const CXX11_OVERRIDE { return len_; }
-  virtual void reset() CXX11_OVERRIDE { EVP_DigestInit_ex(ctx_, md_, nullptr); }
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  size_t getDigestLength() const override { return len_; }
+  void reset() override { EVP_DigestInit_ex(ctx_, md_, nullptr); }
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const char*>(data);
     while (length) {
-      size_t l = std::min(length, (size_t)std::numeric_limits<uint32_t>::max());
+      size_t l = std::min(
+          length,
+          static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       EVP_DigestUpdate(ctx_, bytes, l);
       length -= l;
       bytes += l;
     }
   }
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     unsigned int len;
     EVP_DigestFinal_ex(ctx_, md, &len);
@@ -96,12 +98,12 @@ private:
   const size_t len_;
 };
 
-typedef MessageDigestBase<EVP_md5> MessageDigestMD5;
-typedef MessageDigestBase<EVP_sha1> MessageDigestSHA1;
+using MessageDigestMD5 = MessageDigestBase<EVP_md5>;
+using MessageDigestSHA1 = MessageDigestBase<EVP_sha1>;
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {
-  return make_unique<MessageDigestSHA1>();
+  return std::make_unique<MessageDigestSHA1>();
 }
 
 MessageDigestImpl::hashes_t MessageDigestImpl::hashes = {

@@ -34,8 +34,10 @@
 /* copyright --> */
 #include "common.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <ranges>
 #include <sstream>
 
 #include <aria2/aria2.h>
@@ -144,17 +146,17 @@ void showCandidates(const std::string& unknownOption,
     // Use cost 0 for prefix match
     if (util::startsWith(pref->k, pref->k + strlen(pref->k), optstr,
                          optstr + optstrlen)) {
-      cands.push_back(std::make_pair(0, pref));
+      cands.emplace_back(0, pref);
       continue;
     }
     // cost values are borrowed from git, help.c.
     int sim = levenshtein(optstr, pref->k, 0, 2, 1, 3);
-    cands.push_back(std::make_pair(sim, pref));
+    cands.emplace_back(sim, pref);
   }
   if (cands.empty()) {
     return;
   }
-  std::sort(cands.begin(), cands.end());
+  std::ranges::sort(cands);
   int threshold = cands[0].first;
   // threshold value 12 is a magic value.
   if (threshold > 12) {
@@ -164,8 +166,8 @@ void showCandidates(const std::string& unknownOption,
   global::cerr()->printf(_("Did you mean:"));
   global::cerr()->printf("\n");
   for (auto i = cands.begin(), eoi = cands.end();
-       i != eoi && (*i).first <= threshold; ++i) {
-    global::cerr()->printf("\t--%s\n", (*i).second->k);
+       i != eoi && i->first <= threshold; ++i) {
+    global::cerr()->printf("\t--%s\n", i->second->k);
   }
 }
 
@@ -204,7 +206,7 @@ error_code::Value option_processing(Option& op, bool standalone,
           }
           else {
             keyword = op.get(PREF_HELP);
-            if (util::startsWith(keyword, "--")) {
+            if (keyword.starts_with("--")) {
               keyword.erase(keyword.begin(), keyword.begin() + 2);
             }
             std::string::size_type eqpos = keyword.find("=");

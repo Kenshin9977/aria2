@@ -51,9 +51,9 @@ public:
   RangeBtMessageValidator(const RangeBtMessage* message, size_t numPiece,
                           int32_t pieceLength);
 
-  ~RangeBtMessageValidator();
+  ~RangeBtMessageValidator() override;
 
-  virtual void validate() CXX11_OVERRIDE;
+  void validate() override;
 };
 
 } // namespace aria2

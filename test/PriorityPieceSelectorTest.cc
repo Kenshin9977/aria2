@@ -33,14 +33,20 @@ void PriorityPieceSelectorTest::testSelect()
       std::shared_ptr<PieceSelector>(new MockPieceSelector()));
   selector.setPriorityPiece(std::begin(A), std::end(A));
 
-  size_t index;
-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
-  CPPUNIT_ASSERT_EQUAL((size_t)1, index);
+  {
+    auto r = selector.select(bf.getBitfield(), bf.countBlock());
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)1, *r);
+  }
   bf.unsetBit(1);
-  CPPUNIT_ASSERT(selector.select(index, bf.getBitfield(), bf.countBlock()));
-  CPPUNIT_ASSERT_EQUAL((size_t)200, index);
+  {
+    auto r = selector.select(bf.getBitfield(), bf.countBlock());
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)200, *r);
+  }
   bf.unsetBit(200);
-  CPPUNIT_ASSERT(!selector.select(index, bf.getBitfield(), bf.countBlock()));
+  CPPUNIT_ASSERT(
+      !selector.select(bf.getBitfield(), bf.countBlock()).has_value());
 }
 
 } // namespace aria2

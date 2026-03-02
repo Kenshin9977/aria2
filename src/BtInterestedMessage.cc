@@ -39,8 +39,6 @@
 
 namespace aria2 {
 
-const char BtInterestedMessage::NAME[] = "interested";
-
 BtInterestedMessage::BtInterestedMessage()
     : ZeroBtMessage(ID, NAME), peerStorage_(nullptr)
 {
@@ -49,9 +47,9 @@ BtInterestedMessage::BtInterestedMessage()
 BtInterestedMessage::~BtInterestedMessage() = default;
 
 std::unique_ptr<BtInterestedMessage>
-BtInterestedMessage::create(const unsigned char* data, size_t dataLength)
+BtInterestedMessage::create(std::span<const unsigned char> data)
 {
-  return ZeroBtMessage::create<BtInterestedMessage>(data, dataLength);
+  return ZeroBtMessage::create<BtInterestedMessage>(data);
 }
 
 void BtInterestedMessage::doReceivedAction()

@@ -60,20 +60,17 @@ public:
       const std::shared_ptr<DownloadContext>& dctx,
       const std::shared_ptr<PieceStorage>& pieceStorage);
 
-  virtual ~IteratableChecksumValidator();
+  ~IteratableChecksumValidator() override;
 
-  virtual void init() CXX11_OVERRIDE;
+  void init() override;
 
-  virtual void validateChunk() CXX11_OVERRIDE;
+  void validateChunk() override;
 
-  virtual bool finished() const CXX11_OVERRIDE;
+  bool finished() const override;
 
-  virtual int64_t getCurrentOffset() const CXX11_OVERRIDE
-  {
-    return currentOffset_;
-  }
+  int64_t getCurrentOffset() const override { return currentOffset_; }
 
-  virtual int64_t getTotalLength() const CXX11_OVERRIDE;
+  int64_t getTotalLength() const override;
 };
 
 } // namespace aria2

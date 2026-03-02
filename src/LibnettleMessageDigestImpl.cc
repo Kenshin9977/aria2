@@ -45,29 +45,28 @@ namespace {
 template <const nettle_hash* hash>
 class MessageDigestBase : public MessageDigestImpl {
 public:
-  MessageDigestBase() : ctx_(make_unique<char[]>(hash->context_size))
+  MessageDigestBase() : ctx_(std::make_unique<char[]>(hash->context_size))
   {
     reset();
   }
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return hash->digest_size; }
-  virtual size_t getDigestLength() const CXX11_OVERRIDE
-  {
-    return hash->digest_size;
-  }
-  virtual void reset() CXX11_OVERRIDE { hash->init(ctx_.get()); }
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  virtual size_t getDigestLength() const override { return hash->digest_size; }
+  void reset() override { hash->init(ctx_.get()); }
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const uint8_t*>(data);
     while (length) {
-      size_t l = std::min(length, (size_t)std::numeric_limits<uint32_t>::max());
+      size_t l = std::min(
+          length,
+          static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       hash->update(ctx_.get(), l, bytes);
       length -= l;
       bytes += l;
     }
   }
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     hash->digest(ctx_.get(), getDigestLength(), md);
   }
@@ -77,17 +76,17 @@ private:
   size_t len_;
 };
 
-typedef MessageDigestBase<&nettle_md5> MessageDigestMD5;
-typedef MessageDigestBase<&nettle_sha1> MessageDigestSHA1;
-typedef MessageDigestBase<&nettle_sha224> MessageDigestSHA224;
-typedef MessageDigestBase<&nettle_sha256> MessageDigestSHA256;
-typedef MessageDigestBase<&nettle_sha384> MessageDigestSHA384;
-typedef MessageDigestBase<&nettle_sha512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<&nettle_md5>;
+using MessageDigestSHA1 = MessageDigestBase<&nettle_sha1>;
+using MessageDigestSHA224 = MessageDigestBase<&nettle_sha224>;
+using MessageDigestSHA256 = MessageDigestBase<&nettle_sha256>;
+using MessageDigestSHA384 = MessageDigestBase<&nettle_sha384>;
+using MessageDigestSHA512 = MessageDigestBase<&nettle_sha512>;
 } // namespace
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {
-  return make_unique<MessageDigestSHA1>();
+  return std::make_unique<MessageDigestSHA1>();
 }
 
 MessageDigestImpl::hashes_t MessageDigestImpl::hashes = {

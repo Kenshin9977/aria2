@@ -40,9 +40,9 @@ public:
     virtual std::unique_ptr<DHTFindNodeReplyMessage> createFindNodeReplyMessage(
         const std::shared_ptr<DHTNode>& remoteNode,
         std::vector<std::shared_ptr<DHTNode>> closestKNodes,
-        const std::string& transactionID) CXX11_OVERRIDE
+        const std::string& transactionID) override
     {
-      auto m = make_unique<DHTFindNodeReplyMessage>(AF_INET, localNode_,
+      auto m = std::make_unique<DHTFindNodeReplyMessage>(AF_INET, localNode_,
                                                     remoteNode, transactionID);
       m->setClosestKNodes(std::move(closestKNodes));
       return m;
@@ -105,7 +105,8 @@ void DHTFindNodeMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("find_node"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("find_node"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
   CPPUNIT_ASSERT_EQUAL((size_t)1, m->getClosestKNodes().size());
 }

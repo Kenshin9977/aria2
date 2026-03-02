@@ -37,9 +37,9 @@
 
 #include "common.h"
 
+#include <compare>
 #include <deque>
 #include <algorithm>
-#include <functional>
 #include <memory>
 
 #include "a2netcompat.h"
@@ -88,9 +88,9 @@ public:
     return command_ == commandEvent.command_;
   }
 
-  virtual int getEvents() const { return events_; }
+  int getEvents() const override { return events_; }
 
-  virtual void processEvents(int events)
+  void processEvents(int events) override
   {
     if ((events_ & events) ||
         ((EventPoll::IEV_ERROR | EventPoll::IEV_HUP) & events)) {
@@ -110,12 +110,12 @@ public:
     }
   }
 
-  virtual void addSelf(SocketEntry* socketEntry) const
+  void addSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->addCommandEvent(*this);
   }
 
-  virtual void removeSelf(SocketEntry* socketEntry) const
+  void removeSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->removeCommandEvent(*this);
   }
@@ -143,9 +143,9 @@ public:
     return *resolver_ == *event.resolver_;
   }
 
-  virtual int getEvents() const { return events_; }
+  int getEvents() const override { return events_; }
 
-  virtual void processEvents(int events)
+  void processEvents(int events) override
   {
     ares_socket_t readfd;
     ares_socket_t writefd;
@@ -167,12 +167,12 @@ public:
     command_->setStatusActive();
   }
 
-  virtual void addSelf(SocketEntry* socketEntry) const
+  void addSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->addADNSEvent(*this);
   }
 
-  virtual void removeSelf(SocketEntry* socketEntry) const
+  void removeSelf(SocketEntry* socketEntry) const override
   {
     socketEntry->removeADNSEvent(*this);
   }
@@ -199,20 +199,19 @@ public:
   SocketEntry(const SocketEntry&) = delete;
   SocketEntry(SocketEntry&&) = default;
 
+  auto operator<=>(const SocketEntry& entry) const
+  {
+    return socket_ <=> entry.socket_;
+  }
+
   bool operator==(const SocketEntry& entry) const
   {
     return socket_ == entry.socket_;
   }
 
-  bool operator<(const SocketEntry& entry) const
-  {
-    return socket_ < entry.socket_;
-  }
-
   void addCommandEvent(const CommandEvent& cev)
   {
-    typename std::deque<CommandEvent>::iterator i =
-        std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+    auto i = std::ranges::find(commandEvents_, cev);
     if (i == commandEvents_.end()) {
       commandEvents_.push_back(cev);
     }
@@ -223,8 +222,7 @@ public:
 
   void removeCommandEvent(const CommandEvent& cev)
   {
-    typename std::deque<CommandEvent>::iterator i =
-        std::find(commandEvents_.begin(), commandEvents_.end(), cev);
+    auto i = std::ranges::find(commandEvents_, cev);
     if (i == commandEvents_.end()) {
       // not found
     }
@@ -240,8 +238,7 @@ public:
 
   void addADNSEvent(const ADNSEvent& aev)
   {
-    typename std::deque<ADNSEvent>::iterator i =
-        std::find(adnsEvents_.begin(), adnsEvents_.end(), aev);
+    auto i = std::ranges::find(adnsEvents_, aev);
     if (i == adnsEvents_.end()) {
       adnsEvents_.push_back(aev);
     }
@@ -249,8 +246,7 @@ public:
 
   void removeADNSEvent(const ADNSEvent& aev)
   {
-    typename std::deque<ADNSEvent>::iterator i =
-        std::find(adnsEvents_.begin(), adnsEvents_.end(), aev);
+    auto i = std::ranges::find(adnsEvents_, aev);
     if (i == adnsEvents_.end()) {
       // not found
     }
@@ -275,12 +271,11 @@ public:
 
   void processEvents(int events)
   {
-    using namespace std::placeholders;
-    std::for_each(commandEvents_.begin(), commandEvents_.end(),
-                  std::bind(&CommandEvent::processEvents, _1, events));
+    std::ranges::for_each(commandEvents_,
+                          [events](auto& e) { e.processEvents(events); });
 #ifdef ENABLE_ASYNC_DNS
-    std::for_each(adnsEvents_.begin(), adnsEvents_.end(),
-                  std::bind(&ADNSEvent::processEvents, _1, events));
+    std::ranges::for_each(adnsEvents_,
+                          [events](auto& e) { e.processEvents(events); });
 #endif // ENABLE_ASYNC_DNS
   }
 };

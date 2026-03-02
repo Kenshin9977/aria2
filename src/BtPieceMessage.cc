@@ -64,8 +64,6 @@
 
 namespace aria2 {
 
-const char BtPieceMessage::NAME[] = "piece";
-
 BtPieceMessage::BtPieceMessage(size_t index, int32_t begin, int32_t blockLength)
     : AbstractBtMessage(ID, NAME),
       index_(index),
@@ -83,13 +81,13 @@ BtPieceMessage::~BtPieceMessage() = default;
 void BtPieceMessage::setMsgPayload(const unsigned char* data) { data_ = data; }
 
 std::unique_ptr<BtPieceMessage>
-BtPieceMessage::create(const unsigned char* data, size_t dataLength)
+BtPieceMessage::create(std::span<const unsigned char> data)
 {
-  bittorrent::assertPayloadLengthGreater(9, dataLength, NAME);
-  bittorrent::assertID(ID, data, NAME);
-  return make_unique<BtPieceMessage>(bittorrent::getIntParam(data, 1),
-                                     bittorrent::getIntParam(data, 5),
-                                     dataLength - 9);
+  bittorrent::assertPayloadLengthGreater(9, data.size(), NAME);
+  bittorrent::assertID(ID, data.data(), NAME);
+  return std::make_unique<BtPieceMessage>(bittorrent::getIntParam(data.data(), 1),
+                                     bittorrent::getIntParam(data.data(), 5),
+                                     data.size() - 9);
 }
 
 void BtPieceMessage::doReceivedAction()
@@ -182,7 +180,7 @@ struct PieceSendUpdate : public ProgressUpdate {
       : dctx(dctx), peer(std::move(peer)), headerLength(headerLength)
   {
   }
-  virtual void update(size_t length, bool complete) CXX11_OVERRIDE
+  void update(size_t length, bool complete) override
   {
     if (headerLength > 0) {
       size_t m = std::min(headerLength, length);
@@ -223,7 +221,7 @@ void BtPieceMessage::pushPieceData(int64_t offset, int32_t length) const
   if (r == length) {
     const auto& peer = getPeer();
     getPeerConnection()->pushBytes(
-        std::move(buf), make_unique<PieceSendUpdate>(downloadContext_, peer,
+        std::move(buf), std::make_unique<PieceSendUpdate>(downloadContext_, peer,
                                                      MESSAGE_HEADER_LENGTH));
     peer->updateUploadSpeed(length);
     downloadContext_->updateUploadSpeed(length);

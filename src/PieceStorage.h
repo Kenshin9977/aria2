@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <span>
 #include <string>
 #include <vector>
 #include <memory>
@@ -62,7 +63,8 @@ public:
    * Returns true if the peer has a piece that localhost doesn't have.
    * Otherwise returns false.
    */
-  virtual bool hasMissingPiece(const std::shared_ptr<Peer>& peer) = 0;
+  [[nodiscard]] virtual bool
+  hasMissingPiece(const std::shared_ptr<Peer>& peer) = 0;
 
   // Stores pieces that the peer has but localhost doesn't.  Those
   // pieces will be marked "used" status in order to prevent other
@@ -127,7 +129,7 @@ public:
 #endif // ENABLE_BITTORRENT
 
   // Returns true if there is at least one missing and unused piece.
-  virtual bool hasMissingUnusedPiece() = 0;
+  [[nodiscard]] virtual bool hasMissingUnusedPiece() = 0;
 
   /**
    * Returns a missing piece if available. Otherwise returns 0;
@@ -171,17 +173,17 @@ public:
    * Returns true if the specified piece is already downloaded.
    * Otherwise returns false.
    */
-  virtual bool hasPiece(size_t index) = 0;
+  [[nodiscard]] virtual bool hasPiece(size_t index) = 0;
 
   virtual bool isPieceUsed(size_t index) = 0;
 
-  virtual int64_t getTotalLength() = 0;
+  [[nodiscard]] virtual int64_t getTotalLength() = 0;
 
-  virtual int64_t getFilteredTotalLength() = 0;
+  [[nodiscard]] virtual int64_t getFilteredTotalLength() = 0;
 
-  virtual int64_t getCompletedLength() = 0;
+  [[nodiscard]] virtual int64_t getCompletedLength() = 0;
 
-  virtual int64_t getFilteredCompletedLength() = 0;
+  [[nodiscard]] virtual int64_t getFilteredCompletedLength() = 0;
 
   virtual void setupFileFilter() = 0;
 
@@ -192,24 +194,23 @@ public:
    * If file filter is enabled, then returns true if those files have
    * downloaded.
    */
-  virtual bool downloadFinished() = 0;
+  [[nodiscard]] virtual bool downloadFinished() = 0;
 
   /**
    * Returns true if all files have downloaded.
    * The file filter is ignored.
    */
-  virtual bool allDownloadFinished() = 0;
+  [[nodiscard]] virtual bool allDownloadFinished() = 0;
 
   /**
-   * Initializes DiskAdaptor.
-   * TODO add better documentation here.
+   * Initializes the DiskAdaptor and opens/creates the output files.
+   * Must be called before any read/write operations on pieces.
    */
   virtual void initStorage() = 0;
 
   virtual const unsigned char* getBitfield() = 0;
 
-  virtual void setBitfield(const unsigned char* bitfield,
-                           size_t bitfieldLength) = 0;
+  virtual void setBitfield(std::span<const unsigned char> bitfield) = 0;
 
   virtual size_t getBitfieldLength() = 0;
 
@@ -219,10 +220,10 @@ public:
 
   virtual void enterEndGame() = 0;
 
-  // TODO We can remove this.
+  // Unused — endGamePieceNum is set in constructors but never read.
   virtual void setEndGamePieceNum(size_t num) = 0;
 
-  virtual std::shared_ptr<DiskAdaptor> getDiskAdaptor() = 0;
+  [[nodiscard]] virtual std::shared_ptr<DiskAdaptor> getDiskAdaptor() = 0;
 
   virtual WrDiskCache* getWrDiskCache() = 0;
 
@@ -273,15 +274,12 @@ public:
 
   virtual void addPieceStats(size_t index) = 0;
 
-  virtual void addPieceStats(const unsigned char* bitfield,
-                             size_t bitfieldLength) = 0;
+  virtual void addPieceStats(std::span<const unsigned char> bitfield) = 0;
 
-  virtual void subtractPieceStats(const unsigned char* bitfield,
-                                  size_t bitfieldLength) = 0;
+  virtual void subtractPieceStats(std::span<const unsigned char> bitfield) = 0;
 
-  virtual void updatePieceStats(const unsigned char* newBitfield,
-                                size_t newBitfieldLength,
-                                const unsigned char* oldBitfield) = 0;
+  virtual void updatePieceStats(std::span<const unsigned char> newBitfield,
+                                std::span<const unsigned char> oldBitfield) = 0;
 
   // Returns index x where all pieces in [index+1, x-1], inclusive,
   // are not used and not completed. If all pieces after index+1 are

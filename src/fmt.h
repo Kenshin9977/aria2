@@ -37,10 +37,15 @@
 
 #include "common.h"
 
+#include <format>
 #include <string>
 #include <cstdarg>
 
 namespace aria2 {
+
+// Type-safe formatting using std::format (C++20).
+// Prefer A2_FMT over fmt() for new code.
+#define A2_FMT(...) std::format(__VA_ARGS__)
 
 std::string fmt(const char* fmt, ...)
 #ifdef __MINGW32__

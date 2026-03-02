@@ -47,25 +47,28 @@ namespace aria2 {
 
 namespace bencode2 {
 
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len)
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data)
 {
   size_t end;
-  return decode(data, len, end);
+  return decode(data, end);
 }
 
 std::unique_ptr<ValueBase> decode(const std::string& data)
 {
   size_t end;
-  return decode(reinterpret_cast<const unsigned char*>(data.c_str()),
-                data.size(), end);
+  return decode(
+      std::span<const unsigned char>(
+          reinterpret_cast<const unsigned char*>(data.c_str()), data.size()),
+      end);
 }
 
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len,
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data,
                                   size_t& end)
 {
   ssize_t error;
   bittorrent::ValueBaseBencodeParser parser;
-  auto res = parser.parseFinal(reinterpret_cast<const char*>(data), len, error);
+  auto res = parser.parseFinal(reinterpret_cast<const char*>(data.data()),
+                               data.size(), error);
   if (error < 0) {
     throw DL_ABORT_EX2(
         fmt("Bencode decoding failed: error=%d", static_cast<int>(error)),
@@ -82,22 +85,22 @@ std::string encode(const ValueBase* vlb)
     std::ostringstream out_;
 
   public:
-    virtual void visit(const String& string) CXX11_OVERRIDE
+    void visit(const String& string) override
     {
       const std::string& s = string.s();
       out_ << s.size() << ":";
       out_.write(s.data(), s.size());
     }
 
-    virtual void visit(const Integer& integer) CXX11_OVERRIDE
+    void visit(const Integer& integer) override
     {
       out_ << "i" << integer.i() << "e";
     }
 
-    virtual void visit(const Bool& v) CXX11_OVERRIDE {}
-    virtual void visit(const Null& v) CXX11_OVERRIDE {}
+    void visit(const Bool& v) override {}
+    void visit(const Null& v) override {}
 
-    virtual void visit(const List& list) CXX11_OVERRIDE
+    void visit(const List& list) override
     {
       out_ << "l";
       for (const auto& e : list) {
@@ -106,14 +109,13 @@ std::string encode(const ValueBase* vlb)
       out_ << "e";
     }
 
-    virtual void visit(const Dict& dict) CXX11_OVERRIDE
+    void visit(const Dict& dict) override
     {
       out_ << "d";
-      for (const auto& e : dict) {
-        auto& key = e.first;
+      for (const auto& [key, value] : dict) {
         out_ << key.size() << ":";
         out_.write(key.data(), key.size());
-        e.second->accept(*this);
+        value->accept(*this);
       }
       out_ << "e";
     }

@@ -48,9 +48,9 @@ private:
 
 public:
   BtBitfieldMessageValidator(const BtBitfieldMessage* message, size_t numPiece);
-  ~BtBitfieldMessageValidator();
+  ~BtBitfieldMessageValidator() override;
 
-  virtual void validate() CXX11_OVERRIDE;
+  void validate() override;
 };
 
 } // namespace aria2

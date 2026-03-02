@@ -37,8 +37,6 @@
 
 namespace aria2 {
 
-const char MetalinkMetaurl::MEDIATYPE_TORRENT[] = "torrent";
-
 MetalinkMetaurl::MetalinkMetaurl()
     : priority(MetalinkResource::getLowestPriority())
 {

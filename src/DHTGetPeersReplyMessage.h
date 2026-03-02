@@ -56,7 +56,7 @@ private:
   std::vector<std::shared_ptr<Peer>> values_;
 
 protected:
-  virtual std::string toStringOptional() const CXX11_OVERRIDE;
+  std::string toStringOptional() const override;
 
 public:
   DHTGetPeersReplyMessage(int family, const std::shared_ptr<DHTNode>& localNode,
@@ -64,13 +64,13 @@ public:
                           const std::string& token,
                           const std::string& transactionID);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getResponse() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getResponse() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
-  virtual void accept(DHTMessageCallback* callback) CXX11_OVERRIDE;
+  void accept(DHTMessageCallback* callback) override;
 
   const std::vector<std::shared_ptr<DHTNode>>& getClosestKNodes() const
   {
@@ -88,15 +88,15 @@ public:
 
   const std::string& getToken() const { return token_; }
 
-  static const std::string GET_PEERS;
+  static constexpr const char GET_PEERS[] = "get_peers";
 
-  static const std::string TOKEN;
+  static constexpr const char TOKEN[] = "token";
 
-  static const std::string VALUES;
+  static constexpr const char VALUES[] = "values";
 
-  static const std::string NODES;
+  static constexpr const char NODES[] = "nodes";
 
-  static const std::string NODES6;
+  static constexpr const char NODES6[] = "nodes6";
 };
 
 } // namespace aria2

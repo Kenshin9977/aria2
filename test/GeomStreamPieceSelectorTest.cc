@@ -30,22 +30,33 @@ void GeomStreamPieceSelectorTest::testOnBitfieldInit()
   sel.onBitfieldInit();
   unsigned char igbf[3];
   memset(igbf, 0, 3);
-  size_t index;
   // 11111|11111|00000|00000
-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
-  CPPUNIT_ASSERT_EQUAL((size_t)11, index);
+  {
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)11, *r);
+  }
   bf.setUseBit(11);
   // 11111|11111|10000|00000
-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
-  CPPUNIT_ASSERT_EQUAL((size_t)12, index);
+  {
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)12, *r);
+  }
   bf.setUseBit(12);
   // 11111|11111|11000|00000
-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
-  CPPUNIT_ASSERT_EQUAL((size_t)13, index);
+  {
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)13, *r);
+  }
   bf.setUseBit(13);
   // 11111|11111|11100|00000
-  CPPUNIT_ASSERT(sel.select(index, 20_k, igbf, sizeof(igbf)));
-  CPPUNIT_ASSERT_EQUAL((size_t)15, index);
+  {
+    auto r = sel.select(20_k, {igbf, sizeof(igbf)});
+    CPPUNIT_ASSERT(r.has_value());
+    CPPUNIT_ASSERT_EQUAL((size_t)15, *r);
+  }
 }
 
 } // namespace aria2

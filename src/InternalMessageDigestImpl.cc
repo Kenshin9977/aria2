@@ -47,7 +47,7 @@ template <hash::Algorithms algo>
 class MessageDigestBase : public MessageDigestImpl {
 public:
   MessageDigestBase() : ctx_{hash::create(algo)} {}
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length()
   {
@@ -55,19 +55,16 @@ public:
     return ctx->length();
   }
 
-  virtual size_t getDigestLength() const CXX11_OVERRIDE
-  {
-    return ctx_->length();
-  }
+  virtual size_t getDigestLength() const override { return ctx_->length(); }
 
-  virtual void reset() CXX11_OVERRIDE { ctx_->reset(); }
+  void reset() override { ctx_->reset(); }
 
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  void update(const void* data, size_t length) override
   {
     ctx_->update(data, length);
   }
 
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     auto rv = ctx_->finalize();
     memcpy(md, rv.data(), rv.length());
@@ -77,12 +74,12 @@ private:
   std::unique_ptr<hash::Algorithm> ctx_;
 };
 
-typedef MessageDigestBase<hash::algoMD5> MessageDigestMD5;
-typedef MessageDigestBase<hash::algoSHA1> MessageDigestSHA1;
-typedef MessageDigestBase<hash::algoSHA224> MessageDigestSHA224;
-typedef MessageDigestBase<hash::algoSHA256> MessageDigestSHA256;
-typedef MessageDigestBase<hash::algoSHA384> MessageDigestSHA384;
-typedef MessageDigestBase<hash::algoSHA512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<hash::algoMD5>;
+using MessageDigestSHA1 = MessageDigestBase<hash::algoSHA1>;
+using MessageDigestSHA224 = MessageDigestBase<hash::algoSHA224>;
+using MessageDigestSHA256 = MessageDigestBase<hash::algoSHA256>;
+using MessageDigestSHA384 = MessageDigestBase<hash::algoSHA384>;
+using MessageDigestSHA512 = MessageDigestBase<hash::algoSHA512>;
 
 } // namespace
 
@@ -90,7 +87,7 @@ namespace aria2 {
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {
-  return make_unique<MessageDigestSHA1>();
+  return std::make_unique<MessageDigestSHA1>();
 }
 
 MessageDigestImpl::hashes_t MessageDigestImpl::hashes = {

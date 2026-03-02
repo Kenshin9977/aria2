@@ -46,7 +46,7 @@
 namespace aria2 {
 
 template <typename HashFunc> struct HashFuncEntry {
-  typedef HashFunc HashFuncType;
+  using HashFuncType = HashFunc;
   std::string hashType;
   HashFunc hashFunc;
   HashFuncEntry(std::string hashType, const HashFunc& hashFunc)

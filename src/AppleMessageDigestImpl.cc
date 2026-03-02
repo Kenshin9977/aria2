@@ -48,52 +48,52 @@ template <size_t dlen, typename ctx_t, int (*init_fn)(ctx_t*),
 class MessageDigestBase : public MessageDigestImpl {
 public:
   MessageDigestBase() { reset(); }
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return dlen; }
-  virtual size_t getDigestLength() const CXX11_OVERRIDE { return dlen; }
-  virtual void reset() CXX11_OVERRIDE { init_fn(&ctx_); }
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  size_t getDigestLength() const override { return dlen; }
+  void reset() override { init_fn(&ctx_); }
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const char*>(data);
     while (length) {
       CC_LONG l =
-          std::min(length, (size_t)std::numeric_limits<uint32_t>::max());
+          std::min(length, static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       update_fn(&ctx_, bytes, l);
       length -= l;
       bytes += l;
     }
   }
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE { final_fn(md, &ctx_); }
+  void digest(unsigned char* md) override { final_fn(md, &ctx_); }
 
 private:
   ctx_t ctx_;
 };
 
-typedef MessageDigestBase<CC_MD5_DIGEST_LENGTH, CC_MD5_CTX, CC_MD5_Init,
-                          CC_MD5_Update, CC_MD5_Final>
-    MessageDigestMD5;
-typedef MessageDigestBase<CC_SHA1_DIGEST_LENGTH, CC_SHA1_CTX, CC_SHA1_Init,
-                          CC_SHA1_Update, CC_SHA1_Final>
-    MessageDigestSHA1;
-typedef MessageDigestBase<CC_SHA224_DIGEST_LENGTH, CC_SHA256_CTX,
-                          CC_SHA224_Init, CC_SHA224_Update, CC_SHA224_Final>
-    MessageDigestSHA224;
-typedef MessageDigestBase<CC_SHA256_DIGEST_LENGTH, CC_SHA256_CTX,
-                          CC_SHA256_Init, CC_SHA256_Update, CC_SHA256_Final>
-    MessageDigestSHA256;
-typedef MessageDigestBase<CC_SHA384_DIGEST_LENGTH, CC_SHA512_CTX,
-                          CC_SHA384_Init, CC_SHA384_Update, CC_SHA384_Final>
-    MessageDigestSHA384;
-typedef MessageDigestBase<CC_SHA512_DIGEST_LENGTH, CC_SHA512_CTX,
-                          CC_SHA512_Init, CC_SHA512_Update, CC_SHA512_Final>
-    MessageDigestSHA512;
+using MessageDigestMD5 =
+    MessageDigestBase<CC_MD5_DIGEST_LENGTH, CC_MD5_CTX, CC_MD5_Init,
+                      CC_MD5_Update, CC_MD5_Final>;
+using MessageDigestSHA1 =
+    MessageDigestBase<CC_SHA1_DIGEST_LENGTH, CC_SHA1_CTX, CC_SHA1_Init,
+                      CC_SHA1_Update, CC_SHA1_Final>;
+using MessageDigestSHA224 =
+    MessageDigestBase<CC_SHA224_DIGEST_LENGTH, CC_SHA256_CTX,
+                      CC_SHA224_Init, CC_SHA224_Update, CC_SHA224_Final>;
+using MessageDigestSHA256 =
+    MessageDigestBase<CC_SHA256_DIGEST_LENGTH, CC_SHA256_CTX,
+                      CC_SHA256_Init, CC_SHA256_Update, CC_SHA256_Final>;
+using MessageDigestSHA384 =
+    MessageDigestBase<CC_SHA384_DIGEST_LENGTH, CC_SHA512_CTX,
+                      CC_SHA384_Init, CC_SHA384_Update, CC_SHA384_Final>;
+using MessageDigestSHA512 =
+    MessageDigestBase<CC_SHA512_DIGEST_LENGTH, CC_SHA512_CTX,
+                      CC_SHA512_Init, CC_SHA512_Update, CC_SHA512_Final>;
 
 } // namespace
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {
-  return make_unique<MessageDigestSHA1>();
+  return std::make_unique<MessageDigestSHA1>();
 }
 
 MessageDigestImpl::hashes_t MessageDigestImpl::hashes = {

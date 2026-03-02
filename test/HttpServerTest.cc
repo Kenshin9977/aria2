@@ -4,6 +4,7 @@
 
 #include "SocketCore.h"
 #include "a2functional.h"
+#include "TestEngineHelper.h"
 
 namespace aria2 {
 
@@ -26,12 +27,11 @@ std::unique_ptr<HttpServer> performHttpRequest(SocketCore& server,
 
   SocketCore client;
   client.establishConnection("localhost", endpoint.port);
-  while (!client.isWritable(0)) {
-  }
+  waitWrite(client);
 
   auto inbound = server.acceptConnection();
   inbound->setBlockingMode();
-  auto rv = make_unique<HttpServer>(inbound);
+  auto rv = std::make_unique<HttpServer>(inbound);
 
   client.writeData(request);
   while (!rv->receiveRequest()) {

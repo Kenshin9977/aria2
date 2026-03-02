@@ -63,7 +63,7 @@ constexpr auto GET_PEER_INTERVAL_ZERO = 1_min;
 // Interval for retry.
 constexpr auto GET_PEER_INTERVAL_RETRY = 5_s;
 // Maximum retries. Try more than 5 to drop bad node.
-const int MAX_RETRIES = 10;
+constexpr int MAX_RETRIES = 10;
 
 } // namespace
 

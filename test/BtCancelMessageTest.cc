@@ -40,7 +40,7 @@ public:
     MockBtMessageDispatcher2() : index(0), begin(0), length(0) {}
 
     virtual void doCancelSendingPieceAction(size_t index, int32_t begin,
-                                            int32_t length) CXX11_OVERRIDE
+                                            int32_t length) override
     {
       this->index = index;
       this->begin = begin;
@@ -58,7 +58,7 @@ void BtCancelMessageTest::testCreate()
   bittorrent::setIntParam(&msg[5], 12345);
   bittorrent::setIntParam(&msg[9], 256);
   bittorrent::setIntParam(&msg[13], 1_k);
-  auto pm = BtCancelMessage::create(&msg[4], 13);
+  auto pm = BtCancelMessage::create({&msg[4], 13});
   CPPUNIT_ASSERT_EQUAL((uint8_t)8, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
   CPPUNIT_ASSERT_EQUAL(256, pm->getBegin());
@@ -68,7 +68,7 @@ void BtCancelMessageTest::testCreate()
   try {
     unsigned char msg[18];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 14, 8);
-    BtCancelMessage::create(&msg[4], 14);
+    BtCancelMessage::create({&msg[4], 14});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -77,7 +77,7 @@ void BtCancelMessageTest::testCreate()
   try {
     unsigned char msg[17];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 13, 9);
-    BtCancelMessage::create(&msg[4], 13);
+    BtCancelMessage::create({&msg[4], 13});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -107,7 +107,7 @@ void BtCancelMessageTest::testDoReceivedAction()
   msg.setBegin(32_k);
   msg.setLength(16_k);
   msg.setPeer(peer);
-  auto dispatcher = make_unique<MockBtMessageDispatcher2>();
+  auto dispatcher = std::make_unique<MockBtMessageDispatcher2>();
   msg.setBtMessageDispatcher(dispatcher.get());
 
   msg.doReceivedAction();

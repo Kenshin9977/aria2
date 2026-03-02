@@ -90,7 +90,7 @@ std::string AdaptiveURISelector::select(
   std::string selected = selectOne(uris);
 
   if (selected != A2STR::NIL) {
-    uris.erase(std::find(std::begin(uris), std::end(uris), selected));
+    uris.erase(std::ranges::find(uris, selected));
   }
   return selected;
 }
@@ -109,8 +109,8 @@ void AdaptiveURISelector::mayRetryWithIncreasedTimeout(FileEntry* fileEntry)
   // looking for retries
   std::deque<URIResult> timeouts;
   fileEntry->extractURIResult(timeouts, error_code::TIME_OUT);
-  std::transform(std::begin(timeouts), std::end(timeouts),
-                 std::back_inserter(uris), std::mem_fn(&URIResult::getURI));
+  std::ranges::transform(timeouts, std::back_inserter(uris),
+                         std::mem_fn(&URIResult::getURI));
 
   if (A2_LOG_DEBUG_ENABLED) {
     for (const auto& uri : uris) {
@@ -190,21 +190,22 @@ AdaptiveURISelector::getBestMirror(const std::deque<std::string>& uris) const
 {
   /* Here we return one of the bests mirrors */
   int max = getMaxDownloadSpeed(uris);
-  int min = max - (int)(max * 0.25);
+  int min = max - static_cast<int>(max * 0.25);
   std::deque<std::string> bests = getUrisBySpeed(uris, min);
 
   if (bests.size() < 2) {
     std::string uri = getMaxDownloadSpeedUri(uris);
     A2_LOG_DEBUG(fmt("AdaptiveURISelector: choosing the best mirror :"
                      " %.2fKB/s %s (other mirrors are at least 25%% slower)",
-                     (float)max / 1024, uri.c_str()));
+                     static_cast<float>(max) / 1024, uri.c_str()));
     return uri;
   }
   else {
     std::string uri = selectRandomUri(bests);
     A2_LOG_DEBUG(fmt("AdaptiveURISelector: choosing randomly one of the best"
                      " mirrors (range [%.2fKB/s, %.2fKB/s]): %s",
-                     (float)min / 1024, (float)max / 1024, uri.c_str()));
+                     static_cast<float>(min) / 1024,
+                     static_cast<float>(max) / 1024, uri.c_str()));
     return uri;
   }
 }
@@ -270,11 +271,11 @@ std::string AdaptiveURISelector::getMaxDownloadSpeedUri(
     if (!ss)
       continue;
 
-    if ((int)ss->getSingleConnectionAvgSpeed() > max) {
+    if (static_cast<int>(ss->getSingleConnectionAvgSpeed()) > max) {
       max = ss->getSingleConnectionAvgSpeed();
       uri = u;
     }
-    if ((int)ss->getMultiConnectionAvgSpeed() > max) {
+    if (static_cast<int>(ss->getMultiConnectionAvgSpeed()) > max) {
       max = ss->getMultiConnectionAvgSpeed();
       uri = u;
     }
@@ -331,7 +332,7 @@ std::string AdaptiveURISelector::getFirstToTestUri(
     counter = ss->getCounter();
     if (counter > 8)
       continue;
-    power = (int)pow(2.0, (float)counter);
+    power = static_cast<int>(pow(2.0, static_cast<float>(counter)));
     /* We test the mirror another time if it has not been
      * tested since 2^counter days */
     if (ss->getLastUpdated().difference() > std::chrono::hours(power * 24)) {

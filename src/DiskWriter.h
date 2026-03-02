@@ -47,7 +47,7 @@ class DiskWriter : public BinaryStream {
 public:
   DiskWriter() {}
 
-  virtual ~DiskWriter() = default;
+  ~DiskWriter() override = default;
   /**
    * Opens file. If the file exists, then it is truncated to 0 length.
    */

@@ -8,35 +8,29 @@ namespace aria2 {
 
 class MockBtRequestFactory : public BtRequestFactory {
 public:
-  virtual ~MockBtRequestFactory() {}
+  ~MockBtRequestFactory() override {}
 
-  virtual void
-  addTargetPiece(const std::shared_ptr<Piece>& piece) CXX11_OVERRIDE
-  {
-  }
+  void addTargetPiece(const std::shared_ptr<Piece>& piece) override {}
 
-  virtual void
-  removeTargetPiece(const std::shared_ptr<Piece>& piece) CXX11_OVERRIDE
-  {
-  }
+  void removeTargetPiece(const std::shared_ptr<Piece>& piece) override {}
 
-  virtual void removeAllTargetPiece() CXX11_OVERRIDE {}
+  void removeAllTargetPiece() override {}
 
-  virtual size_t countTargetPiece() CXX11_OVERRIDE { return 0; }
+  size_t countTargetPiece() override { return 0; }
 
-  virtual size_t countMissingBlock() CXX11_OVERRIDE { return 0; }
+  size_t countMissingBlock() override { return 0; }
 
-  virtual void removeCompletedPiece() CXX11_OVERRIDE {}
+  void removeCompletedPiece() override {}
 
-  virtual void doChokedAction() CXX11_OVERRIDE {}
+  void doChokedAction() override {}
 
-  virtual std::vector<std::unique_ptr<BtRequestMessage>>
-  createRequestMessages(size_t max, bool endGame) CXX11_OVERRIDE
+  std::vector<std::unique_ptr<BtRequestMessage>>
+  createRequestMessages(size_t max, bool endGame) override
   {
     return std::vector<std::unique_ptr<BtRequestMessage>>{};
   }
 
-  virtual std::vector<size_t> getTargetPieceIndexes() const CXX11_OVERRIDE
+  std::vector<size_t> getTargetPieceIndexes() const override
   {
     return std::vector<size_t>{};
   }

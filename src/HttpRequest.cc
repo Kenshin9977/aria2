@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "HttpRequest.h"
 
+#include <algorithm>
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -53,10 +54,11 @@
 #include "Request.h"
 #include "DownloadHandlerConstants.h"
 #include "MessageDigest.h"
+#include "HttpDigestAuth.h"
 
 namespace aria2 {
 
-const std::string HttpRequest::USER_AGENT("aria2");
+constexpr const char HttpRequest::USER_AGENT[];
 
 HttpRequest::HttpRequest()
     : cookieStorage_(nullptr),
@@ -143,11 +145,20 @@ std::string getHostText(const std::string& host, uint16_t port)
 
 std::string HttpRequest::createRequest()
 {
+  using enum Protocol;
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
-  auto requestLine = request_->getMethod();
+  if (authConfig_ &&
+      authConfigFactory_->findDigestCred(request_->getHost(),
+                                         request_->getPort())) {
+    authConfig_->setAuthScheme("digest");
+  }
+  std::string requestLine(httpMethodToString(request_->getMethod()));
+  requestLine.reserve(512);
   requestLine += ' ';
   if (proxyRequest_) {
-    if (getProtocol() == "ftp" && request_->getUsername().empty() &&
+    if ((getProtocol() == FTP ||
+         getProtocol() == FTPS) &&
+        request_->getUsername().empty() &&
         authConfig_) {
       // Insert user into URI, like ftp://USER@host/
       auto uri = getCurrentURI();
@@ -186,6 +197,18 @@ std::string HttpRequest::createRequest()
       acceptableEncodings += "deflate, gzip";
     }
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+    if (!acceptableEncodings.empty()) {
+      acceptableEncodings += ", ";
+    }
+    acceptableEncodings += "br";
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+    if (!acceptableEncodings.empty()) {
+      acceptableEncodings += ", ";
+    }
+    acceptableEncodings += "zstd";
+#endif // HAVE_LIBZSTD
     if (!acceptableEncodings.empty()) {
       builtinHds.emplace_back("Accept-Encoding:", acceptableEncodings);
     }
@@ -222,10 +245,27 @@ std::string HttpRequest::createRequest()
     builtinHds.push_back(getProxyAuthString());
   }
   if (authConfig_) {
-    auto authText = authConfig_->getAuthText();
-    std::string val = "Basic ";
-    val += base64::encode(std::begin(authText), std::end(authText));
-    builtinHds.emplace_back("Authorization:", val);
+    if (authConfig_->isDigest() && authConfigFactory_) {
+      auto* dc = authConfigFactory_->findDigestCred(
+          request_->getHost(), request_->getPort());
+      if (dc) {
+        ++dc->nc;
+        auto uri = getDir() + getFile();
+        std::string method =
+            getMethod() == HttpMethod::HEAD ? "HEAD" : "GET";
+        auto val = http_digest_auth::computeAuthHeader(
+            authConfig_->getUser(), authConfig_->getPassword(),
+            method, uri, dc->challenge, dc->nc);
+        builtinHds.emplace_back("Authorization:", val);
+      }
+    }
+    else {
+      auto authText = authConfig_->getAuthText();
+      std::string val = "Basic ";
+      val +=
+          base64::encode(std::begin(authText), std::end(authText));
+      builtinHds.emplace_back("Authorization:", val);
+    }
   }
   if (!request_->getReferer().empty()) {
     builtinHds.emplace_back("Referer:", request_->getReferer());
@@ -234,8 +274,9 @@ std::string HttpRequest::createRequest()
     std::string cookiesValue;
     auto path = getDir();
     path += getFile();
-    auto cookies = cookieStorage_->criteriaFind(
-        getHost(), path, Time().getTimeFromEpoch(), getProtocol() == "https");
+    auto cookies =
+        cookieStorage_->criteriaFind(getHost(), path, Time().getTimeFromEpoch(),
+                                     getProtocol() == HTTPS);
     for (auto c : cookies) {
       cookiesValue += c->toString();
       cookiesValue += ';';
@@ -265,15 +306,14 @@ std::string HttpRequest::createRequest()
       builtinHds.emplace_back("Want-Digest:", wantDigest);
     }
   }
-  for (const auto& builtinHd : builtinHds) {
-    auto it = std::find_if(std::begin(headers_), std::end(headers_),
-                           [&builtinHd](const std::string& hd) {
-                             return util::istartsWith(hd, builtinHd.first);
-                           });
+  for (const auto& [name, value] : builtinHds) {
+    auto it = std::ranges::find_if(headers_, [&name](const std::string& hd) {
+      return util::istartsWith(hd, name);
+    });
     if (it == std::end(headers_)) {
-      requestLine += builtinHd.first;
+      requestLine += name;
       requestLine += ' ';
-      requestLine += builtinHd.second;
+      requestLine += value;
       requestLine += "\r\n";
     }
   }
@@ -303,10 +343,10 @@ std::string HttpRequest::createProxyRequest() const
   requestLine += "\r\n";
 
   if (!proxyRequest_->getUsername().empty()) {
-    auto auth = getProxyAuthString();
-    requestLine += auth.first;
+    auto [authName, authValue] = getProxyAuthString();
+    requestLine += authName;
     requestLine += ' ';
-    requestLine += auth.second;
+    requestLine += authValue;
     requestLine += "\r\n";
   }
 
@@ -329,10 +369,19 @@ void HttpRequest::enableContentEncoding() { contentEncodingEnabled_ = true; }
 
 void HttpRequest::disableContentEncoding() { contentEncodingEnabled_ = false; }
 
-void HttpRequest::addHeader(const std::string& headersString)
+void HttpRequest::addHeader(std::string_view headersString)
 {
+  std::vector<std::string> hdrs;
   util::split(std::begin(headersString), std::end(headersString),
-              std::back_inserter(headers_), '\n', true);
+              std::back_inserter(hdrs), '\n', true);
+  // Reject headers containing CR or LF to prevent HTTP header injection.
+  for (auto& hd : hdrs) {
+    if (hd.find('\r') != std::string::npos ||
+        hd.find('\n') != std::string::npos) {
+      continue;
+    }
+    headers_.push_back(std::move(hd));
+  }
 }
 
 void HttpRequest::clearHeader() { headers_.clear(); }
@@ -375,15 +424,9 @@ const std::string& HttpRequest::getHost() const { return request_->getHost(); }
 
 uint16_t HttpRequest::getPort() const { return request_->getPort(); }
 
-const std::string& HttpRequest::getMethod() const
-{
-  return request_->getMethod();
-}
+HttpMethod HttpRequest::getMethod() const { return request_->getMethod(); }
 
-const std::string& HttpRequest::getProtocol() const
-{
-  return request_->getProtocol();
-}
+Protocol HttpRequest::getProtocol() const { return request_->getProtocol(); }
 
 const std::string& HttpRequest::getCurrentURI() const
 {
@@ -421,13 +464,10 @@ bool HttpRequest::conditionalRequest() const
   if (!ifModSinceHeader_.empty()) {
     return true;
   }
-  for (auto& h : headers_) {
-    if (util::istartsWith(h, "if-modified-since") ||
-        util::istartsWith(h, "if-none-match")) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(headers_, [](const auto& h) {
+    return util::istartsWith(h, "if-modified-since") ||
+           util::istartsWith(h, "if-none-match");
+  });
 }
 
 } // namespace aria2

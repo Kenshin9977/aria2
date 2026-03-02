@@ -58,7 +58,7 @@ FtpFinishDownloadCommand::FtpFinishDownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<FtpConnection>& ftpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, socket),
       ftpConnection_(ftpConnection)
 {
@@ -85,7 +85,8 @@ bool FtpFinishDownloadCommand::execute()
         if (getOption()->getAsBool(PREF_FTP_REUSE_CONNECTION)) {
           getDownloadEngine()->poolSocket(
               getRequest(), ftpConnection_->getUser(), createProxyRequest(),
-              getSocket(), ftpConnection_->getBaseWorkingDir());
+              std::static_pointer_cast<SocketCore>(getSocket()),
+              ftpConnection_->getBaseWorkingDir());
         }
       }
       else {

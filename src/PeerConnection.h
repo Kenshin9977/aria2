@@ -48,7 +48,7 @@
 namespace aria2 {
 
 class Peer;
-class SocketCore;
+class ISocketCore;
 class ARC4Encryptor;
 
 // The maximum length of buffer. If the message length (including 4
@@ -60,7 +60,7 @@ class PeerConnection {
 private:
   cuid_t cuid_;
   std::shared_ptr<Peer> peer_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
 
   int msgState_;
   // The capacity of the buffer resbuf_
@@ -90,7 +90,7 @@ private:
 
 public:
   PeerConnection(cuid_t cuid, const std::shared_ptr<Peer>& peer,
-                 const std::shared_ptr<SocketCore>& socket);
+                 const std::shared_ptr<ISocketCore>& socket);
 
   ~PeerConnection();
 

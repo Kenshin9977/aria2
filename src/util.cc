@@ -63,6 +63,7 @@
 #include <ostream>
 #include <algorithm>
 #include <fstream>
+#include <ranges>
 #include <iomanip>
 
 #include "SimpleRandomizer.h"
@@ -118,7 +119,7 @@ std::wstring utf8ToWChar(const char* src)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<wchar_t[]>((size_t)len);
+  auto buf = std::make_unique<wchar_t[]>(static_cast<size_t>(len));
   len = utf8ToWChar(buf.get(), len, src);
   if (len <= 0) {
     abort();
@@ -139,7 +140,7 @@ std::string wCharToUtf8(const std::wstring& wsrc)
   if (len <= 0) {
     abort();
   }
-  auto buf = make_unique<char[]>((size_t)len);
+  auto buf = std::make_unique<char[]>(static_cast<size_t>(len));
   len = wCharToUtf8(buf.get(), len, wsrc.c_str());
   if (len <= 0) {
     abort();
@@ -152,23 +153,14 @@ std::string wCharToUtf8(const std::wstring& wsrc)
 std::string toForwardSlash(const std::string& src)
 {
   auto dst = src;
-  std::transform(std::begin(dst), std::end(dst), std::begin(dst),
-                 [](char c) { return c == '\\' ? '/' : c; });
+  std::ranges::transform(dst, std::begin(dst),
+                         [](char c) { return c == '\\' ? '/' : c; });
   return dst;
 }
 
 #endif // __MINGW32__
 
 namespace util {
-
-const char DEFAULT_STRIP_CHARSET[] = "\r\n\t ";
-
-std::string strip(const std::string& str, const char* chars)
-{
-  std::pair<std::string::const_iterator, std::string::const_iterator> p =
-      stripIter(str.begin(), str.end(), chars);
-  return std::string(p.first, p.second);
-}
 
 std::string itos(int64_t value, bool comma)
 {
@@ -200,8 +192,8 @@ int64_t difftv(struct timeval tv1, struct timeval tv2)
       ((tv1.tv_sec == tv2.tv_sec) && (tv1.tv_usec < tv2.tv_usec))) {
     return 0;
   }
-  return ((int64_t)(tv1.tv_sec - tv2.tv_sec) * 1000000 + tv1.tv_usec -
-          tv2.tv_usec);
+  return (static_cast<int64_t>(tv1.tv_sec - tv2.tv_sec) * 1000000 +
+          tv1.tv_usec - tv2.tv_usec);
 }
 
 int32_t difftvsec(struct timeval tv1, struct timeval tv2)
@@ -212,61 +204,19 @@ int32_t difftvsec(struct timeval tv1, struct timeval tv2)
   return tv1.tv_sec - tv2.tv_sec;
 }
 
-std::string replace(const std::string& target, const std::string& oldstr,
-                    const std::string& newstr)
-{
-  if (target.empty() || oldstr.empty()) {
-    return target;
-  }
-  std::string result;
-  std::string::size_type p = 0;
-  std::string::size_type np = target.find(oldstr);
-  while (np != std::string::npos) {
-    result.append(target.begin() + p, target.begin() + np);
-    result += newstr;
-    p = np + oldstr.size();
-    np = target.find(oldstr, p);
-  }
-  result.append(target.begin() + p, target.end());
-  return result;
-}
-
-bool isAlpha(const char c)
-{
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-bool isDigit(const char c) { return '0' <= c && c <= '9'; }
-
-bool isHexDigit(const char c)
-{
-  return isDigit(c) || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f');
-}
-
-bool isHexDigit(const std::string& s)
-{
-  for (const auto& c : s) {
-    if (!isHexDigit(c)) {
-      return false;
-    }
-  }
-  return true;
-}
 
 bool inRFC3986ReservedChars(const char c)
 {
   static const char reserved[] = {':', '/',  '?', '#', '[', ']', '@', '!', '$',
                                   '&', '\'', '(', ')', '*', '+', ',', ';', '='};
-  return std::find(std::begin(reserved), std::end(reserved), c) !=
-         std::end(reserved);
+  return std::ranges::find(reserved, c) != std::end(reserved);
 }
 
 bool inRFC3986UnreservedChars(const char c)
 {
   static const char unreserved[] = {'-', '.', '_', '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(unreserved), std::end(unreserved), c) !=
-             std::end(unreserved);
+         std::ranges::find(unreserved, c) != std::end(unreserved);
 }
 
 bool inRFC2978MIMECharset(const char c)
@@ -274,7 +224,7 @@ bool inRFC2978MIMECharset(const char c)
   static const char chars[] = {'!', '#', '$', '%', '&', '\'', '+',
                                '-', '^', '_', '`', '{', '}',  '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(chars), std::end(chars), c) != std::end(chars);
+         std::ranges::find(chars, c) != std::end(chars);
 }
 
 bool inRFC2616HttpToken(const char c)
@@ -282,7 +232,7 @@ bool inRFC2616HttpToken(const char c)
   static const char chars[] = {'!', '#', '$', '%', '&', '\'', '*', '+',
                                '-', '.', '^', '_', '`', '|',  '~'};
   return isAlpha(c) || isDigit(c) ||
-         std::find(std::begin(chars), std::end(chars), c) != std::end(chars);
+         std::ranges::find(chars, c) != std::end(chars);
 }
 
 bool inRFC5987AttrChar(const char c)
@@ -295,9 +245,6 @@ bool isIso8859p1(unsigned char c)
 {
   return (0x20u <= c && c <= 0x7eu) || 0xa0u <= c;
 }
-
-bool isLws(const char c) { return c == ' ' || c == '\t'; }
-bool isCRLF(const char c) { return c == '\r' || c == '\n'; }
 
 namespace {
 
@@ -312,10 +259,9 @@ bool inPercentEncodeMini(const unsigned char c)
 
 } // namespace
 
-bool isUtf8(const std::string& str)
+bool isUtf8(std::string_view str)
 {
-  for (std::string::const_iterator s = str.begin(), eos = str.end(); s != eos;
-       ++s) {
+  for (auto s = str.begin(), eos = str.end(); s != eos; ++s) {
     unsigned char firstChar = *s;
     // See ABNF in http://tools.ietf.org/search/rfc3629#section-4
     if (in(firstChar, 0x20u, 0x7eu) || firstChar == 0x08u || // \b
@@ -394,21 +340,20 @@ std::string percentEncode(const unsigned char* target, size_t len)
   return dest;
 }
 
-std::string percentEncode(const std::string& target)
+std::string percentEncode(std::string_view target)
 {
-  if (std::find_if_not(target.begin(), target.end(),
-                       inRFC3986UnreservedChars) == target.end()) {
-    return target;
+  if (std::ranges::find_if_not(target, inRFC3986UnreservedChars) ==
+      target.end()) {
+    return std::string(target);
   }
-  return percentEncode(reinterpret_cast<const unsigned char*>(target.c_str()),
+  return percentEncode(reinterpret_cast<const unsigned char*>(target.data()),
                        target.size());
 }
 
-std::string percentEncodeMini(const std::string& src)
+std::string percentEncodeMini(std::string_view src)
 {
-  if (std::find_if_not(src.begin(), src.end(), inPercentEncodeMini) ==
-      src.end()) {
-    return src;
+  if (std::ranges::find_if_not(src, inPercentEncodeMini) == src.end()) {
+    return std::string(src);
   }
   std::string result;
   for (auto c : src) {
@@ -436,10 +381,10 @@ std::string torrentPercentEncode(const unsigned char* target, size_t len)
   return dest;
 }
 
-std::string torrentPercentEncode(const std::string& target)
+std::string torrentPercentEncode(std::string_view target)
 {
   return torrentPercentEncode(
-      reinterpret_cast<const unsigned char*>(target.c_str()), target.size());
+      reinterpret_cast<const unsigned char*>(target.data()), target.size());
 }
 
 std::string percentDecode(std::string::const_iterator first,
@@ -491,9 +436,9 @@ std::string toHex(const char* src, size_t len)
   return toHex(reinterpret_cast<const unsigned char*>(src), len);
 }
 
-std::string toHex(const std::string& src)
+std::string toHex(std::string_view src)
 {
-  return toHex(reinterpret_cast<const unsigned char*>(src.c_str()), src.size());
+  return toHex(reinterpret_cast<const unsigned char*>(src.data()), src.size());
 }
 
 unsigned int hexCharToUInt(unsigned char ch)
@@ -557,87 +502,80 @@ bool parseLong(T& res, F f, const std::string& s, int base)
 }
 } // namespace
 
-bool parseIntNoThrow(int32_t& res, const std::string& s, int base)
+std::expected<int32_t, std::string> parseInt(std::string_view s, int base)
 {
+  std::string str(s);
   long int t;
-  if (parseLong(t, strtol, s, base) &&
+  if (parseLong(t, strtol, str, base) &&
       t >= std::numeric_limits<int32_t>::min() &&
       t <= std::numeric_limits<int32_t>::max()) {
-    res = t;
-    return true;
+    return static_cast<int32_t>(t);
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
-bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base)
+std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
+                                                      int base)
 {
+  std::string str(s);
   long int t;
-  if (parseLong(t, strtol, s, base) && t >= 0 &&
+  if (parseLong(t, strtol, str, base) && t >= 0 &&
       t <= std::numeric_limits<int32_t>::max()) {
-    res = t;
-    return true;
+    return static_cast<uint32_t>(t);
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
-bool parseLLIntNoThrow(int64_t& res, const std::string& s, int base)
+std::expected<int64_t, std::string> parseLLInt(std::string_view s, int base)
 {
+  std::string str(s);
   int64_t t;
-  if (parseLong(t, strtoll, s, base)) {
-    res = t;
-    return true;
+  if (parseLong(t, strtoll, str, base)) {
+    return t;
   }
-  else {
-    return false;
-  }
+  return std::unexpected(std::string("parse error"));
 }
 
-bool parseDoubleNoThrow(double& res, const std::string& s)
+std::expected<double, std::string> parseDouble(std::string_view s)
 {
   if (s.empty()) {
-    return false;
+    return std::unexpected(std::string("empty string"));
   }
 
+  std::string str(s);
   errno = 0;
   char* endptr;
-  auto d = strtod(s.c_str(), &endptr);
+  auto d = strtod(str.c_str(), &endptr);
 
   if (errno == ERANGE) {
-    return false;
+    return std::unexpected(std::string("out of range"));
   }
 
-  if (endptr != s.c_str() + s.size()) {
-    for (auto i = std::begin(s) + (endptr - s.c_str()); i != std::end(s); ++i) {
+  if (endptr != str.c_str() + str.size()) {
+    for (auto i = str.begin() + (endptr - str.c_str()); i != str.end(); ++i) {
       if (!isspace(*i)) {
-        return false;
+        return std::unexpected(std::string("parse error"));
       }
     }
   }
 
-  res = d;
-
-  return true;
+  return d;
 }
 
-SegList<int> parseIntSegments(const std::string& src)
+SegList<int> parseIntSegments(std::string_view src)
 {
   SegList<int> sgl;
-  for (std::string::const_iterator i = src.begin(), eoi = src.end();
-       i != eoi;) {
-    std::string::const_iterator j = std::find(i, eoi, ',');
+  for (auto i = src.begin(), eoi = src.end(); i != eoi;) {
+    auto j = std::find(i, eoi, ',');
     if (j == i) {
       ++i;
       continue;
     }
-    std::string::const_iterator p = std::find(i, j, '-');
+    auto p = std::find(i, j, '-');
     if (p == j) {
-      int a;
-      if (parseIntNoThrow(a, std::string(i, j))) {
-        sgl.add(a, a + 1);
+      auto a = parseInt(std::string_view(&*i, j - i));
+      if (a) {
+        sgl.add(*a, *a + 1);
       }
       else {
         throw DL_ABORT_EX(fmt("Bad range %s", std::string(i, j).c_str()));
@@ -647,10 +585,10 @@ SegList<int> parseIntSegments(const std::string& src)
       throw DL_ABORT_EX(fmt(MSG_INCOMPLETE_RANGE, std::string(i, j).c_str()));
     }
     else {
-      int a, b;
-      if (parseIntNoThrow(a, std::string(i, p)) &&
-          parseIntNoThrow(b, (std::string(p + 1, j)))) {
-        sgl.add(a, b + 1);
+      auto a = parseInt(std::string_view(&*i, p - i));
+      auto b = parseInt(std::string_view(&*(p + 1), j - (p + 1)));
+      if (a && b) {
+        sgl.add(*a, *b + 1);
       }
       else {
         throw DL_ABORT_EX(fmt("Bad range %s", std::string(i, j).c_str()));
@@ -718,30 +656,31 @@ void parsePrioritizePieceRange(
   std::vector<size_t> indexes;
   std::vector<Scip> parts;
   splitIter(src.begin(), src.end(), std::back_inserter(parts), ',', true);
-  for (const auto& i : parts) {
-    if (util::streq(i.first, i.second, "head")) {
+  for (const auto& [first, last] : parts) {
+    if (util::streq(first, last, "head")) {
       computeHeadPieces(indexes, fileEntries, pieceLength, defaultSize);
     }
-    else if (util::startsWith(i.first, i.second, "head=")) {
-      std::string sizestr(i.first + 5, i.second);
+    else if (util::startsWith(first, last, "head=")) {
+      std::string sizestr(first + 5, last);
       computeHeadPieces(indexes, fileEntries, pieceLength,
-                        std::max((int64_t)0, getRealSize(sizestr)));
+                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
-    else if (util::streq(i.first, i.second, "tail")) {
+    else if (util::streq(first, last, "tail")) {
       computeTailPieces(indexes, fileEntries, pieceLength, defaultSize);
     }
-    else if (util::startsWith(i.first, i.second, "tail=")) {
-      std::string sizestr(i.first + 5, i.second);
+    else if (util::startsWith(first, last, "tail=")) {
+      std::string sizestr(first + 5, last);
       computeTailPieces(indexes, fileEntries, pieceLength,
-                        std::max((int64_t)0, getRealSize(sizestr)));
+                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
     else {
       throw DL_ABORT_EX(
-          fmt("Unrecognized token %s", std::string(i.first, i.second).c_str()));
+          fmt("Unrecognized token %s", std::string(first, last).c_str()));
     }
   }
-  std::sort(indexes.begin(), indexes.end());
-  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
+  std::ranges::sort(indexes);
+  indexes.erase(std::ranges::begin(std::ranges::unique(indexes)),
+                indexes.end());
   result.insert(result.end(), indexes.begin(), indexes.end());
 }
 
@@ -771,9 +710,9 @@ std::string iso8859p1ToUtf8(const char* src, size_t len)
   return dest;
 }
 
-std::string iso8859p1ToUtf8(const std::string& src)
+std::string iso8859p1ToUtf8(std::string_view src)
 {
-  return iso8859p1ToUtf8(src.c_str(), src.size());
+  return iso8859p1ToUtf8(src.data(), src.size());
 }
 
 /* Start of utf8 dfa */
@@ -1194,7 +1133,7 @@ static uint32_t utf8dfa(uint32_t* state, uint32_t* codep, uint32_t byte)
 
 /* End of utf8 dfa */
 
-typedef enum {
+enum content_disposition_parse_state {
   CD_BEFORE_DISPOSITION_TYPE,
   CD_AFTER_DISPOSITION_TYPE,
   CD_DISPOSITION_TYPE,
@@ -1211,18 +1150,18 @@ typedef enum {
   CD_VALUE_CHARS,
   CD_VALUE_CHARS_PCT_ENCODED1,
   CD_VALUE_CHARS_PCT_ENCODED2
-} content_disposition_parse_state;
+};
 
-typedef enum {
+enum content_disposition_parse_flag {
   CD_FILENAME_FOUND = 1,
   CD_EXT_FILENAME_FOUND = 1 << 1
-} content_disposition_parse_flag;
+};
 
-typedef enum {
+enum content_disposition_charset {
   CD_ENC_UNKNOWN,
   CD_ENC_UTF8,
   CD_ENC_ISO_8859_1
-} content_disposition_charset;
+};
 
 ssize_t parse_content_disposition(char* dest, size_t destlen,
                                   const char** charsetp, size_t* charsetlenp,
@@ -1375,7 +1314,7 @@ ssize_t parse_content_disposition(char* dest, size_t destlen,
            ISO-8859-1 chars, or UTF-8 if defaultUTF8 is set */
         quoted_seen = 0;
         if (defaultUTF8) {
-          if (utf8dfa(&dfa_state, &dfa_code, (unsigned char)*p) ==
+          if (utf8dfa(&dfa_state, &dfa_code, static_cast<unsigned char>(*p)) ==
               UTF8_REJECT) {
             return -1;
           }
@@ -1594,52 +1533,15 @@ std::string getContentDispositionFilename(const std::string& header,
   return "";
 }
 
-std::string toUpper(std::string src)
-{
-  uppercase(src);
-  return src;
-}
-
-std::string toLower(std::string src)
-{
-  lowercase(src);
-  return src;
-}
-
-void uppercase(std::string& s)
-{
-  std::transform(s.begin(), s.end(), s.begin(), toUpperChar);
-}
-
-void lowercase(std::string& s)
-{
-  std::transform(s.begin(), s.end(), s.begin(), toLowerChar);
-}
-
-char toUpperChar(char c)
-{
-  if ('a' <= c && c <= 'z') {
-    c += 'A' - 'a';
-  }
-  return c;
-}
-
-char toLowerChar(char c)
-{
-  if ('A' <= c && c <= 'Z') {
-    c += 'a' - 'A';
-  }
-  return c;
-}
-
-bool isNumericHost(const std::string& name)
+bool isNumericHost(std::string_view name)
 {
   struct addrinfo hints;
   struct addrinfo* res;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_flags = AI_NUMERICHOST;
-  if (getaddrinfo(name.c_str(), nullptr, &hints, &res)) {
+  std::string nameStr(name);
+  if (getaddrinfo(nameStr.c_str(), nullptr, &hints, &res)) {
     return false;
   }
   freeaddrinfo(res);
@@ -1824,12 +1726,12 @@ std::string getDHTFile(bool ipv6)
   return filename;
 }
 
-int64_t getRealSize(const std::string& sizeWithUnit)
+int64_t getRealSize(std::string_view sizeWithUnit)
 {
-  std::string::size_type p = sizeWithUnit.find_first_of("KMkm");
+  auto p = sizeWithUnit.find_first_of("KMkm");
   std::string size;
   int32_t mult = 1;
-  if (p == std::string::npos) {
+  if (p == std::string_view::npos) {
     size = sizeWithUnit;
   }
   else {
@@ -1845,16 +1747,16 @@ int64_t getRealSize(const std::string& sizeWithUnit)
     }
     size.assign(sizeWithUnit.begin(), sizeWithUnit.begin() + p);
   }
-  int64_t v;
-  if (!parseLLIntNoThrow(v, size) || v < 0) {
-    throw DL_ABORT_EX(
-        fmt("Bad or negative value detected: %s", sizeWithUnit.c_str()));
+  auto v = parseLLInt(size);
+  if (!v || *v < 0) {
+    throw DL_ABORT_EX(fmt("Bad or negative value detected: %s",
+                          std::string(sizeWithUnit).c_str()));
   }
-  if (INT64_MAX / mult < v) {
+  if (INT64_MAX / mult < *v) {
     throw DL_ABORT_EX(
         fmt(MSG_STRING_INTEGER_CONVERSION_FAILURE, "overflow/underflow"));
   }
-  return v * mult;
+  return *v * mult;
 }
 
 std::string abbrevSize(int64_t size)
@@ -1957,8 +1859,9 @@ void convertBitfield(BitfieldMan* dest, const BitfieldMan* src)
 {
   size_t numBlock = dest->countBlock();
   for (size_t index = 0; index < numBlock; ++index) {
-    if (src->isBitSetOffsetRange((int64_t)index * dest->getBlockLength(),
-                                 dest->getBlockLength())) {
+    if (src->isBitSetOffsetRange(
+            static_cast<int64_t>(index) * dest->getBlockLength(),
+            dest->getBlockLength())) {
       dest->setBit(index);
     }
   }
@@ -2009,7 +1912,7 @@ Endpoint getNumericNameInfo(const struct sockaddr* sockaddr, socklen_t len)
           static_cast<uint16_t>(strtoul(service, nullptr, 10))};
 }
 
-std::string htmlEscape(const std::string& src)
+std::string htmlEscape(std::string_view src)
 {
   std::string dest;
   dest.reserve(src.size());
@@ -2043,17 +1946,20 @@ std::string htmlEscape(const std::string& src)
   return dest;
 }
 
-std::pair<size_t, std::string> parseIndexPath(const std::string& line)
+std::pair<size_t, std::string> parseIndexPath(std::string_view line)
 {
-  auto p = divide(std::begin(line), std::end(line), '=');
-  uint32_t index;
-  if (!parseUIntNoThrow(index, std::string(p.first.first, p.first.second))) {
+  auto [indexPart, pathPart] =
+      divide(std::begin(line), std::end(line), '=');
+  auto index =
+      parseUIntNoThrow(std::string(indexPart.first, indexPart.second));
+  if (!index) {
     throw DL_ABORT_EX("Bad path index");
   }
-  if (p.second.first == p.second.second) {
-    throw DL_ABORT_EX(fmt("Path with index=%u is empty.", index));
+  if (pathPart.first == pathPart.second) {
+    throw DL_ABORT_EX(fmt("Path with index=%u is empty.", *index));
   }
-  return std::make_pair(index, std::string(p.second.first, p.second.second));
+  return std::make_pair(*index,
+                        std::string(pathPart.first, pathPart.second));
 }
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i)
@@ -2113,18 +2019,18 @@ std::string applyDir(const std::string& dir, const std::string& relPath)
     }
   }
 #ifdef __MINGW32__
-  for (std::string::iterator i = s.begin(), eoi = s.end(); i != eoi; ++i) {
-    if (*i == '\\') {
-      *i = '/';
+  for (auto& c : s) {
+    if (c == '\\') {
+      c = '/';
     }
   }
 #endif // __MINGW32__
   return s;
 }
 
-std::string fixTaintedBasename(const std::string& src)
+std::string fixTaintedBasename(std::string_view src)
 {
-  return escapePath(replace(src, "/", "%2F"));
+  return escapePath(replace(std::string(src), "/", "%2F"));
 }
 
 void generateRandomKey(unsigned char* key)
@@ -2141,13 +2047,13 @@ void generateRandomKey(unsigned char* key)
 // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
 // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
 // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
-bool inPrivateAddress(const std::string& ipv4addr)
+bool inPrivateAddress(std::string_view ipv4addr)
 {
-  if (util::startsWith(ipv4addr, "10.") ||
-      util::startsWith(ipv4addr, "192.168.")) {
+  if (ipv4addr.starts_with("10.") ||
+      ipv4addr.starts_with("192.168.")) {
     return true;
   }
-  if (util::startsWith(ipv4addr, "172.")) {
+  if (ipv4addr.starts_with("172.")) {
     for (int i = 16; i <= 31; ++i) {
       std::string t(fmt("%d.", i));
       if (util::startsWith(ipv4addr.begin() + 4, ipv4addr.end(), t.begin(),
@@ -2159,7 +2065,7 @@ bool inPrivateAddress(const std::string& ipv4addr)
   return false;
 }
 
-bool detectDirTraversal(const std::string& s)
+bool detectDirTraversal(std::string_view s)
 {
   if (s.empty()) {
     return false;
@@ -2170,13 +2076,15 @@ bool detectDirTraversal(const std::string& s)
       return true;
     }
   }
-  return s == "." || s == ".." || s[0] == '/' || util::startsWith(s, "./") ||
-         util::startsWith(s, "../") || s.find("/../") != std::string::npos ||
-         s.find("/./") != std::string::npos || s[s.size() - 1] == '/' ||
-         util::endsWith(s, "/.") || util::endsWith(s, "/..");
+  return s == "." || s == ".." || s[0] == '/' || s.starts_with("./") ||
+         s.starts_with("../") ||
+         s.find("/../") != std::string_view::npos ||
+         s.find("/./") != std::string_view::npos ||
+         s[s.size() - 1] == '/' ||
+         s.ends_with("/.") || s.ends_with("/..");
 }
 
-std::string escapePath(const std::string& s)
+std::string escapePath(std::string_view s)
 {
 // We don't escape '/' because we use it as a path separator.
 #ifdef __MINGW32__
@@ -2188,9 +2096,8 @@ std::string escapePath(const std::string& s)
     unsigned char c = cc;
     if (in(c, 0x00u, 0x1fu) || c == 0x7fu
 #ifdef __MINGW32__
-        || std::find(std::begin(WIN_INVALID_PATH_CHARS),
-                     std::end(WIN_INVALID_PATH_CHARS),
-                     c) != std::end(WIN_INVALID_PATH_CHARS)
+        || std::ranges::find(WIN_INVALID_PATH_CHARS, c) !=
+               std::end(WIN_INVALID_PATH_CHARS)
 #endif // __MINGW32__
     ) {
       d += fmt("%%%02X", c);
@@ -2294,7 +2201,7 @@ void executeHook(const std::string& command, a2_gid_t gid, size_t numFiles,
   }
   int cmdlineLen = utf8ToWChar(nullptr, 0, cmdline.c_str());
   assert(cmdlineLen > 0);
-  auto wcharCmdline = make_unique<wchar_t[]>(cmdlineLen);
+  auto wcharCmdline = std::make_unique<wchar_t[]>(cmdlineLen);
   cmdlineLen = utf8ToWChar(wcharCmdline.get(), cmdlineLen, cmdline.c_str());
   assert(cmdlineLen > 0);
   A2_LOG_INFO(fmt("Executing user command: %s", cmdline.c_str()));
@@ -2352,9 +2259,9 @@ std::string createSafePath(const std::string& filename)
              : util::escapePath(util::percentEncode(filename));
 }
 
-std::string encodeNonUtf8(const std::string& s)
+std::string encodeNonUtf8(std::string_view s)
 {
-  return util::isUtf8(s) ? s : util::percentEncode(s);
+  return util::isUtf8(s) ? std::string(s) : util::percentEncode(s);
 }
 
 std::string makeString(const char* str)
@@ -2367,24 +2274,22 @@ std::string makeString(const char* str)
 
 std::string safeStrerror(int errNum) { return makeString(strerror(errNum)); }
 
-bool noProxyDomainMatch(const std::string& hostname, const std::string& domain)
+bool noProxyDomainMatch(std::string_view hostname, std::string_view domain)
 {
   if (!domain.empty() && domain[0] == '.' && !util::isNumericHost(hostname)) {
-    return util::endsWith(hostname, domain);
+    return hostname.ends_with(domain);
   }
   return hostname == domain;
 }
 
-bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
+bool tlsHostnameMatch(std::string_view pattern, std::string_view hostname)
 {
-  std::string::const_iterator ptWildcard =
-      std::find(pattern.begin(), pattern.end(), '*');
+  auto ptWildcard = std::ranges::find(pattern, '*');
   if (ptWildcard == pattern.end()) {
     return strieq(pattern.begin(), pattern.end(), hostname.begin(),
                   hostname.end());
   }
-  std::string::const_iterator ptLeftLabelEnd =
-      std::find(pattern.begin(), pattern.end(), '.');
+  auto ptLeftLabelEnd = std::ranges::find(pattern, '.');
   bool wildcardEnabled = true;
   // Do case-insensitive match. At least 2 dots are required to enable
   // wildcard match. Also wildcard must be in the left-most label.
@@ -2399,8 +2304,7 @@ bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
     return strieq(pattern.begin(), pattern.end(), hostname.begin(),
                   hostname.end());
   }
-  std::string::const_iterator hnLeftLabelEnd =
-      std::find(hostname.begin(), hostname.end(), '.');
+  auto hnLeftLabelEnd = std::ranges::find(hostname, '.');
   if (!strieq(ptLeftLabelEnd, pattern.end(), hnLeftLabelEnd, hostname.end())) {
     return false;
   }
@@ -2415,60 +2319,10 @@ bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname)
                    ptLeftLabelEnd);
 }
 
-bool strieq(const std::string& a, const char* b)
-{
-  return strieq(a.begin(), a.end(), b);
-}
-
-bool strieq(const std::string& a, const std::string& b)
-{
-  return strieq(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool startsWith(const std::string& a, const char* b)
-{
-  return startsWith(a.begin(), a.end(), b);
-}
-
-bool startsWith(const std::string& a, const std::string& b)
-{
-  return startsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool istartsWith(const std::string& a, const char* b)
-{
-  return istartsWith(a.begin(), a.end(), b);
-}
-
-bool istartsWith(const std::string& a, const std::string& b)
-{
-  return istartsWith(std::begin(a), std::end(a), std::begin(b), std::end(b));
-}
-
-bool endsWith(const std::string& a, const char* b)
-{
-  return endsWith(a.begin(), a.end(), b, b + strlen(b));
-}
-
-bool endsWith(const std::string& a, const std::string& b)
-{
-  return endsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
-bool iendsWith(const std::string& a, const char* b)
-{
-  return iendsWith(a.begin(), a.end(), b, b + strlen(b));
-}
-
-bool iendsWith(const std::string& a, const std::string& b)
-{
-  return iendsWith(a.begin(), a.end(), b.begin(), b.end());
-}
-
 bool strless(const char* a, const char* b) { return strcmp(a, b) < 0; }
 
 #ifdef ENABLE_SSL
-TLSVersion toTLSVersion(const std::string& ver)
+TLSVersion toTLSVersion(std::string_view ver)
 {
   if (ver == A2_V_TLS11) {
     return TLS_PROTO_TLS11;
@@ -2547,7 +2401,7 @@ bool gainPrivilege(LPCTSTR privName)
 
   auto tokenCloser = defer(token, CloseHandle);
 
-  if (!AdjustTokenPrivileges(token, FALSE, &tp, 0, NULL, NULL)) {
+  if (!AdjustTokenPrivileges(token, FALSE, &tp, 0, nullptr, nullptr)) {
     auto errNum = GetLastError();
     A2_LOG_WARN(fmt("Gaining privilege %s failed. cause: %s", privName,
                     util::formatLastError(errNum).c_str()));
@@ -2562,7 +2416,7 @@ bool gainPrivilege(LPCTSTR privName)
     return false;
   }
 
-  auto buf = make_unique<char[]>(bufsize);
+  auto buf = std::make_unique<char[]>(bufsize);
   if (!GetTokenInformation(token, TokenPrivileges, buf.get(), bufsize,
                            &bufsize)) {
     auto errNum = GetLastError();

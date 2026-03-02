@@ -74,7 +74,7 @@ template <typename V> void unsetBit(V& b, PrefPtr pref)
 
 } // namespace
 
-void Option::put(PrefPtr pref, const std::string& value)
+void Option::put(PrefPtr pref, std::string_view value)
 {
   setBit(use_, pref);
   table_[pref->i] = value;
@@ -165,8 +165,8 @@ void Option::remove(PrefPtr pref)
 
 void Option::clear()
 {
-  std::fill(use_.begin(), use_.end(), 0);
-  std::fill(table_.begin(), table_.end(), "");
+  std::ranges::fill(use_, 0);
+  std::ranges::fill(table_, "");
 }
 
 void Option::merge(const Option& option)
@@ -189,8 +189,7 @@ const std::shared_ptr<Option>& Option::getParent() const { return parent_; }
 
 bool Option::emptyLocal() const
 {
-  size_t dst;
-  return !bitfield::getFirstSetBitIndex(dst, use_, use_.size() * 8);
+  return !bitfield::getFirstSetBitIndex(use_, use_.size() * 8);
 }
 
 } // namespace aria2

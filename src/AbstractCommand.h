@@ -41,6 +41,8 @@
 #include <string>
 #include <memory>
 
+#include "uri.h"
+
 #include "TimerA2.h"
 
 namespace aria2 {
@@ -54,6 +56,7 @@ class PieceStorage;
 class Request;
 class DownloadEngine;
 class Segment;
+class ISocketCore;
 class SocketCore;
 class Option;
 class SocketRecvBuffer;
@@ -66,10 +69,10 @@ class AbstractCommand : public Command {
 private:
   std::shared_ptr<Request> req_;
   std::shared_ptr<FileEntry> fileEntry_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   std::shared_ptr<SocketRecvBuffer> socketRecvBuffer_;
-  std::shared_ptr<SocketCore> readCheckTarget_;
-  std::shared_ptr<SocketCore> writeCheckTarget_;
+  std::shared_ptr<ISocketCore> readCheckTarget_;
+  std::shared_ptr<ISocketCore> writeCheckTarget_;
 
 #ifdef ENABLE_ASYNC_DNS
   std::unique_ptr<AsyncNameResolverMan> asyncNameResolverMan_;
@@ -100,7 +103,7 @@ public:
 
   const std::shared_ptr<Request>& getRequest() const { return req_; }
 
-  void setRequest(const std::shared_ptr<Request>& request);
+  void setRequest(std::shared_ptr<Request> request);
 
   // Resets request_. This method is more efficient than
   // setRequest(std::shared_ptr<Request>());
@@ -112,11 +115,11 @@ public:
 
   DownloadEngine* getDownloadEngine() const { return e_; }
 
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
+  const std::shared_ptr<ISocketCore>& getSocket() const { return socket_; }
 
-  std::shared_ptr<SocketCore>& getSocket() { return socket_; }
+  std::shared_ptr<ISocketCore>& getSocket() { return socket_; }
 
-  void setSocket(const std::shared_ptr<SocketCore>& s);
+  void setSocket(std::shared_ptr<ISocketCore> s);
 
   void createSocket();
 
@@ -140,9 +143,9 @@ public:
 
   void tryReserved();
 
-  void setReadCheckSocket(const std::shared_ptr<SocketCore>& socket);
+  void setReadCheckSocket(const std::shared_ptr<ISocketCore>& socket);
 
-  void setWriteCheckSocket(const std::shared_ptr<SocketCore>& socket);
+  void setWriteCheckSocket(const std::shared_ptr<ISocketCore>& socket);
 
   void disableReadCheckSocket();
 
@@ -152,18 +155,18 @@ public:
    * If pred == true, calls setReadCheckSocket(socket). Otherwise, calls
    * disableReadCheckSocket().
    */
-  void setReadCheckSocketIf(const std::shared_ptr<SocketCore>& socket,
+  void setReadCheckSocketIf(const std::shared_ptr<ISocketCore>& socket,
                             bool pred);
   /**
    * If pred == true, calls setWriteCheckSocket(socket). Otherwise, calls
    * disableWriteCheckSocket().
    */
-  void setWriteCheckSocketIf(const std::shared_ptr<SocketCore>& socket,
+  void setWriteCheckSocketIf(const std::shared_ptr<ISocketCore>& socket,
                              bool pred);
 
   // Swaps socket_ with socket. This disables current read and write
   // check.
-  void swapSocket(std::shared_ptr<SocketCore>& socket);
+  void swapSocket(std::shared_ptr<ISocketCore>& socket);
 
   std::chrono::seconds getTimeout() const { return timeout_; }
 
@@ -179,7 +182,7 @@ public:
   // InitiateConnectionCommandFactory and it is pushed to
   // DownloadEngine and returns false. If no addresses left, DlRetryEx
   // exception is thrown.
-  bool checkIfConnectionEstablished(const std::shared_ptr<SocketCore>& socket,
+  bool checkIfConnectionEstablished(const std::shared_ptr<ISocketCore>& socket,
                                     const std::string& connectedHostname,
                                     const std::string& connectedAddr,
                                     uint16_t connectedPort);
@@ -198,12 +201,15 @@ public:
 
   // Returns proxy method for given protocol. Either V_GET or V_TUNNEL
   // is returned.  For HTTPS, always returns V_TUNNEL.
-  const std::string& resolveProxyMethod(const std::string& protocol) const;
+  const std::string& resolveProxyMethod(Protocol protocol) const;
+
+  // Returns true if the proxy is a SOCKS5 proxy.
+  bool isSocks5Proxy() const;
 
   const std::shared_ptr<Option>& getOption() const;
 
   const std::shared_ptr<DownloadContext>& getDownloadContext() const;
-  const std::shared_ptr<SegmentMan>& getSegmentMan() const;
+  SegmentMan* getSegmentMan() const;
   const std::shared_ptr<PieceStorage>& getPieceStorage() const;
 
   Timer& getCheckPoint() { return checkPoint_; }
@@ -213,6 +219,17 @@ public:
   void addCommandSelf();
 
 protected:
+  // Sets write check on socket, disables read check.
+  void transitionToWriting(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToWriting() { transitionToWriting(getSocket()); }
+
+  // Sets read check on socket, disables write check.
+  void transitionToReading(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToReading() { transitionToReading(getSocket()); }
+
+  // Sets connect timeout and transitions to writing on the main socket.
+  void initConnectTimeout();
+
   virtual bool prepareForRetry(time_t wait);
 
   virtual void onAbort();
@@ -227,18 +244,18 @@ public:
   AbstractCommand(
       cuid_t cuid, const std::shared_ptr<Request>& req,
       const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-      DownloadEngine* e, const std::shared_ptr<SocketCore>& s = nullptr,
+      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s = nullptr,
       const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer = nullptr,
       bool incNumConnection = true);
 
-  virtual ~AbstractCommand();
+  ~AbstractCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
-std::string getProxyUri(const std::string& protocol, const Option* option);
+std::string getProxyUri(Protocol protocol, const Option* option);
 
 } // namespace aria2
 

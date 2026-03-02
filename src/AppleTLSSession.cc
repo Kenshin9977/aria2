@@ -103,10 +103,7 @@ static inline const char* protoToString(SSLProtocol proto)
   }
 }
 
-#define SUITE(s, n)                                                            \
-  {                                                                            \
-    n, #s                                                                      \
-  }
+#define SUITE(s, n) {n, #s}
 static struct {
   SSLCipherSuite suite;
   const char* name;
@@ -327,7 +324,7 @@ static inline bool isBlockedSuite(SSLCipherSuite suite)
   return false;
 }
 
-typedef std::vector<SSLCipherSuite> SSLCipherSuiteList;
+using SSLCipherSuiteList = std::vector<SSLCipherSuite>;
 static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
 {
 #ifndef CIPHER_CONSTRUCT_ALWAYS
@@ -354,8 +351,7 @@ static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
     return rv;
   }
 
-  rv.erase(std::remove_if(std::begin(rv), std::end(rv), isBlockedSuite),
-           std::end(rv));
+  std::erase_if(rv, isBlockedSuite);
   return rv;
 }
 
@@ -363,9 +359,10 @@ static SSLCipherSuiteList constructEnabledSuites(SSLContextRef ctx)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new AppleTLSSession(static_cast<AppleTLSContext*>(ctx));
+  return std::make_unique<AppleTLSSession>(
+      static_cast<AppleTLSContext*>(ctx));
 }
 
 AppleTLSSession::AppleTLSSession(AppleTLSContext* ctx)
@@ -479,8 +476,8 @@ AppleTLSSession::AppleTLSSession(AppleTLSContext* ctx)
     return;
   }
 
-  std::unique_ptr<void, decltype(&CFRelease)> del_certs((void*)certs,
-                                                        CFRelease);
+  std::unique_ptr<void, decltype(&CFRelease)> del_certs(
+      const_cast<void*>(static_cast<const void*>(certs)), CFRelease);
   lastError_ = SSLSetCertificate(sslCtx_, certs);
   if (lastError_ != noErr) {
     A2_LOG_ERROR(fmt("AppleTLS: Failed to set credentials: %s",
@@ -550,6 +547,63 @@ int AppleTLSSession::setSNIHostname(const std::string& hostname)
   return (lastError_ != noErr) ? TLS_ERR_ERROR : TLS_ERR_OK;
 }
 
+int AppleTLSSession::setALPNProtocols(
+    const std::vector<std::string>& protocols)
+{
+#if defined(__MAC_10_13)
+  if (!sslCtx_) {
+    return TLS_ERR_ERROR;
+  }
+  CFMutableArrayRef alpnArray = CFArrayCreateMutable(
+      nullptr, protocols.size(), &kCFTypeArrayCallBacks);
+  if (!alpnArray) {
+    return TLS_ERR_ERROR;
+  }
+  for (const auto& proto : protocols) {
+    CFStringRef str = CFStringCreateWithBytes(
+        nullptr, reinterpret_cast<const UInt8*>(proto.data()), proto.size(),
+        kCFStringEncodingUTF8, false);
+    if (str) {
+      CFArrayAppendValue(alpnArray, str);
+      CFRelease(str);
+    }
+  }
+  OSStatus status = SSLSetALPNProtocols(sslCtx_, alpnArray);
+  CFRelease(alpnArray);
+  return status == noErr ? TLS_ERR_OK : TLS_ERR_ERROR;
+#else
+  return TLS_ERR_OK;
+#endif
+}
+
+std::string AppleTLSSession::getNegotiatedProtocol() const
+{
+#if defined(__MAC_10_13)
+  if (!sslCtx_) {
+    return std::string();
+  }
+  CFArrayRef protocols = nullptr;
+  OSStatus status = SSLCopyALPNProtocols(sslCtx_, &protocols);
+  if (status != noErr || !protocols || CFArrayGetCount(protocols) == 0) {
+    if (protocols) {
+      CFRelease(protocols);
+    }
+    return std::string();
+  }
+  CFStringRef proto =
+      static_cast<CFStringRef>(CFArrayGetValueAtIndex(protocols, 0));
+  char buf[64];
+  std::string result;
+  if (CFStringGetCString(proto, buf, sizeof(buf), kCFStringEncodingUTF8)) {
+    result = buf;
+  }
+  CFRelease(protocols);
+  return result;
+#else
+  return std::string();
+#endif
+}
+
 int AppleTLSSession::closeConnection()
 {
   if (state_ != st_connected) {
@@ -562,8 +616,9 @@ int AppleTLSSession::closeConnection()
   return lastError_ == noErr ? TLS_ERR_OK : TLS_ERR_ERROR;
 }
 
-int AppleTLSSession::checkDirection()
+TLSDirection AppleTLSSession::checkDirection()
 {
+  using enum TLSDirection;
   // See: https://github.com/aria2/aria2/pull/61#issuecomment-16051793
   if (state_ == st_connected) {
     // Need to check read first, as SocketCore kinda expects this
@@ -851,7 +906,7 @@ std::string AppleTLSSession::getLastErrorString()
     return "Connection refused";
 
   default:
-    return fmt("Unspecified error %ld", (long)lastError_);
+    return fmt("Unspecified error %ld", static_cast<long>(lastError_));
   }
 }
 

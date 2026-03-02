@@ -60,7 +60,7 @@ Authenticator::Authenticator(std::string machine, std::string login,
 
 Authenticator::~Authenticator() = default;
 
-bool Authenticator::match(const std::string& hostname) const
+bool Authenticator::match(std::string_view hostname) const
 {
   return util::noProxyDomainMatch(hostname, machine_);
 }
@@ -94,7 +94,7 @@ DefaultAuthenticator::DefaultAuthenticator(std::string login,
 
 DefaultAuthenticator::~DefaultAuthenticator() = default;
 
-bool DefaultAuthenticator::match(const std::string& hostname) const
+bool DefaultAuthenticator::match(std::string_view hostname) const
 {
   return true;
 }
@@ -169,12 +169,12 @@ void Netrc::parse(const std::string& path)
       if (state == GET_TOKEN) {
         if (util::streq((*iter).first, (*iter).second, "machine")) {
           storeAuthenticator(std::move(authenticator));
-          authenticator = make_unique<Authenticator>();
+          authenticator = std::make_unique<Authenticator>();
           state = SET_MACHINE;
         }
         else if (util::streq((*iter).first, (*iter).second, "default")) {
           storeAuthenticator(std::move(authenticator));
-          authenticator = make_unique<DefaultAuthenticator>();
+          authenticator = std::make_unique<DefaultAuthenticator>();
         }
         else {
           if (!authenticator) {
@@ -233,10 +233,10 @@ void Netrc::storeAuthenticator(std::unique_ptr<Authenticator> authenticator)
 namespace {
 class AuthHostMatch {
 private:
-  std::string hostname;
+  std::string_view hostname;
 
 public:
-  AuthHostMatch(std::string hostname) : hostname(std::move(hostname)) {}
+  AuthHostMatch(std::string_view hostname) : hostname(hostname) {}
 
   bool operator()(const std::unique_ptr<Authenticator>& authenticator)
   {
@@ -245,11 +245,10 @@ public:
 };
 } // namespace
 
-const Authenticator* Netrc::findAuthenticator(const std::string& hostname) const
+const Authenticator* Netrc::findAuthenticator(std::string_view hostname) const
 {
   std::unique_ptr<Authenticator> res;
-  auto itr = std::find_if(std::begin(authenticators_),
-                          std::end(authenticators_), AuthHostMatch(hostname));
+  auto itr = std::ranges::find_if(authenticators_, AuthHostMatch(hostname));
   if (itr == std::end(authenticators_)) {
     return nullptr;
   }

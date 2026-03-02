@@ -37,16 +37,23 @@
 
 #include "common.h"
 
+#include <expected>
 #include <string>
+#include <string_view>
 
 #include "uri_split.h"
 
 namespace aria2 {
 
+enum class Protocol { HTTP, HTTPS, FTP, FTPS, SFTP, UNKNOWN };
+
+Protocol toProtocol(const std::string& s);
+std::string_view protocolToString(Protocol p);
+
 namespace uri {
 
 struct UriStruct {
-  std::string protocol;
+  Protocol protocol;
   std::string host;
   std::string dir;
   std::string file;
@@ -67,10 +74,9 @@ struct UriStruct {
 
 void swap(UriStruct& lhs, UriStruct& rhs);
 
-// Splits URI uri into components and stores them into result.  On
-// success returns true. Otherwise returns false and result is
-// undefined.
-bool parse(UriStruct& result, const std::string& uri);
+// Splits URI uri into components. On success returns UriStruct.
+// Otherwise returns an error string describing the failure.
+std::expected<UriStruct, std::string> parse(const std::string& uri);
 
 // Returns string specified by field in res. The base pointer in res
 // is given as base. If the given field is not stored in res, returns

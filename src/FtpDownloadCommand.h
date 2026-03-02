@@ -48,8 +48,8 @@ private:
   std::shared_ptr<SocketCore> ctrlSocket_;
 
 protected:
-  virtual bool prepareForNextSegment() CXX11_OVERRIDE;
-  virtual int64_t getRequestEndOffset() const CXX11_OVERRIDE;
+  bool prepareForNextSegment() override;
+  int64_t getRequestEndOffset() const override;
 
 public:
   FtpDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -57,9 +57,9 @@ public:
                      RequestGroup* requestGroup,
                      const std::shared_ptr<FtpConnection>& ftpConnection,
                      DownloadEngine* e,
-                     const std::shared_ptr<SocketCore>& dataSocket,
+                     const std::shared_ptr<ISocketCore>& dataSocket,
                      const std::shared_ptr<SocketCore>& ctrlSocket);
-  virtual ~FtpDownloadCommand();
+  ~FtpDownloadCommand() override;
 };
 
 } // namespace aria2

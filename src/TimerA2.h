@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <chrono>
+#include <compare>
 
 #include "a2time.h"
 #include "a2functional.h"
@@ -64,10 +65,7 @@ public:
   Timer& operator=(Timer&& timer) = default;
   Timer& operator=(const Timer& timer) = default;
 
-  bool operator<(const Timer& timer) const { return tp_ < timer.tp_; }
-  bool operator>(const Timer& timer) const { return timer < *this; }
-  bool operator<=(const Timer& timer) const { return !(timer < *this); }
-  bool operator>=(const Timer& timer) const { return !(*this < timer); }
+  auto operator<=>(const Timer& timer) const { return tp_ <=> timer.tp_; }
 
   void reset();
 

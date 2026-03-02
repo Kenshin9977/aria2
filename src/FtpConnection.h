@@ -39,6 +39,7 @@
 
 #include <utility>
 #include <string>
+#include <string_view>
 #include <memory>
 
 #include "TimeA2.h"
@@ -70,13 +71,13 @@ private:
 
   std::string baseWorkingDir_;
 
-  int getStatus(const std::string& response) const;
+  int getStatus(std::string_view response) const;
   std::string::size_type findEndOfResponse(int status,
-                                           const std::string& buf) const;
+                                           std::string_view buf) const;
   bool bulkReceiveResponse(std::pair<int, std::string>& response);
 
   // prepare for large banners
-  static const size_t MAX_RECV_BUFFER = 64_k;
+  static constexpr size_t MAX_RECV_BUFFER = 64_k;
 
 public:
   FtpConnection(cuid_t cuid, const std::shared_ptr<SocketCore>& socket,
@@ -84,6 +85,9 @@ public:
                 const std::shared_ptr<AuthConfig>& authConfig,
                 const Option* op);
   ~FtpConnection();
+  bool sendAuthTls();
+  bool sendPbsz();
+  bool sendProtP();
   bool sendUser();
   bool sendPass();
   bool sendType();

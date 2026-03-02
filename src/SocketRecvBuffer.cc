@@ -37,12 +37,12 @@
 #include <cstring>
 #include <cassert>
 
-#include "SocketCore.h"
+#include "ISocketCore.h"
 #include "LogFactory.h"
 
 namespace aria2 {
 
-SocketRecvBuffer::SocketRecvBuffer(std::shared_ptr<SocketCore> socket)
+SocketRecvBuffer::SocketRecvBuffer(std::shared_ptr<ISocketCore> socket)
     : socket_(std::move(socket)), pos_(buf_.data()), last_(pos_)
 {
 }

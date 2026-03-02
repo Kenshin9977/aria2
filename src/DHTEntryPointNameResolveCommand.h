@@ -90,9 +90,9 @@ public:
       cuid_t cuid, DownloadEngine* e, int family,
       const std::vector<std::pair<std::string, uint16_t>>& entryPoints);
 
-  virtual ~DHTEntryPointNameResolveCommand();
+  ~DHTEntryPointNameResolveCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setBootstrapEnabled(bool f);
 

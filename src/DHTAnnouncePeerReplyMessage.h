@@ -45,17 +45,17 @@ public:
                               const std::shared_ptr<DHTNode>& remoteNode,
                               const std::string& transactionID);
 
-  virtual ~DHTAnnouncePeerReplyMessage();
+  ~DHTAnnouncePeerReplyMessage() override;
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getResponse() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getResponse() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
-  virtual void accept(DHTMessageCallback* callback) CXX11_OVERRIDE;
+  void accept(DHTMessageCallback* callback) override;
 
-  static const std::string ANNOUNCE_PEER;
+  static constexpr const char ANNOUNCE_PEER[] = "announce_peer";
 };
 
 } // namespace aria2

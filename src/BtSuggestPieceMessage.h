@@ -43,14 +43,14 @@ class BtSuggestPieceMessage : public IndexBtMessage {
 public:
   BtSuggestPieceMessage(size_t index = 0);
 
-  static const uint8_t ID = 13;
+  static constexpr uint8_t ID = 13;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "suggest piece";
 
   static std::unique_ptr<BtSuggestPieceMessage>
-  create(const unsigned char* data, size_t dataLength);
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE
+  void doReceivedAction() override
   {
     // TODO Current implementation ignores this message.
   }

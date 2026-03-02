@@ -37,25 +37,19 @@ public:
   {
   }
 
-  virtual ~MockDHTMessage() {}
+  ~MockDHTMessage() override {}
 
-  virtual void doReceivedAction() CXX11_OVERRIDE {}
+  void doReceivedAction() override {}
 
-  virtual bool send() CXX11_OVERRIDE { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const CXX11_OVERRIDE { return isReply_; }
+  bool isReply() const override { return isReply_; }
 
   void setReply(bool f) { isReply_ = f; }
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE
-  {
-    return messageType_;
-  }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
-  virtual std::string toString() const CXX11_OVERRIDE
-  {
-    return "MockDHTMessage";
-  }
+  std::string toString() const override { return "MockDHTMessage"; }
 };
 
 class MockDHTQueryMessage : public DHTQueryMessage {
@@ -78,28 +72,19 @@ public:
   {
   }
 
-  virtual ~MockDHTQueryMessage() {}
+  ~MockDHTQueryMessage() override {}
 
-  virtual void doReceivedAction() CXX11_OVERRIDE {}
+  void doReceivedAction() override {}
 
-  virtual bool send() CXX11_OVERRIDE { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const CXX11_OVERRIDE { return false; }
+  bool isReply() const override { return false; }
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE
-  {
-    return messageType_;
-  }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
-  virtual std::string toString() const CXX11_OVERRIDE
-  {
-    return "MockDHTMessage";
-  }
+  std::string toString() const override { return "MockDHTMessage"; }
 
-  virtual std::unique_ptr<Dict> getArgument() CXX11_OVERRIDE
-  {
-    return Dict::g();
-  }
+  std::unique_ptr<Dict> getArgument() override { return Dict::g(); }
 };
 
 class MockDHTResponseMessage : public DHTResponseMessage {
@@ -122,30 +107,21 @@ public:
   {
   }
 
-  virtual ~MockDHTResponseMessage() {}
+  ~MockDHTResponseMessage() override {}
 
-  virtual void doReceivedAction() CXX11_OVERRIDE {}
+  void doReceivedAction() override {}
 
-  virtual bool send() CXX11_OVERRIDE { return true; }
+  bool send() override { return true; }
 
-  virtual bool isReply() const CXX11_OVERRIDE { return true; }
+  bool isReply() const override { return true; }
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE
-  {
-    return messageType_;
-  }
+  const char* getMessageType() const override { return messageType_.c_str(); }
 
-  virtual std::string toString() const CXX11_OVERRIDE
-  {
-    return "MockDHTMessage";
-  }
+  std::string toString() const override { return "MockDHTMessage"; }
 
-  virtual std::unique_ptr<Dict> getResponse() CXX11_OVERRIDE
-  {
-    return Dict::g();
-  }
+  std::unique_ptr<Dict> getResponse() override { return Dict::g(); }
 
-  virtual void accept(DHTMessageCallback* callback) CXX11_OVERRIDE {}
+  void accept(DHTMessageCallback* callback) override {}
 };
 
 } // namespace aria2

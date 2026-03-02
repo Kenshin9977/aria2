@@ -1,0 +1,61 @@
+name: coverage
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+          g++-14 \
+          autoconf \
+          automake \
+          autotools-dev \
+          autopoint \
+          libtool \
+          pkg-config \
+          libssl-dev \
+          libc-ares-dev \
+          zlib1g-dev \
+          libsqlite3-dev \
+          libssh2-1-dev \
+          libcppunit-dev \
+          lcov
+    - name: Configure with coverage
+      run: |
+        autoreconf -i
+        ./configure \
+          --without-gnutls --with-openssl \
+          CC=gcc-14 CXX=g++-14
+      env:
+        CPPFLAGS: "--coverage -g3 -O0"
+        LDFLAGS: "--coverage"
+    - name: Build and test
+      run: |
+        make -j"$(nproc)" check
+    - name: Collect coverage
+      run: |
+        lcov --capture \
+          --directory src \
+          --output-file coverage.info \
+          --gcov-tool gcov-14 \
+          --ignore-errors mismatch
+        lcov --remove coverage.info \
+          '*/test/*' \
+          '*/deps/*' \
+          '/usr/*' \
+          --output-file coverage.info
+        lcov --list coverage.info
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        files: coverage.info
+        fail_ci_if_error: false

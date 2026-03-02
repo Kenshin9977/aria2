@@ -43,9 +43,9 @@ class EvictSocketPoolCommand : public TimeBasedCommand {
 public:
   EvictSocketPoolCommand(cuid_t cuid, DownloadEngine* e,
                          std::chrono::seconds interval);
-  virtual ~EvictSocketPoolCommand();
-  virtual void preProcess() CXX11_OVERRIDE;
-  virtual void process() CXX11_OVERRIDE;
+  ~EvictSocketPoolCommand() override;
+  void preProcess() override;
+  void process() override;
 };
 
 } // namespace aria2

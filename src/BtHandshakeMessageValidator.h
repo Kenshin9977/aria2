@@ -54,9 +54,9 @@ public:
   BtHandshakeMessageValidator(const BtHandshakeMessage* message,
                               const unsigned char* infoHash);
 
-  ~BtHandshakeMessageValidator();
+  ~BtHandshakeMessageValidator() override;
 
-  virtual void validate() CXX11_OVERRIDE;
+  void validate() override;
 };
 
 } // namespace aria2

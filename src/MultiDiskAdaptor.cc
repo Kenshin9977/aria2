@@ -122,7 +122,7 @@ namespace {
 std::unique_ptr<DiskWriterEntry>
 createDiskWriterEntry(const std::shared_ptr<FileEntry>& fileEntry)
 {
-  auto entry = make_unique<DiskWriterEntry>(fileEntry);
+  auto entry = std::make_unique<DiskWriterEntry>(fileEntry);
   entry->needsFileAllocation(fileEntry->isRequested());
   return entry;
 }
@@ -432,8 +432,8 @@ void MultiDiskAdaptor::flushOSBuffers()
 
 bool MultiDiskAdaptor::fileExists()
 {
-  return std::find_if(std::begin(getFileEntries()), std::end(getFileEntries()),
-                      std::mem_fn(&FileEntry::exists)) !=
+  return std::ranges::find_if(getFileEntries(),
+                              std::mem_fn(&FileEntry::exists)) !=
          std::end(getFileEntries());
 }
 
@@ -449,7 +449,7 @@ int64_t MultiDiskAdaptor::size()
 std::unique_ptr<FileAllocationIterator>
 MultiDiskAdaptor::fileAllocationIterator()
 {
-  return make_unique<MultiFileAllocationIterator>(this);
+  return std::make_unique<MultiFileAllocationIterator>(this);
 }
 
 void MultiDiskAdaptor::enableReadOnly() { readOnly_ = true; }

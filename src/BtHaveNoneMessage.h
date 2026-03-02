@@ -43,14 +43,14 @@ class BtHaveNoneMessage : public ZeroBtMessage {
 public:
   BtHaveNoneMessage();
 
-  static const uint8_t ID = 15;
+  static constexpr uint8_t ID = 15;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "have none";
 
-  static std::unique_ptr<BtHaveNoneMessage> create(const unsigned char* data,
-                                                   size_t dataLength);
+  static std::unique_ptr<BtHaveNoneMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 };
 
 } // namespace aria2

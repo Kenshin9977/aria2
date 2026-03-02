@@ -62,15 +62,15 @@ namespace aria2 {
 InitiatorMSEHandshakeCommand::InitiatorMSEHandshakeCommand(
     cuid_t cuid, RequestGroup* requestGroup, const std::shared_ptr<Peer>& p,
     DownloadEngine* e, const std::shared_ptr<BtRuntime>& btRuntime,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : PeerAbstractCommand(cuid, p, e, s),
       requestGroup_(requestGroup),
       btRuntime_(btRuntime),
       sequence_(INITIATOR_SEND_KEY),
-      mseHandshake_(make_unique<MSEHandshake>(cuid, s, getOption().get()))
+      mseHandshake_(std::make_unique<MSEHandshake>(
+          cuid, std::static_pointer_cast<SocketCore>(s), getOption().get()))
 {
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  transitionToWriting();
   setTimeout(std::chrono::seconds(
       getOption()->getAsInt(PREF_PEER_CONNECTION_TIMEOUT)));
 
@@ -153,7 +153,7 @@ bool InitiatorMSEHandshakeCommand::executeInternal()
     case INITIATOR_RECEIVE_PAD_D: {
       if (mseHandshake_->receivePad()) {
         auto peerConnection =
-            make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
+            std::make_unique<PeerConnection>(getCuid(), getPeer(), getSocket());
         if (mseHandshake_->getNegotiatedCryptoType() ==
             MSEHandshake::CRYPTO_ARC4) {
           size_t buflen = mseHandshake_->getBufferLength();
@@ -167,7 +167,7 @@ bool InitiatorMSEHandshakeCommand::executeInternal()
           peerConnection->presetBuffer(mseHandshake_->getBuffer(),
                                        mseHandshake_->getBufferLength());
         }
-        getDownloadEngine()->addCommand(make_unique<PeerInteractionCommand>(
+        getDownloadEngine()->addCommand(std::make_unique<PeerInteractionCommand>(
             getCuid(), requestGroup_, getPeer(), getDownloadEngine(),
             btRuntime_, pieceStorage_, peerStorage_, getSocket(),
             PeerInteractionCommand::INITIATOR_SEND_HANDSHAKE,
@@ -204,7 +204,7 @@ void InitiatorMSEHandshakeCommand::tryNewPeer()
     std::shared_ptr<Peer> peer = peerStorage_->checkoutPeer(ncuid);
     // sanity check
     if (peer) {
-      auto command = make_unique<PeerInitiateConnectionCommand>(
+      auto command = std::make_unique<PeerInitiateConnectionCommand>(
           ncuid, requestGroup_, peer, getDownloadEngine(), btRuntime_);
       command->setPeerStorage(peerStorage_);
       command->setPieceStorage(pieceStorage_);
@@ -234,7 +234,7 @@ bool InitiatorMSEHandshakeCommand::prepareForNextPeer(time_t wait)
     A2_LOG_INFO(fmt("CUID#%" PRId64
                     " - Retry using legacy BitTorrent handshake.",
                     getCuid()));
-    auto command = make_unique<PeerInitiateConnectionCommand>(
+    auto command = std::make_unique<PeerInitiateConnectionCommand>(
         getCuid(), requestGroup_, getPeer(), getDownloadEngine(), btRuntime_,
         false);
     command->setPeerStorage(peerStorage_);

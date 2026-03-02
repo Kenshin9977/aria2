@@ -14,6 +14,7 @@
 #ifndef BIGNUM_H
 #define BIGNUM_H
 
+#include <compare>
 #include <cstring>
 #include <algorithm>
 #include <memory>
@@ -26,24 +27,24 @@ namespace bignum {
 template <size_t dim> class ulong {
 
 public:
-  typedef char char_t;
-  typedef std::make_unsigned<char_t>::type uchar_t;
+  using char_t = char;
+  using uchar_t = typename std::make_unsigned<char_t>::type;
 
 private:
   std::unique_ptr<uchar_t[]> buf_;
 
 public:
-  inline ulong() : buf_(aria2::make_unique<uchar_t[]>(dim)) {}
-  inline ulong(size_t t) : buf_(aria2::make_unique<uchar_t[]>(dim))
+  inline ulong() : buf_(aria2::std::make_unique<uchar_t[]>(dim)) {}
+  inline ulong(size_t t) : buf_(aria2::std::make_unique<uchar_t[]>(dim))
   {
     memcpy(buf_.get(), (uchar_t*)&t, sizeof(t));
   }
-  inline ulong(const ulong<dim>& rhs) : buf_(aria2::make_unique<uchar_t[]>(dim))
+  inline ulong(const ulong<dim>& rhs) : buf_(aria2::std::make_unique<uchar_t[]>(dim))
   {
     memcpy(buf_.get(), rhs.buf_.get(), dim);
   }
   explicit inline ulong(const uchar_t* data, size_t size)
-      : buf_(aria2::make_unique<uchar_t[]>(dim))
+      : buf_(aria2::std::make_unique<uchar_t[]>(dim))
   {
     if (size > dim) {
       throw std::bad_alloc();
@@ -63,11 +64,7 @@ public:
   {
     return memcmp(buf_.get(), rhs.buf_.get(), dim) == 0;
   }
-  bool operator!=(const ulong<dim>& rhs) const
-  {
-    return memcmp(buf_.get(), rhs.buf_.get(), dim) != 0;
-  }
-  bool operator>(const ulong<dim>& rhs) const
+  std::strong_ordering operator<=>(const ulong<dim>& rhs) const
   {
     const auto b1 = buf_.get();
     const auto b2 = rhs.buf_.get();
@@ -76,20 +73,11 @@ public:
         uchar_t t = ((uchar_t)(b1[i] << 4 * (1 - j))) >> 4;
         uchar_t r = ((uchar_t)(b2[i] << 4 * (1 - j))) >> 4;
         if (t != r) {
-          return t > r;
+          return t <=> r;
         }
       }
     }
-    return false;
-  }
-  bool operator>=(const ulong<dim>& rhs) const
-  {
-    return *this == rhs || *this > rhs;
-  }
-  bool operator<(const ulong<dim>& rhs) const { return !(*this >= rhs); }
-  bool operator<=(const ulong<dim>& rhs) const
-  {
-    return *this == rhs || *this < rhs;
+    return std::strong_ordering::equal;
   }
 
   ulong<dim> operator+(const ulong<dim>& rhs) const

@@ -41,17 +41,15 @@
 
 namespace aria2 {
 
-const char BtRejectMessage::NAME[] = "reject";
-
 BtRejectMessage::BtRejectMessage(size_t index, int32_t begin, int32_t length)
     : RangeBtMessage(ID, NAME, index, begin, length)
 {
 }
 
 std::unique_ptr<BtRejectMessage>
-BtRejectMessage::create(const unsigned char* data, size_t dataLength)
+BtRejectMessage::create(std::span<const unsigned char> data)
 {
-  return RangeBtMessage::create<BtRejectMessage>(data, dataLength);
+  return RangeBtMessage::create<BtRejectMessage>(data);
 }
 
 void BtRejectMessage::doReceivedAction()
@@ -65,9 +63,8 @@ void BtRejectMessage::doReceivedAction()
   }
   // TODO Current implementation does not close a connection even if
   // a request for this reject message has never sent.
-  auto slot = getBtMessageDispatcher()->getOutstandingRequest(
-      getIndex(), getBegin(), getLength());
-  if (slot) {
+  if (auto slot = getBtMessageDispatcher()->getOutstandingRequest(
+          getIndex(), getBegin(), getLength())) {
     getBtMessageDispatcher()->removeOutstandingRequest(slot);
   }
   else {

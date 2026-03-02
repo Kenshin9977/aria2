@@ -198,12 +198,10 @@ void Metalink2RequestGroup::createRequestGroup(
     }
     entries.resize(inspoint);
   }
-  std::for_each(std::begin(entries), std::end(entries),
-                std::mem_fn(&MetalinkEntry::reorderMetaurlsByPriority));
+  std::ranges::for_each(entries,
+                        std::mem_fn(&MetalinkEntry::reorderMetaurlsByPriority));
   auto entryGroups = metalink::groupEntryByMetaurlName(entries);
-  for (auto& entryGroup : entryGroups) {
-    auto& metaurl = entryGroup.first;
-    auto& mes = entryGroup.second;
+  for (auto& [metaurl, mes] : entryGroups) {
     A2_LOG_INFO(fmt("Processing metaurl group metaurl=%s", metaurl.c_str()));
 #ifdef ENABLE_BITTORRENT
     std::shared_ptr<RequestGroup> torrentRg;
@@ -247,8 +245,7 @@ void Metalink2RequestGroup::createRequestGroup(
         A2_LOG_DEBUG(fmt("priority=%d url=%s", mr->priority, mr->url.c_str()));
       }
       std::vector<std::string> uris;
-      std::for_each(std::begin(entry->resources), std::end(entry->resources),
-                    AccumulateNonP2PUri(uris));
+      std::ranges::for_each(entry->resources, AccumulateNonP2PUri(uris));
       // If piece hash is specified in the metalink,
       // make segment size equal to piece hash size.
       int32_t pieceLength;
@@ -299,8 +296,7 @@ void Metalink2RequestGroup::createRequestGroup(
             fmt("originalName = %s", entry->metaurls[0]->name.c_str()));
         entry->reorderResourcesByPriority();
         std::vector<std::string> uris;
-        std::for_each(std::begin(entry->resources), std::end(entry->resources),
-                      AccumulateNonP2PUri(uris));
+        std::ranges::for_each(entry->resources, AccumulateNonP2PUri(uris));
         auto fe = std::make_shared<FileEntry>(
             util::applyDir(option->get(PREF_DIR), entry->file->getPath()),
             entry->file->getLength(), offset, uris);
@@ -334,8 +330,8 @@ void Metalink2RequestGroup::createRequestGroup(
     // Inject dependency between rg and torrentRg here if
     // torrentRg is true
     if (torrentRg) {
-      auto dep = std::make_shared<BtDependency>(rg.get(), torrentRg);
-      rg->dependsOn(dep);
+      auto dep = std::make_unique<BtDependency>(rg.get(), torrentRg);
+      rg->dependsOn(std::move(dep));
       torrentRg->belongsTo(rg->getGID());
       // metadata download may take very long time. If URIs are
       // available, give up metadata download in at most 30 seconds.

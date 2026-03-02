@@ -43,14 +43,14 @@ class BtHaveMessage : public IndexBtMessage {
 public:
   BtHaveMessage(size_t index = 0);
 
-  static const uint8_t ID = 4;
+  static constexpr uint8_t ID = 4;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "have";
 
-  static std::unique_ptr<BtHaveMessage> create(const unsigned char* data,
-                                               size_t dataLength);
+  static std::unique_ptr<BtHaveMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 };
 
 } // namespace aria2

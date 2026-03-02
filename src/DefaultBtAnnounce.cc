@@ -292,53 +292,59 @@ void DefaultBtAnnounce::processAnnounceResponse(
     const unsigned char* trackerResponse, size_t trackerResponseLength)
 {
   A2_LOG_DEBUG("Now processing tracker response.");
-  auto decodedValue = bencode2::decode(trackerResponse, trackerResponseLength);
+  auto decodedValue =
+      bencode2::decode({trackerResponse, trackerResponseLength});
   const Dict* dict = downcast<Dict>(decodedValue);
   if (!dict) {
     throw DL_ABORT_EX(MSG_NULL_TRACKER_RESPONSE);
   }
-  const String* failure =
-      downcast<String>(dict->get(BtAnnounce::FAILURE_REASON));
-  if (failure) {
-    throw DL_ABORT_EX(fmt(EX_TRACKER_FAILURE, failure->s().c_str()));
+  if (const auto* failure = downcast<String>(
+          dict->get(BtAnnounce::FAILURE_REASON))) {
+    throw DL_ABORT_EX(
+        fmt(EX_TRACKER_FAILURE, failure->s().c_str()));
   }
-  const String* warn = downcast<String>(dict->get(BtAnnounce::WARNING_MESSAGE));
-  if (warn) {
-    A2_LOG_WARN(fmt(MSG_TRACKER_WARNING_MESSAGE, warn->s().c_str()));
+  if (const auto* warn = downcast<String>(
+          dict->get(BtAnnounce::WARNING_MESSAGE))) {
+    A2_LOG_WARN(
+        fmt(MSG_TRACKER_WARNING_MESSAGE, warn->s().c_str()));
   }
-  const String* tid = downcast<String>(dict->get(BtAnnounce::TRACKER_ID));
-  if (tid) {
+  if (const auto* tid = downcast<String>(
+          dict->get(BtAnnounce::TRACKER_ID))) {
     trackerId_ = tid->s();
     A2_LOG_DEBUG(fmt("Tracker ID:%s", trackerId_.c_str()));
   }
-  const Integer* ival = downcast<Integer>(dict->get(BtAnnounce::INTERVAL));
-  if (ival && ival->i() > 0) {
+  if (const auto* ival = downcast<Integer>(
+          dict->get(BtAnnounce::INTERVAL));
+      ival && ival->i() > 0) {
     interval_ = std::chrono::seconds(ival->i());
-    A2_LOG_DEBUG(fmt("Interval:%ld", static_cast<long int>(interval_.count())));
+    A2_LOG_DEBUG(fmt("Interval:%ld",
+                     static_cast<long int>(interval_.count())));
   }
-  const Integer* mival = downcast<Integer>(dict->get(BtAnnounce::MIN_INTERVAL));
-  if (mival && mival->i() > 0) {
+  if (const auto* mival = downcast<Integer>(
+          dict->get(BtAnnounce::MIN_INTERVAL));
+      mival && mival->i() > 0) {
     minInterval_ = std::chrono::seconds(mival->i());
-    A2_LOG_DEBUG(
-        fmt("Min interval:%ld", static_cast<long int>(minInterval_.count())));
+    A2_LOG_DEBUG(fmt("Min interval:%ld",
+                     static_cast<long int>(minInterval_.count())));
     minInterval_ = std::min(minInterval_, interval_);
   }
   else {
     // Use interval as a minInterval if minInterval is not supplied.
     minInterval_ = interval_;
   }
-  const Integer* comp = downcast<Integer>(dict->get(BtAnnounce::COMPLETE));
-  if (comp && comp->i() >= 0) {
+  if (const auto* comp = downcast<Integer>(
+          dict->get(BtAnnounce::COMPLETE));
+      comp && comp->i() >= 0) {
     complete_ = comp->i();
     A2_LOG_DEBUG(fmt("Complete:%d", complete_));
   }
-  const Integer* incomp = downcast<Integer>(dict->get(BtAnnounce::INCOMPLETE));
-  if (incomp && incomp->i() >= 0) {
+  if (const auto* incomp = downcast<Integer>(
+          dict->get(BtAnnounce::INCOMPLETE));
+      incomp && incomp->i() >= 0) {
     incomplete_ = incomp->i();
     A2_LOG_DEBUG(fmt("Incomplete:%d", incomplete_));
   }
-  auto peerData = dict->get(BtAnnounce::PEERS);
-  if (!peerData) {
+  if (auto peerData = dict->get(BtAnnounce::PEERS); !peerData) {
     A2_LOG_INFO(MSG_NO_PEER_LIST_RECEIVED);
   }
   else {
@@ -348,8 +354,7 @@ void DefaultBtAnnounce::processAnnounceResponse(
       peerStorage_->addPeer(peers);
     }
   }
-  auto peer6Data = dict->get(BtAnnounce::PEERS6);
-  if (!peer6Data) {
+  if (auto peer6Data = dict->get(BtAnnounce::PEERS6); !peer6Data) {
     A2_LOG_INFO("No peers6 received.");
   }
   else {
@@ -377,8 +382,8 @@ void DefaultBtAnnounce::processUDPTrackerResponse(
   incomplete_ = reply->leechers;
   A2_LOG_DEBUG(fmt("Incomplete:%d", reply->leechers));
   if (!btRuntime_->isHalt() && btRuntime_->lessThanMinPeers()) {
-    for (auto& elem : reply->peers) {
-      peerStorage_->addPeer(std::make_shared<Peer>(elem.first, elem.second));
+    for (auto& [host, port] : reply->peers) {
+      peerStorage_->addPeer(std::make_shared<Peer>(host, port));
     }
   }
 }

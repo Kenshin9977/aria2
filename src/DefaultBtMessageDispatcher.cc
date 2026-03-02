@@ -138,8 +138,7 @@ void DefaultBtMessageDispatcher::doCancelSendingPieceAction(size_t index,
   }
 }
 
-// Cancel sending piece message to peer.
-// TODO Is this method really necessary?
+// Unused stub — only the (index, begin, length) overload is called.
 void DefaultBtMessageDispatcher::doCancelSendingPieceAction(
     const std::shared_ptr<Piece>& piece)
 {
@@ -166,12 +165,10 @@ void DefaultBtMessageDispatcher::doAbortOutstandingRequestAction(
       abortOutstandingRequest(slot.get(), piece, cuid_);
     }
   }
-  requestSlots_.erase(
-      std::remove_if(std::begin(requestSlots_), std::end(requestSlots_),
-                     [&](const std::unique_ptr<RequestSlot>& slot) {
-                       return slot->getIndex() == piece->getIndex();
-                     }),
-      std::end(requestSlots_));
+  std::erase_if(requestSlots_, [&](const std::unique_ptr<RequestSlot>& slot) {
+    return slot->getIndex() == piece->getIndex();
+  });
+  rebuildOutstandingIndex();
 
   BtAbortOutstandingRequestEvent event(piece);
 
@@ -193,12 +190,10 @@ void DefaultBtMessageDispatcher::doChokedAction()
       slot->getPiece()->cancelBlock(slot->getBlockIndex());
     }
   }
-  requestSlots_.erase(
-      std::remove_if(std::begin(requestSlots_), std::end(requestSlots_),
-                     [&](const std::unique_ptr<RequestSlot>& slot) {
-                       return !peer_->isInPeerAllowedIndexSet(slot->getIndex());
-                     }),
-      std::end(requestSlots_));
+  std::erase_if(requestSlots_, [&](const std::unique_ptr<RequestSlot>& slot) {
+    return !peer_->isInPeerAllowedIndexSet(slot->getIndex());
+  });
+  rebuildOutstandingIndex();
 }
 
 // localhost dispatched choke message to the peer.
@@ -232,13 +227,11 @@ void DefaultBtMessageDispatcher::checkRequestSlotAndDoNecessaryThing()
           slot->getIndex(), slot->getBegin(), slot->getLength()));
     }
   }
-  requestSlots_.erase(
-      std::remove_if(std::begin(requestSlots_), std::end(requestSlots_),
-                     [&](const std::unique_ptr<RequestSlot>& slot) {
-                       return slot->isTimeout(requestTimeout_) ||
-                              slot->getPiece()->hasBlock(slot->getBlockIndex());
-                     }),
-      std::end(requestSlots_));
+  std::erase_if(requestSlots_, [&](const std::unique_ptr<RequestSlot>& slot) {
+    return slot->isTimeout(requestTimeout_) ||
+           slot->getPiece()->hasBlock(slot->getBlockIndex());
+  });
+  rebuildOutstandingIndex();
 }
 
 bool DefaultBtMessageDispatcher::isSendingInProgress()
@@ -249,25 +242,27 @@ bool DefaultBtMessageDispatcher::isSendingInProgress()
 bool DefaultBtMessageDispatcher::isOutstandingRequest(size_t index,
                                                       size_t blockIndex)
 {
+  return outstandingIndex_.count({index, blockIndex}) > 0;
+}
+
+void DefaultBtMessageDispatcher::rebuildOutstandingIndex()
+{
+  outstandingIndex_.clear();
   for (auto& slot : requestSlots_) {
-    if (slot->getIndex() == index && slot->getBlockIndex() == blockIndex) {
-      return true;
-    }
+    outstandingIndex_.emplace(slot->getIndex(), slot->getBlockIndex());
   }
-  return false;
 }
 
 const RequestSlot*
 DefaultBtMessageDispatcher::getOutstandingRequest(size_t index, int32_t begin,
                                                   int32_t length)
 {
-  for (auto& slot : requestSlots_) {
-    if (slot->getIndex() == index && slot->getBegin() == begin &&
-        slot->getLength() == length) {
-      return slot.get();
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      requestSlots_, [index, begin, length](const auto& slot) {
+        return slot->getIndex() == index && slot->getBegin() == begin &&
+               slot->getLength() == length;
+      });
+  return it != requestSlots_.end() ? it->get() : nullptr;
 }
 
 void DefaultBtMessageDispatcher::removeOutstandingRequest(
@@ -276,6 +271,7 @@ void DefaultBtMessageDispatcher::removeOutstandingRequest(
   for (auto i = std::begin(requestSlots_), eoi = std::end(requestSlots_);
        i != eoi; ++i) {
     if (*(*i) == *slot) {
+      outstandingIndex_.erase({(*i)->getIndex(), (*i)->getBlockIndex()});
       abortOutstandingRequest((*i).get(), (*i)->getPiece(), cuid_);
       requestSlots_.erase(i);
       break;
@@ -286,13 +282,14 @@ void DefaultBtMessageDispatcher::removeOutstandingRequest(
 void DefaultBtMessageDispatcher::addOutstandingRequest(
     std::unique_ptr<RequestSlot> slot)
 {
+  outstandingIndex_.emplace(slot->getIndex(), slot->getBlockIndex());
   requestSlots_.push_back(std::move(slot));
 }
 
 size_t DefaultBtMessageDispatcher::countOutstandingUpload()
 {
-  return std::count_if(std::begin(messageQueue_), std::end(messageQueue_),
-                       std::mem_fn(&BtMessage::isUploading));
+  return std::ranges::count_if(messageQueue_,
+                               std::mem_fn(&BtMessage::isUploading));
 }
 
 void DefaultBtMessageDispatcher::setPeer(const std::shared_ptr<Peer>& peer)

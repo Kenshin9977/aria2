@@ -51,9 +51,9 @@ public:
   BtPieceMessageValidator(const BtPieceMessage* message, size_t numPiece,
                           int32_t pieceLength);
 
-  ~BtPieceMessageValidator();
+  ~BtPieceMessageValidator() override;
 
-  virtual void validate() CXX11_OVERRIDE;
+  void validate() override;
 };
 
 } // namespace aria2

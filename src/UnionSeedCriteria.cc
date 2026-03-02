@@ -50,12 +50,8 @@ void UnionSeedCriteria::reset()
 
 bool UnionSeedCriteria::evaluate()
 {
-  for (const auto& c : criterion_) {
-    if (c->evaluate()) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(
+      criterion_, [](const auto& c) { return c->evaluate(); });
 }
 
 void UnionSeedCriteria::addSeedCriteria(std::unique_ptr<SeedCriteria> cri)

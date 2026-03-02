@@ -36,29 +36,32 @@
 #define D_ZERO_BT_MESSAGE_H
 
 #include "SimpleBtMessage.h"
+
+#include <span>
+
 #include "bittorrent_helper.h"
 
 namespace aria2 {
 
 class ZeroBtMessage : public SimpleBtMessage {
 private:
-  static const size_t MESSAGE_LENGTH = 5;
+  static constexpr size_t MESSAGE_LENGTH = 5;
 
 protected:
   template <typename T>
-  static std::unique_ptr<T> create(const unsigned char* data, size_t dataLength)
+  static std::unique_ptr<T> create(std::span<const unsigned char> data)
   {
-    bittorrent::assertPayloadLengthEqual(1, dataLength, T::NAME);
-    bittorrent::assertID(T::ID, data, T::NAME);
-    return make_unique<T>();
+    bittorrent::assertPayloadLengthEqual(1, data.size(), T::NAME);
+    bittorrent::assertID(T::ID, data.data(), T::NAME);
+    return std::make_unique<T>();
   }
 
 public:
   ZeroBtMessage(uint8_t id, const char* name);
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 };
 
 } // namespace aria2

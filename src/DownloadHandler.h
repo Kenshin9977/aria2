@@ -40,14 +40,15 @@
 #include <string>
 #include <memory>
 
+#include "RequestGroupCriteria.h"
+
 namespace aria2 {
 
 class RequestGroup;
-class RequestGroupCriteria;
 
 class DownloadHandler {
 public:
-  virtual ~DownloadHandler() {}
+  virtual ~DownloadHandler() = default;
 
   bool canHandle(const RequestGroup* requestGroup) const;
 

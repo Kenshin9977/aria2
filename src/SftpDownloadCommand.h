@@ -46,17 +46,17 @@ private:
   std::unique_ptr<AuthConfig> authConfig_;
 
 protected:
-  virtual bool prepareForNextSegment() CXX11_OVERRIDE;
-  virtual int64_t getRequestEndOffset() const CXX11_OVERRIDE;
-  virtual bool shouldEnableWriteCheck() CXX11_OVERRIDE;
+  bool prepareForNextSegment() override;
+  int64_t getRequestEndOffset() const override;
+  bool shouldEnableWriteCheck() override;
 
 public:
   SftpDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                       const std::shared_ptr<FileEntry>& fileEntry,
                       RequestGroup* requestGroup, DownloadEngine* e,
-                      const std::shared_ptr<SocketCore>& socket,
+                      const std::shared_ptr<ISocketCore>& socket,
                       std::unique_ptr<AuthConfig> authConfig);
-  virtual ~SftpDownloadCommand();
+  ~SftpDownloadCommand() override;
 };
 
 } // namespace aria2

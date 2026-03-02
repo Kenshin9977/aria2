@@ -44,12 +44,11 @@ DefaultStreamPieceSelector::DefaultStreamPieceSelector(BitfieldMan* bitfieldMan)
 
 DefaultStreamPieceSelector::~DefaultStreamPieceSelector() = default;
 
-bool DefaultStreamPieceSelector::select(size_t& index, size_t minSplitSize,
-                                        const unsigned char* ignoreBitfield,
-                                        size_t length)
+std::optional<size_t> DefaultStreamPieceSelector::select(
+    size_t minSplitSize, std::span<const unsigned char> ignoreBitfield)
 {
-  return bitfieldMan_->getSparseMissingUnusedIndex(index, minSplitSize,
-                                                   ignoreBitfield, length);
+  return bitfieldMan_->getSparseMissingUnusedIndex(minSplitSize,
+                                                   ignoreBitfield);
 }
 
 void DefaultStreamPieceSelector::onBitfieldInit() {}

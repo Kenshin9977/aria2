@@ -40,7 +40,7 @@ void BtHaveMessageTest::testCreate()
   unsigned char msg[9];
   bittorrent::createPeerMessageString(msg, sizeof(msg), 5, 4);
   bittorrent::setIntParam(&msg[5], 12345);
-  std::shared_ptr<BtHaveMessage> pm(BtHaveMessage::create(&msg[4], 5));
+  std::shared_ptr<BtHaveMessage> pm(BtHaveMessage::create({&msg[4], 5}));
   CPPUNIT_ASSERT_EQUAL((uint8_t)4, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
 
@@ -48,7 +48,7 @@ void BtHaveMessageTest::testCreate()
   try {
     unsigned char msg[10];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 6, 4);
-    BtHaveMessage::create(&msg[4], 2);
+    BtHaveMessage::create({&msg[4], 2});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -57,7 +57,7 @@ void BtHaveMessageTest::testCreate()
   try {
     unsigned char msg[9];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 5, 5);
-    BtHaveMessage::create(&msg[4], 1);
+    BtHaveMessage::create({&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -83,7 +83,7 @@ void BtHaveMessageTest::testDoReceivedAction()
   BtHaveMessage msg;
   msg.setIndex(1);
   msg.setPeer(peer);
-  auto pieceStorage = make_unique<MockPieceStorage>();
+  auto pieceStorage = std::make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
 
   CPPUNIT_ASSERT(!peer->hasPiece(msg.getIndex()));
@@ -100,7 +100,7 @@ void BtHaveMessageTest::testDoReceivedAction_goodByeSeeder()
   BtHaveMessage msg;
   msg.setIndex(0);
   msg.setPeer(peer);
-  auto pieceStorage = make_unique<MockPieceStorage>();
+  auto pieceStorage = std::make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
 
   // peer is not seeder and client have not completed download

@@ -43,14 +43,14 @@ class BtCancelMessage : public RangeBtMessage {
 public:
   BtCancelMessage(size_t index = 0, int32_t begin = 0, int32_t length = 0);
 
-  static const int8_t ID = 8;
+  static constexpr int8_t ID = 8;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "cancel";
 
-  static std::unique_ptr<BtCancelMessage> create(const unsigned char* data,
-                                                 size_t dataLength);
+  static std::unique_ptr<BtCancelMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 };
 
 } // namespace aria2

@@ -55,6 +55,7 @@
 #include "ConnectCommand.h"
 #include "HttpRequestConnectChain.h"
 #include "HttpProxyRequestConnectChain.h"
+#include "Socks5RequestConnectChain.h"
 
 namespace aria2 {
 
@@ -82,13 +83,17 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     if (!pooledSocket) {
       A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(), addr.c_str(), port));
       createSocket();
-      getSocket()->establishConnection(addr, port);
+      std::static_pointer_cast<SocketCore>(getSocket())
+          ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
-      auto c = make_unique<ConnectCommand>(
+      auto c = std::make_unique<ConnectCommand>(
           getCuid(), getRequest(), proxyRequest, getFileEntry(),
           getRequestGroup(), getDownloadEngine(), getSocket());
-      if (proxyMethod == V_TUNNEL) {
+      if (isSocks5Proxy()) {
+        c->setControlChain(std::make_shared<Socks5RequestConnectChain>());
+      }
+      else if (proxyMethod == V_TUNNEL) {
         c->setControlChain(std::make_shared<HttpProxyRequestConnectChain>());
       }
       else if (proxyMethod == V_GET) {
@@ -103,7 +108,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     }
     else {
       setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
-      auto c = make_unique<HttpRequestCommand>(
+      auto c = std::make_unique<HttpRequestCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           std::make_shared<HttpConnection>(
               getCuid(), pooledSocket,
@@ -122,10 +127,11 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
     if (!pooledSocket) {
       A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(), addr.c_str(), port));
       createSocket();
-      getSocket()->establishConnection(addr, port);
+      std::static_pointer_cast<SocketCore>(getSocket())
+          ->establishConnection(addr, port);
 
       getRequest()->setConnectedAddrInfo(hostname, addr, port);
-      auto c = make_unique<ConnectCommand>(getCuid(), getRequest(),
+      auto c = std::make_unique<ConnectCommand>(getCuid(), getRequest(),
                                            proxyRequest, // must be null
                                            getFileEntry(), getRequestGroup(),
                                            getDownloadEngine(), getSocket());
@@ -137,7 +143,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
       setSocket(pooledSocket);
       setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
 
-      return make_unique<HttpRequestCommand>(
+      return std::make_unique<HttpRequestCommand>(
           getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
           std::make_shared<HttpConnection>(
               getCuid(), getSocket(),

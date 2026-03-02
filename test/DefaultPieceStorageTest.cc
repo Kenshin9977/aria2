@@ -40,6 +40,13 @@ class DefaultPieceStorageTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testGetFilteredCompletedLength);
   CPPUNIT_TEST(testGetNextUsedIndex);
   CPPUNIT_TEST(testAdvertisePiece);
+  CPPUNIT_TEST(testDownloadFinished);
+  CPPUNIT_TEST(testAllDownloadFinished);
+  CPPUNIT_TEST(testMarkAllPiecesDone);
+  CPPUNIT_TEST(testMarkPieceMissing);
+  CPPUNIT_TEST(testCountInFlightPiece);
+  CPPUNIT_TEST(testIsSelectiveDownloadingMode);
+  CPPUNIT_TEST(testGetBitfieldLength);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -58,7 +65,7 @@ public:
     peer = std::make_shared<Peer>("192.168.0.1", 6889);
     peer->allocateSessionResource(dctx_->getPieceLength(),
                                   dctx_->getTotalLength());
-    pieceSelector_ = make_unique<InorderPieceSelector>();
+    pieceSelector_ = std::make_unique<InorderPieceSelector>();
   }
 
   void testGetTotalLength();
@@ -79,6 +86,13 @@ public:
   void testGetFilteredCompletedLength();
   void testGetNextUsedIndex();
   void testAdvertisePiece();
+  void testDownloadFinished();
+  void testAllDownloadFinished();
+  void testMarkAllPiecesDone();
+  void testMarkPieceMissing();
+  void testCountInFlightPiece();
+  void testIsSelectiveDownloadingMode();
+  void testGetBitfieldLength();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DefaultPieceStorageTest);
@@ -455,6 +469,160 @@ void DefaultPieceStorageTest::testAdvertisePiece()
 
   CPPUNIT_ASSERT_EQUAL((uint64_t)0, lastHaveIndex);
   CPPUNIT_ASSERT_EQUAL((size_t)0, res.size());
+}
+
+void DefaultPieceStorageTest::testDownloadFinished()
+{
+  // dctx_ has 3 pieces of 128 bytes each, totalLength=384
+  DefaultPieceStorage pss(dctx_, option_.get());
+
+  CPPUNIT_ASSERT(!pss.downloadFinished());
+
+  // Mark all pieces done
+  pss.markAllPiecesDone();
+  CPPUNIT_ASSERT(pss.downloadFinished());
+
+  // Test with filter: create a context with selective download
+  size_t pieceLength = 1_k;
+  auto dctx = std::make_shared<DownloadContext>();
+  dctx->setPieceLength(pieceLength);
+  auto files = std::vector<std::shared_ptr<FileEntry>>{
+      std::make_shared<FileEntry>("foo", 2 * pieceLength, 0),
+      std::make_shared<FileEntry>("bar", 2 * pieceLength, 2 * pieceLength)};
+  files[1]->setRequested(false);
+  dctx->setFileEntries(std::begin(files), std::end(files));
+
+  DefaultPieceStorage ps(dctx, option_.get());
+  ps.setupFileFilter();
+  CPPUNIT_ASSERT(!ps.downloadFinished());
+
+  // Complete only the filtered (requested) pieces
+  auto piece0 = std::make_shared<Piece>(0, pieceLength);
+  auto piece1 = std::make_shared<Piece>(1, pieceLength);
+  ps.completePiece(piece0);
+  ps.completePiece(piece1);
+  CPPUNIT_ASSERT(ps.downloadFinished());
+  // But not all download finished (pieces 2,3 are not done)
+  CPPUNIT_ASSERT(!ps.allDownloadFinished());
+}
+
+void DefaultPieceStorageTest::testAllDownloadFinished()
+{
+  DefaultPieceStorage pss(dctx_, option_.get());
+
+  CPPUNIT_ASSERT(!pss.allDownloadFinished());
+
+  pss.markAllPiecesDone();
+  CPPUNIT_ASSERT(pss.allDownloadFinished());
+
+  // Mark one piece missing
+  pss.markPieceMissing(1);
+  CPPUNIT_ASSERT(!pss.allDownloadFinished());
+}
+
+void DefaultPieceStorageTest::testMarkAllPiecesDone()
+{
+  DefaultPieceStorage pss(dctx_, option_.get());
+
+  CPPUNIT_ASSERT(!pss.hasPiece(0));
+  CPPUNIT_ASSERT(!pss.hasPiece(1));
+  CPPUNIT_ASSERT(!pss.hasPiece(2));
+
+  pss.markAllPiecesDone();
+
+  CPPUNIT_ASSERT(pss.hasPiece(0));
+  CPPUNIT_ASSERT(pss.hasPiece(1));
+  CPPUNIT_ASSERT(pss.hasPiece(2));
+  CPPUNIT_ASSERT(pss.allDownloadFinished());
+  CPPUNIT_ASSERT_EQUAL((int64_t)384LL, pss.getCompletedLength());
+}
+
+void DefaultPieceStorageTest::testMarkPieceMissing()
+{
+  DefaultPieceStorage pss(dctx_, option_.get());
+
+  // Complete piece 1
+  auto piece = std::make_shared<Piece>(1, 128);
+  pss.completePiece(piece);
+  CPPUNIT_ASSERT(pss.hasPiece(1));
+
+  // Mark it missing
+  pss.markPieceMissing(1);
+  CPPUNIT_ASSERT(!pss.hasPiece(1));
+
+  // Mark all done, then mark 0 missing
+  pss.markAllPiecesDone();
+  CPPUNIT_ASSERT(pss.allDownloadFinished());
+
+  pss.markPieceMissing(0);
+  CPPUNIT_ASSERT(!pss.hasPiece(0));
+  CPPUNIT_ASSERT(pss.hasPiece(1));
+  CPPUNIT_ASSERT(pss.hasPiece(2));
+  CPPUNIT_ASSERT(!pss.allDownloadFinished());
+}
+
+void DefaultPieceStorageTest::testCountInFlightPiece()
+{
+  DefaultPieceStorage pss(dctx_, option_.get());
+  pss.setPieceSelector(std::move(pieceSelector_));
+
+  CPPUNIT_ASSERT_EQUAL((size_t)0, pss.countInFlightPiece());
+
+  peer->setAllBitfield();
+
+  auto piece = pss.getMissingPiece(peer, 1);
+  CPPUNIT_ASSERT(piece);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, pss.countInFlightPiece());
+
+  auto piece2 = pss.getMissingPiece(peer, 1);
+  CPPUNIT_ASSERT(piece2);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, pss.countInFlightPiece());
+
+  // Complete the first piece; it should be removed from in-flight
+  pss.completePiece(piece);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, pss.countInFlightPiece());
+}
+
+void DefaultPieceStorageTest::testIsSelectiveDownloadingMode()
+{
+  DefaultPieceStorage pss(dctx_, option_.get());
+
+  // No filter set, so not selective
+  CPPUNIT_ASSERT(!pss.isSelectiveDownloadingMode());
+
+  // Create context with file filter
+  size_t pieceLength = 1_k;
+  auto dctx = std::make_shared<DownloadContext>();
+  dctx->setPieceLength(pieceLength);
+  auto files = std::vector<std::shared_ptr<FileEntry>>{
+      std::make_shared<FileEntry>("foo", 2 * pieceLength, 0),
+      std::make_shared<FileEntry>("bar", 2 * pieceLength, 2 * pieceLength)};
+  files[1]->setRequested(false);
+  dctx->setFileEntries(std::begin(files), std::end(files));
+
+  DefaultPieceStorage ps(dctx, option_.get());
+  ps.setupFileFilter();
+  CPPUNIT_ASSERT(ps.isSelectiveDownloadingMode());
+}
+
+void DefaultPieceStorageTest::testGetBitfieldLength()
+{
+  // dctx_ has totalLength=384, pieceLength=128, so 3 pieces
+  // bitfieldLength = ceil(3/8) = 1
+  DefaultPieceStorage pss(dctx_, option_.get());
+  CPPUNIT_ASSERT_EQUAL((size_t)1, pss.getBitfieldLength());
+
+  // Test with larger context: 256 pieces
+  auto dctx = std::make_shared<DownloadContext>(1_k, 256_k);
+  DefaultPieceStorage ps(dctx, option_.get());
+  // 256 blocks, bitfieldLength = 256/8 = 32
+  CPPUNIT_ASSERT_EQUAL((size_t)32, ps.getBitfieldLength());
+
+  // Test non-aligned: 10 pieces
+  auto dctx2 = std::make_shared<DownloadContext>(1_k, 10_k);
+  DefaultPieceStorage ps2(dctx2, option_.get());
+  // 10 blocks, bitfieldLength = ceil(10/8) = 2
+  CPPUNIT_ASSERT_EQUAL((size_t)2, ps2.getBitfieldLength());
 }
 
 } // namespace aria2

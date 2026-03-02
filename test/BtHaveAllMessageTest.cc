@@ -37,14 +37,14 @@ void BtHaveAllMessageTest::testCreate()
 {
   unsigned char msg[5];
   bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 14);
-  std::shared_ptr<BtHaveAllMessage> pm(BtHaveAllMessage::create(&msg[4], 1));
+  std::shared_ptr<BtHaveAllMessage> pm(BtHaveAllMessage::create({&msg[4], 1}));
   CPPUNIT_ASSERT_EQUAL((uint8_t)14, pm->getId());
 
   // case: payload size is wrong
   try {
     unsigned char msg[6];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 2, 14);
-    BtHaveAllMessage::create(&msg[4], 2);
+    BtHaveAllMessage::create({&msg[4], 2});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -53,7 +53,7 @@ void BtHaveAllMessageTest::testCreate()
   try {
     unsigned char msg[5];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 15);
-    BtHaveAllMessage::create(&msg[4], 1);
+    BtHaveAllMessage::create({&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -77,7 +77,7 @@ void BtHaveAllMessageTest::testDoReceivedAction()
   peer->allocateSessionResource(16_k, 256_k);
   peer->setFastExtensionEnabled(true);
   msg.setPeer(peer);
-  auto pieceStorage = make_unique<MockPieceStorage>();
+  auto pieceStorage = std::make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
 
   msg.doReceivedAction();
@@ -101,7 +101,7 @@ void BtHaveAllMessageTest::testDoReceivedAction_goodByeSeeder()
   peer->allocateSessionResource(1_k, 1_k);
   peer->setFastExtensionEnabled(true);
   msg.setPeer(peer);
-  auto pieceStorage = make_unique<MockPieceStorage>();
+  auto pieceStorage = std::make_unique<MockPieceStorage>();
   msg.setPieceStorage(pieceStorage.get());
 
   pieceStorage->setDownloadFinished(true);

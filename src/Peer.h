@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <cassert>
+#include <span>
 #include <string>
 #include <set>
 #include <algorithm>
@@ -197,7 +198,7 @@ public:
    */
   int64_t getSessionDownloadLength() const;
 
-  void setBitfield(const unsigned char* bitfield, size_t bitfieldLength);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   const unsigned char* getBitfield() const;
 

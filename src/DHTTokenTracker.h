@@ -42,7 +42,7 @@ namespace aria2 {
 
 class DHTTokenTracker {
 private:
-  static const size_t SECRET_SIZE = 4;
+  static constexpr size_t SECRET_SIZE = 4;
 
   unsigned char secret_[2][SECRET_SIZE];
 
@@ -57,7 +57,6 @@ public:
 
   ~DHTTokenTracker();
 
-  // TODO handle exception thrown by this function.
   std::string generateToken(const unsigned char* infoHash,
                             const std::string& ipaddr, uint16_t port) const;
 

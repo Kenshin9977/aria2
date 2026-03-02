@@ -100,7 +100,6 @@ std::shared_ptr<DHTTask> DHTTaskFactoryImpl::createPeerLookupTask(
 std::shared_ptr<DHTTask>
 DHTTaskFactoryImpl::createPeerAnnounceTask(const unsigned char* infoHash)
 {
-  // TODO
   return nullptr;
 }
 

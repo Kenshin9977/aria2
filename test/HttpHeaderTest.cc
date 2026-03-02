@@ -15,6 +15,9 @@ class HttpHeaderTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testClearField);
   CPPUNIT_TEST(testFieldContains);
   CPPUNIT_TEST(testRemove);
+  CPPUNIT_TEST(testFindEmptyButPresent);
+  CPPUNIT_TEST(testGetRangeEmptyHeaders);
+  CPPUNIT_TEST(testIsKeepAliveEmptyConnection);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,6 +26,9 @@ public:
   void testClearField();
   void testFieldContains();
   void testRemove();
+  void testFindEmptyButPresent();
+  void testGetRangeEmptyHeaders();
+  void testIsKeepAliveEmptyConnection();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HttpHeaderTest);
@@ -158,11 +164,13 @@ void HttpHeaderTest::testClearField()
   h.setVersion("HTTP/1.1");
   h.put(HttpHeader::LINK, "Bar");
 
-  CPPUNIT_ASSERT_EQUAL(std::string("Bar"), h.find(HttpHeader::LINK));
+  CPPUNIT_ASSERT(h.find(HttpHeader::LINK).has_value());
+  CPPUNIT_ASSERT_EQUAL(std::string("Bar"),
+                       std::string(*h.find(HttpHeader::LINK)));
 
   h.clearField();
 
-  CPPUNIT_ASSERT_EQUAL(std::string(""), h.find(HttpHeader::LINK));
+  CPPUNIT_ASSERT(!h.find(HttpHeader::LINK).has_value());
   CPPUNIT_ASSERT_EQUAL(200, h.getStatusCode());
   CPPUNIT_ASSERT_EQUAL(std::string("HTTP/1.1"), h.getVersion());
 }
@@ -195,6 +203,66 @@ void HttpHeaderTest::testRemove()
 
   CPPUNIT_ASSERT(!h.defined(HttpHeader::TRANSFER_ENCODING));
   CPPUNIT_ASSERT(h.defined(HttpHeader::CONNECTION));
+}
+
+void HttpHeaderTest::testFindEmptyButPresent()
+{
+  HttpHeader h;
+  h.put(HttpHeader::CONTENT_LENGTH, "");
+
+  // Empty-but-present header: find() returns optional with empty view
+  auto result = h.find(HttpHeader::CONTENT_LENGTH);
+  CPPUNIT_ASSERT(result.has_value());
+  CPPUNIT_ASSERT(result->empty());
+
+  // Absent header: find() returns nullopt
+  auto absent = h.find(HttpHeader::CONTENT_RANGE);
+  CPPUNIT_ASSERT(!absent.has_value());
+
+  // defined() returns true for empty-but-present
+  CPPUNIT_ASSERT(h.defined(HttpHeader::CONTENT_LENGTH));
+}
+
+void HttpHeaderTest::testGetRangeEmptyHeaders()
+{
+  // Empty Content-Range should return empty Range (not throw)
+  {
+    HttpHeader h;
+    h.put(HttpHeader::CONTENT_RANGE, "");
+    Range range = h.getRange();
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.startByte);
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.endByte);
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.entityLength);
+  }
+  // Empty Content-Length should return empty Range (not throw)
+  {
+    HttpHeader h;
+    h.put(HttpHeader::CONTENT_LENGTH, "");
+    Range range = h.getRange();
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.startByte);
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.endByte);
+    CPPUNIT_ASSERT_EQUAL((int64_t)0, range.entityLength);
+  }
+}
+
+void HttpHeaderTest::testIsKeepAliveEmptyConnection()
+{
+  // Empty Connection header with HTTP/1.1 should behave like absent
+  {
+    HttpHeader h;
+    h.setVersion("HTTP/1.1");
+    h.put(HttpHeader::CONNECTION, "");
+    // Empty Connection: old code returned empty string from find(),
+    // strieq("", "close") is false, and version is 1.1, so keep-alive
+    CPPUNIT_ASSERT(h.isKeepAlive());
+  }
+  // Empty Connection with HTTP/1.0: strieq("", "keep-alive") is false
+  {
+    HttpHeader h;
+    h.setVersion("HTTP/1.0");
+    h.put(HttpHeader::CONNECTION, "");
+    CPPUNIT_ASSERT(!h.isKeepAlive());
+  }
 }
 
 } // namespace aria2

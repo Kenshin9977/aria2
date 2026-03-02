@@ -58,23 +58,23 @@ void encodeValue(const ValueBase* value, OutputStream& o)
   public:
     XmlValueBaseVisitor(OutputStream& o) : o_(o) {}
 
-    virtual ~XmlValueBaseVisitor() = default;
+    ~XmlValueBaseVisitor() override = default;
 
-    virtual void visit(const String& v) CXX11_OVERRIDE
+    void visit(const String& v) override
     {
       o_ << "<value><string>" << util::htmlEscape(v.s()) << "</string></value>";
     }
 
-    virtual void visit(const Integer& v) CXX11_OVERRIDE
+    void visit(const Integer& v) override
     {
       o_ << "<value><int>" << v.i() << "</int></value>";
     }
 
-    virtual void visit(const Bool& boolValue) CXX11_OVERRIDE {}
+    void visit(const Bool& boolValue) override {}
 
-    virtual void visit(const Null& nullValue) CXX11_OVERRIDE {}
+    void visit(const Null& nullValue) override {}
 
-    virtual void visit(const List& v) CXX11_OVERRIDE
+    void visit(const List& v) override
     {
       o_ << "<value><array><data>";
       for (const auto& e : v) {
@@ -83,12 +83,12 @@ void encodeValue(const ValueBase* value, OutputStream& o)
       o_ << "</data></array></value>";
     }
 
-    virtual void visit(const Dict& v) CXX11_OVERRIDE
+    void visit(const Dict& v) override
     {
       o_ << "<value><struct>";
-      for (const auto& e : v) {
-        o_ << "<member><name>" << util::htmlEscape(e.first) << "</name>";
-        e.second->accept(*this);
+      for (const auto& [name, value] : v) {
+        o_ << "<member><name>" << util::htmlEscape(name) << "</name>";
+        value->accept(*this);
         o_ << "</member>";
       }
       o_ << "</struct></value>";

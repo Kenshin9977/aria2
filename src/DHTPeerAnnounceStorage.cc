@@ -103,8 +103,7 @@ void DHTPeerAnnounceStorage::getPeers(std::vector<std::shared_ptr<Peer>>& peers,
 {
   auto entry = std::make_shared<DHTPeerAnnounceEntry>(infoHash);
 
-  auto i = entries_.find(entry);
-  if (i != entries_.end()) {
+  if (auto i = entries_.find(entry); i != entries_.end()) {
     (*i)->getPeers(peers);
   }
 }
@@ -113,10 +112,10 @@ void DHTPeerAnnounceStorage::handleTimeout()
 {
   A2_LOG_DEBUG(fmt("Now purge peer announces(%lu entries) which are timed out.",
                    static_cast<unsigned long>(entries_.size())));
-  std::for_each(std::begin(entries_), std::end(entries_),
-                [](const std::shared_ptr<DHTPeerAnnounceEntry>& e) {
-                  e->removeStalePeerAddrEntry(DHT_PEER_ANNOUNCE_PURGE_INTERVAL);
-                });
+  std::ranges::for_each(
+      entries_, [](const std::shared_ptr<DHTPeerAnnounceEntry>& e) {
+        e->removeStalePeerAddrEntry(DHT_PEER_ANNOUNCE_PURGE_INTERVAL);
+      });
 
   for (auto i = std::begin(entries_); i != std::end(entries_);) {
     if ((*i)->empty()) {
@@ -140,6 +139,9 @@ void DHTPeerAnnounceStorage::announcePeer()
     }
     e->notifyUpdate();
     auto task = taskFactory_->createPeerAnnounceTask(e->getInfoHash());
+    if (!task) {
+      continue;
+    }
     taskQueue_->addPeriodicTask2(task);
     A2_LOG_DEBUG(fmt("Added 1 peer announce: infoHash=%s",
                      util::toHex(e->getInfoHash(), DHT_ID_LENGTH).c_str()));

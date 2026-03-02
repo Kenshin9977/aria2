@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <span>
 #include <string>
 
 #include "ValueBase.h"
@@ -45,14 +46,14 @@ namespace aria2 {
 
 namespace bencode2 {
 
-// Decode the data whose length is len.
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len);
+// Decode the data.
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data);
 
 std::unique_ptr<ValueBase> decode(const std::string& data);
 
-// Decode the data whose length is len. After decode is done
-// successfully, return the bencoded string length in end.
-std::unique_ptr<ValueBase> decode(const unsigned char* data, size_t len,
+// Decode the data. After decode is done successfully, return the
+// bencoded string length in end.
+std::unique_ptr<ValueBase> decode(std::span<const unsigned char> data,
                                   size_t& end);
 
 std::unique_ptr<ValueBase> decodeFromFile(const std::string& filename);

@@ -44,13 +44,13 @@ class BitfieldMan;
 class InorderStreamPieceSelector : public StreamPieceSelector {
 public:
   InorderStreamPieceSelector(BitfieldMan* bitfieldMan);
-  virtual ~InorderStreamPieceSelector();
+  ~InorderStreamPieceSelector() override;
 
-  virtual bool select(size_t& index, size_t minSplitSize,
-                      const unsigned char* ignoreBitfield,
-                      size_t length) CXX11_OVERRIDE;
+  std::optional<size_t>
+  select(size_t minSplitSize,
+         std::span<const unsigned char> ignoreBitfield) override;
 
-  virtual void onBitfieldInit() CXX11_OVERRIDE;
+  void onBitfieldInit() override;
 
 private:
   BitfieldMan* bitfieldMan_;

@@ -144,9 +144,10 @@ createRequestGroup(const std::shared_ptr<Option>& optionTemplate,
       option->getAsInt(PREF_MAX_CONNECTION_PER_SERVER));
   const std::string& checksum = option->get(PREF_CHECKSUM);
   if (!checksum.empty()) {
-    auto p = util::divide(std::begin(checksum), std::end(checksum), '=');
-    std::string hashType(p.first.first, p.first.second);
-    std::string hexDigest(p.second.first, p.second.second);
+    auto [hashRange, digestRange] =
+        util::divide(std::begin(checksum), std::end(checksum), '=');
+    std::string hashType(hashRange.first, hashRange.second);
+    std::string hexDigest(digestRange.first, digestRange.second);
     util::lowercase(hashType);
     dctx->setDigest(hashType,
                     util::fromHex(std::begin(hexDigest), std::end(hexDigest)));
@@ -214,9 +215,9 @@ createBtRequestGroup(const std::string& metaInfoUri,
   dctx->setFileFilter(std::move(sgl));
   std::istringstream indexOutIn(option->get(PREF_INDEX_OUT));
   auto indexPaths = util::createIndexPaths(indexOutIn);
-  for (const auto& i : indexPaths) {
-    dctx->setFilePathWithIndex(i.first,
-                               util::applyDir(option->get(PREF_DIR), i.second));
+  for (const auto& [index, path] : indexPaths) {
+    dctx->setFilePathWithIndex(index,
+                               util::applyDir(option->get(PREF_DIR), path));
   }
   rg->setDownloadContext(dctx);
 
@@ -253,8 +254,7 @@ createBtMagnetRequestGroup(const std::string& magnetLink,
                        util::toHex(torrentAttrs->infoHash) + ".torrent");
 
     bittorrent::ValueBaseBencodeParser parser;
-    auto torrent = parseFile(parser, torrentFilename);
-    if (torrent) {
+    if (auto torrent = parseFile(parser, torrentFilename)) {
       auto rg = createBtRequestGroup(torrentFilename, optionTemplate, {},
                                      torrent.get());
       const auto& actualInfoHash =
@@ -485,9 +485,8 @@ void createRequestGroupForUri(
   }
   if (!ignoreForceSequential &&
       option->get(PREF_FORCE_SEQUENTIAL) == A2_V_TRUE) {
-    std::for_each(
-        std::begin(nargs), std::end(nargs),
-        AccRequestGroup(result, option, ignoreLocalPath, throwOnError));
+    std::ranges::for_each(
+        nargs, AccRequestGroup(result, option, ignoreLocalPath, throwOnError));
   }
   else {
     auto strmProtoEnd = std::stable_partition(

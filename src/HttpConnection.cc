@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "HttpConnection.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "util.h"
@@ -64,13 +65,13 @@ namespace aria2 {
 HttpRequestEntry::HttpRequestEntry(std::unique_ptr<HttpRequest> httpRequest)
     : httpRequest_{std::move(httpRequest)},
       proc_{
-          make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER)}
+          std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER)}
 {
 }
 
 void HttpRequestEntry::resetHttpHeaderProcessor()
 {
-  proc_ = make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER);
+  proc_ = std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER);
 }
 
 std::unique_ptr<HttpRequest> HttpRequestEntry::popHttpRequest()
@@ -85,7 +86,7 @@ HttpRequestEntry::getHttpHeaderProcessor() const
 }
 
 HttpConnection::HttpConnection(
-    cuid_t cuid, const std::shared_ptr<SocketCore>& socket,
+    cuid_t cuid, const std::shared_ptr<ISocketCore>& socket,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer)
     : cuid_(cuid),
       socket_(socket),
@@ -130,7 +131,7 @@ void HttpConnection::sendRequest(std::unique_ptr<HttpRequest> httpRequest,
   socketBuffer_.pushStr(std::move(request));
   socketBuffer_.send();
   outstandingHttpRequests_.push_back(
-      make_unique<HttpRequestEntry>(std::move(httpRequest)));
+      std::make_unique<HttpRequestEntry>(std::move(httpRequest)));
 }
 
 void HttpConnection::sendRequest(std::unique_ptr<HttpRequest> httpRequest)
@@ -169,7 +170,7 @@ std::unique_ptr<HttpResponse> HttpConnection::receiveResponse()
       return nullptr;
     }
 
-    auto httpResponse = make_unique<HttpResponse>();
+    auto httpResponse = std::make_unique<HttpResponse>();
     httpResponse->setCuid(cuid_);
     httpResponse->setHttpHeader(std::move(result));
     httpResponse->setHttpRequest(
@@ -185,12 +186,10 @@ std::unique_ptr<HttpResponse> HttpConnection::receiveResponse()
 
 bool HttpConnection::isIssued(const std::shared_ptr<Segment>& segment) const
 {
-  for (const auto& entry : outstandingHttpRequests_) {
-    if (*entry->getHttpRequest()->getSegment() == *segment) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(
+      outstandingHttpRequests_, [&segment](const auto& entry) {
+        return *entry->getHttpRequest()->getSegment() == *segment;
+      });
 }
 
 bool HttpConnection::sendBufferIsEmpty() const

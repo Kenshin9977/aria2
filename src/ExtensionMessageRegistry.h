@@ -41,7 +41,7 @@
 
 namespace aria2 {
 
-typedef std::vector<int> Extensions;
+using Extensions = std::vector<int>;
 
 // This class stores mapping between BitTorrent extension name and its
 // ID. The BitTorrent Extension Protocol is specified in BEP10.  This
@@ -72,7 +72,7 @@ public:
   uint8_t getExtensionMessageID(int key) const;
 
   // Returns extension name corresponding to the given |id|. If no
-  // extension is defined for the given |id|, returns NULL.
+  // extension is defined for the given |id|, returns nullptr.
   const char* getExtensionName(uint8_t id) const;
 
   // Sets association of the |key| and |id|. The |key| must be one of

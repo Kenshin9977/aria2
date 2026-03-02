@@ -62,29 +62,31 @@ public:
     reset();
   }
 
-  virtual ~MessageDigestBase() = default;
+  ~MessageDigestBase() override = default;
 
   static size_t length() { return ::gcry_md_get_algo_dlen(hash); }
 
-  virtual size_t getDigestLength() const CXX11_OVERRIDE
+  virtual size_t getDigestLength() const override
   {
     return ::gcry_md_get_algo_dlen(hash);
   }
 
-  virtual void reset() CXX11_OVERRIDE { ::gcry_md_reset(ctx_.get()); }
+  void reset() override { ::gcry_md_reset(ctx_.get()); }
 
-  virtual void update(const void* data, size_t length) CXX11_OVERRIDE
+  void update(const void* data, size_t length) override
   {
     auto bytes = reinterpret_cast<const uint8_t*>(data);
     while (length) {
-      size_t l = std::min(length, (size_t)std::numeric_limits<uint32_t>::max());
+      size_t l = std::min(
+          length,
+          static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       gcry_md_write(ctx_.get(), bytes, length);
       length -= l;
       bytes += l;
     }
   }
 
-  virtual void digest(unsigned char* md) CXX11_OVERRIDE
+  void digest(unsigned char* md) override
   {
     ::memcpy(md, gcry_md_read(ctx_.get(), 0), getDigestLength());
   }
@@ -93,17 +95,17 @@ private:
   std::unique_ptr<std::remove_pointer<gcry_md_hd_t>::type, Deleter> ctx_;
 };
 
-typedef MessageDigestBase<GCRY_MD_MD5> MessageDigestMD5;
-typedef MessageDigestBase<GCRY_MD_SHA1> MessageDigestSHA1;
-typedef MessageDigestBase<GCRY_MD_SHA224> MessageDigestSHA224;
-typedef MessageDigestBase<GCRY_MD_SHA256> MessageDigestSHA256;
-typedef MessageDigestBase<GCRY_MD_SHA384> MessageDigestSHA384;
-typedef MessageDigestBase<GCRY_MD_SHA512> MessageDigestSHA512;
+using MessageDigestMD5 = MessageDigestBase<GCRY_MD_MD5>;
+using MessageDigestSHA1 = MessageDigestBase<GCRY_MD_SHA1>;
+using MessageDigestSHA224 = MessageDigestBase<GCRY_MD_SHA224>;
+using MessageDigestSHA256 = MessageDigestBase<GCRY_MD_SHA256>;
+using MessageDigestSHA384 = MessageDigestBase<GCRY_MD_SHA384>;
+using MessageDigestSHA512 = MessageDigestBase<GCRY_MD_SHA512>;
 } // namespace
 
 std::unique_ptr<MessageDigestImpl> MessageDigestImpl::sha1()
 {
-  return make_unique<MessageDigestSHA1>();
+  return std::make_unique<MessageDigestSHA1>();
 }
 
 MessageDigestImpl::hashes_t MessageDigestImpl::hashes = {

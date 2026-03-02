@@ -65,7 +65,7 @@ HttpServer::HttpServer(const std::shared_ptr<SocketCore>& socket)
       socketRecvBuffer_(std::make_shared<SocketRecvBuffer>(socket_)),
       socketBuffer_(socket),
       headerProcessor_(
-          make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::SERVER_PARSER)),
+          std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::SERVER_PARSER)),
       lastContentLength_(0),
       bodyConsumed_(0),
       reqType_(RPC_TYPE_NONE),
@@ -190,14 +190,15 @@ bool HttpServer::receiveRequest()
     if (setupResponseRecv() < 0) {
       A2_LOG_INFO("Request path is invalid. Ignore the request body.");
     }
-    const std::string& contentLengthHdr =
+    auto contentLengthHdr =
         lastRequestHeader_->find(HttpHeader::CONTENT_LENGTH);
-    if (!contentLengthHdr.empty()) {
-      if (!util::parseLLIntNoThrow(lastContentLength_, contentLengthHdr) ||
-          lastContentLength_ < 0) {
-        throw DL_ABORT_EX(
-            fmt("Invalid Content-Length=%s", contentLengthHdr.c_str()));
+    if (contentLengthHdr) {
+      auto cl = util::parseLLInt(*contentLengthHdr);
+      if (!cl || *cl < 0) {
+        throw DL_ABORT_EX(fmt("Invalid Content-Length=%s",
+                              std::string(*contentLengthHdr).c_str()));
       }
+      lastContentLength_ = *cl;
     }
     else {
       lastContentLength_ = 0;
@@ -205,15 +206,13 @@ bool HttpServer::receiveRequest()
     headerProcessor_->clear();
 
     std::vector<Scip> acceptEncodings;
-    const std::string& acceptEnc =
-        lastRequestHeader_->find(HttpHeader::ACCEPT_ENCODING);
+    auto acceptEncOpt = lastRequestHeader_->find(HttpHeader::ACCEPT_ENCODING);
+    std::string acceptEnc(acceptEncOpt.value_or(""));
     util::splitIter(acceptEnc.begin(), acceptEnc.end(),
                     std::back_inserter(acceptEncodings), ',', true);
     acceptsGZip_ = false;
-    for (std::vector<Scip>::const_iterator i = acceptEncodings.begin(),
-                                           eoi = acceptEncodings.end();
-         i != eoi; ++i) {
-      if (util::strieq((*i).first, (*i).second, "gzip")) {
+    for (const auto& [first, last] : acceptEncodings) {
+      if (util::strieq(first, last, "gzip")) {
         acceptsGZip_ = true;
         break;
       }
@@ -324,20 +323,23 @@ bool HttpServer::authenticate()
     return true;
   }
 
-  const std::string& authHeader =
-      lastRequestHeader_->find(HttpHeader::AUTHORIZATION);
-  if (authHeader.empty()) {
+  auto authHeaderOpt = lastRequestHeader_->find(HttpHeader::AUTHORIZATION);
+  if (!authHeaderOpt) {
     return false;
   }
-  auto p = util::divide(std::begin(authHeader), std::end(authHeader), ' ');
-  if (!util::streq(p.first.first, p.first.second, "Basic")) {
+  std::string authHeader(*authHeaderOpt);
+  auto [schemePart, credPart] =
+      util::divide(std::begin(authHeader), std::end(authHeader), ' ');
+  if (!util::streq(schemePart.first, schemePart.second, "Basic")) {
     return false;
   }
 
-  std::string userpass = base64::decode(p.second.first, p.second.second);
-  auto up = util::divide(std::begin(userpass), std::end(userpass), ':', false);
-  std::string username(up.first.first, up.first.second);
-  std::string password(up.second.first, up.second.second);
+  std::string userpass =
+      base64::decode(credPart.first, credPart.second);
+  auto [userPart, passPart] =
+      util::divide(std::begin(userpass), std::end(userpass), ':', false);
+  std::string username(userPart.first, userPart.second);
+  std::string password(passPart.first, passPart.second);
   return *username_ == hmac_->getResult(username) &&
          (!password_ || *password_ == hmac_->getResult(password));
 }
@@ -352,14 +354,14 @@ void HttpServer::setUsernamePassword(const std::string& username,
   }
 
   if (!username.empty()) {
-    username_ = make_unique<HMACResult>(hmac_->getResult(username));
+    username_ = std::make_unique<HMACResult>(hmac_->getResult(username));
   }
   else {
     username_.reset();
   }
 
   if (!password.empty()) {
-    password_ = make_unique<HMACResult>(hmac_->getResult(password));
+    password_ = std::make_unique<HMACResult>(hmac_->getResult(password));
   }
   else {
     password_.reset();
@@ -380,7 +382,7 @@ int HttpServer::setupResponseRecv()
     if (path == "/jsonrpc") {
       if (reqType_ != RPC_TYPE_JSON) {
         reqType_ = RPC_TYPE_JSON;
-        lastBody_ = make_unique<json::JsonDiskWriter>();
+        lastBody_ = std::make_unique<json::JsonDiskWriter>();
       }
       return 0;
     }
@@ -388,7 +390,7 @@ int HttpServer::setupResponseRecv()
     if (path == "/rpc") {
       if (reqType_ != RPC_TYPE_XML) {
         reqType_ = RPC_TYPE_XML;
-        lastBody_ = make_unique<rpc::XmlRpcDiskWriter>();
+        lastBody_ = std::make_unique<rpc::XmlRpcDiskWriter>();
       }
       return 0;
     }

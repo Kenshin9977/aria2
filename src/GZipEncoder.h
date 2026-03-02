@@ -36,6 +36,7 @@
 #define D_GZIP_ENCODER_H
 #include "common.h"
 
+#include <memory>
 #include <string>
 
 #include <zlib.h>
@@ -44,7 +45,7 @@ namespace aria2 {
 
 class GZipEncoder {
 private:
-  z_stream* strm_;
+  std::unique_ptr<z_stream> strm_;
 
   // Internal buffer for deflated data.
   std::string internalBuf_;

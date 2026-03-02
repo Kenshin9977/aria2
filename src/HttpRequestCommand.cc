@@ -59,6 +59,10 @@
 #include "LogFactory.h"
 #include "fmt.h"
 #include "SocketRecvBuffer.h"
+#ifdef HAVE_LIBNGHTTP2
+#  include "Http2Session.h"
+#  include "Http2RequestCommand.h"
+#endif // HAVE_LIBNGHTTP2
 
 namespace aria2 {
 
@@ -66,14 +70,12 @@ HttpRequestCommand::HttpRequestCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       httpConnection->getSocketRecvBuffer()),
       httpConnection_(httpConnection)
 {
-  setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
-  disableReadCheckSocket();
-  setWriteCheckSocket(getSocket());
+  initConnectTimeout();
 }
 
 HttpRequestCommand::~HttpRequestCommand() = default;
@@ -88,7 +90,7 @@ createHttpRequest(const std::shared_ptr<Request>& req,
                   const std::shared_ptr<Request>& proxyRequest,
                   int64_t endOffset = 0)
 {
-  auto httpRequest = make_unique<HttpRequest>();
+  auto httpRequest = std::make_unique<HttpRequest>();
   httpRequest->setUserAgent(option->get(PREF_USER_AGENT));
   httpRequest->setRequest(req);
   httpRequest->setFileEntry(fileEntry);
@@ -122,16 +124,28 @@ createHttpRequest(const std::shared_ptr<Request>& req,
 
 bool HttpRequestCommand::executeInternal()
 {
+  using enum Protocol;
   // socket->setBlockingMode();
   if (httpConnection_->sendBufferIsEmpty()) {
 #ifdef ENABLE_SSL
-    if (getRequest()->getProtocol() == "https") {
-      if (!getSocket()->tlsConnect(getRequest()->getHost())) {
+    if (getRequest()->getProtocol() == HTTPS) {
+      auto sc = std::static_pointer_cast<SocketCore>(getSocket());
+#  ifdef HAVE_LIBNGHTTP2
+      // Offer h2 + http/1.1 via ALPN (harmless if called repeatedly;
+      // only applied once when TLS session is first created)
+      sc->setALPNProtocols({"h2", "http/1.1"});
+#  endif // HAVE_LIBNGHTTP2
+      if (!sc->tlsConnect(getRequest()->getHost())) {
         setReadCheckSocketIf(getSocket(), getSocket()->wantRead());
         setWriteCheckSocketIf(getSocket(), getSocket()->wantWrite());
         addCommandSelf();
         return false;
       }
+#  ifdef HAVE_LIBNGHTTP2
+      if (sc->getNegotiatedProtocol() == "h2") {
+        return createHttp2Command();
+      }
+#  endif // HAVE_LIBNGHTTP2
     }
 #endif // ENABLE_SSL
     if (getSegments().empty()) {
@@ -139,8 +153,8 @@ bool HttpRequestCommand::executeInternal()
           getRequest(), getFileEntry(), std::shared_ptr<Segment>(), getOption(),
           getRequestGroup(), getDownloadEngine(), proxyRequest_);
       if (getOption()->getAsBool(PREF_CONDITIONAL_GET) &&
-          (getRequest()->getProtocol() == "http" ||
-           getRequest()->getProtocol() == "https")) {
+          (getRequest()->getProtocol() == HTTP ||
+           getRequest()->getProtocol() == HTTPS)) {
 
         std::string path;
 
@@ -176,7 +190,8 @@ bool HttpRequestCommand::executeInternal()
         if (!httpConnection_->isIssued(segment)) {
           int64_t endOffset = 0;
           // FTP via HTTP proxy does not support end byte marker
-          if (getRequest()->getProtocol() != "ftp" &&
+          if (getRequest()->getProtocol() != FTP &&
+              getRequest()->getProtocol() != FTPS &&
               getRequestGroup()->getTotalLength() > 0 && getPieceStorage()) {
             size_t nextIndex =
                 getPieceStorage()->getNextUsedIndex(segment->getIndex());
@@ -198,7 +213,7 @@ bool HttpRequestCommand::executeInternal()
     httpConnection_->sendPendingData();
   }
   if (httpConnection_->sendBufferIsEmpty()) {
-    getDownloadEngine()->addCommand(make_unique<HttpResponseCommand>(
+    getDownloadEngine()->addCommand(std::make_unique<HttpResponseCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         httpConnection_, getDownloadEngine(), getSocket()));
     return true;
@@ -209,6 +224,71 @@ bool HttpRequestCommand::executeInternal()
     addCommandSelf();
     return false;
   }
+}
+
+bool HttpRequestCommand::createHttp2Command()
+{
+#ifdef HAVE_LIBNGHTTP2
+  A2_LOG_INFO(
+      fmt("CUID#%" PRId64 " - ALPN negotiated h2, switching to HTTP/2",
+          getCuid()));
+
+  auto h2session = std::make_shared<Http2Session>(
+      std::static_pointer_cast<SocketCore>(getSocket()));
+  if (h2session->init() != 0) {
+    throw DL_ABORT_EX("HTTP2: Failed to initialize session");
+  }
+
+  // Build request headers
+  std::string method = "GET";
+  std::string scheme = "https";
+  std::string authority = getRequest()->getHost();
+  if (getRequest()->getPort() != 443) {
+    authority += ":" + util::uitos(getRequest()->getPort());
+  }
+  std::string path = getRequest()->getCurrentUri();
+  // Extract path portion from full URI
+  auto pathStart = path.find(authority);
+  if (pathStart != std::string::npos) {
+    path = path.substr(pathStart + authority.size());
+  }
+  if (path.empty()) {
+    path = "/";
+  }
+  // If path still contains scheme://host, parse it properly
+  if (path.find("://") != std::string::npos) {
+    // Full URI — extract path component
+    auto schemeEnd = path.find("://");
+    auto hostStart = schemeEnd + 3;
+    auto pathPos = path.find('/', hostStart);
+    if (pathPos != std::string::npos) {
+      path = path.substr(pathPos);
+    }
+    else {
+      path = "/";
+    }
+  }
+
+  std::vector<std::pair<std::string, std::string>> headers;
+  headers.emplace_back("user-agent", getOption()->get(PREF_USER_AGENT));
+  headers.emplace_back("accept", "*/*");
+
+  int32_t streamId =
+      h2session->submitRequest(method, scheme, authority, path, headers);
+  if (streamId < 0) {
+    throw DL_ABORT_EX("HTTP2: Failed to submit request");
+  }
+
+  auto cmd = std::make_unique<Http2RequestCommand>(
+      getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
+      getDownloadEngine(), getSocket(), h2session, streamId);
+  cmd->setStatus(Command::STATUS_ONESHOT_REALTIME);
+  getDownloadEngine()->setNoWait(true);
+  getDownloadEngine()->addCommand(std::move(cmd));
+  return true;
+#else
+  return false;
+#endif // HAVE_LIBNGHTTP2
 }
 
 void HttpRequestCommand::setProxyRequest(

@@ -37,6 +37,7 @@
 
 #include "common.h"
 
+#include <span>
 #include <string>
 #include <deque>
 #include <memory>
@@ -44,7 +45,7 @@
 
 namespace aria2 {
 
-class SocketCore;
+class ISocketCore;
 
 struct ProgressUpdate {
   virtual ~ProgressUpdate() = default;
@@ -60,7 +61,7 @@ private:
     {
     }
     virtual ~BufEntry() = default;
-    virtual ssize_t send(const std::shared_ptr<SocketCore>& socket,
+    virtual ssize_t send(const std::shared_ptr<ISocketCore>& socket,
                          size_t offset) = 0;
     virtual bool final(size_t offset) const = 0;
     virtual size_t getLength() const = 0;
@@ -80,12 +81,12 @@ private:
   public:
     ByteArrayBufEntry(std::vector<unsigned char> bytes,
                       std::unique_ptr<ProgressUpdate> progressUpdate);
-    virtual ~ByteArrayBufEntry();
-    virtual ssize_t send(const std::shared_ptr<SocketCore>& socket,
-                         size_t offset) CXX11_OVERRIDE;
-    virtual bool final(size_t offset) const CXX11_OVERRIDE;
-    virtual size_t getLength() const CXX11_OVERRIDE;
-    virtual const unsigned char* getData() const CXX11_OVERRIDE;
+    ~ByteArrayBufEntry() override;
+    ssize_t send(const std::shared_ptr<ISocketCore>& socket,
+                 size_t offset) override;
+    bool final(size_t offset) const override;
+    size_t getLength() const override;
+    const unsigned char* getData() const override;
 
   private:
     std::vector<unsigned char> bytes_;
@@ -95,17 +96,17 @@ private:
   public:
     StringBufEntry(std::string s,
                    std::unique_ptr<ProgressUpdate> progressUpdate);
-    virtual ssize_t send(const std::shared_ptr<SocketCore>& socket,
-                         size_t offset) CXX11_OVERRIDE;
-    virtual bool final(size_t offset) const CXX11_OVERRIDE;
-    virtual size_t getLength() const CXX11_OVERRIDE;
-    virtual const unsigned char* getData() const CXX11_OVERRIDE;
+    ssize_t send(const std::shared_ptr<ISocketCore>& socket,
+                 size_t offset) override;
+    bool final(size_t offset) const override;
+    size_t getLength() const override;
+    const unsigned char* getData() const override;
 
   private:
     std::string str_;
   };
 
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
 
   std::deque<std::unique_ptr<BufEntry>> bufq_;
 
@@ -115,7 +116,7 @@ private:
   size_t offset_;
 
 public:
-  SocketBuffer(std::shared_ptr<SocketCore> socket);
+  SocketBuffer(std::shared_ptr<ISocketCore> socket);
 
   ~SocketBuffer();
 
@@ -129,6 +130,12 @@ public:
   // can be null.
   void pushBytes(std::vector<unsigned char> bytes,
                  std::unique_ptr<ProgressUpdate> progressUpdate = nullptr);
+  void pushBytes(std::span<const unsigned char> data,
+                 std::unique_ptr<ProgressUpdate> progressUpdate = nullptr)
+  {
+    pushBytes(std::vector<unsigned char>(data.begin(), data.end()),
+              std::move(progressUpdate));
+  }
 
   // Feeds data into queue. This function doesn't send data.  If
   // progressUpdate is not null, its update() function will be called

@@ -33,6 +33,9 @@
  */
 /* copyright --> */
 #include "DNSCache.h"
+
+#include <algorithm>
+
 #include "A2STR.h"
 
 namespace aria2 {
@@ -56,7 +59,9 @@ DNSCache::AddrEntry& DNSCache::AddrEntry::operator=(const AddrEntry& c)
 }
 
 DNSCache::CacheEntry::CacheEntry(const std::string& hostname, uint16_t port)
-    : hostname_(hostname), port_(port)
+    : hostname_(hostname),
+      port_(port),
+      createdAt_(std::chrono::steady_clock::now())
 {
 }
 
@@ -76,37 +81,29 @@ DNSCache::CacheEntry& DNSCache::CacheEntry::operator=(const CacheEntry& c)
 
 bool DNSCache::CacheEntry::add(const std::string& addr)
 {
-  for (std::vector<AddrEntry>::const_iterator i = addrEntries_.begin(),
-                                              eoi = addrEntries_.end();
-       i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
-      return false;
-    }
+  if (std::ranges::any_of(addrEntries_, [&addr](const auto& entry) {
+        return entry.addr_ == addr;
+      })) {
+    return false;
   }
-  addrEntries_.push_back(AddrEntry(addr));
+  addrEntries_.emplace_back(addr);
   return true;
 }
 
 std::vector<DNSCache::AddrEntry>::iterator
 DNSCache::CacheEntry::find(const std::string& addr)
 {
-  for (auto i = addrEntries_.begin(), eoi = addrEntries_.end(); i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
-      return i;
-    }
-  }
-  return addrEntries_.end();
+  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
+    return entry.addr_ == addr;
+  });
 }
 
 std::vector<DNSCache::AddrEntry>::const_iterator
 DNSCache::CacheEntry::find(const std::string& addr) const
 {
-  for (auto i = addrEntries_.begin(), eoi = addrEntries_.end(); i != eoi; ++i) {
-    if ((*i).addr_ == addr) {
-      return i;
-    }
-  }
-  return addrEntries_.end();
+  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
+    return entry.addr_ == addr;
+  });
 }
 
 bool DNSCache::CacheEntry::contains(const std::string& addr) const
@@ -116,12 +113,9 @@ bool DNSCache::CacheEntry::contains(const std::string& addr) const
 
 const std::string& DNSCache::CacheEntry::getGoodAddr() const
 {
-  for (auto& elem : addrEntries_) {
-    if (elem.good_) {
-      return (elem).addr_;
-    }
-  }
-  return A2STR::NIL;
+  auto it = std::ranges::find_if(
+      addrEntries_, [](const auto& elem) { return elem.good_; });
+  return it != addrEntries_.end() ? it->addr_ : A2STR::NIL;
 }
 
 void DNSCache::CacheEntry::markBad(const std::string& addr)
@@ -132,21 +126,7 @@ void DNSCache::CacheEntry::markBad(const std::string& addr)
   }
 }
 
-bool DNSCache::CacheEntry::operator<(const CacheEntry& e) const
-{
-  int r = hostname_.compare(e.hostname_);
-  if (r != 0) {
-    return r < 0;
-  }
-  return port_ < e.port_;
-}
-
-bool DNSCache::CacheEntry::operator==(const CacheEntry& e) const
-{
-  return hostname_ == e.hostname_ && port_ == e.port_;
-}
-
-DNSCache::DNSCache() {}
+DNSCache::DNSCache(std::chrono::seconds ttl) : ttl_(ttl) {}
 
 DNSCache::DNSCache(const DNSCache& c) = default;
 
@@ -156,51 +136,64 @@ DNSCache& DNSCache::operator=(const DNSCache& c)
 {
   if (this != &c) {
     entries_ = c.entries_;
+    ttl_ = c.ttl_;
   }
   return *this;
 }
 
-const std::string& DNSCache::find(const std::string& hostname,
-                                  uint16_t port) const
+bool DNSCache::isExpired(const CacheEntry& entry) const
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.find(target);
-  if (i == entries_.end()) {
+  if (ttl_.count() == 0) {
+    return false;
+  }
+  auto now = std::chrono::steady_clock::now();
+  return now - entry.createdAt_ > ttl_;
+}
+
+const std::string& DNSCache::find(const std::string& hostname,
+                                  uint16_t port)
+{
+  if (auto i = entries_.find({hostname, port});
+      i == entries_.end()) {
+    return A2STR::NIL;
+  }
+  else if (isExpired(i->second)) {
+    entries_.erase(i);
     return A2STR::NIL;
   }
   else {
-    return (*i)->getGoodAddr();
+    return i->second.getGoodAddr();
   }
 }
 
 void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
                    uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.lower_bound(target);
-  if (i != entries_.end() && *(*i) == *target) {
-    (*i)->add(ipaddr);
+  auto key = CacheKey{hostname, port};
+  auto i = entries_.find(key);
+  if (i != entries_.end()) {
+    i->second.add(ipaddr);
+    i->second.createdAt_ = std::chrono::steady_clock::now();
   }
   else {
-    target->add(ipaddr);
-    entries_.insert(i, target);
+    CacheEntry entry(hostname, port);
+    entry.add(ipaddr);
+    entries_.emplace(std::move(key), std::move(entry));
   }
 }
 
 void DNSCache::markBad(const std::string& hostname, const std::string& ipaddr,
                        uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  auto i = entries_.find(target);
-  if (i != entries_.end()) {
-    (*i)->markBad(ipaddr);
+  if (auto i = entries_.find({hostname, port});
+      i != entries_.end()) {
+    i->second.markBad(ipaddr);
   }
 }
 
 void DNSCache::remove(const std::string& hostname, uint16_t port)
 {
-  auto target = std::make_shared<CacheEntry>(hostname, port);
-  entries_.erase(target);
+  entries_.erase({hostname, port});
 }
 
 } // namespace aria2

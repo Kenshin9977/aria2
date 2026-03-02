@@ -59,8 +59,10 @@ namespace aria2 {
 class Option;
 class RequestGroupMan;
 class StatCalc;
+class ISocketCore;
 class SocketCore;
 class CookieStorage;
+class HstsStore;
 class AuthConfigFactory;
 class Request;
 class EventPoll;
@@ -105,7 +107,7 @@ private:
 
   public:
     SocketPoolEntry(const std::shared_ptr<SocketCore>& socket,
-                    const std::string& option, std::chrono::seconds timeout);
+                    std::string option, std::chrono::seconds timeout);
 
     SocketPoolEntry(const std::shared_ptr<SocketCore>& socket,
                     std::chrono::seconds timeout);
@@ -130,6 +132,7 @@ private:
   Timer lastRefresh_;
 
   std::unique_ptr<CookieStorage> cookieStorage_;
+  std::unique_ptr<HstsStore> hstsStore_;
 
 #ifdef ENABLE_BITTORRENT
   std::unique_ptr<BtRegistry> btRegistry_;
@@ -154,7 +157,7 @@ private:
 
   void afterEachIteration();
 
-  void poolSocket(const std::string& key, const SocketPoolEntry& entry);
+  void poolSocket(const std::string& key, SocketPoolEntry entry);
 
   std::multimap<std::string, SocketPoolEntry>::iterator
   findSocketPoolEntry(const std::string& key);
@@ -182,13 +185,13 @@ public:
   // processed. Otherwise, returns 0.
   int run(bool oneshot = false);
 
-  bool addSocketForReadCheck(const std::shared_ptr<SocketCore>& socket,
+  bool addSocketForReadCheck(const std::shared_ptr<ISocketCore>& socket,
                              Command* command);
-  bool deleteSocketForReadCheck(const std::shared_ptr<SocketCore>& socket,
+  bool deleteSocketForReadCheck(const std::shared_ptr<ISocketCore>& socket,
                                 Command* command);
-  bool addSocketForWriteCheck(const std::shared_ptr<SocketCore>& socket,
+  bool addSocketForWriteCheck(const std::shared_ptr<ISocketCore>& socket,
                               Command* command);
-  bool deleteSocketForWriteCheck(const std::shared_ptr<SocketCore>& socket,
+  bool deleteSocketForWriteCheck(const std::shared_ptr<ISocketCore>& socket,
                                  Command* command);
 
 #ifdef ENABLE_ASYNC_DNS
@@ -287,6 +290,11 @@ public:
 
   const std::unique_ptr<CookieStorage>& getCookieStorage() const;
 
+  const std::unique_ptr<HstsStore>& getHstsStore() const
+  {
+    return hstsStore_;
+  }
+
 #ifdef ENABLE_BITTORRENT
   const std::unique_ptr<BtRegistry>& getBtRegistry() const
   {
@@ -297,11 +305,11 @@ public:
   cuid_t newCUID();
 
   const std::string& findCachedIPAddress(const std::string& hostname,
-                                         uint16_t port) const;
+                                         uint16_t port);
 
   template <typename OutputIterator>
   void findAllCachedIPAddresses(OutputIterator out, const std::string& hostname,
-                                uint16_t port) const
+                                uint16_t port)
   {
     dnsCache_->findAll(out, hostname, port);
   }

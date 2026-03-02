@@ -43,6 +43,7 @@
 #  include <ifaddrs.h>
 #endif // HAVE_IFADDRS_H
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <cassert>
@@ -605,9 +606,18 @@ void SocketCore::setNonBlockingMode()
   int flags;
   while ((flags = fcntl(sockfd_, F_GETFL, 0)) == -1 && errno == EINTR)
     ;
-  // TODO add error handling
-  while (fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK) == -1 && errno == EINTR)
+  if (flags == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_NONBLOCKING, errorMsg(errNum).c_str()));
+  }
+  int r;
+  while ((r = fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK)) == -1 &&
+         errno == EINTR)
     ;
+  if (r == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_NONBLOCKING, errorMsg(errNum).c_str()));
+  }
 #endif // __MINGW32__
   blocking_ = false;
 }
@@ -624,9 +634,18 @@ void SocketCore::setBlockingMode()
   int flags;
   while ((flags = fcntl(sockfd_, F_GETFL, 0)) == -1 && errno == EINTR)
     ;
-  // TODO add error handling
-  while (fcntl(sockfd_, F_SETFL, flags & (~O_NONBLOCK)) == -1 && errno == EINTR)
+  if (flags == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_BLOCKING, errorMsg(errNum).c_str()));
+  }
+  int r;
+  while ((r = fcntl(sockfd_, F_SETFL, flags & (~O_NONBLOCK))) == -1 &&
+         errno == EINTR)
     ;
+  if (r == -1) {
+    int errNum = errno;
+    throw DL_ABORT_EX(fmt(EX_SOCKET_BLOCKING, errorMsg(errNum).c_str()));
+  }
 #endif // __MINGW32__
   blocking_ = true;
 }
@@ -825,7 +844,8 @@ ssize_t SocketCore::writeData(const void* data, size_t len)
         throw DL_RETRY_EX(
             fmt(EX_SOCKET_SEND, tlsSession_->getLastErrorString().c_str()));
       }
-      if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() ==
+          TLSDirection::TLS_WANT_READ) {
         wantRead_ = true;
       }
       else {
@@ -886,7 +906,8 @@ void SocketCore::readData(void* data, size_t& len)
           throw DL_RETRY_EX(
               fmt(EX_SOCKET_RECV, tlsSession_->getLastErrorString().c_str()));
         }
-        if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+        if (tlsSession_->checkDirection() ==
+            TLSDirection::TLS_WANT_READ) {
           wantRead_ = true;
         }
         else {
@@ -925,7 +946,7 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
   if (secure_ == A2_TLS_NONE) {
     // Do some initial setup
     A2_LOG_DEBUG("Creating TLS session");
-    tlsSession_.reset(TLSSession::make(tlsctx));
+    tlsSession_ = TLSSession::make(tlsctx);
     auto rv = tlsSession_->init(sockfd_);
     if (rv != TLS_ERR_OK) {
       std::string error = tlsSession_->getLastErrorString();
@@ -940,6 +961,13 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
       if (rv != TLS_ERR_OK) {
         throw DL_ABORT_EX(fmt(EX_SSL_INIT_FAILURE,
                               tlsSession_->getLastErrorString().c_str()));
+      }
+    }
+    // Set ALPN protocols if configured
+    if (!alpnProtocols_.empty()) {
+      rv = tlsSession_->setALPNProtocols(alpnProtocols_);
+      if (rv != TLS_ERR_OK) {
+        A2_LOG_WARN("Failed to set ALPN protocols");
       }
     }
     // Done with the setup, now let handshaking begin immediately.
@@ -994,14 +1022,24 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
       A2_LOG_DEBUG(fmt("Securely connected to %s with %s", peerInfo.c_str(),
                        tlsVersion.c_str()));
 
-      // 2. We're connected now!
+      // 2. Query ALPN result
+      if (!alpnProtocols_.empty()) {
+        negotiatedProtocol_ = tlsSession_->getNegotiatedProtocol();
+        if (!negotiatedProtocol_.empty()) {
+          A2_LOG_INFO(fmt("ALPN negotiated protocol: %s",
+                          negotiatedProtocol_.c_str()));
+        }
+      }
+
+      // 3. We're connected now!
       secure_ = A2_TLS_CONNECTED;
       return true;
     }
 
     if (rv == TLS_ERR_WOULDBLOCK) {
       // We're not done yet...
-      if (tlsSession_->checkDirection() == TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() ==
+          TLSDirection::TLS_WANT_READ) {
         // ... but read buffers are empty.
         wantRead_ = true;
       }
@@ -1044,7 +1082,7 @@ bool SocketCore::sshHandshake(const std::string& hashType,
   wantWrite_ = false;
 
   if (!sshSession_) {
-    sshSession_ = make_unique<SSHSession>();
+    sshSession_ = std::make_unique<SSHSession>();
     if (sshSession_->init(sockfd_) == SSH_ERR_ERROR) {
       throw DL_ABORT_EX("Could not create SSH session");
     }
@@ -1548,24 +1586,18 @@ bool verifyHostname(const std::string& hostname,
     if (addrLen == 0) {
       return false;
     }
-    for (auto& ipAddr : ipAddrs) {
-      if (addrLen == ipAddr.size() &&
-          memcmp(binAddr, ipAddr.c_str(), addrLen) == 0) {
-        return true;
-      }
-    }
-    return false;
+    return std::ranges::any_of(ipAddrs, [&](const auto& ipAddr) {
+      return addrLen == ipAddr.size() &&
+             memcmp(binAddr, ipAddr.c_str(), addrLen) == 0;
+    });
   }
 
   if (dnsNames.empty()) {
     return util::tlsHostnameMatch(commonName, hostname);
   }
-  for (auto& dnsName : dnsNames) {
-    if (util::tlsHostnameMatch(dnsName, hostname)) {
-      return true;
-    }
-  }
-  return false;
+  return std::ranges::any_of(dnsNames, [&hostname](const auto& dnsName) {
+    return util::tlsHostnameMatch(dnsName, hostname);
+  });
 }
 
 namespace {
@@ -1575,8 +1607,8 @@ bool ipv6AddrConfigured = true;
 
 #ifdef __MINGW32__
 namespace {
-const uint32_t APIPA_IPV4_BEGIN = 2851995649u; // 169.254.0.1
-const uint32_t APIPA_IPV4_END = 2852061183u;   // 169.254.255.255
+constexpr uint32_t APIPA_IPV4_BEGIN = 2851995649u; // 169.254.0.1
+constexpr uint32_t APIPA_IPV4_END = 2852061183u;   // 169.254.255.255
 } // namespace
 #endif // __MINGW32__
 

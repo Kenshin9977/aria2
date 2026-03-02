@@ -53,6 +53,7 @@
 #include "SocketRecvBuffer.h"
 #include "BackupIPv4ConnectCommand.h"
 #include "ConnectCommand.h"
+#include "HstsStore.h"
 
 namespace aria2 {
 
@@ -73,6 +74,22 @@ InitiateConnectionCommand::~InitiateConnectionCommand() = default;
 
 bool InitiateConnectionCommand::executeInternal()
 {
+  // HSTS: upgrade HTTP to HTTPS if the host has an active HSTS policy
+  if (getRequest()->getProtocol() == Protocol::HTTP) {
+    auto& hstsStore = getDownloadEngine()->getHstsStore();
+    if (hstsStore && hstsStore->shouldUpgrade(getRequest()->getHost())) {
+      std::string httpsUri = getRequest()->getUri();
+      if (httpsUri.substr(0, 7) == "http://") {
+        httpsUri = "https://" + httpsUri.substr(7);
+        A2_LOG_INFO(fmt("CUID#%" PRId64
+                        " - HSTS: upgrading %s to HTTPS",
+                        getCuid(),
+                        getRequest()->getUri().c_str()));
+        getRequest()->redirectUri(httpsUri);
+      }
+    }
+  }
+
   std::string hostname;
   uint16_t port;
   std::shared_ptr<Request> proxyRequest = createProxyRequest();
@@ -149,7 +166,7 @@ InitiateConnectionCommand::createBackupIPv4ConnectCommand(
        i != eoi; ++i) {
     if (inetPton(AF_INET, (*i).c_str(), &buf) == 0) {
       info = std::make_shared<BackupConnectInfo>();
-      auto command = make_unique<BackupIPv4ConnectCommand>(
+      auto command = std::make_unique<BackupIPv4ConnectCommand>(
           getDownloadEngine()->newCUID(), *i, port, info, mainCommand,
           getRequestGroup(), getDownloadEngine());
       A2_LOG_INFO(fmt("Issue backup connection command CUID#%" PRId64

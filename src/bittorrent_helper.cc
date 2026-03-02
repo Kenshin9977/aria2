@@ -37,6 +37,7 @@
 #include <cassert>
 #include <cstring>
 #include <algorithm>
+#include <ranges>
 
 #include "DownloadContext.h"
 #include "Randomizer.h"
@@ -68,27 +69,27 @@ namespace aria2 {
 namespace bittorrent {
 
 namespace {
-const char C_NAME[] = "name";
-const char C_NAME_UTF8[] = "name.utf-8";
-const char C_FILES[] = "files";
-const char C_LENGTH[] = "length";
-const char C_PATH[] = "path";
-const char C_PATH_UTF8[] = "path.utf-8";
-const char C_INFO[] = "info";
-const char C_PIECES[] = "pieces";
-const char C_PIECE_LENGTH[] = "piece length";
-const char C_PRIVATE[] = "private";
-const char C_URL_LIST[] = "url-list";
-const char C_ANNOUNCE[] = "announce";
-const char C_ANNOUNCE_LIST[] = "announce-list";
-const char C_NODES[] = "nodes";
-const char C_CREATION_DATE[] = "creation date";
-const char C_COMMENT[] = "comment";
-const char C_COMMENT_UTF8[] = "comment.utf-8";
-const char C_CREATED_BY[] = "created by";
+constexpr char C_NAME[] = "name";
+constexpr char C_NAME_UTF8[] = "name.utf-8";
+constexpr char C_FILES[] = "files";
+constexpr char C_LENGTH[] = "length";
+constexpr char C_PATH[] = "path";
+constexpr char C_PATH_UTF8[] = "path.utf-8";
+constexpr char C_INFO[] = "info";
+constexpr char C_PIECES[] = "pieces";
+constexpr char C_PIECE_LENGTH[] = "piece length";
+constexpr char C_PRIVATE[] = "private";
+constexpr char C_URL_LIST[] = "url-list";
+constexpr char C_ANNOUNCE[] = "announce";
+constexpr char C_ANNOUNCE_LIST[] = "announce-list";
+constexpr char C_NODES[] = "nodes";
+constexpr char C_CREATION_DATE[] = "creation date";
+constexpr char C_COMMENT[] = "comment";
+constexpr char C_COMMENT_UTF8[] = "comment.utf-8";
+constexpr char C_CREATED_BY[] = "created by";
 
-const char DEFAULT_PEER_ID_PREFIX[] = "aria2-";
-const char DEFAULT_PEER_AGENT[] = "aria2/" PACKAGE_VERSION;
+constexpr char DEFAULT_PEER_ID_PREFIX[] = "aria2-";
+constexpr char DEFAULT_PEER_AGENT[] = "aria2/" PACKAGE_VERSION;
 } // namespace
 
 const std::string MULTI("multi");
@@ -104,7 +105,7 @@ void extractPieceHash(const std::shared_ptr<DownloadContext>& ctx,
   pieceHashes.reserve(numPieces);
   for (size_t i = 0; i < numPieces; ++i) {
     const char* p = hashData.data() + i * hashLength;
-    pieceHashes.push_back(std::string(p, p + hashLength));
+    pieceHashes.emplace_back(p, p + hashLength);
   }
   ctx->setPieceHashes("sha-1", pieceHashes.begin(), pieceHashes.end());
 }
@@ -125,29 +126,28 @@ void extractUrlList(TorrentAttribute* torrent, std::vector<std::string>& uris,
     {
     }
 
-    virtual void visit(const String& v) CXX11_OVERRIDE
+    void visit(const String& v) override
     {
       std::string utf8Uri = util::encodeNonUtf8(v.s());
       uris_.push_back(utf8Uri);
       torrent_->urlList.push_back(utf8Uri);
     }
 
-    virtual void visit(const Integer& v) CXX11_OVERRIDE {}
-    virtual void visit(const Bool& v) CXX11_OVERRIDE {}
-    virtual void visit(const Null& v) CXX11_OVERRIDE {}
+    void visit(const Integer& v) override {}
+    void visit(const Bool& v) override {}
+    void visit(const Null& v) override {}
 
-    virtual void visit(const List& v) CXX11_OVERRIDE
+    void visit(const List& v) override
     {
       for (auto& elem : v) {
-        const String* uri = downcast<String>(elem);
-        if (uri) {
+        if (const auto* uri = downcast<String>(elem)) {
           std::string utf8Uri = util::encodeNonUtf8(uri->s());
           uris_.push_back(utf8Uri);
           torrent_->urlList.push_back(utf8Uri);
         }
       }
     }
-    virtual void visit(const Dict& v) CXX11_OVERRIDE {}
+    void visit(const Dict& v) override {}
   };
 
   if (v) {
@@ -261,8 +261,7 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
       auto pathelemOutItr = pathelem.begin();
       ++pathelemOutItr;
       for (auto& p : *pathList) {
-        const String* elem = downcast<String>(p);
-        if (elem) {
+        if (const auto* elem = downcast<String>(p)) {
           (*pathelemOutItr++) = elem->s();
         }
         else {
@@ -272,16 +271,15 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
       }
       std::string utf8Path = strjoin(
           pathelem.begin(), pathelem.end(), "/",
-          std::function<std::string(const std::string&)>(util::encodeNonUtf8));
+          util::encodeNonUtf8);
       if (util::detectDirTraversal(utf8Path)) {
         throw DL_ABORT_EX2(fmt(MSG_DIR_TRAVERSAL_DETECTED, utf8Path.c_str()),
                            error_code::BITTORRENT_PARSE_ERROR);
       }
       std::string pePath =
           strjoin(pathelem.begin(), pathelem.end(), "/",
-                  std::function<std::string(const std::string&)>(
-                      static_cast<std::string (*)(const std::string&)>(
-                          util::percentEncode)));
+                  static_cast<std::string (*)(std::string_view)>(
+                      util::percentEncode));
       std::vector<std::string> uris;
       createUri(urlList.begin(), urlList.end(), std::back_inserter(uris),
                 pePath);
@@ -350,8 +348,8 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
 namespace {
 void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
 {
-  const List* announceList = downcast<List>(rootDict->get(C_ANNOUNCE_LIST));
-  if (announceList) {
+  if (const auto* announceList =
+          downcast<List>(rootDict->get(C_ANNOUNCE_LIST))) {
     for (auto& elem : *announceList) {
       const List* tier = downcast<List>(elem);
       if (!tier) {
@@ -359,9 +357,9 @@ void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
       }
       std::vector<std::string> ntier;
       for (auto& t : *tier) {
-        const String* uri = downcast<String>(t);
-        if (uri) {
-          ntier.push_back(util::encodeNonUtf8(util::strip(uri->s())));
+        if (const auto* uri = downcast<String>(t)) {
+          ntier.push_back(
+              util::encodeNonUtf8(util::strip(uri->s())));
         }
       }
       if (!ntier.empty()) {
@@ -383,8 +381,7 @@ void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
 namespace {
 void extractNodes(TorrentAttribute* torrent, const ValueBase* nodesListSrc)
 {
-  const List* nodesList = downcast<List>(nodesListSrc);
-  if (nodesList) {
+  if (const auto* nodesList = downcast<List>(nodesListSrc)) {
     for (auto& elem : *nodesList) {
       const List* addrPairList = downcast<List>(elem);
       if (!addrPairList || addrPairList->size() != 2) {
@@ -403,7 +400,7 @@ void extractNodes(TorrentAttribute* torrent, const ValueBase* nodesListSrc)
       if (!port || !(0 < port->i() && port->i() < 65536)) {
         continue;
       }
-      torrent->nodes.push_back(std::make_pair(utf8Hostname, port->i()));
+      torrent->nodes.emplace_back(utf8Hostname, port->i());
     }
   }
 }
@@ -489,8 +486,8 @@ void processRootDictionary(const std::shared_ptr<DownloadContext>& ctx,
   std::vector<std::string> urlList;
   extractUrlList(torrent.get(), urlList, rootDict->get(C_URL_LIST));
   urlList.insert(urlList.end(), uris.begin(), uris.end());
-  std::sort(urlList.begin(), urlList.end());
-  urlList.erase(std::unique(urlList.begin(), urlList.end()), urlList.end());
+  std::ranges::sort(urlList);
+  urlList.erase(std::ranges::unique(urlList).begin(), urlList.end());
 
   // retrieve file entries
   extractFileEntries(ctx, torrent.get(), infoDict, option, defaultName,
@@ -524,7 +521,7 @@ void processRootDictionary(const std::shared_ptr<DownloadContext>& ctx,
     torrent->createdBy = util::encodeNonUtf8(createdBy->s());
   }
 
-  ctx->setAttribute(CTX_ATTR_BT, std::move(torrent));
+  ctx->setAttribute(ContextAttributeType::CTX_ATTR_BT, std::move(torrent));
 }
 } // namespace
 
@@ -554,7 +551,7 @@ void loadFromMemory(const unsigned char* content, size_t length,
                     const std::string& defaultName,
                     const std::string& overrideName)
 {
-  processRootDictionary(ctx, bencode2::decode(content, length).get(), option,
+  processRootDictionary(ctx, bencode2::decode({content, length}).get(), option,
                         defaultName, overrideName, std::vector<std::string>());
 }
 
@@ -565,7 +562,7 @@ void loadFromMemory(const unsigned char* content, size_t length,
                     const std::string& defaultName,
                     const std::string& overrideName)
 {
-  processRootDictionary(ctx, bencode2::decode(content, length).get(), option,
+  processRootDictionary(ctx, bencode2::decode({content, length}).get(), option,
                         defaultName, overrideName, uris);
 }
 
@@ -607,7 +604,7 @@ TorrentAttribute* getTorrentAttrs(const std::shared_ptr<DownloadContext>& dctx)
 
 TorrentAttribute* getTorrentAttrs(DownloadContext* dctx)
 {
-  return static_cast<TorrentAttribute*>(dctx->getAttribute(CTX_ATTR_BT).get());
+  return static_cast<TorrentAttribute*>(dctx->getAttribute(ContextAttributeType::CTX_ATTR_BT).get());
 }
 
 const unsigned char* getInfoHash(const std::shared_ptr<DownloadContext>& dctx)
@@ -664,8 +661,7 @@ std::vector<size_t> computeFastSet(const std::string& ipaddr, size_t numPieces,
       memcpy(&ny, x + j, 4);
       uint32_t y = ntohl(ny);
       size_t index = y % numPieces;
-      if (std::find(std::begin(fastSet), std::end(fastSet), index) ==
-          std::end(fastSet)) {
+      if (std::ranges::find(fastSet, index) == std::end(fastSet)) {
 
         fastSet.push_back(index);
       }
@@ -898,24 +894,23 @@ void assertID(uint8_t expected, const unsigned char* data, const char* msgName)
   }
 }
 
-std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
+std::expected<std::unique_ptr<TorrentAttribute>, std::string>
+parseMagnet(const std::string& magnet)
 {
   auto r = magnet::parse(magnet);
   if (!r) {
-    throw DL_ABORT_EX2("Bad BitTorrent Magnet URI.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Bad BitTorrent Magnet URI.");
   }
   const List* xts = downcast<List>(r->get("xt"));
   if (!xts) {
-    throw DL_ABORT_EX2("Missing xt parameter in Magnet URI.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Missing xt parameter in Magnet URI.");
   }
-  auto attrs = make_unique<TorrentAttribute>();
+  auto attrs = std::make_unique<TorrentAttribute>();
   std::string infoHash;
   for (auto xtiter = xts->begin(), eoi = xts->end();
        xtiter != eoi && infoHash.empty(); ++xtiter) {
     const String* xt = downcast<String>(*xtiter);
-    if (util::startsWith(xt->s(), "urn:btih:")) {
+    if (xt->s().starts_with("urn:btih:")) {
       size_t size = xt->s().end() - xt->s().begin() - 9;
       if (size == 32) {
         std::string rawhash =
@@ -933,9 +928,8 @@ std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
     }
   }
   if (infoHash.empty()) {
-    throw DL_ABORT_EX2("Bad BitTorrent Magnet URI. "
-                       "No valid BitTorrent Info Hash found.",
-                       error_code::MAGNET_PARSE_ERROR);
+    return std::unexpected("Bad BitTorrent Magnet URI. "
+                           "No valid BitTorrent Info Hash found.");
   }
   const List* trs = downcast<List>(r->get("tr"));
   if (trs) {
@@ -962,7 +956,11 @@ std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet)
 void loadMagnet(const std::string& magnet,
                 const std::shared_ptr<DownloadContext>& dctx)
 {
-  dctx->setAttribute(CTX_ATTR_BT, parseMagnet(magnet));
+  auto result = parseMagnet(magnet);
+  if (!result) {
+    throw DL_ABORT_EX2(result.error(), error_code::MAGNET_PARSE_ERROR);
+  }
+  dctx->setAttribute(ContextAttributeType::CTX_ATTR_BT, std::move(*result));
 }
 
 std::string metadata2Torrent(const std::string& metadata,
@@ -1032,11 +1030,11 @@ void removeAnnounceUri(TorrentAttribute* attrs,
   if (uris.empty()) {
     return;
   }
-  if (std::find(uris.begin(), uris.end(), "*") == uris.end()) {
+  if (std::ranges::find(uris, "*") == uris.end()) {
     for (auto i = attrs->announceList.begin();
          i != attrs->announceList.end();) {
       for (auto j = (*i).begin(); j != (*i).end();) {
-        if (std::find(uris.begin(), uris.end(), *j) == uris.end()) {
+        if (std::ranges::find(uris, *j) == uris.end()) {
           ++j;
         }
         else {

@@ -38,6 +38,7 @@
 
 #include <gnutls/x509.h>
 
+#include "a2functional.h"
 #include "TLSContext.h"
 #include "util.h"
 #include "SocketCore.h"
@@ -65,9 +66,10 @@ TLSVersion getProtocolFromSession(gnutls_session_t& session)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new GnuTLSSession(static_cast<GnuTLSContext*>(ctx));
+  return std::make_unique<GnuTLSSession>(
+      static_cast<GnuTLSContext*>(ctx));
 }
 
 GnuTLSSession::GnuTLSSession(GnuTLSContext* tlsContext)
@@ -192,10 +194,11 @@ int GnuTLSSession::closeConnection()
   }
 }
 
-int GnuTLSSession::checkDirection()
+TLSDirection GnuTLSSession::checkDirection()
 {
   int direction = gnutls_record_get_direction(sslSession_);
-  return direction == 0 ? TLS_WANT_READ : TLS_WANT_WRITE;
+  return direction == 0 ? TLSDirection::TLS_WANT_READ
+                        : TLSDirection::TLS_WANT_WRITE;
 }
 
 ssize_t GnuTLSSession::writeData(const void* data, size_t len)
@@ -329,10 +332,10 @@ int GnuTLSSession::tlsConnect(const std::string& hostname, TLSVersion& version,
           }
         }
 
-        dnsNames.push_back(std::string(altName, altNameLen));
+        dnsNames.emplace_back(altName, altNameLen);
       }
       else if (ret == GNUTLS_SAN_IPADDRESS) {
-        ipAddrs.push_back(std::string(altName, altNameLen));
+        ipAddrs.emplace_back(altName, altNameLen);
       }
     }
     altNameLen = sizeof(altName);

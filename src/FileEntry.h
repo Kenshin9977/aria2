@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <deque>
 #include <vector>
 #include <ostream>
@@ -50,6 +51,7 @@
 #include "error_code.h"
 #include "A2STR.h"
 #include "TimerA2.h"
+#include "SlowStartController.h"
 #include "util.h"
 #include "a2functional.h"
 
@@ -60,8 +62,8 @@ class ServerStatMan;
 
 class FileEntry {
 public:
-  typedef std::set<std::shared_ptr<Request>, RefLess<Request>>
-      InFlightRequestSet;
+  using InFlightRequestSet =
+      std::set<std::shared_ptr<Request>, RefLess<Request>>;
 
 private:
   class RequestFaster {
@@ -69,7 +71,7 @@ private:
     bool operator()(const std::shared_ptr<Request>& lhs,
                     const std::shared_ptr<Request>& rhs) const;
   };
-  typedef std::set<std::shared_ptr<Request>, RequestFaster> RequestPool;
+  using RequestPool = std::set<std::shared_ptr<Request>, RequestFaster>;
 
   int64_t length_;
   int64_t offset_;
@@ -91,6 +93,7 @@ private:
 
   Timer lastFasterReplace_;
   int maxConnectionPerServer_;
+  SlowStartController slowStart_;
 
   bool requested_;
   bool uniqueProtocol_;
@@ -100,7 +103,7 @@ private:
   std::shared_ptr<Request> getRequestWithInFlightHosts(
       URISelector* selector, bool uriReuse,
       const std::vector<std::pair<size_t, std::string>>& usedHosts,
-      const std::string& referer, const std::string& method,
+      const std::string& referer, HttpMethod method,
       const std::vector<std::string>& inFlightHosts);
 
 public:
@@ -182,7 +185,7 @@ public:
   getRequest(URISelector* selector, bool uriReuse,
              const std::vector<std::pair<size_t, std::string>>& usedHosts,
              const std::string& referer = A2STR::NIL,
-             const std::string& method = Request::METHOD_GET);
+             HttpMethod method = HttpMethod::GET);
 
   // Finds pooled Request object which is faster than passed one,
   // comparing their PeerStat objects. If such Request is found, it is
@@ -216,9 +219,9 @@ public:
   // Translate global offset goff to file local offset.
   int64_t gtoloff(int64_t goff) const;
 
-  void removeURIWhoseHostnameIs(const std::string& hostname);
+  void removeURIWhoseHostnameIs(std::string_view hostname);
 
-  void removeIdenticalURI(const std::string& uri);
+  void removeIdenticalURI(std::string_view uri);
 
   void addURIResult(std::string uri, error_code::Value result);
 
@@ -228,9 +231,17 @@ public:
   // The extracted URIResults are removed from uriResults_.
   void extractURIResult(std::deque<URIResult>& res, error_code::Value r);
 
-  void setMaxConnectionPerServer(int n) { maxConnectionPerServer_ = n; }
+  void setMaxConnectionPerServer(int n)
+  {
+    maxConnectionPerServer_ = n;
+    slowStart_.setCeiling(n);
+  }
 
   int getMaxConnectionPerServer() const { return maxConnectionPerServer_; }
+
+  SlowStartController& getSlowStart() { return slowStart_; }
+
+  const SlowStartController& getSlowStart() const { return slowStart_; }
 
   // Reuse URIs which have not emitted error so far and whose host
   // component is not included in ignore. The reusable URIs are

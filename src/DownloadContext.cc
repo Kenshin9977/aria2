@@ -49,7 +49,8 @@ namespace aria2 {
 
 DownloadContext::DownloadContext()
     : ownerRequestGroup_(nullptr),
-      attrs_(MAX_CTX_ATTR),
+      attrs_(static_cast<size_t>(
+          ContextAttributeType::MAX_CTX_ATTR)),
       downloadStopTime_(Timer::zero()),
       pieceLength_(0),
       checksumVerified_(false),
@@ -65,7 +66,8 @@ DownloadContext::DownloadContext()
 DownloadContext::DownloadContext(int32_t pieceLength, int64_t totalLength,
                                  std::string path)
     : ownerRequestGroup_(nullptr),
-      attrs_(MAX_CTX_ATTR),
+      attrs_(static_cast<size_t>(
+          ContextAttributeType::MAX_CTX_ATTR)),
       downloadStopTime_(Timer::zero()),
       pieceLength_(pieceLength),
       checksumVerified_(false),
@@ -135,11 +137,10 @@ void DownloadContext::setFilePathWithIndex(size_t index,
 
 void DownloadContext::setFileFilter(SegList<int> sgl)
 {
-  using namespace std::placeholders;
-
   if (!sgl.hasNext() || fileEntries_.size() == 1) {
-    std::for_each(fileEntries_.begin(), fileEntries_.end(),
-                  std::bind(&FileEntry::setRequested, _1, true));
+    std::ranges::for_each(
+        fileEntries_,
+        [](const auto& fe) { fe->setRequested(true); });
     return;
   }
   assert(sgl.peek() >= 1);
@@ -163,15 +164,15 @@ void DownloadContext::setFileFilter(SegList<int> sgl)
 void DownloadContext::setAttribute(ContextAttributeType key,
                                    std::shared_ptr<ContextAttribute> value)
 {
-  assert(key < MAX_CTX_ATTR);
-  attrs_[key] = std::move(value);
+  assert(key < ContextAttributeType::MAX_CTX_ATTR);
+  attrs_[static_cast<size_t>(key)] = std::move(value);
 }
 
 const std::shared_ptr<ContextAttribute>&
 DownloadContext::getAttribute(ContextAttributeType key)
 {
-  assert(key < MAX_CTX_ATTR);
-  const auto& attr = attrs_[key];
+  assert(key < ContextAttributeType::MAX_CTX_ATTR);
+  const auto& attr = attrs_[static_cast<size_t>(key)];
   if (!attr) {
     throw DL_ABORT_EX(
         fmt("No attribute named %s", strContextAttributeType(key)));
@@ -182,8 +183,8 @@ DownloadContext::getAttribute(ContextAttributeType key)
 
 bool DownloadContext::hasAttribute(ContextAttributeType key) const
 {
-  assert(key < MAX_CTX_ATTR);
-  return attrs_[key].get();
+  assert(key < ContextAttributeType::MAX_CTX_ATTR);
+  return attrs_[static_cast<size_t>(key)].get();
 }
 
 const std::vector<std::shared_ptr<ContextAttribute>>&
@@ -194,12 +195,9 @@ DownloadContext::getAttributes() const
 
 void DownloadContext::releaseRuntimeResource()
 {
-  for (std::vector<std::shared_ptr<FileEntry>>::const_iterator
-           i = fileEntries_.begin(),
-           eoi = fileEntries_.end();
-       i != eoi; ++i) {
-    (*i)->putBackRequest();
-    (*i)->releaseRuntimeResource();
+  for (const auto& fe : fileEntries_) {
+    fe->putBackRequest();
+    fe->releaseRuntimeResource();
   }
 }
 
@@ -238,23 +236,15 @@ const std::string& DownloadContext::getBasePath() const
 
 std::shared_ptr<FileEntry> DownloadContext::getFirstRequestedFileEntry() const
 {
-  for (auto& e : fileEntries_) {
-    if (e->isRequested()) {
-      return e;
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      fileEntries_, [](const auto& e) { return e->isRequested(); });
+  return it != fileEntries_.end() ? *it : nullptr;
 }
 
 size_t DownloadContext::countRequestedFileEntry() const
 {
-  size_t numFiles = 0;
-  for (const auto& e : fileEntries_) {
-    if (e->isRequested()) {
-      ++numFiles;
-    }
-  }
-  return numFiles;
+  return std::ranges::count_if(
+      fileEntries_, [](const auto& e) { return e->isRequested(); });
 }
 
 bool DownloadContext::isChecksumVerificationNeeded() const
@@ -284,8 +274,8 @@ const std::string& DownloadContext::getPieceHash(size_t index) const
   }
 }
 
-void DownloadContext::setDigest(const std::string& hashType,
-                                const std::string& digest)
+void DownloadContext::setDigest(std::string_view hashType,
+                                std::string_view digest)
 {
   hashType_ = hashType;
   digest_ = digest;
@@ -313,8 +303,7 @@ void DownloadContext::updateDownload(size_t bytes)
 void DownloadContext::updateUploadSpeed(size_t bytes)
 {
   netStat_.updateUploadSpeed(bytes);
-  auto rgman = ownerRequestGroup_->getRequestGroupMan();
-  if (rgman) {
+  if (auto rgman = ownerRequestGroup_->getRequestGroupMan()) {
     rgman->getNetStat().updateUploadSpeed(bytes);
   }
 }
@@ -322,8 +311,7 @@ void DownloadContext::updateUploadSpeed(size_t bytes)
 void DownloadContext::updateUploadLength(size_t bytes)
 {
   netStat_.updateUploadLength(bytes);
-  auto rgman = ownerRequestGroup_->getRequestGroupMan();
-  if (rgman) {
+  if (auto rgman = ownerRequestGroup_->getRequestGroupMan()) {
     rgman->getNetStat().updateUploadLength(bytes);
   }
 }

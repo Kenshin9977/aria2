@@ -198,7 +198,7 @@ void DefaultBtInteractive::addPortMessageToQueue()
 
 void DefaultBtInteractive::addHandshakeExtendedMessageToQueue()
 {
-  auto m = make_unique<HandshakeExtensionMessage>();
+  auto m = std::make_unique<HandshakeExtensionMessage>();
   m->setClientVersion(bittorrent::getStaticPeerAgent());
   m->setTCPPort(tcpPort_);
   m->setExtensions(extensionMessageRegistry_->getExtensions());
@@ -343,7 +343,7 @@ size_t DefaultBtInteractive::receiveMessages()
       (countOldOutstandingRequest - dispatcher_->countOutstandingRequest()) *
               4 >=
           maxOutstandingRequest_) {
-    maxOutstandingRequest_ = std::min((size_t)UB_MAX_OUTSTANDING_REQUEST,
+    maxOutstandingRequest_ = std::min(static_cast<size_t>(UB_MAX_OUTSTANDING_REQUEST),
                                       maxOutstandingRequest_ * 2);
   }
   return msgcount;
@@ -506,7 +506,7 @@ void DefaultBtInteractive::addPeerExchangeMessage()
 {
   if (pexTimer_.difference(global::wallclock()) >=
       UTPexExtensionMessage::DEFAULT_INTERVAL) {
-    auto m = make_unique<UTPexExtensionMessage>(
+    auto m = std::make_unique<UTPexExtensionMessage>(
         peer_->getExtensionMessageID(ExtensionMessageRegistry::UT_PEX));
     auto& usedPeers = peerStorage_->getUsedPeers();
     for (auto i = std::begin(usedPeers), eoi = std::end(usedPeers);

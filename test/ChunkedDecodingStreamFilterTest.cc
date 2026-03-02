@@ -35,9 +35,9 @@ public:
   void setUp()
   {
     writer_ = std::make_shared<ByteArrayDiskWriter>();
-    auto sinkFilter = make_unique<SinkStreamFilter>();
+    auto sinkFilter = std::make_unique<SinkStreamFilter>();
     sinkFilter->init();
-    filter_ = make_unique<ChunkedDecodingStreamFilter>(std::move(sinkFilter));
+    filter_ = std::make_unique<ChunkedDecodingStreamFilter>(std::move(sinkFilter));
     filter_->init();
     segment_ = std::make_shared<MockSegment>();
   }
@@ -267,7 +267,7 @@ void ChunkedDecodingStreamFilterTest::testTransform_chunkSizeMismatch()
 void ChunkedDecodingStreamFilterTest::testGetName()
 {
   CPPUNIT_ASSERT_EQUAL(std::string("ChunkedDecodingStreamFilter"),
-                       filter_->getName());
+                       std::string(filter_->getName()));
 }
 
 } // namespace aria2

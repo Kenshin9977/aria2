@@ -40,7 +40,7 @@
 namespace aria2 {
 
 class PeerConnection;
-class SocketCore;
+class ISocketCore;
 class Peer;
 
 class PeerReceiveHandshakeCommand : public PeerAbstractCommand {
@@ -48,16 +48,20 @@ private:
   std::unique_ptr<PeerConnection> peerConnection_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
-  virtual bool exitBeforeExecute() CXX11_OVERRIDE;
+  bool executeInternal() override;
+  bool exitBeforeExecute() override;
 
 public:
-  PeerReceiveHandshakeCommand(
-      cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-      const std::shared_ptr<SocketCore>& s,
-      std::unique_ptr<PeerConnection> peerConnection = nullptr);
+  PeerReceiveHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
+                              DownloadEngine* e,
+                              const std::shared_ptr<ISocketCore>& s);
 
-  virtual ~PeerReceiveHandshakeCommand();
+  PeerReceiveHandshakeCommand(cuid_t cuid, const std::shared_ptr<Peer>& peer,
+                              DownloadEngine* e,
+                              const std::shared_ptr<ISocketCore>& s,
+                              std::unique_ptr<PeerConnection> peerConnection);
+
+  ~PeerReceiveHandshakeCommand() override;
 };
 
 } // namespace aria2

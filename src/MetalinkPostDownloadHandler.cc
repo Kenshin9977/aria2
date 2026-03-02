@@ -57,7 +57,7 @@ namespace aria2 {
 
 MetalinkPostDownloadHandler::MetalinkPostDownloadHandler()
 {
-  setCriteria(make_unique<ContentTypeRequestGroupCriteria>(
+  setCriteria(std::make_unique<ContentTypeRequestGroupCriteria>(
       getMetalinkContentTypes(), getMetalinkExtensions()));
 }
 
@@ -107,9 +107,9 @@ void MetalinkPostDownloadHandler::getNextRequestGroups(
     for (auto& rg : newRgs) {
       rg->following(requestGroup->getGID());
     }
-    auto mi = createMetadataInfoFromFirstFileEntry(
-        requestGroup->getGroupId(), requestGroup->getDownloadContext());
-    if (mi) {
+    if (auto mi = createMetadataInfoFromFirstFileEntry(
+            requestGroup->getGroupId(),
+            requestGroup->getDownloadContext())) {
       setMetadataInfo(newRgs.begin(), newRgs.end(), mi);
     }
 

@@ -79,7 +79,7 @@ HttpHeaderProcessor::HttpHeaderProcessor(ParserMode mode)
       state_(mode == CLIENT_PARSER ? PREV_RES_VERSION : PREV_METHOD),
       lastBytesProcessed_(0),
       lastFieldHdKey_(HttpHeader::MAX_INTERESTING_HEADER),
-      result_(make_unique<HttpHeader>())
+      result_(std::make_unique<HttpHeader>())
 {
 }
 
@@ -463,9 +463,9 @@ fin:
   return true;
 }
 
-bool HttpHeaderProcessor::parse(const std::string& data)
+bool HttpHeaderProcessor::parse(std::string_view data)
 {
-  return parse(reinterpret_cast<const unsigned char*>(data.c_str()),
+  return parse(reinterpret_cast<const unsigned char*>(data.data()),
                data.size());
 }
 
@@ -481,7 +481,7 @@ void HttpHeaderProcessor::clear()
   buf_.clear();
   lastFieldName_.clear();
   lastFieldHdKey_ = HttpHeader::MAX_INTERESTING_HEADER;
-  result_ = make_unique<HttpHeader>();
+  result_ = std::make_unique<HttpHeader>();
   headers_.clear();
 }
 

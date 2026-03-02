@@ -39,8 +39,6 @@
 
 namespace aria2 {
 
-const char BtNotInterestedMessage::NAME[] = "not interested";
-
 BtNotInterestedMessage::BtNotInterestedMessage()
     : ZeroBtMessage(ID, NAME), peerStorage_(nullptr)
 {
@@ -49,9 +47,9 @@ BtNotInterestedMessage::BtNotInterestedMessage()
 BtNotInterestedMessage::~BtNotInterestedMessage() = default;
 
 std::unique_ptr<BtNotInterestedMessage>
-BtNotInterestedMessage::create(const unsigned char* data, size_t dataLength)
+BtNotInterestedMessage::create(std::span<const unsigned char> data)
 {
-  return ZeroBtMessage::create<BtNotInterestedMessage>(data, dataLength);
+  return ZeroBtMessage::create<BtNotInterestedMessage>(data);
 }
 
 void BtNotInterestedMessage::doReceivedAction()

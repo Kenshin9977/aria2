@@ -76,7 +76,7 @@ private:
                  const std::vector<std::shared_ptr<DHTNode>>& nodes) const
   {
     for (auto& node : nodes) {
-      entries.push_back(make_unique<DHTNodeLookupEntry>(node));
+      entries.push_back(std::make_unique<DHTNodeLookupEntry>(node));
     }
   }
 
@@ -142,9 +142,9 @@ public:
     memcpy(targetID_, targetID, DHT_ID_LENGTH);
   }
 
-  static const size_t ALPHA = 3;
+  static constexpr size_t ALPHA = 3;
 
-  virtual void startup() CXX11_OVERRIDE
+  void startup() override
   {
     std::vector<std::shared_ptr<DHTNode>> nodes;
     getRoutingTable()->getClosestKNodes(nodes, targetID_);

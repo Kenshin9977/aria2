@@ -37,6 +37,7 @@
 #include <cstring>
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 
 #include "DHTNode.h"
 #include "LogFactory.h"
@@ -106,7 +107,7 @@ bool DHTBucket::isInRange(const unsigned char* nodeID, const unsigned char* max,
 bool DHTBucket::addNode(const std::shared_ptr<DHTNode>& node)
 {
   notifyUpdate();
-  auto itr = std::find_if(nodes_.begin(), nodes_.end(), derefEqual(node));
+  auto itr = std::ranges::find_if(nodes_, derefEqual(node));
   if (itr == nodes_.end()) {
     if (nodes_.size() < K) {
       nodes_.push_back(node);
@@ -142,7 +143,7 @@ void DHTBucket::cacheNode(const std::shared_ptr<DHTNode>& node)
 void DHTBucket::dropNode(const std::shared_ptr<DHTNode>& node)
 {
   if (!cachedNodes_.empty()) {
-    auto itr = std::find_if(nodes_.begin(), nodes_.end(), derefEqual(node));
+    auto itr = std::ranges::find_if(nodes_, derefEqual(node));
     if (itr != nodes_.end()) {
       nodes_.erase(itr);
       nodes_.push_back(cachedNodes_.front());
@@ -153,7 +154,7 @@ void DHTBucket::dropNode(const std::shared_ptr<DHTNode>& node)
 
 void DHTBucket::moveToHead(const std::shared_ptr<DHTNode>& node)
 {
-  auto itr = std::find_if(nodes_.begin(), nodes_.end(), derefEqual(node));
+  auto itr = std::ranges::find_if(nodes_, derefEqual(node));
   if (itr != nodes_.end()) {
     nodes_.erase(itr);
     nodes_.push_front(node);
@@ -162,7 +163,7 @@ void DHTBucket::moveToHead(const std::shared_ptr<DHTNode>& node)
 
 void DHTBucket::moveToTail(const std::shared_ptr<DHTNode>& node)
 {
-  auto itr = std::find_if(nodes_.begin(), nodes_.end(), derefEqual(node));
+  auto itr = std::ranges::find_if(nodes_, derefEqual(node));
   if (itr != nodes_.end()) {
     nodes_.erase(itr);
     nodes_.push_back(node);
@@ -187,7 +188,7 @@ std::unique_ptr<DHTBucket> DHTBucket::split()
   bitfield::flipBit(min_, DHT_ID_LENGTH, prefixLength_);
 
   ++prefixLength_;
-  auto rBucket = make_unique<DHTBucket>(prefixLength_, rMax, rMin, localNode_);
+  auto rBucket = std::make_unique<DHTBucket>(prefixLength_, rMax, rMin, localNode_);
 
   std::deque<std::shared_ptr<DHTNode>> lNodes;
   for (auto& elem : nodes_) {
@@ -199,7 +200,6 @@ std::unique_ptr<DHTBucket> DHTBucket::split()
     }
   }
   nodes_ = lNodes;
-  // TODO create toString() and use it.
   A2_LOG_DEBUG(fmt("New bucket. prefixLength=%u, Range:%s-%s",
                    static_cast<unsigned int>(rBucket->getPrefixLength()),
                    util::toHex(rBucket->getMinID(), DHT_ID_LENGTH).c_str(),
@@ -215,9 +215,7 @@ void DHTBucket::getGoodNodes(
     std::vector<std::shared_ptr<DHTNode>>& goodNodes) const
 {
   goodNodes.insert(goodNodes.end(), nodes_.begin(), nodes_.end());
-  goodNodes.erase(std::remove_if(goodNodes.begin(), goodNodes.end(),
-                                 std::mem_fn(&DHTNode::isBad)),
-                  goodNodes.end());
+  std::erase_if(goodNodes, std::mem_fn(&DHTNode::isBad));
 }
 
 std::shared_ptr<DHTNode> DHTBucket::getNode(const unsigned char* nodeID,
@@ -227,7 +225,7 @@ std::shared_ptr<DHTNode> DHTBucket::getNode(const unsigned char* nodeID,
   auto node = std::make_shared<DHTNode>(nodeID);
   node->setIPAddress(ipaddr);
   node->setPort(port);
-  auto itr = std::find_if(nodes_.begin(), nodes_.end(), derefEqual(node));
+  auto itr = std::ranges::find_if(nodes_, derefEqual(node));
   if (itr == nodes_.end() || (*itr)->getIPAddress() != ipaddr ||
       (*itr)->getPort() != port) {
     return nullptr;
@@ -263,13 +261,12 @@ public:
 
 bool DHTBucket::containsQuestionableNode() const
 {
-  return std::find_if(nodes_.begin(), nodes_.end(), FindQuestionableNode()) !=
-         nodes_.end();
+  return std::ranges::find_if(nodes_, FindQuestionableNode()) != nodes_.end();
 }
 
 std::shared_ptr<DHTNode> DHTBucket::getLRUQuestionableNode() const
 {
-  auto i = std::find_if(nodes_.begin(), nodes_.end(), FindQuestionableNode());
+  auto i = std::ranges::find_if(nodes_, FindQuestionableNode());
   if (i == nodes_.end()) {
     return nullptr;
   }

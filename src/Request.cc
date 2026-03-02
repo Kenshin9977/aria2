@@ -46,14 +46,23 @@
 
 namespace aria2 {
 
-const std::string Request::METHOD_GET = "GET";
+const char* httpMethodToString(HttpMethod m)
+{
+  using enum HttpMethod;
+  switch (m) {
+  case GET:
+    return "GET";
+  case HEAD:
+    return "HEAD";
+  default:
+    return "GET";
+  }
+}
 
-const std::string Request::METHOD_HEAD = "HEAD";
-
-const std::string Request::DEFAULT_FILE = "index.html";
+constexpr const char Request::DEFAULT_FILE[];
 
 Request::Request()
-    : method_(METHOD_GET),
+    : method_(HttpMethod::GET),
       tryCount_(0),
       redirectCount_(0),
       supportsPersistentConnection_(true),
@@ -69,14 +78,14 @@ Request::Request()
 Request::~Request() = default;
 
 namespace {
-std::string removeFragment(const std::string& uri)
+std::string removeFragment(std::string_view uri)
 {
-  std::string::size_type sharpIndex = uri.find("#");
-  if (sharpIndex == std::string::npos) {
-    return uri;
+  auto sharpIndex = uri.find('#');
+  if (sharpIndex == std::string_view::npos) {
+    return std::string(uri);
   }
   else {
-    return uri.substr(0, sharpIndex);
+    return std::string(uri.substr(0, sharpIndex));
   }
 }
 } // namespace
@@ -95,7 +104,7 @@ bool Request::resetUri()
   return parseUri(uri_);
 }
 
-void Request::setReferer(const std::string& uri)
+void Request::setReferer(std::string_view uri)
 {
   referer_ = removeFragment(uri);
 }
@@ -108,10 +117,10 @@ bool Request::redirectUri(const std::string& uri)
     return false;
   }
   std::string redirectedUri;
-  if (util::startsWith(uri, "//")) {
+  if (uri.starts_with("//")) {
     // Network-path reference (according to RFC 3986, Section 4.2)
     // Just complement current protocol.
-    redirectedUri = getProtocol();
+    redirectedUri = std::string(protocolToString(getProtocol()));
     redirectedUri += ":";
     redirectedUri += uri;
   }
@@ -149,9 +158,9 @@ bool Request::redirectUri(const std::string& uri)
 bool Request::parseUri(const std::string& srcUri)
 {
   currentUri_ = removeFragment(srcUri);
-  uri::UriStruct us;
-  if (uri::parse(us, currentUri_)) {
-    us_.swap(us);
+  auto result = uri::parse(currentUri_);
+  if (result) {
+    us_.swap(*result);
     return true;
   }
   else {
@@ -189,7 +198,7 @@ std::string Request::getURIHost() const
   }
 }
 
-void Request::setMethod(const std::string& method) { method_ = method; }
+void Request::setMethod(HttpMethod method) { method_ = method; }
 
 void Request::setConnectedAddrInfo(const std::string& hostname,
                                    const std::string& addr, uint16_t port)

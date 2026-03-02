@@ -35,6 +35,17 @@ class RequestGroupManTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testFillRequestGroupFromReserver_uriParser);
   CPPUNIT_TEST(testInsertReservedGroup);
   CPPUNIT_TEST(testAddDownloadResult);
+  CPPUNIT_TEST(testCountRequestGroup);
+  CPPUNIT_TEST(testDownloadFinished);
+  CPPUNIT_TEST(testFindGroup);
+  CPPUNIT_TEST(testRemoveReservedGroup);
+  CPPUNIT_TEST(testFindDownloadResult);
+  CPPUNIT_TEST(testPurgeDownloadResult);
+  CPPUNIT_TEST(testRemoveDownloadResult);
+  CPPUNIT_TEST(testGetDownloadStat);
+  CPPUNIT_TEST(testOverallSpeedLimits);
+  CPPUNIT_TEST(testHalt);
+  CPPUNIT_TEST(testQueueCheck);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -50,9 +61,9 @@ public:
     // To enable paused RequestGroup
     option_->put(PREF_ENABLE_RPC, A2_V_TRUE);
     File(option_->get(PREF_DIR)).mkdirs();
-    e_ = make_unique<DownloadEngine>(make_unique<SelectEventPoll>());
+    e_ = std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
     e_->setOption(option_.get());
-    auto rgman = make_unique<RequestGroupMan>(
+    auto rgman = std::make_unique<RequestGroupMan>(
         std::vector<std::shared_ptr<RequestGroup>>{}, 3, option_.get());
     rgman_ = rgman.get();
     e_->setRequestGroupMan(std::move(rgman));
@@ -67,6 +78,17 @@ public:
   void testFillRequestGroupFromReserver_uriParser();
   void testInsertReservedGroup();
   void testAddDownloadResult();
+  void testCountRequestGroup();
+  void testDownloadFinished();
+  void testFindGroup();
+  void testRemoveReservedGroup();
+  void testFindDownloadResult();
+  void testPurgeDownloadResult();
+  void testRemoveDownloadResult();
+  void testGetDownloadStat();
+  void testOverallSpeedLimits();
+  void testHalt();
+  void testQueueCheck();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RequestGroupManTest);
@@ -278,6 +300,210 @@ void RequestGroupManTest::testAddDownloadResult()
   rgman_->addDownloadResult(createDownloadResult(error_code::FINISHED, uri));
   CPPUNIT_ASSERT_EQUAL(error_code::TIME_OUT,
                        rgman_->getDownloadStat().getLastErrorResult());
+}
+
+void RequestGroupManTest::testCountRequestGroup()
+{
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  // countRequestGroup() counts only active (requestGroups_), not reserved
+  CPPUNIT_ASSERT_EQUAL((size_t)0, rm.countRequestGroup());
+
+  auto rg1 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  rm.addRequestGroup(rg1);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, rm.countRequestGroup());
+
+  auto rg2 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  rm.addRequestGroup(rg2);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, rm.countRequestGroup());
+}
+
+void RequestGroupManTest::testDownloadFinished()
+{
+  // Use a separate option without ENABLE_RPC so keepRunning_ is false
+  auto op = std::make_shared<Option>();
+  op->put(PREF_PIECE_LENGTH, "1048576");
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3, op.get());
+  // No groups, no reserved, no keepRunning → finished
+  CPPUNIT_ASSERT(rm.downloadFinished());
+
+  // Add a reserved group → not finished
+  auto rg = std::make_shared<RequestGroup>(GroupId::create(), util::copy(op));
+  rm.addReservedGroup(rg);
+  CPPUNIT_ASSERT(!rm.downloadFinished());
+}
+
+void RequestGroupManTest::testFindGroup()
+{
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  auto rg1 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  auto rg2 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+
+  rm.addRequestGroup(rg1);
+  rm.addReservedGroup(rg2);
+
+  // Find in active groups
+  CPPUNIT_ASSERT(rm.findGroup(rg1->getGID()));
+  CPPUNIT_ASSERT_EQUAL(rg1->getGID(), rm.findGroup(rg1->getGID())->getGID());
+
+  // Find in reserved groups
+  CPPUNIT_ASSERT(rm.findGroup(rg2->getGID()));
+  CPPUNIT_ASSERT_EQUAL(rg2->getGID(), rm.findGroup(rg2->getGID())->getGID());
+
+  // Not found
+  CPPUNIT_ASSERT(!rm.findGroup(GroupId::create()->getNumericId()));
+}
+
+void RequestGroupManTest::testRemoveReservedGroup()
+{
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  auto rg =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  rm.addReservedGroup(rg);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, rm.getReservedGroups().size());
+
+  CPPUNIT_ASSERT(rm.removeReservedGroup(rg->getGID()));
+  CPPUNIT_ASSERT_EQUAL((size_t)0, rm.getReservedGroups().size());
+
+  // Remove non-existent returns false
+  CPPUNIT_ASSERT(!rm.removeReservedGroup(GroupId::create()->getNumericId()));
+}
+
+void RequestGroupManTest::testFindDownloadResult()
+{
+  std::string uri = "http://example.org";
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  rm.setMaxDownloadResult(1000);
+  auto dr = createDownloadResult(error_code::FINISHED, uri);
+  a2_gid_t gid = dr->gid->getNumericId();
+  rm.addDownloadResult(dr);
+
+  // Found
+  auto found = rm.findDownloadResult(gid);
+  CPPUNIT_ASSERT(found);
+  CPPUNIT_ASSERT_EQUAL(error_code::FINISHED, found->result);
+
+  // Not found
+  CPPUNIT_ASSERT(!rm.findDownloadResult(GroupId::create()->getNumericId()));
+}
+
+void RequestGroupManTest::testPurgeDownloadResult()
+{
+  std::string uri = "http://example.org";
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  rm.setMaxDownloadResult(1000);
+  rm.addDownloadResult(createDownloadResult(error_code::FINISHED, uri));
+  rm.addDownloadResult(createDownloadResult(error_code::FINISHED, uri));
+  CPPUNIT_ASSERT_EQUAL((size_t)2, rm.getDownloadResults().size());
+
+  rm.purgeDownloadResult();
+  CPPUNIT_ASSERT_EQUAL((size_t)0, rm.getDownloadResults().size());
+}
+
+void RequestGroupManTest::testRemoveDownloadResult()
+{
+  std::string uri = "http://example.org";
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+  rm.setMaxDownloadResult(1000);
+  auto dr = createDownloadResult(error_code::FINISHED, uri);
+  a2_gid_t gid = dr->gid->getNumericId();
+  rm.addDownloadResult(dr);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, rm.getDownloadResults().size());
+
+  // Remove existing → true
+  CPPUNIT_ASSERT(rm.removeDownloadResult(gid));
+  CPPUNIT_ASSERT_EQUAL((size_t)0, rm.getDownloadResults().size());
+
+  // Remove non-existent → false
+  CPPUNIT_ASSERT(!rm.removeDownloadResult(GroupId::create()->getNumericId()));
+}
+
+void RequestGroupManTest::testGetDownloadStat()
+{
+  std::string uri = "http://example.org";
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+
+  // No results → allCompleted true
+  {
+    RequestGroupMan::DownloadStat stat = rm.getDownloadStat();
+    CPPUNIT_ASSERT(stat.allCompleted());
+    CPPUNIT_ASSERT_EQUAL(0, stat.getInProgress());
+    CPPUNIT_ASSERT_EQUAL(error_code::FINISHED, stat.getLastErrorResult());
+  }
+
+  // Add an error result
+  rm.addDownloadResult(createDownloadResult(error_code::TIME_OUT, uri));
+  {
+    RequestGroupMan::DownloadStat stat = rm.getDownloadStat();
+    CPPUNIT_ASSERT(!stat.allCompleted());
+    CPPUNIT_ASSERT_EQUAL(error_code::TIME_OUT, stat.getLastErrorResult());
+  }
+}
+
+void RequestGroupManTest::testOverallSpeedLimits()
+{
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+
+  // No limit (0) → never exceeds
+  CPPUNIT_ASSERT(!rm.doesOverallDownloadSpeedExceed());
+  CPPUNIT_ASSERT(!rm.doesOverallUploadSpeedExceed());
+
+  // Set limits — speed is 0, so should not exceed
+  rm.setMaxOverallDownloadSpeedLimit(1000);
+  CPPUNIT_ASSERT_EQUAL(1000, rm.getMaxOverallDownloadSpeedLimit());
+  CPPUNIT_ASSERT(!rm.doesOverallDownloadSpeedExceed());
+
+  rm.setMaxOverallUploadSpeedLimit(500);
+  CPPUNIT_ASSERT_EQUAL(500, rm.getMaxOverallUploadSpeedLimit());
+  CPPUNIT_ASSERT(!rm.doesOverallUploadSpeedExceed());
+}
+
+void RequestGroupManTest::testHalt()
+{
+  auto rg1 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  auto rg2 =
+      std::make_shared<RequestGroup>(GroupId::create(), util::copy(option_));
+  auto ctx1 = std::make_shared<DownloadContext>(0, 0, "foo1");
+  auto ctx2 = std::make_shared<DownloadContext>(0, 0, "foo2");
+  rg1->setDownloadContext(ctx1);
+  rg2->setDownloadContext(ctx2);
+
+  rgman_->addRequestGroup(rg1);
+  rgman_->addRequestGroup(rg2);
+
+  rgman_->halt();
+  CPPUNIT_ASSERT(rg1->isHaltRequested());
+  CPPUNIT_ASSERT(rg2->isHaltRequested());
+
+  // forceHalt sets force flag
+  rgman_->forceHalt();
+  CPPUNIT_ASSERT(rg1->isForceHaltRequested());
+  CPPUNIT_ASSERT(rg2->isForceHaltRequested());
+}
+
+void RequestGroupManTest::testQueueCheck()
+{
+  RequestGroupMan rm(std::vector<std::shared_ptr<RequestGroup>>(), 3,
+                     option_.get());
+
+  // Default is true
+  CPPUNIT_ASSERT(rm.queueCheckRequested());
+  rm.clearQueueCheck();
+  CPPUNIT_ASSERT(!rm.queueCheckRequested());
+  rm.requestQueueCheck();
+  CPPUNIT_ASSERT(rm.queueCheckRequested());
 }
 
 } // namespace aria2

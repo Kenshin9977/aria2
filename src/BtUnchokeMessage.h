@@ -41,19 +41,19 @@ namespace aria2 {
 
 class BtUnchokeMessage : public ZeroBtMessage {
 private:
-  static const size_t MESSAGE_LENGTH = 5;
+  static constexpr size_t MESSAGE_LENGTH = 5;
 
 public:
   BtUnchokeMessage();
 
-  static const uint8_t ID = 1;
+  static constexpr uint8_t ID = 1;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "unchoke";
 
-  static std::unique_ptr<BtUnchokeMessage> create(const unsigned char* data,
-                                                  size_t dataLength);
+  static std::unique_ptr<BtUnchokeMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 };
 
 } // namespace aria2

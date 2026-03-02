@@ -46,9 +46,9 @@ private:
   std::shared_ptr<FtpConnection> ftpConnection_;
 
 protected:
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   FtpFinishDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -56,8 +56,8 @@ public:
                            RequestGroup* requestGroup,
                            const std::shared_ptr<FtpConnection>& ftpConnection,
                            DownloadEngine* e,
-                           const std::shared_ptr<SocketCore>& socket);
-  virtual ~FtpFinishDownloadCommand();
+                           const std::shared_ptr<ISocketCore>& socket);
+  ~FtpFinishDownloadCommand() override;
 };
 
 } // namespace aria2

@@ -105,10 +105,10 @@ void PortEventPoll::poll(const struct timeval& tv)
   // If port_getn was interrupted by signal, it can consume events but
   // not update nget!. For this very annoying bug, we have to check
   // actually event is filled or not.
-  portEvents_[0].portev_user = (void*)-1;
+  portEvents_[0].portev_user = reinterpret_cast<void*>(-1);
   res = port_getn(port_, portEvents_, portEventsSize_, &nget, &timeout);
   if (res == 0 || (res == -1 && (errno == ETIME || errno == EINTR) &&
-                   portEvents_[0].portev_user != (void*)-1)) {
+                   portEvents_[0].portev_user != reinterpret_cast<void*>(-1))) {
     A2_LOG_DEBUG(fmt("nget=%u", nget));
     for (uint_t i = 0; i < nget; ++i) {
       const port_event_t& pev = portEvents_[i];
@@ -142,8 +142,6 @@ void PortEventPoll::poll(const struct timeval& tv)
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 namespace {

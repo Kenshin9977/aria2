@@ -47,6 +47,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include <ranges>
 #include <sstream>
 #include <iterator>
 
@@ -81,7 +82,7 @@ std::string SizeFormatter::operator()(int64_t size) const
 namespace {
 class AbbrevSizeFormatter : public SizeFormatter {
 protected:
-  virtual std::string format(int64_t size) const CXX11_OVERRIDE
+  std::string format(int64_t size) const override
   {
     return util::abbrevSize(size);
   }
@@ -91,10 +92,7 @@ protected:
 namespace {
 class PlainSizeFormatter : public SizeFormatter {
 protected:
-  virtual std::string format(int64_t size) const CXX11_OVERRIDE
-  {
-    return util::itos(size);
-  }
+  std::string format(int64_t size) const override { return util::itos(size); }
 };
 } // namespace
 
@@ -181,8 +179,7 @@ void printProgress(ColorizedStream& o, const std::shared_ptr<RequestGroup>& rg,
   printSizeProgress(o, rg, stat, sizeFormatter);
   o << " CN:" << rg->getNumConnection();
 #ifdef ENABLE_BITTORRENT
-  auto btObj = e->getBtRegistry()->get(rg->getGID());
-  if (btObj) {
+  if (auto btObj = e->getBtRegistry()->get(rg->getGID())) {
     const PeerSet& peers = btObj->peerStorage->getUsedPeers();
     o << " SD:" << countSeeder(peers.begin(), peers.end());
   }
@@ -249,7 +246,7 @@ void printProgressSummary(const RequestGroupList& groups, size_t cols,
     time_t now;
     struct tm* staticNowtmPtr;
     char buf[26];
-    if (time(&now) != (time_t)-1 &&
+    if (time(&now) != static_cast<time_t>(-1) &&
         (staticNowtmPtr = localtime(&now)) != nullptr &&
         asctime_r(staticNowtmPtr, buf) != nullptr) {
       char* lfptr = strchr(buf, '\n');
@@ -262,8 +259,7 @@ void printProgressSummary(const RequestGroupList& groups, size_t cols,
   o << " *** \n"
     << std::setfill(SEP_CHAR) << std::setw(cols) << SEP_CHAR << "\n";
   global::cout()->write(o.str().c_str());
-  std::for_each(groups.begin(), groups.end(),
-                PrintSummary(cols, e, sizeFormatter));
+  std::ranges::for_each(groups, PrintSummary(cols, e, sizeFormatter));
 }
 } // namespace
 
@@ -280,10 +276,10 @@ ConsoleStatCalc::ConsoleStatCalc(std::chrono::seconds summaryInterval,
       colorOutput_(colorOutput)
 {
   if (humanReadable) {
-    sizeFormatter_ = make_unique<AbbrevSizeFormatter>();
+    sizeFormatter_ = std::make_unique<AbbrevSizeFormatter>();
   }
   else {
-    sizeFormatter_ = make_unique<PlainSizeFormatter>();
+    sizeFormatter_ = std::make_unique<PlainSizeFormatter>();
   }
 }
 
@@ -305,7 +301,7 @@ void ConsoleStatCalc::calculateStat(const DownloadEngine* e)
 #  ifdef HAVE_TERMIOS_H
     struct winsize size;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == 0) {
-      cols = std::max(0, (int)size.ws_col - 1);
+      cols = std::max(0, static_cast<int>(size.ws_col) - 1);
     }
 #  endif // HAVE_TERMIOS_H
 #else    // __MINGW32__

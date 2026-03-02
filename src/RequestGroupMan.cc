@@ -40,6 +40,8 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
+#include <ranges>
+#include <unordered_map>
 #include <utility>
 
 #include "BtProgressInfoFile.h"
@@ -242,7 +244,7 @@ namespace {
 void notifyDownloadEvent(DownloadEvent event,
                          const std::shared_ptr<RequestGroup>& group)
 {
-  // Check NULL to make unit test easier.
+  // Check nullptr to make unit test easier.
   if (SingletonHolder<Notifier>::instance()) {
     SingletonHolder<Notifier>::instance()->notifyDownloadEvent(event, group);
   }
@@ -401,7 +403,7 @@ public:
           // FileEntry::getPath() does not return actual file path, so
           // we don't remove it.
           if (group->getOption()->getAsBool(PREF_BT_REMOVE_UNSELECTED_FILE) &&
-              !group->inMemoryDownload() && dctx->hasAttribute(CTX_ATTR_BT)) {
+              !group->inMemoryDownload() && dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
             A2_LOG_INFO(fmt(MSG_REMOVING_UNSELECTED_FILE,
                             GroupId::toHex(group->getGID()).c_str()));
             const std::vector<std::shared_ptr<FileEntry>>& files =
@@ -437,8 +439,7 @@ public:
         group->releaseRuntimeResource(e_);
         group->setForceHaltRequested(false);
 
-        auto pendingOption = group->getPendingOption();
-        if (pendingOption) {
+        if (auto pendingOption = group->getPendingOption()) {
           changeOption(group, *pendingOption, e_);
         }
 
@@ -490,14 +491,14 @@ void RequestGroupMan::configureRequestGroup(
       requestGroup->getOption()->get(PREF_URI_SELECTOR);
   if (uriSelectorValue == V_FEEDBACK) {
     requestGroup->setURISelector(
-        make_unique<FeedbackURISelector>(serverStatMan_));
+        std::make_unique<FeedbackURISelector>(serverStatMan_));
   }
   else if (uriSelectorValue == V_INORDER) {
-    requestGroup->setURISelector(make_unique<InorderURISelector>());
+    requestGroup->setURISelector(std::make_unique<InorderURISelector>());
   }
   else if (uriSelectorValue == V_ADAPTIVE) {
     requestGroup->setURISelector(
-        make_unique<AdaptiveURISelector>(serverStatMan_, requestGroup.get()));
+        std::make_unique<AdaptiveURISelector>(serverStatMan_, requestGroup.get()));
   }
 }
 
@@ -794,8 +795,8 @@ void RequestGroupMan::formatDownloadResultFull(
 {
   BitfieldMan bt(downloadResult->pieceLength, downloadResult->totalLength);
   bt.setBitfield(
-      reinterpret_cast<const unsigned char*>(downloadResult->bitfield.data()),
-      downloadResult->bitfield.size());
+      {reinterpret_cast<const unsigned char*>(downloadResult->bitfield.data()),
+       downloadResult->bitfield.size()});
   bool head = true;
   const std::vector<std::shared_ptr<FileEntry>>& fileEntries =
       downloadResult->fileEntries;
@@ -872,11 +873,11 @@ bool RequestGroupMan::isSameFileBeingDownloaded(
     if (rg.get() != requestGroup) {
       const std::vector<std::shared_ptr<FileEntry>>& entries =
           rg->getDownloadContext()->getFileEntries();
-      std::transform(entries.begin(), entries.end(), std::back_inserter(files),
-                     std::mem_fn(&FileEntry::getPath));
+      std::ranges::transform(entries, std::back_inserter(files),
+                             std::mem_fn(&FileEntry::getPath));
     }
   }
-  std::sort(files.begin(), files.end());
+  std::ranges::sort(files);
   const std::vector<std::shared_ptr<FileEntry>>& entries =
       requestGroup->getDownloadContext()->getFileEntries();
   return sameFilePathExists(files.begin(), files.end(), entries.begin(),
@@ -918,7 +919,8 @@ void RequestGroupMan::addDownloadResult(
     const std::shared_ptr<DownloadResult>& dr)
 {
   ++numStoppedTotal_;
-  bool rv = downloadResults_.push_back(dr->gid->getNumericId(), dr);
+  [[maybe_unused]] bool rv =
+      downloadResults_.push_back(dr->gid->getNumericId(), dr);
   assert(rv);
   while (downloadResults_.size() > maxDownloadResult_) {
     // Save last encountered error code so that we can report it
@@ -1003,6 +1005,8 @@ void RequestGroupMan::getUsedHosts(
   // speed. We use -download speed so that we can sort them using
   // operator<().
   std::vector<std::tuple<size_t, int, std::string>> tempHosts;
+  // Map from hostname to index in tempHosts for O(1) lookup
+  std::unordered_map<std::string, size_t> hostIndex;
   for (const auto& rg : requestGroups_) {
     const auto& inFlightReqs =
         rg->getDownloadContext()->getFirstFileEntry()->getInFlightRequests();
@@ -1011,32 +1015,29 @@ void RequestGroupMan::getUsedHosts(
       if (uri_split(&us, req->getUri().c_str()) == 0) {
         std::string host =
             uri::getFieldString(us, USR_HOST, req->getUri().c_str());
-        auto k = tempHosts.begin();
-        auto eok = tempHosts.end();
-        for (; k != eok; ++k) {
-          if (std::get<2>(*k) == host) {
-            ++std::get<0>(*k);
-            break;
-          }
+        auto it = hostIndex.find(host);
+        if (it != hostIndex.end()) {
+          ++std::get<0>(tempHosts[it->second]);
         }
-        if (k == eok) {
+        else {
           std::string protocol =
               uri::getFieldString(us, USR_SCHEME, req->getUri().c_str());
           auto ss = findServerStat(host, protocol);
           int invDlSpeed = (ss && ss->isOK())
                                ? -(static_cast<int>(ss->getDownloadSpeed()))
                                : 0;
+          hostIndex.emplace(host, tempHosts.size());
           tempHosts.emplace_back(1, invDlSpeed, host);
         }
       }
     }
   }
-  std::sort(tempHosts.begin(), tempHosts.end());
-  std::transform(tempHosts.begin(), tempHosts.end(),
-                 std::back_inserter(usedHosts),
-                 [](const std::tuple<size_t, int, std::string>& x) {
-                   return std::make_pair(std::get<0>(x), std::get<2>(x));
-                 });
+  std::ranges::sort(tempHosts);
+  std::ranges::transform(tempHosts, std::back_inserter(usedHosts),
+                         [](const std::tuple<size_t, int, std::string>& x) {
+                           return std::make_pair(std::get<0>(x),
+                                                 std::get<2>(x));
+                         });
 }
 
 void RequestGroupMan::setUriListParser(
@@ -1050,7 +1051,7 @@ void RequestGroupMan::initWrDiskCache()
   assert(!wrDiskCache_);
   size_t limit = option_->getAsInt(PREF_DISK_CACHE);
   if (limit > 0) {
-    wrDiskCache_ = make_unique<WrDiskCache>(limit);
+    wrDiskCache_ = std::make_unique<WrDiskCache>(limit);
   }
 }
 

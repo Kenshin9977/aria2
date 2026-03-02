@@ -45,7 +45,7 @@ private:
   unsigned char targetNodeID_[DHT_ID_LENGTH];
 
 protected:
-  virtual std::string toStringOptional() const CXX11_OVERRIDE;
+  std::string toStringOptional() const override;
 
 public:
   DHTFindNodeMessage(const std::shared_ptr<DHTNode>& localNode,
@@ -53,18 +53,18 @@ public:
                      const unsigned char* targetNodeID,
                      const std::string& transactionID = A2STR::NIL);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getArgument() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getArgument() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
   const unsigned char* getTargetNodeID() const { return targetNodeID_; }
 
-  static const std::string FIND_NODE;
+  static constexpr const char FIND_NODE[] = "find_node";
 
   // We want "TARGET", but it is defined by macro.
-  static const std::string TARGET_NODE;
+  static constexpr const char TARGET_NODE[] = "target";
 };
 
 } // namespace aria2

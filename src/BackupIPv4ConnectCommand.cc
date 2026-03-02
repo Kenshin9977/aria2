@@ -96,7 +96,7 @@ bool BackupIPv4ConnectCommand::execute()
                           getCuid(), ipaddr_.c_str()));
           info_->ipaddr = ipaddr_;
           e_->deleteSocketForWriteCheck(socket_, this);
-          info_->socket.swap(socket_);
+          info_->socket = std::move(socket_);
           mainCommand_->setStatus(STATUS_ONESHOT_REALTIME);
           e_->setNoWait(true);
           retval = true;

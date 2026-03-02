@@ -48,8 +48,8 @@ private:
   std::shared_ptr<HttpConnection> httpConnection_;
 
 protected:
-  virtual bool prepareForNextSegment() CXX11_OVERRIDE;
-  virtual int64_t getRequestEndOffset() const CXX11_OVERRIDE;
+  bool prepareForNextSegment() override;
+  int64_t getRequestEndOffset() const override;
 
 public:
   HttpDownloadCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
@@ -57,8 +57,8 @@ public:
                       RequestGroup* requestGroup,
                       std::unique_ptr<HttpResponse> httpResponse,
                       const std::shared_ptr<HttpConnection>& httpConnection,
-                      DownloadEngine* e, const std::shared_ptr<SocketCore>& s);
-  virtual ~HttpDownloadCommand();
+                      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
+  ~HttpDownloadCommand() override;
 };
 
 } // namespace aria2

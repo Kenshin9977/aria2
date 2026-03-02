@@ -116,7 +116,7 @@ public:
   }
 };
 
-template <typename T, typename S> bool in(T x, S s, S t)
+template <typename T, typename S> constexpr bool in(T x, S s, S t)
 {
   return s <= x && x <= t;
 }
@@ -149,57 +149,39 @@ struct RefLess {
   }
 };
 
-#if __cplusplus > 201103L
-using std::make_unique;
-#else  // __cplusplus <= 201103L
-template <typename T, typename... U>
-typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
-make_unique(U&&... u)
-{
-  return std::unique_ptr<T>(new T(std::forward<U>(u)...));
-}
-
-template <typename T>
-typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T>>::type
-make_unique(size_t size)
-{
-  return std::unique_ptr<T>(new typename std::remove_extent<T>::type[size]());
-}
-#endif // __cplusplus <= 201103L
-
 // User-defined literals for K, M, and G (powers of 1024)
 
-constexpr unsigned long long operator"" _k(unsigned long long k)
+constexpr unsigned long long operator""_k(unsigned long long k)
 {
   return k * 1024;
 }
 
-constexpr unsigned long long operator"" _m(unsigned long long m)
+constexpr unsigned long long operator""_m(unsigned long long m)
 {
   return m * 1024 * 1024;
 }
 
-constexpr unsigned long long operator"" _g(unsigned long long g)
+constexpr unsigned long long operator""_g(unsigned long long g)
 {
   return g * 1024 * 1024 * 1024;
 }
 
-constexpr std::chrono::hours operator"" _h(unsigned long long h)
+constexpr std::chrono::hours operator""_h(unsigned long long h)
 {
   return std::chrono::hours(h);
 }
 
-constexpr std::chrono::minutes operator"" _min(unsigned long long min)
+constexpr std::chrono::minutes operator""_min(unsigned long long min)
 {
   return std::chrono::minutes(min);
 }
 
-constexpr std::chrono::seconds operator"" _s(unsigned long long s)
+constexpr std::chrono::seconds operator""_s(unsigned long long s)
 {
   return std::chrono::seconds(s);
 }
 
-constexpr std::chrono::milliseconds operator"" _ms(unsigned long long ms)
+constexpr std::chrono::milliseconds operator""_ms(unsigned long long ms)
 {
   return std::chrono::milliseconds(ms);
 }

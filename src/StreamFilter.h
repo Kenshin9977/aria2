@@ -53,7 +53,7 @@ private:
 public:
   StreamFilter(std::unique_ptr<StreamFilter> delegate = nullptr);
 
-  virtual ~StreamFilter();
+  virtual ~StreamFilter() = default;
 
   // init() must be called before calling decode().
   virtual void init() = 0;
@@ -69,7 +69,7 @@ public:
   // After calling release(), the object can be reused by calling init().
   virtual void release() = 0;
 
-  virtual const std::string& getName() const = 0;
+  virtual const char* getName() const = 0;
 
   // Returns the number of input bytes processed in the last
   // transform() invocation.

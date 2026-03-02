@@ -41,20 +41,20 @@ namespace aria2 {
 
 class BtKeepAliveMessage : public SimpleBtMessage {
 private:
-  static const size_t MESSAGE_LENGTH = 4;
+  static constexpr size_t MESSAGE_LENGTH = 4;
 
 public:
   BtKeepAliveMessage() : SimpleBtMessage(ID, NAME) {}
 
-  static const uint8_t ID = 99;
+  static constexpr uint8_t ID = 99;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "keep alive";
 
-  virtual void doReceivedAction() CXX11_OVERRIDE {}
+  void doReceivedAction() override {}
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE { return NAME; }
+  std::string toString() const override { return NAME; }
 };
 
 } // namespace aria2

@@ -36,6 +36,9 @@
 #define D_GZIP_STREAM_FILTER_H
 
 #include "StreamFilter.h"
+
+#include <memory>
+
 #include <zlib.h>
 
 #include "a2functional.h"
@@ -45,38 +48,36 @@ namespace aria2 {
 // GZipDecodingStreamFilter can decode both gzip and deflate format.
 class GZipDecodingStreamFilter : public StreamFilter {
 private:
-  z_stream* strm_;
+  std::unique_ptr<z_stream> strm_;
 
   bool finished_;
 
+  bool rawMode_;
+
   size_t bytesProcessed_;
 
-  static const size_t OUTBUF_LENGTH = 16_k;
+  static constexpr size_t OUTBUF_LENGTH = 16_k;
 
 public:
   GZipDecodingStreamFilter(std::unique_ptr<StreamFilter> delegate = nullptr);
 
-  virtual ~GZipDecodingStreamFilter();
+  ~GZipDecodingStreamFilter() override;
 
-  virtual void init() CXX11_OVERRIDE;
+  void init() override;
 
-  virtual ssize_t transform(const std::shared_ptr<BinaryStream>& out,
-                            const std::shared_ptr<Segment>& segment,
-                            const unsigned char* inbuf,
-                            size_t inlen) CXX11_OVERRIDE;
+  ssize_t transform(const std::shared_ptr<BinaryStream>& out,
+                    const std::shared_ptr<Segment>& segment,
+                    const unsigned char* inbuf, size_t inlen) override;
 
-  virtual bool finished() CXX11_OVERRIDE;
+  bool finished() override;
 
-  virtual void release() CXX11_OVERRIDE;
+  void release() override;
 
-  virtual const std::string& getName() const CXX11_OVERRIDE;
+  const char* getName() const override;
 
-  virtual size_t getBytesProcessed() const CXX11_OVERRIDE
-  {
-    return bytesProcessed_;
-  }
+  size_t getBytesProcessed() const override { return bytesProcessed_; }
 
-  static const std::string NAME;
+  static constexpr const char NAME[] = "GZipDecodingStreamFilter";
 };
 
 } // namespace aria2

@@ -71,20 +71,20 @@ public:
                             const std::shared_ptr<PieceStorage>& pieceStorage,
                             const Option* option);
 
-  virtual ~DefaultBtProgressInfoFile();
+  ~DefaultBtProgressInfoFile() override;
 
-  virtual std::string getFilename() CXX11_OVERRIDE { return filename_; }
+  std::string getFilename() override { return filename_; }
 
-  virtual bool exists() CXX11_OVERRIDE;
+  bool exists() override;
 
-  virtual void save() CXX11_OVERRIDE;
+  void save() override;
 
-  virtual void load() CXX11_OVERRIDE;
+  void load() override;
 
-  virtual void removeFile() CXX11_OVERRIDE;
+  void removeFile() override;
 
   // re-set filename using current dctx_.
-  virtual void updateFilename() CXX11_OVERRIDE;
+  void updateFilename() override;
 
 #ifdef ENABLE_BITTORRENT
   // for torrents

@@ -34,6 +34,7 @@
 /* copyright --> */
 #include "DHTMessageTracker.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "DHTMessage.h"
@@ -56,11 +57,13 @@ DHTMessageTracker::DHTMessageTracker()
 {
 }
 
+DHTMessageTracker::~DHTMessageTracker() = default;
+
 void DHTMessageTracker::addMessage(DHTMessage* message,
                                    std::chrono::seconds timeout,
                                    std::unique_ptr<DHTMessageCallback> callback)
 {
-  entries_.push_back(make_unique<DHTMessageTrackerEntry>(
+  entries_.push_back(std::make_unique<DHTMessageTrackerEntry>(
       message->getRemoteNode(), message->getTransactionID(),
       message->getMessageType(), std::move(timeout), std::move(callback)));
 }
@@ -142,31 +145,27 @@ void DHTMessageTracker::handleTimeoutEntry(DHTMessageTrackerEntry* entry)
 
 void DHTMessageTracker::handleTimeout()
 {
-  entries_.erase(
-      std::remove_if(std::begin(entries_), std::end(entries_),
-                     [&](const std::unique_ptr<DHTMessageTrackerEntry>& ent) {
-                       if (ent->isTimeout()) {
-                         handleTimeoutEntry(ent.get());
-                         return true;
-                       }
-                       else {
-                         return false;
-                       }
-                     }),
-      std::end(entries_));
+  std::erase_if(entries_,
+                [&](const std::unique_ptr<DHTMessageTrackerEntry>& ent) {
+                  if (ent->isTimeout()) {
+                    handleTimeoutEntry(ent.get());
+                    return true;
+                  }
+                  else {
+                    return false;
+                  }
+                });
 }
 
 const DHTMessageTrackerEntry*
 DHTMessageTracker::getEntryFor(const DHTMessage* message) const
 {
-  for (auto& ent : entries_) {
-    if (ent->match(message->getTransactionID(),
-                   message->getRemoteNode()->getIPAddress(),
-                   message->getRemoteNode()->getPort())) {
-      return ent.get();
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(entries_, [&message](const auto& ent) {
+    return ent->match(message->getTransactionID(),
+                      message->getRemoteNode()->getIPAddress(),
+                      message->getRemoteNode()->getPort());
+  });
+  return it != entries_.end() ? it->get() : nullptr;
 }
 
 size_t DHTMessageTracker::countEntry() const { return entries_.size(); }

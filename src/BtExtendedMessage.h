@@ -36,6 +36,8 @@
 #define D_BT_EXTENDED_MESSAGE_H
 #include "SimpleBtMessage.h"
 
+#include <span>
+
 namespace aria2 {
 
 class ExtensionMessage;
@@ -48,24 +50,26 @@ private:
   size_t msgLength_;
 
 public:
-  BtExtendedMessage(std::unique_ptr<ExtensionMessage> extensionMessage =
-                        std::unique_ptr<ExtensionMessage>{});
+  BtExtendedMessage();
+  BtExtendedMessage(std::unique_ptr<ExtensionMessage> extensionMessage);
 
-  static const uint8_t ID = 20;
+  ~BtExtendedMessage() override;
 
-  static const char NAME[];
+  static constexpr uint8_t ID = 20;
+
+  static constexpr char NAME[] = "extended";
 
   static std::unique_ptr<BtExtendedMessage>
   create(ExtensionMessageFactory* factory, const std::shared_ptr<Peer>& peer,
-         const unsigned char* data, size_t dataLength);
+         std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual bool sendPredicate() const CXX11_OVERRIDE;
+  bool sendPredicate() const override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   const std::unique_ptr<ExtensionMessage>& getExtensionMessage() const;
 };

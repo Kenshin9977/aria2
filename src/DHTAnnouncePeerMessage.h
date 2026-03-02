@@ -57,7 +57,7 @@ private:
   DHTTokenTracker* tokenTracker_;
 
 protected:
-  virtual std::string toStringOptional() const CXX11_OVERRIDE;
+  std::string toStringOptional() const override;
 
 public:
   DHTAnnouncePeerMessage(const std::shared_ptr<DHTNode>& localNode,
@@ -66,13 +66,13 @@ public:
                          const std::string& token,
                          const std::string& transactionID = A2STR::NIL);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getArgument() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getArgument() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
-  virtual void validate() const CXX11_OVERRIDE;
+  void validate() const override;
 
   const unsigned char* getInfoHash() const { return infoHash_; }
 
@@ -84,13 +84,13 @@ public:
 
   void setTokenTracker(DHTTokenTracker* tokenTracker);
 
-  static const std::string ANNOUNCE_PEER;
+  static constexpr const char ANNOUNCE_PEER[] = "announce_peer";
 
-  static const std::string INFO_HASH;
+  static constexpr const char INFO_HASH[] = "info_hash";
 
-  static const std::string PORT;
+  static constexpr const char PORT[] = "port";
 
-  static const std::string TOKEN;
+  static constexpr const char TOKEN[] = "token";
 };
 
 } // namespace aria2

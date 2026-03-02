@@ -53,14 +53,14 @@ namespace aria2 {
 
 namespace {
 
-const size_t MAX_PEER_LIST_SIZE = 512;
+constexpr size_t MAX_PEER_LIST_SIZE = 512;
 
 } // namespace
 
 DefaultPeerStorage::DefaultPeerStorage()
     : maxPeerListSize_(MAX_PEER_LIST_SIZE),
-      seederStateChoke_(make_unique<BtSeederStateChoke>()),
-      leecherStateChoke_(make_unique<BtLeecherStateChoke>()),
+      seederStateChoke_(std::make_unique<BtSeederStateChoke>()),
+      leecherStateChoke_(std::make_unique<BtLeecherStateChoke>()),
       lastTransferStatMapUpdated_(Timer::zero())
 {
 }
@@ -165,11 +165,11 @@ DefaultPeerStorage::addAndCheckoutPeer(const std::shared_ptr<Peer>& peer,
                                        cuid_t cuid)
 {
   if (isPeerAlreadyAdded(peer)) {
-    auto it = std::find_if(std::begin(unusedPeers_), std::end(unusedPeers_),
-                           [&peer](const std::shared_ptr<Peer>& p) {
-                             return p->getIPAddress() == peer->getIPAddress() &&
-                                    p->getOrigPort() == peer->getOrigPort();
-                           });
+    auto it = std::ranges::find_if(
+        unusedPeers_, [&peer](const std::shared_ptr<Peer>& p) {
+          return p->getIPAddress() == peer->getIPAddress() &&
+                 p->getOrigPort() == peer->getOrigPort();
+        });
     if (it == std::end(unusedPeers_)) {
       // peer is in usedPeers_.
       return nullptr;

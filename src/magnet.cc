@@ -42,19 +42,18 @@ namespace magnet {
 
 std::unique_ptr<Dict> parse(const std::string& magnet)
 {
-  if (!util::startsWith(magnet, "magnet:?")) {
+  if (!magnet.starts_with("magnet:?")) {
     return nullptr;
   }
   auto dict = Dict::g();
   std::vector<Scip> queries;
   util::splitIter(magnet.begin() + 8, magnet.end(), std::back_inserter(queries),
                   '&');
-  for (std::vector<Scip>::const_iterator i = queries.begin(),
-                                         eoi = queries.end();
-       i != eoi; ++i) {
-    auto p = util::divide((*i).first, (*i).second, '=');
-    std::string name(p.first.first, p.first.second);
-    std::string value(util::percentDecode(p.second.first, p.second.second));
+  for (const auto& [qbegin, qend] : queries) {
+    auto [namePart, valuePart] = util::divide(qbegin, qend, '=');
+    std::string name(namePart.first, namePart.second);
+    std::string value(
+        util::percentDecode(valuePart.first, valuePart.second));
     List* l = downcast<List>(dict->get(name));
     if (l) {
       l->append(String::g(value));

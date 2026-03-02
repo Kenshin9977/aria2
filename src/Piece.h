@@ -38,9 +38,12 @@
 #include "common.h"
 
 #include <stdint.h>
-#include <vector>
-#include <string>
 #include <memory>
+#include <optional>
+#include <compare>
+#include <span>
+#include <string>
+#include <vector>
 
 #include "Command.h"
 #include "a2functional.h"
@@ -72,19 +75,18 @@ private:
   Piece& operator=(const Piece& piece) = delete;
 
 public:
-  static const int32_t BLOCK_LENGTH = 16_k;
+  static constexpr int32_t BLOCK_LENGTH = 16_k;
 
   Piece();
   Piece(size_t index, int64_t length, int32_t blockLength = BLOCK_LENGTH);
 
   ~Piece();
 
+  auto operator<=>(const Piece& piece) const { return index_ <=> piece.index_; }
+
   bool operator==(const Piece& piece) const { return index_ == piece.index_; }
 
-  bool operator<(const Piece& piece) const { return index_ < piece.index_; }
-
-  // TODO This function only used by unit tests
-  bool getMissingUnusedBlockIndex(size_t& index) const;
+  std::optional<size_t> getMissingUnusedBlockIndex() const;
 
   // Appends at most n missing unused block index to indexes. For all
   // i in retrieved indexes, call bitfield->setUseBit(i). This
@@ -93,7 +95,7 @@ public:
   size_t getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
                                     size_t n) const;
 
-  bool getFirstMissingBlockIndexWithoutLock(size_t& index) const;
+  std::optional<size_t> getFirstMissingBlockIndexWithoutLock() const;
   bool getAllMissingBlockIndexes(unsigned char* misbitfield,
                                  size_t mislen) const;
   void completeBlock(size_t blockIndex);
@@ -103,31 +105,31 @@ public:
 
   size_t countMissingBlock() const;
 
-  bool hasBlock(size_t blockIndex) const;
+  [[nodiscard]] bool hasBlock(size_t blockIndex) const;
 
   /**
    * Returns true if all blocks of this piece have been downloaded, otherwise
    * returns false.
    */
-  bool pieceComplete() const;
+  [[nodiscard]] bool pieceComplete() const;
 
-  size_t countBlock() const;
+  [[nodiscard]] size_t countBlock() const;
 
   int32_t getBlockLength(size_t index) const;
 
   int32_t getBlockLength() const;
 
-  size_t getIndex() const { return index_; }
+  [[nodiscard]] size_t getIndex() const { return index_; }
 
   void setIndex(size_t index) { index_ = index; }
 
-  int64_t getLength() const { return length_; }
+  [[nodiscard]] int64_t getLength() const { return length_; }
 
   void setLength(int64_t length) { length_ = length; }
 
   const unsigned char* getBitfield() const;
 
-  void setBitfield(const unsigned char* bitfield, size_t len);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   size_t getBitfieldLength() const;
 

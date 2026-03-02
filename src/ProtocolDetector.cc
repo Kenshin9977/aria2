@@ -78,13 +78,7 @@ bool ProtocolDetector::guessTorrentFile(const std::string& uri) const
 bool ProtocolDetector::guessTorrentMagnet(const std::string& uri) const
 {
 #ifdef ENABLE_BITTORRENT
-  try {
-    bittorrent::parseMagnet(uri);
-    return true;
-  }
-  catch (RecoverableException& e) {
-    return false;
-  }
+  return bittorrent::parseMagnet(uri).has_value();
 #else  // !ENABLE_BITTORRENT
   return false;
 #endif // !ENABLE_BITTORRENT

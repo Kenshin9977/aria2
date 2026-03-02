@@ -47,7 +47,7 @@ namespace aria2 {
 
 PeerSessionResource::PeerSessionResource(int32_t pieceLength,
                                          int64_t totalLength)
-    : bitfieldMan_(make_unique<BitfieldMan>(pieceLength, totalLength)),
+    : bitfieldMan_(std::make_unique<BitfieldMan>(pieceLength, totalLength)),
       lastDownloadUpdate_(Timer::zero()),
       lastAmUnchoking_(Timer::zero()),
       dispatcher_(nullptr),
@@ -116,10 +116,9 @@ void PeerSessionResource::updateBitfield(size_t index, int operation)
   }
 }
 
-void PeerSessionResource::setBitfield(const unsigned char* bitfield,
-                                      size_t bitfieldLength)
+void PeerSessionResource::setBitfield(std::span<const unsigned char> bitfield)
 {
-  bitfieldMan_->setBitfield(bitfield, bitfieldLength);
+  bitfieldMan_->setBitfield(bitfield);
 }
 
 const unsigned char* PeerSessionResource::getBitfield() const
@@ -235,7 +234,7 @@ size_t PeerSessionResource::countOutstandingUpload() const
 
 void PeerSessionResource::reconfigure(int32_t pieceLength, int64_t totalLenth)
 {
-  bitfieldMan_ = make_unique<BitfieldMan>(pieceLength, totalLenth);
+  bitfieldMan_ = std::make_unique<BitfieldMan>(pieceLength, totalLenth);
 }
 
 } // namespace aria2

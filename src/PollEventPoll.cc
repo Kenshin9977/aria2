@@ -78,7 +78,7 @@ struct pollfd PollEventPoll::KSocketEntry::getEvents()
 PollEventPoll::PollEventPoll()
     : pollfdCapacity_(1024),
       pollfdNum_(0),
-      pollfds_(make_unique<struct pollfd[]>(pollfdCapacity_))
+      pollfds_(std::make_unique<struct pollfd[]>(pollfdCapacity_))
 {
 }
 
@@ -96,8 +96,8 @@ void PollEventPoll::poll(const struct timeval& tv)
     for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
          first != last; ++first) {
       if (first->revents) {
-        auto itr = socketEntries_.find(first->fd);
-        if (itr == std::end(socketEntries_)) {
+        if (auto itr = socketEntries_.find(first->fd);
+            itr == std::end(socketEntries_)) {
           A2_LOG_DEBUG(
               fmt("Socket %d is not found in SocketEntries.", first->fd));
         }
@@ -116,16 +116,13 @@ void PollEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& r : nameResolverEntries_) {
-    auto& ent = r.second;
+  for (auto& [key, ent] : nameResolverEntries_) {
     ent.processTimeout();
     ent.removeSocketEvents(this);
     ent.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 int PollEventPoll::translateEvents(EventPoll::EventType events)
@@ -148,9 +145,9 @@ int PollEventPoll::translateEvents(EventPoll::EventType events)
 
 bool PollEventPoll::addEvents(sock_t socket, const PollEventPoll::KEvent& event)
 {
-  auto i = socketEntries_.lower_bound(socket);
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    auto& socketEntry = (*i).second;
+  auto i = socketEntries_.find(socket);
+  if (i != socketEntries_.end()) {
+    auto& socketEntry = i->second;
     event.addSelf(&socketEntry);
     for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
          first != last; ++first) {
@@ -161,12 +158,12 @@ bool PollEventPoll::addEvents(sock_t socket, const PollEventPoll::KEvent& event)
     }
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, KSocketEntry(socket)));
-    auto& socketEntry = (*i).second;
+    auto p = socketEntries_.emplace(socket, KSocketEntry(socket));
+    auto& socketEntry = p.first->second;
     event.addSelf(&socketEntry);
     if (pollfdCapacity_ == pollfdNum_) {
       pollfdCapacity_ *= 2;
-      auto newPollfds = make_unique<struct pollfd[]>(pollfdCapacity_);
+      auto newPollfds = std::make_unique<struct pollfd[]>(pollfdCapacity_);
       memcpy(newPollfds.get(), pollfds_.get(),
              pollfdNum_ * sizeof(struct pollfd));
       pollfds_ = std::move(newPollfds);

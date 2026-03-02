@@ -39,10 +39,12 @@
 
 #include <string>
 #include <set>
+#include <map>
 #include <memory>
 
 #include "SingletonHolder.h"
 #include "a2functional.h"
+#include "HttpDigestAuth.h"
 
 namespace aria2 {
 
@@ -73,11 +75,26 @@ public:
   bool operator<(const BasicCred& cred) const;
 };
 
+struct DigestCred {
+  std::string host;
+  uint16_t port;
+  DigestChallenge challenge;
+  uint32_t nc;
+
+  DigestCred(std::string host, uint16_t port, DigestChallenge challenge)
+      : host(std::move(host)),
+        port(port),
+        challenge(std::move(challenge)),
+        nc(0)
+  {
+  }
+};
+
 class AuthConfigFactory {
 public:
-  typedef std::set<std::unique_ptr<BasicCred>,
-                   DerefLess<std::unique_ptr<BasicCred>>>
-      BasicCredSet;
+  using BasicCredSet =
+      std::set<std::unique_ptr<BasicCred>,
+               DerefLess<std::unique_ptr<BasicCred>>>;
 
 private:
   std::unique_ptr<Netrc> netrc_;
@@ -87,6 +104,11 @@ private:
   std::unique_ptr<AuthResolver> createFtpAuthResolver(const Option* op) const;
 
   BasicCredSet basicCreds_;
+
+  // host:port -> DigestCred
+  std::map<std::string, std::unique_ptr<DigestCred>> digestCreds_;
+
+  static std::string makeDigestKey(const std::string& host, uint16_t port);
 
 public:
   AuthConfigFactory();
@@ -123,6 +145,21 @@ public:
   //
   // Made public for unit test.
   void updateBasicCred(std::unique_ptr<BasicCred> basicCred);
+
+  // Store a Digest authentication challenge for the given host:port.
+  void updateDigestCred(const std::string& host, uint16_t port,
+                        DigestChallenge challenge);
+
+  // Find a stored DigestCred for the given host:port. Returns nullptr
+  // if not found.
+  DigestCred* findDigestCred(const std::string& host, uint16_t port);
+
+  // Try to activate Digest auth: parse WWW-Authenticate headers,
+  // store challenge, and activate credentials. Returns true if
+  // Digest auth was activated.
+  bool activateDigestCred(const std::string& host, uint16_t port,
+                          const std::string& wwwAuthenticate,
+                          const Option* op);
 };
 
 } // namespace aria2

@@ -71,37 +71,35 @@ protected:
 
 public:
   AbstractDiskWriter(const std::string& filename);
-  virtual ~AbstractDiskWriter();
+  ~AbstractDiskWriter() override;
 
-  virtual void openFile(int64_t totalLength = 0) CXX11_OVERRIDE;
+  void openFile(int64_t totalLength = 0) override;
 
-  virtual void closeFile() CXX11_OVERRIDE;
+  void closeFile() override;
 
-  virtual void openExistingFile(int64_t totalLength = 0) CXX11_OVERRIDE;
+  void openExistingFile(int64_t totalLength = 0) override;
 
-  virtual void writeData(const unsigned char* data, size_t len,
-                         int64_t offset) CXX11_OVERRIDE;
+  void writeData(const unsigned char* data, size_t len,
+                 int64_t offset) override;
 
-  virtual ssize_t readData(unsigned char* data, size_t len,
-                           int64_t offset) CXX11_OVERRIDE;
+  ssize_t readData(unsigned char* data, size_t len, int64_t offset) override;
 
-  virtual void truncate(int64_t length) CXX11_OVERRIDE;
+  void truncate(int64_t length) override;
 
   // File must be opened before calling this function.
-  virtual void allocate(int64_t offset, int64_t length,
-                        bool sparse) CXX11_OVERRIDE;
+  void allocate(int64_t offset, int64_t length, bool sparse) override;
 
-  virtual int64_t size() CXX11_OVERRIDE;
+  int64_t size() override;
 
-  virtual void enableReadOnly() CXX11_OVERRIDE;
+  void enableReadOnly() override;
 
-  virtual void disableReadOnly() CXX11_OVERRIDE;
+  void disableReadOnly() override;
 
-  virtual void enableMmap() CXX11_OVERRIDE;
+  void enableMmap() override;
 
-  virtual void dropCache(int64_t len, int64_t offset) CXX11_OVERRIDE;
+  void dropCache(int64_t len, int64_t offset) override;
 
-  virtual void flushOSBuffers() CXX11_OVERRIDE;
+  void flushOSBuffers() override;
 };
 
 } // namespace aria2

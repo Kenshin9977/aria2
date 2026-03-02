@@ -131,8 +131,8 @@ bool DHTInteractionCommand::execute()
                                             remoteAddr, remotePort,
                                             global::wallclock()) == 0) {
           if (req->action == UDPT_ACT_ANNOUNCE) {
-            auto c = static_cast<TrackerWatcherCommand*>(req->user_data);
-            if (c) {
+            if (auto c = static_cast<TrackerWatcherCommand*>(
+                    req->user_data)) {
               c->setStatus(Command::STATUS_ONESHOT_REALTIME);
               e_->setNoWait(true);
             }

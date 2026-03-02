@@ -77,11 +77,12 @@ bool PeerInitiateConnectionCommand::executeInternal()
   A2_LOG_INFO(fmt(MSG_CONNECTING_TO_SERVER, getCuid(),
                   getPeer()->getIPAddress().c_str(), getPeer()->getPort()));
   createSocket();
-  getSocket()->establishConnection(getPeer()->getIPAddress(),
-                                   getPeer()->getPort(), false);
-  getSocket()->applyIpDscp();
+  std::static_pointer_cast<SocketCore>(getSocket())
+      ->establishConnection(getPeer()->getIPAddress(), getPeer()->getPort(),
+                            false);
+  std::static_pointer_cast<SocketCore>(getSocket())->applyIpDscp();
   if (mseHandshakeEnabled_) {
-    auto c = make_unique<InitiatorMSEHandshakeCommand>(
+    auto c = std::make_unique<InitiatorMSEHandshakeCommand>(
         getCuid(), requestGroup_, getPeer(), getDownloadEngine(), btRuntime_,
         getSocket());
     c->setPeerStorage(peerStorage_);
@@ -89,7 +90,7 @@ bool PeerInitiateConnectionCommand::executeInternal()
     getDownloadEngine()->addCommand(std::move(c));
   }
   else {
-    getDownloadEngine()->addCommand(make_unique<PeerInteractionCommand>(
+    getDownloadEngine()->addCommand(std::make_unique<PeerInteractionCommand>(
         getCuid(), requestGroup_, getPeer(), getDownloadEngine(), btRuntime_,
         pieceStorage_, peerStorage_, getSocket(),
         PeerInteractionCommand::INITIATOR_SEND_HANDSHAKE));
@@ -97,7 +98,6 @@ bool PeerInitiateConnectionCommand::executeInternal()
   return true;
 }
 
-// TODO this method removed when PeerBalancerCommand is implemented
 bool PeerInitiateConnectionCommand::prepareForNextPeer(time_t wait)
 {
   if (peerStorage_->isPeerAvailable() && btRuntime_->lessThanEqMinPeers()) {
@@ -105,7 +105,7 @@ bool PeerInitiateConnectionCommand::prepareForNextPeer(time_t wait)
     std::shared_ptr<Peer> peer = peerStorage_->checkoutPeer(ncuid);
     // sanity check
     if (peer) {
-      auto command = make_unique<PeerInitiateConnectionCommand>(
+      auto command = std::make_unique<PeerInitiateConnectionCommand>(
           ncuid, requestGroup_, peer, getDownloadEngine(), btRuntime_);
       command->setPeerStorage(peerStorage_);
       command->setPieceStorage(pieceStorage_);

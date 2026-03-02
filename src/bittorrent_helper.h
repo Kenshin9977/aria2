@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <cstring>
+#include <expected>
 #include <string>
 #include <vector>
 #include <utility>
@@ -108,15 +109,15 @@ void loadFromMemory(const ValueBase* torrent,
                     const std::string& overrideName = "");
 
 // Parses BitTorrent Magnet URI and returns
-// std::unique_ptr<TorrentAttribute> which includes infoHash, name and
-// announceList. If parsing operation failed, an RecoverableException
-// will be thrown.  infoHash and name are string and announceList is a
-// list of list of announce URI.
+// std::expected<std::unique_ptr<TorrentAttribute>, std::string> which
+// includes infoHash, name and announceList on success, or an error
+// message string on failure.
 //
 // magnet:?xt=urn:btih:<info-hash>&dn=<name>&tr=<tracker-url>
 // <info-hash> comes in 2 flavors: 40bytes hexadecimal ascii string,
 // or 32bytes Base32 encoded string.
-std::unique_ptr<TorrentAttribute> parseMagnet(const std::string& magnet);
+std::expected<std::unique_ptr<TorrentAttribute>, std::string>
+parseMagnet(const std::string& magnet);
 
 // Parses BitTorrent Magnet URI and set them in ctx as a
 // bittorrent::BITTORRENT attribute. If parsing operation failed, an
@@ -281,9 +282,9 @@ void extractPeer(const ValueBase* peerData, int family, OutputIterator dest)
     {
     }
 
-    virtual ~PeerListValueBaseVisitor() = default;
+    ~PeerListValueBaseVisitor() override = default;
 
-    virtual void visit(const String& peerData) CXX11_OVERRIDE
+    void visit(const String& peerData) override
     {
       int unit = family_ == AF_INET ? 6 : 18;
       size_t length = peerData.s().size();
@@ -301,19 +302,19 @@ void extractPeer(const ValueBase* peerData, int family, OutputIterator dest)
       }
     }
 
-    virtual void visit(const Integer& v) CXX11_OVERRIDE {}
-    virtual void visit(const Bool& v) CXX11_OVERRIDE {}
-    virtual void visit(const Null& v) CXX11_OVERRIDE {}
+    void visit(const Integer& v) override {}
+    void visit(const Bool& v) override {}
+    void visit(const Null& v) override {}
 
-    virtual void visit(const List& peerData) CXX11_OVERRIDE
+    void visit(const List& peerData) override
     {
       for (auto& elem : peerData) {
         const Dict* peerDict = downcast<Dict>(elem);
         if (!peerDict) {
           continue;
         }
-        static const std::string IP = "ip";
-        static const std::string PORT = "port";
+        static constexpr const char IP[] = "ip";
+        static constexpr const char PORT[] = "port";
         const String* ip = downcast<String>(peerDict->get(IP));
         const Integer* port = downcast<Integer>(peerDict->get(PORT));
         if (!ip || !port || !(0 < port->i() && port->i() < 65536)) {
@@ -324,7 +325,7 @@ void extractPeer(const ValueBase* peerData, int family, OutputIterator dest)
       }
     }
 
-    virtual void visit(const Dict& v) CXX11_OVERRIDE {}
+    void visit(const Dict& v) override {}
   };
   if (peerData) {
     PeerListValueBaseVisitor visitor(dest, family);
@@ -383,8 +384,8 @@ void print(Output& o, const std::shared_ptr<DownloadContext>& dctx)
   }
   if (!torrentAttrs->nodes.empty()) {
     o.write("Nodes:\n");
-    for (auto& p : torrentAttrs->nodes) {
-      o.printf(" %s:%u\n", p.first.c_str(), p.second);
+    for (auto& [host, port] : torrentAttrs->nodes) {
+      o.printf(" %s:%u\n", host.c_str(), port);
     }
   }
   o.printf("Name: %s\n", torrentAttrs->name.c_str());

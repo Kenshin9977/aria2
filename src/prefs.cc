@@ -36,7 +36,7 @@
 
 #include <cassert>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace aria2 {
 
@@ -75,17 +75,18 @@ public:
   }
   PrefPtr k2p(const std::string& k) const
   {
-    auto i = k2p_.find(k);
-    if (i == k2p_.end()) {
+    if (auto i = k2p_.find(k); i == k2p_.end()) {
       return i2p_[0];
     }
-    return (*i).second;
+    else {
+      return (*i).second;
+    }
   }
 
 private:
   size_t count_;
   std::vector<PrefPtr> i2p_;
-  std::map<std::string, PrefPtr> k2p_;
+  std::unordered_map<std::string, PrefPtr> k2p_;
 };
 
 PrefFactory* getPrefFactory()
@@ -136,6 +137,7 @@ const std::string A2_V_RANDOM("random");
 const std::string V_FEEDBACK("feedback");
 const std::string V_ADAPTIVE("adaptive");
 const std::string V_LIBUV("libuv");
+const std::string V_IOURING("io-uring");
 const std::string V_EPOLL("epoll");
 const std::string V_KQUEUE("kqueue");
 const std::string V_PORT("port");
@@ -451,6 +453,9 @@ PrefPtr PREF_FTP_PROXY_USER = makePref("ftp-proxy-user");
 PrefPtr PREF_FTP_PROXY_PASSWD = makePref("ftp-proxy-passwd");
 PrefPtr PREF_ALL_PROXY_USER = makePref("all-proxy-user");
 PrefPtr PREF_ALL_PROXY_PASSWD = makePref("all-proxy-passwd");
+PrefPtr PREF_SOCKS5_PROXY = makePref("socks5-proxy");
+PrefPtr PREF_SOCKS5_PROXY_USER = makePref("socks5-proxy-user");
+PrefPtr PREF_SOCKS5_PROXY_PASSWD = makePref("socks5-proxy-passwd");
 
 /**
  * BitTorrent related preferences

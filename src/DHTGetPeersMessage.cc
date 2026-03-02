@@ -54,10 +54,6 @@
 
 namespace aria2 {
 
-const std::string DHTGetPeersMessage::GET_PEERS("get_peers");
-
-const std::string DHTGetPeersMessage::INFO_HASH("info_hash");
-
 DHTGetPeersMessage::DHTGetPeersMessage(
     const std::shared_ptr<DHTNode>& localNode,
     const std::shared_ptr<DHTNode>& remoteNode, const unsigned char* infoHash,
@@ -98,11 +94,10 @@ void DHTGetPeersMessage::addLocalPeer(std::vector<std::shared_ptr<Peer>>& peers)
   }
 
   auto tcpPort = btRegistry_->getTcpPort();
-  if (std::find_if(std::begin(peers), std::end(peers),
-                   [&externalIP, tcpPort](const std::shared_ptr<Peer>& peer) {
-                     return peer->getIPAddress() == externalIP &&
-                            peer->getPort() == tcpPort;
-                   }) != std::end(peers)) {
+  if (std::ranges::find_if(peers, [&externalIP,
+                                   tcpPort](const std::shared_ptr<Peer>& peer) {
+        return peer->getIPAddress() == externalIP && peer->getPort() == tcpPort;
+      }) != std::end(peers)) {
     return;
   }
 
@@ -124,7 +119,8 @@ void DHTGetPeersMessage::doReceivedAction()
   getMessageDispatcher()->addMessageToQueue(
       getMessageFactory()->createGetPeersReplyMessage(
           getRemoteNode(), std::move(nodes), std::move(peers), token,
-          getTransactionID()));
+          getTransactionID()),
+      nullptr);
 }
 
 std::unique_ptr<Dict> DHTGetPeersMessage::getArgument()
@@ -135,7 +131,7 @@ std::unique_ptr<Dict> DHTGetPeersMessage::getArgument()
   return aDict;
 }
 
-const std::string& DHTGetPeersMessage::getMessageType() const
+const char* DHTGetPeersMessage::getMessageType() const
 {
   return GET_PEERS;
 }

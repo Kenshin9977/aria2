@@ -43,7 +43,7 @@ namespace aria2 {
 class HttpConnection;
 class HttpDownloadCommand;
 class HttpResponse;
-class SocketCore;
+class ISocketCore;
 class StreamFilter;
 class Checksum;
 
@@ -81,7 +81,7 @@ private:
                      const Checksum& checksum);
 
 protected:
-  bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
   bool shouldInflateContentEncoding(HttpResponse* httpResponse);
 
@@ -90,8 +90,8 @@ public:
                       const std::shared_ptr<FileEntry>& fileEntry,
                       RequestGroup* requestGroup,
                       const std::shared_ptr<HttpConnection>& httpConnection,
-                      DownloadEngine* e, const std::shared_ptr<SocketCore>& s);
-  ~HttpResponseCommand();
+                      DownloadEngine* e, const std::shared_ptr<ISocketCore>& s);
+  ~HttpResponseCommand() override;
 };
 
 } // namespace aria2

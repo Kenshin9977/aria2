@@ -52,7 +52,7 @@ private:
 
   bool finished_;
 
-  static const size_t OUTBUF_LENGTH = 16_k;
+  static constexpr size_t OUTBUF_LENGTH = 16_k;
 
   static const std::string NAME;
 

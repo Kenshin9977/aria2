@@ -41,8 +41,8 @@ namespace aria2 {
 
 class HttpServerResponseCommand : public AbstractHttpServerResponseCommand {
 protected:
-  virtual void afterSend(const std::shared_ptr<HttpServer>& httpServer,
-                         DownloadEngine* e) CXX11_OVERRIDE;
+  void afterSend(const std::shared_ptr<HttpServer>& httpServer,
+                 DownloadEngine* e) override;
 
 public:
   HttpServerResponseCommand(cuid_t cuid,
@@ -50,7 +50,7 @@ public:
                             DownloadEngine* e,
                             const std::shared_ptr<SocketCore>& socket);
 
-  virtual ~HttpServerResponseCommand();
+  ~HttpServerResponseCommand() override;
 };
 
 } // namespace aria2

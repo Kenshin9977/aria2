@@ -73,9 +73,9 @@ public:
   ConsoleStatCalc(std::chrono::seconds summaryInterval, bool colorOutput = true,
                   bool humanReadable = true);
 
-  virtual ~ConsoleStatCalc() = default;
+  ~ConsoleStatCalc() override = default;
 
-  virtual void calculateStat(const DownloadEngine* e) CXX11_OVERRIDE;
+  void calculateStat(const DownloadEngine* e) override;
 
   void setReadoutVisibility(bool visibility)
   {

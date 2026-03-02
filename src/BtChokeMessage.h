@@ -43,14 +43,14 @@ class BtChokeMessage : public ZeroBtMessage {
 public:
   BtChokeMessage();
 
-  static const uint8_t ID = 0;
+  static constexpr uint8_t ID = 0;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "choke";
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  static std::unique_ptr<BtChokeMessage> create(const unsigned char* data,
-                                                size_t dataLength);
+  static std::unique_ptr<BtChokeMessage>
+  create(std::span<const unsigned char> data);
 };
 
 } // namespace aria2

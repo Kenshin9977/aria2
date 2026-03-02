@@ -3,6 +3,8 @@ TESTS = aria2c
 check_PROGRAMS = $(TESTS)
 aria2c_SOURCES = AllTest.cc\
 	TestUtil.cc TestUtil.h\
+	TestEngineHelper.h\
+	MockSocketCore.h\
 	SocketCoreTest.cc\
 	array_funTest.cc\
 	Base64Test.cc\
@@ -90,7 +92,19 @@ aria2c_SOURCES = AllTest.cc\
 	WrDiskCacheEntryTest.cc\
 	GroupIdTest.cc\
 	IndexedListTest.cc \
-	SimpleRandomizerTest.cc
+	SimpleRandomizerTest.cc \
+	DownloadEngineTest.cc \
+	DownloadEngineMethodTest.cc \
+	SocketBufferTest.cc \
+	TimeBasedCommandTest.cc \
+	RealtimeCommandTest.cc \
+	HttpCommandIntegrationTest.cc \
+	FtpCommandIntegrationTest.cc \
+	SmallClassCoverageTest.cc \
+	SlowStartControllerTest.cc \
+	Socks5CommandTest.cc \
+	HstsStoreTest.cc \
+	HttpDigestAuthTest.cc
 
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
@@ -107,6 +121,14 @@ aria2c_SOURCES += \
 	GZipDecodingStreamFilterTest.cc\
 	GZipFileTest.cc
 endif # HAVE_ZLIB
+
+if HAVE_LIBBROTLIDEC
+aria2c_SOURCES += BrotliDecodingStreamFilterTest.cc
+endif # HAVE_LIBBROTLIDEC
+
+if HAVE_LIBZSTD
+aria2c_SOURCES += ZstdDecodingStreamFilterTest.cc
+endif # HAVE_LIBZSTD
 
 if HAVE_SQLITE3
 aria2c_SOURCES += Sqlite3CookieParserTest.cc
@@ -216,7 +238,14 @@ aria2c_SOURCES += BtAllowedFastMessageTest.cc\
 	PeerConnectionTest.cc\
 	ValueBaseBencodeParserTest.cc\
 	ExtensionMessageRegistryTest.cc\
-	UDPTrackerClientTest.cc
+	UDPTrackerClientTest.cc\
+	BtOrchestrationTest.cc\
+	DHTCommandTest.cc\
+	BtPeerIntegrationTest.cc\
+	BtValidatorTest.cc\
+	StreamPieceSelectorTest.cc\
+	DHTMessageDispatchTest.cc\
+	DHTTaskTest.cc
 endif # ENABLE_BITTORRENT
 
 if ENABLE_METALINK
@@ -228,6 +257,10 @@ aria2c_SOURCES += MetalinkerTest.cc\
 	MetalinkParserControllerTest.cc\
 	MetalinkProcessorTest.cc
 endif # ENABLE_METALINK
+
+if HAVE_LIBNGHTTP2
+aria2c_SOURCES += Http2SessionTest.cc
+endif # HAVE_LIBNGHTTP2
 
 if ENABLE_ASYNC_DNS
 aria2c_SOURCES += AsyncNameResolverTest.cc
@@ -246,6 +279,8 @@ aria2c_LDADD = \
 	@LIBINTL@ \
 	@EXTRALIBS@ \
 	@ZLIB_LIBS@ \
+	@LIBBROTLIDEC_LIBS@ \
+	@LIBZSTD_LIBS@ \
 	@LIBUV_LIBS@ \
 	@LIBXML2_LIBS@ \
 	@EXPAT_LIBS@ \
@@ -257,8 +292,13 @@ aria2c_LDADD = \
 	@LIBGMP_LIBS@ \
 	@LIBGCRYPT_LIBS@ \
 	@LIBSSH2_LIBS@ \
+	@LIBNGHTTP2_LIBS@ \
+	@LIBNGTCP2_LIBS@ \
+	@LIBNGTCP2_CRYPTO_QUICTLS_LIBS@ \
+	@LIBNGHTTP3_LIBS@ \
 	@LIBCARES_LIBS@ \
 	@WSLAY_LIBS@ \
+	@LIBURING_LIBS@ \
 	@CPPUNIT_LIBS@ \
 	@TCMALLOC_LIBS@ \
 	@JEMALLOC_LIBS@
@@ -274,6 +314,8 @@ AM_CPPFLAGS = \
 	@DEFS@ \
 	@EXTRACPPFLAGS@ \
 	@ZLIB_CFLAGS@ \
+	@LIBBROTLIDEC_CFLAGS@ \
+	@LIBZSTD_CFLAGS@ \
 	@LIBUV_CFLAGS@ \
 	@LIBXML2_CFLAGS@ \
 	@EXPAT_CFLAGS@ \
@@ -284,8 +326,13 @@ AM_CPPFLAGS = \
 	@LIBGMP_CFLAGS@ \
 	@LIBGCRYPT_CFLAGS@ \
 	@LIBSSH2_CFLAGS@ \
+	@LIBNGHTTP2_CFLAGS@ \
+	@LIBNGTCP2_CFLAGS@ \
+	@LIBNGTCP2_CRYPTO_QUICTLS_CFLAGS@ \
+	@LIBNGHTTP3_CFLAGS@ \
 	@LIBCARES_CFLAGS@ \
 	@WSLAY_CFLAGS@ \
+	@LIBURING_CFLAGS@ \
 	@TCMALLOC_CFLAGS@ \
 	@JEMALLOC_CFLAGS@
 
@@ -308,6 +355,8 @@ EXTRA_DIST = 4096chunk.txt\
 	filelist1.txt\
 	filelist2.txt\
 	gzip_decode_test.gz\
+	brotli_decode_test.br\
+	zstd_decode_test.zst\
 	load-nonBt.aria2\
 	load-nonBt-v0001.aria2\
 	load.aria2\
@@ -331,6 +380,10 @@ EXTRA_DIST = 4096chunk.txt\
 	metalink4-dosdirtraversal.xml\
 	base_uri.xml\
 	local-metaurl.meta4
+
+check-e2e:
+	@echo "Running end-to-end tests..."
+	@$(SHELL) $(srcdir)/e2e/run_all.sh
 
 clean-local:
 	-rm -rf ${a2_test_outdir}

@@ -44,23 +44,21 @@ private:
   bool redownload_;
 
 public:
-  ChecksumCheckIntegrityEntry(
-      RequestGroup* requestGroup,
-      std::unique_ptr<Command> nextCommand = std::unique_ptr<Command>());
+  ChecksumCheckIntegrityEntry(RequestGroup* requestGroup);
+  ChecksumCheckIntegrityEntry(RequestGroup* requestGroup,
+                              std::unique_ptr<Command> nextCommand);
 
-  virtual ~ChecksumCheckIntegrityEntry();
+  ~ChecksumCheckIntegrityEntry() override;
 
-  virtual bool isValidationReady() CXX11_OVERRIDE;
+  bool isValidationReady() override;
 
-  virtual void initValidator() CXX11_OVERRIDE;
+  void initValidator() override;
 
-  virtual void
-  onDownloadFinished(std::vector<std::unique_ptr<Command>>& commands,
-                     DownloadEngine* e) CXX11_OVERRIDE;
+  void onDownloadFinished(std::vector<std::unique_ptr<Command>>& commands,
+                          DownloadEngine* e) override;
 
-  virtual void
-  onDownloadIncomplete(std::vector<std::unique_ptr<Command>>& commands,
-                       DownloadEngine* e) CXX11_OVERRIDE;
+  void onDownloadIncomplete(std::vector<std::unique_ptr<Command>>& commands,
+                            DownloadEngine* e) override;
 
   void setRedownload(bool redownload) { redownload_ = redownload; }
 };

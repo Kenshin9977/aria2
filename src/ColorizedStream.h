@@ -77,25 +77,25 @@ extern const Color clear;
 
 } // namespace colors
 
-typedef std::char_traits<char> traits_t;
+using traits_t = std::char_traits<char>;
 class ColorizedStreamBuf : public std::basic_streambuf<char, traits_t> {
   enum part_t { eColor, eString };
-  typedef std::pair<part_t, std::string> elem_t;
-  typedef std::deque<elem_t> elems_t;
+  using elem_t = std::pair<part_t, std::string>;
+  using elems_t = std::deque<elem_t>;
   elems_t elems;
 
 public:
-  ColorizedStreamBuf() { elems.push_back(std::make_pair(eString, "")); }
+  ColorizedStreamBuf() { elems.emplace_back(eString, ""); }
 
   void setColor(const colors::Color& color)
   {
-    elems.push_back(std::make_pair(eColor, color.str()));
-    elems.push_back(std::make_pair(eString, ""));
+    elems.emplace_back(eColor, color.str());
+    elems.emplace_back(eString, "");
   }
 
-  traits_t::int_type overflow(traits_t::int_type c) CXX11_OVERRIDE
+  traits_t::int_type overflow(traits_t::int_type c) override
   {
-    elems.back().second.push_back((char)c);
+    elems.back().second.push_back(static_cast<char>(c));
     return std::char_traits<char>::not_eof(c);
   }
 

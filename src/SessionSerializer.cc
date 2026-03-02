@@ -76,13 +76,13 @@ bool SessionSerializer::save(const std::string& filename) const
   {
     std::unique_ptr<IOFile> fp;
 #if HAVE_ZLIB
-    if (util::endsWith(filename, ".gz")) {
-      fp = make_unique<GZipFile>(tempFilename.c_str(), IOFile::WRITE);
+    if (filename.ends_with(".gz")) {
+      fp = std::make_unique<GZipFile>(tempFilename.c_str(), IOFile::WRITE);
     }
     else
 #endif
     {
-      fp = make_unique<BufferedFile>(tempFilename.c_str(), IOFile::WRITE);
+      fp = std::make_unique<BufferedFile>(tempFilename.c_str(), IOFile::WRITE);
     }
     if (!*fp) {
       return false;
@@ -141,7 +141,7 @@ bool writeOption(IOFile& fp, const std::shared_ptr<Option>& op)
 
 namespace {
 template <typename T> class Unique {
-  typedef T type;
+  using type = T;
   struct PointerCmp {
     inline bool operator()(const type* x, const type* y) const
     {

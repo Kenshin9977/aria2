@@ -40,6 +40,7 @@
 #include <utility>
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <iterator>
 #include <vector>
@@ -151,9 +152,9 @@ NumberOptionHandler::~NumberOptionHandler() = default;
 void NumberOptionHandler::parseArg(Option& option,
                                    const std::string& optarg) const
 {
-  int64_t number;
-  if (util::parseLLIntNoThrow(number, optarg)) {
-    parseArg(option, number);
+  auto number = util::parseLLInt(optarg);
+  if (number) {
+    parseArg(option, *number);
   }
   else {
     throw DL_ABORT_EX(fmt("Bad number %s", optarg.c_str()));
@@ -380,15 +381,16 @@ ChecksumOptionHandler::~ChecksumOptionHandler() = default;
 void ChecksumOptionHandler::parseArg(Option& option,
                                      const std::string& optarg) const
 {
-  auto p = util::divide(std::begin(optarg), std::end(optarg), '=');
-  std::string hashType(p.first.first, p.first.second);
+  auto [hashPart, digestPart] =
+      util::divide(std::begin(optarg), std::end(optarg), '=');
+  std::string hashType(hashPart.first, hashPart.second);
   if (!acceptableTypes_.empty() &&
-      std::find(std::begin(acceptableTypes_), std::end(acceptableTypes_),
-                hashType) == std::end(acceptableTypes_)) {
+      std::ranges::find(acceptableTypes_, hashType) ==
+          std::end(acceptableTypes_)) {
     throw DL_ABORT_EX(
         fmt("Checksum type %s is not acceptable", hashType.c_str()));
   }
-  std::string hexDigest(p.second.first, p.second.second);
+  std::string hexDigest(digestPart.first, digestPart.second);
   util::lowercase(hashType);
   util::lowercase(hexDigest);
   if (!MessageDigest::isValidHash(hashType, hexDigest)) {
@@ -416,8 +418,7 @@ ParameterOptionHandler::~ParameterOptionHandler() = default;
 void ParameterOptionHandler::parseArg(Option& option,
                                       const std::string& optarg) const
 {
-  auto itr =
-      std::find(validParamValues_.begin(), validParamValues_.end(), optarg);
+  auto itr = std::ranges::find(validParamValues_, optarg);
   if (itr == validParamValues_.end()) {
     std::string msg = pref_->k;
     msg += " ";
@@ -442,8 +443,8 @@ void ParameterOptionHandler::parseArg(Option& option,
 std::string ParameterOptionHandler::createPossibleValuesString() const
 {
   std::stringstream s;
-  std::copy(validParamValues_.begin(), validParamValues_.end(),
-            std::ostream_iterator<std::string>(s, ", "));
+  std::ranges::copy(validParamValues_,
+                     std::ostream_iterator<std::string>(s, ", "));
   return util::strip(s.str(), ", ");
 }
 
@@ -506,21 +507,21 @@ void HttpProxyOptionHandler::parseArg(Option& option,
   }
   else {
     std::string uri;
-    if (util::startsWith(optarg, "http://") ||
-        util::startsWith(optarg, "https://") ||
-        util::startsWith(optarg, "ftp://")) {
+    if (optarg.starts_with("http://") ||
+        optarg.starts_with("https://") ||
+        optarg.starts_with("ftp://")) {
       uri = optarg;
     }
     else {
       uri = "http://";
       uri += optarg;
     }
-    uri::UriStruct us;
-    if (!uri::parse(us, uri)) {
+    auto us = uri::parse(uri);
+    if (!us) {
       throw DL_ABORT_EX(_("unrecognized proxy format"));
     }
-    us.protocol = "http";
-    option.put(pref_, uri::construct(us));
+    us->protocol = Protocol::HTTP;
+    option.put(pref_, uri::construct(*us));
   }
 }
 
@@ -620,9 +621,10 @@ void OptimizeConcurrentDownloadsOptionHandler::parseArg(
     option.put(pref_, A2_V_FALSE);
   }
   else {
-    auto p = util::divide(std::begin(optarg), std::end(optarg), ':');
+    auto [aPart, bPart] =
+        util::divide(std::begin(optarg), std::end(optarg), ':');
 
-    std::string coeff_b(p.second.first, p.second.second);
+    std::string coeff_b(bPart.first, bPart.second);
     if (coeff_b.empty()) {
       std::string msg = pref_->k;
       msg += " ";
@@ -631,7 +633,7 @@ void OptimizeConcurrentDownloadsOptionHandler::parseArg(
       throw DL_ABORT_EX(msg);
     }
 
-    std::string coeff_a(p.first.first, p.first.second);
+    std::string coeff_a(aPart.first, aPart.second);
 
     PrefPtr pref = PREF_OPTIMIZE_CONCURRENT_DOWNLOADS_COEFFA;
     std::string* sptr = &coeff_a;
@@ -661,9 +663,10 @@ OptimizeConcurrentDownloadsOptionHandler::createPossibleValuesString() const
 }
 
 DeprecatedOptionHandler::DeprecatedOptionHandler(
-    OptionHandler* depOptHandler, const OptionHandler* repOptHandler,
-    bool stillWork, std::string additionalMessage)
-    : depOptHandler_(depOptHandler),
+    std::unique_ptr<OptionHandler> depOptHandler,
+    const OptionHandler* repOptHandler, bool stillWork,
+    std::string additionalMessage)
+    : depOptHandler_(std::move(depOptHandler)),
       repOptHandler_(repOptHandler),
       stillWork_(stillWork),
       additionalMessage_(std::move(additionalMessage))
@@ -671,11 +674,7 @@ DeprecatedOptionHandler::DeprecatedOptionHandler(
   depOptHandler_->addTag(TAG_DEPRECATED);
 }
 
-DeprecatedOptionHandler::~DeprecatedOptionHandler()
-{
-  delete depOptHandler_;
-  // We don't delete repOptHandler_.
-}
+DeprecatedOptionHandler::~DeprecatedOptionHandler() = default;
 
 void DeprecatedOptionHandler::parse(Option& option,
                                     const std::string& arg) const

@@ -50,7 +50,7 @@ FtpTunnelResponseCommand::FtpTunnelResponseCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& s)
+    const std::shared_ptr<ISocketCore>& s)
     : AbstractProxyResponseCommand(cuid, req, fileEntry, requestGroup,
                                    httpConnection, e, s)
 {
@@ -61,14 +61,14 @@ FtpTunnelResponseCommand::~FtpTunnelResponseCommand() = default;
 std::unique_ptr<Command> FtpTunnelResponseCommand::getNextCommand()
 {
 #ifdef HAVE_LIBSSH2
-  if (getRequest()->getProtocol() == "sftp") {
-    return make_unique<SftpNegotiationCommand>(
+  if (getRequest()->getProtocol() == Protocol::SFTP) {
+    return std::make_unique<SftpNegotiationCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         getDownloadEngine(), getSocket());
   }
 #endif // HAVE_LIBSSH2
 
-  return make_unique<FtpNegotiationCommand>(getCuid(), getRequest(),
+  return std::make_unique<FtpNegotiationCommand>(getCuid(), getRequest(),
                                             getFileEntry(), getRequestGroup(),
                                             getDownloadEngine(), getSocket());
 }

@@ -37,6 +37,7 @@
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
+#include <numeric>
 
 #include "util.h"
 #include "LogFactory.h"
@@ -82,32 +83,32 @@ void DomainNode::findCookie(std::vector<const Cookie*>& out,
 
 bool DomainNode::addCookie(std::unique_ptr<Cookie> cookie, time_t now)
 {
-  using namespace std::placeholders;
   setLastAccessTime(now);
   if (!cookies_) {
     if (cookie->isExpired(now)) {
       return false;
     }
     else {
-      cookies_ = make_unique<std::deque<std::unique_ptr<Cookie>>>();
+      cookies_ = std::make_unique<std::deque<std::unique_ptr<Cookie>>>();
       cookies_->push_back(std::move(cookie));
       return true;
     }
   }
 
-  auto i = std::find_if(
-      std::begin(*cookies_), std::end(*cookies_),
-      [&](const std::unique_ptr<Cookie>& c) { return *c == *cookie; });
+  auto i =
+      std::ranges::find_if(*cookies_, [&](const std::unique_ptr<Cookie>& c) {
+        return *c == *cookie;
+      });
   if (i == std::end(*cookies_)) {
     if (cookie->isExpired(now)) {
       return false;
     }
     else {
       if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
-        cookies_->erase(std::remove_if(std::begin(*cookies_),
-                                       std::end(*cookies_),
-                                       std::bind(&Cookie::isExpired, _1, now)),
-                        std::end(*cookies_));
+        std::erase_if(*cookies_,
+                       [now](const std::unique_ptr<Cookie>& c) {
+                         return c->isExpired(now);
+                       });
         if (cookies_->size() >= CookieStorage::MAX_COOKIE_PER_DOMAIN) {
           auto m = std::min_element(std::begin(*cookies_), std::end(*cookies_),
                                     [](const std::unique_ptr<Cookie>& lhs,
@@ -197,12 +198,11 @@ void DomainNode::removeNode(DomainNode* node) { next_.erase(node->getLabel()); }
 
 DomainNode* DomainNode::findNext(const std::string& label) const
 {
-  auto i = next_.find(label);
-  if (i == std::end(next_)) {
+  if (auto i = next_.find(label); i == std::end(next_)) {
     return nullptr;
   }
   else {
-    return (*i).second.get();
+    return i->second.get();
   }
 }
 
@@ -219,15 +219,15 @@ bool DomainNode::getInLru() const { return inLru_; }
 
 void DomainNode::setInLru(bool f) { inLru_ = f; }
 
-CookieStorage::CookieStorage() : rootNode_{make_unique<DomainNode>("", nullptr)}
+CookieStorage::CookieStorage() : rootNode_{std::make_unique<DomainNode>("", nullptr)}
 {
 }
 
 namespace {
 // See CookieStorageTest::testDomainIsFull() in CookieStorageTest.cc
-const size_t DOMAIN_EVICTION_TRIGGER = 2000;
+constexpr size_t DOMAIN_EVICTION_TRIGGER = 2000;
 
-const double DOMAIN_EVICTION_RATE = 0.1;
+constexpr double DOMAIN_EVICTION_RATE = 0.1;
 } // namespace
 
 namespace {
@@ -250,7 +250,7 @@ size_t CookieStorage::getLruTrackerSize() const { return lruTracker_.size(); }
 void CookieStorage::evictNode(size_t delnum)
 {
   for (; delnum > 0 && !lruTracker_.empty(); --delnum) {
-    auto node = (*lruTracker_.begin()).second;
+    auto [accessTime, node] = *lruTracker_.begin();
     lruTracker_.erase(lruTracker_.begin());
     node->setInLru(false);
     node->clearCookie();
@@ -280,12 +280,11 @@ bool CookieStorage::store(std::unique_ptr<Cookie> cookie, time_t now)
   auto labels = splitDomainLabel(cookie->getDomain());
   auto node = rootNode_.get();
   for (auto i = labels.rbegin(), eoi = labels.rend(); i != eoi; ++i) {
-    auto nextNode = node->findNext(*i);
-    if (nextNode) {
+    if (auto nextNode = node->findNext(*i)) {
       node = nextNode;
     }
     else {
-      node = node->addNext(*i, make_unique<DomainNode>(*i, node));
+      node = node->addNext(*i, std::make_unique<DomainNode>(*i, node));
     }
   }
   bool ok = node->addCookie(std::move(cookie), now);
@@ -415,19 +414,18 @@ CookieStorage::criteriaFind(const std::string& requestHost,
     node = nextNode;
   }
   auto divs = std::vector<CookiePathDivider>{};
-  std::transform(std::begin(res), std::end(res), std::back_inserter(divs),
-                 CookiePathDividerConverter{});
-  std::sort(std::begin(divs), std::end(divs), OrderByPathDepthDesc{});
-  std::transform(std::begin(divs), std::end(divs), std::begin(res),
-                 CookiePathDividerConverter{});
+  std::ranges::transform(res, std::back_inserter(divs),
+                         CookiePathDividerConverter{});
+  std::ranges::sort(divs, OrderByPathDepthDesc{});
+  std::ranges::transform(divs, std::begin(res), CookiePathDividerConverter{});
   return res;
 }
 
 size_t CookieStorage::size() const
 {
   size_t n = 0;
-  for (auto& p : lruTracker_) {
-    n += p.second->countCookie();
+  for (auto& [domain, node] : lruTracker_) {
+    n += node->countCookie();
   }
   return n;
 }
@@ -490,8 +488,8 @@ bool CookieStorage::saveNsFormat(const std::string& filename)
       A2_LOG_ERROR(fmt("Cannot create cookie file %s", filename.c_str()));
       return false;
     }
-    for (auto& p : lruTracker_) {
-      if (!p.second->writeCookie(fp)) {
+    for (auto& [accessTime, node] : lruTracker_) {
+      if (!node->writeCookie(fp)) {
         A2_LOG_ERROR(fmt("Failed to save cookies to %s", filename.c_str()));
         return false;
       }

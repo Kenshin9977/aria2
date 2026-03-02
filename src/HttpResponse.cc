@@ -34,6 +34,8 @@
 /* copyright --> */
 
 #include "HttpResponse.h"
+#include <algorithm>
+#include <ranges>
 #include "Request.h"
 #include "Segment.h"
 #include "HttpRequest.h"
@@ -63,6 +65,12 @@
 #ifdef HAVE_ZLIB
 #  include "GZipDecodingStreamFilter.h"
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+#  include "BrotliDecodingStreamFilter.h"
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+#  include "ZstdDecodingStreamFilter.h"
+#endif // HAVE_LIBZSTD
 
 namespace aria2 {
 
@@ -114,9 +122,9 @@ void HttpResponse::validateResponse() const
 
 std::string HttpResponse::determineFilename(bool contentDispositionUTF8) const
 {
+  auto cd = httpHeader_->find(HttpHeader::CONTENT_DISPOSITION);
   std::string contentDisposition = util::getContentDispositionFilename(
-      httpHeader_->find(HttpHeader::CONTENT_DISPOSITION),
-      contentDispositionUTF8);
+      cd ? std::string(*cd) : "", contentDispositionUTF8);
   if (contentDisposition.empty()) {
     auto file = httpRequest_->getFile();
     file = util::percentDecode(file.begin(), file.end());
@@ -134,10 +142,10 @@ std::string HttpResponse::determineFilename(bool contentDispositionUTF8) const
 void HttpResponse::retrieveCookie()
 {
   Time now;
-  auto r = httpHeader_->equalRange(HttpHeader::SET_COOKIE);
-  for (; r.first != r.second; ++r.first) {
+  auto [it, endIt] = httpHeader_->equalRange(HttpHeader::SET_COOKIE);
+  for (; it != endIt; ++it) {
     httpRequest_->getCookieStorage()->parseAndStore(
-        (*r.first).second, httpRequest_->getHost(), httpRequest_->getDir(),
+        (*it).second, httpRequest_->getHost(), httpRequest_->getDir(),
         now.getTimeFromEpoch());
   }
 }
@@ -159,7 +167,9 @@ bool HttpResponse::isRedirect() const
 void HttpResponse::processRedirect()
 {
   const auto& req = httpRequest_->getRequest();
-  if (!req->redirectUri(util::percentEncodeMini(getRedirectURI()))) {
+  auto redirectURI = getRedirectURI();
+  if (!req->redirectUri(
+          util::percentEncodeMini(std::string(redirectURI.value_or(""))))) {
     throw DL_RETRY_EX(fmt(
         "CUID#%" PRId64 " - Redirect to %s failed. It may not be a valid URI.",
         cuid_, req->getCurrentUri().c_str()));
@@ -169,7 +179,7 @@ void HttpResponse::processRedirect()
                     httpRequest_->getRequest()->getCurrentUri().c_str()));
 }
 
-const std::string& HttpResponse::getRedirectURI() const
+std::optional<std::string_view> HttpResponse::getRedirectURI() const
 {
   return httpHeader_->find(HttpHeader::LOCATION);
 }
@@ -179,20 +189,37 @@ bool HttpResponse::isTransferEncodingSpecified() const
   return httpHeader_->defined(HttpHeader::TRANSFER_ENCODING);
 }
 
-const std::string& HttpResponse::getTransferEncoding() const
+std::optional<std::string_view> HttpResponse::getTransferEncoding() const
 {
-  // TODO See TODO in getTransferEncodingStreamFilter()
   return httpHeader_->find(HttpHeader::TRANSFER_ENCODING);
 }
+
+namespace {
+// Returns true if |token| appears as a comma-separated token in |field|.
+// Comparison is case-insensitive per RFC 7230 section 3.3.1.
+bool hasToken(std::string_view field, std::string_view token)
+{
+  std::vector<std::pair<std::string_view::const_iterator,
+                        std::string_view::const_iterator>>
+      tokens;
+  util::splitIter(field.begin(), field.end(), std::back_inserter(tokens),
+                  ',', true);
+  return std::ranges::any_of(tokens, [&token](const auto& t) {
+    return util::strieq(t.first, t.second, token.begin(), token.end());
+  });
+}
+} // namespace
 
 std::unique_ptr<StreamFilter>
 HttpResponse::getTransferEncodingStreamFilter() const
 {
-  // TODO Transfer-Encoding header field can contains multiple tokens. We should
-  // parse the field and retrieve each token.
+  // RFC 7230 section 3.3.1: Transfer-Encoding may contain multiple
+  // comma-separated tokens (e.g. "gzip, chunked"). We check whether
+  // "chunked" appears as a token.
   if (isTransferEncodingSpecified()) {
-    if (util::strieq(getTransferEncoding(), "chunked")) {
-      return make_unique<ChunkedDecodingStreamFilter>();
+    auto te = getTransferEncoding();
+    if (te && hasToken(*te, "chunked")) {
+      return std::make_unique<ChunkedDecodingStreamFilter>();
     }
   }
   return nullptr;
@@ -203,7 +230,7 @@ bool HttpResponse::isContentEncodingSpecified() const
   return httpHeader_->defined(HttpHeader::CONTENT_ENCODING);
 }
 
-const std::string& HttpResponse::getContentEncoding() const
+std::optional<std::string_view> HttpResponse::getContentEncoding() const
 {
   return httpHeader_->find(HttpHeader::CONTENT_ENCODING);
 }
@@ -211,12 +238,25 @@ const std::string& HttpResponse::getContentEncoding() const
 std::unique_ptr<StreamFilter>
 HttpResponse::getContentEncodingStreamFilter() const
 {
+  auto ce = getContentEncoding();
+  if (!ce) {
+    return nullptr;
+  }
 #ifdef HAVE_ZLIB
-  if (util::strieq(getContentEncoding(), "gzip") ||
-      util::strieq(getContentEncoding(), "deflate")) {
-    return make_unique<GZipDecodingStreamFilter>();
+  if (util::strieq(*ce, "gzip") || util::strieq(*ce, "deflate")) {
+    return std::make_unique<GZipDecodingStreamFilter>();
   }
 #endif // HAVE_ZLIB
+#ifdef HAVE_LIBBROTLIDEC
+  if (util::strieq(*ce, "br")) {
+    return std::make_unique<BrotliDecodingStreamFilter>();
+  }
+#endif // HAVE_LIBBROTLIDEC
+#ifdef HAVE_LIBZSTD
+  if (util::strieq(*ce, "zstd")) {
+    return std::make_unique<ZstdDecodingStreamFilter>();
+  }
+#endif // HAVE_LIBZSTD
 
   return nullptr;
 }
@@ -245,9 +285,12 @@ std::string HttpResponse::getContentType() const
     return A2STR::NIL;
   }
 
-  const auto& ctype = httpHeader_->find(HttpHeader::CONTENT_TYPE);
-  auto i = std::find(ctype.begin(), ctype.end(), ';');
-  Scip p = util::stripIter(ctype.begin(), i);
+  auto ctype = httpHeader_->find(HttpHeader::CONTENT_TYPE);
+  if (!ctype) {
+    return A2STR::NIL;
+  }
+  auto i = std::ranges::find(*ctype, ';');
+  auto p = util::stripIter(ctype->begin(), i);
   return std::string(p.first, p.second);
 }
 
@@ -270,7 +313,8 @@ int HttpResponse::getStatusCode() const { return httpHeader_->getStatusCode(); }
 
 Time HttpResponse::getLastModifiedTime() const
 {
-  return Time::parseHTTPDate(httpHeader_->find(HttpHeader::LAST_MODIFIED));
+  auto lm = httpHeader_->find(HttpHeader::LAST_MODIFIED);
+  return Time::parseHTTPDate(lm ? std::string(*lm) : "");
 }
 
 bool HttpResponse::supportsPersistentConnection() const
@@ -282,7 +326,7 @@ namespace {
 
 bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
 {
-  const auto first = std::find(s.begin(), s.end(), '<');
+  const auto first = std::ranges::find(s, '<');
   if (first == s.end()) {
     return false;
   }
@@ -292,12 +336,12 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
     return false;
   }
 
-  auto p = util::stripIter(first + 1, last);
-  if (p.first == p.second) {
+  auto [sbegin, send] = util::stripIter(first + 1, last);
+  if (sbegin == send) {
     return false;
   }
 
-  result.uri.assign(p.first, p.second);
+  result.uri.assign(sbegin, send);
   last = std::find(last, s.end(), ';');
   if (last != s.end()) {
     ++last;
@@ -305,10 +349,11 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
   bool ok = false;
   while (1) {
     std::string name, value;
-    auto r = util::nextParam(name, value, last, s.end(), ';');
-    last = r.first;
+    auto [nextItr, found] =
+        util::nextParam(name, value, last, s.end(), ';');
+    last = nextItr;
 
-    if (!r.second) {
+    if (!found) {
       break;
     }
 
@@ -330,11 +375,9 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
     }
 
     if (name == "pri") {
-      int32_t priValue;
-      if (util::parseIntNoThrow(priValue, value)) {
-        if (1 <= priValue && priValue <= 999999) {
-          result.pri = priValue;
-        }
+      auto priValue = util::parseInt(value);
+      if (priValue && 1 <= *priValue && *priValue <= 999999) {
+        result.pri = *priValue;
       }
       continue;
     }
@@ -356,10 +399,11 @@ void HttpResponse::getMetalinKHttpEntries(
     std::vector<MetalinkHttpEntry>& result,
     const std::shared_ptr<Option>& option) const
 {
-  auto p = httpHeader_->equalRange(HttpHeader::LINK);
-  for (; p.first != p.second; ++p.first) {
+  auto [linkIt, linkEnd] =
+      httpHeader_->equalRange(HttpHeader::LINK);
+  for (; linkIt != linkEnd; ++linkIt) {
     MetalinkHttpEntry e;
-    if (parseMetalinkHttpLink(e, (*p.first).second)) {
+    if (parseMetalinkHttpLink(e, (*linkIt).second)) {
       result.push_back(e);
     }
   }
@@ -374,28 +418,30 @@ void HttpResponse::getMetalinKHttpEntries(
       }
     }
     for (auto& r : result) {
-      if (std::find(locs.begin(), locs.end(), r.geo) != locs.end()) {
+      if (std::ranges::find(locs, r.geo) != locs.end()) {
         r.pri -= 999999;
       }
     }
   }
 
-  std::sort(result.begin(), result.end());
+  std::ranges::sort(result, std::less<>{});
 }
 
 // Digest header field is defined by
 // http://tools.ietf.org/html/rfc3230.
 void HttpResponse::getDigest(std::vector<Checksum>& result) const
 {
-  auto p = httpHeader_->equalRange(HttpHeader::DIGEST);
-  for (; p.first != p.second; ++p.first) {
-    const std::string& s = (*p.first).second;
+  auto [digestIt, digestEnd] =
+      httpHeader_->equalRange(HttpHeader::DIGEST);
+  for (; digestIt != digestEnd; ++digestIt) {
+    const std::string& s = (*digestIt).second;
     std::string::const_iterator itr = s.begin();
     while (1) {
       std::string hashType, digest;
-      auto r = util::nextParam(hashType, digest, itr, s.end(), ',');
-      itr = r.first;
-      if (!r.second) {
+      auto [nextItr, found] =
+          util::nextParam(hashType, digest, itr, s.end(), ',');
+      itr = nextItr;
+      if (!found) {
         break;
       }
 
@@ -406,11 +452,11 @@ void HttpResponse::getDigest(std::vector<Checksum>& result) const
         continue;
       }
 
-      result.push_back(Checksum(hashType, digest));
+      result.emplace_back(hashType, digest);
     }
   }
 
-  std::sort(result.begin(), result.end(), HashTypeStronger());
+  std::ranges::sort(result, HashTypeStronger());
   std::vector<Checksum> temp;
   for (auto i = result.begin(), eoi = result.end(); i != eoi;) {
     bool ok = true;

@@ -34,8 +34,10 @@
 /* copyright --> */
 #include "Piece.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <ranges>
 
 #include "util.h"
 #include "BitfieldMan.h"
@@ -54,7 +56,7 @@ namespace aria2 {
 Piece::Piece() : index_(0), length_(0), nextBegin_(0), usedBySegment_(false) {}
 
 Piece::Piece(size_t index, int64_t length, int32_t blockLength)
-    : bitfield_(make_unique<BitfieldMan>(blockLength, length)),
+    : bitfield_(std::make_unique<BitfieldMan>(blockLength, length)),
       index_(index),
       length_(length),
       nextBegin_(0),
@@ -127,14 +129,14 @@ bool Piece::hasBlock(size_t blockIndex) const
   return bitfield_->isBitSet(blockIndex);
 }
 
-bool Piece::getMissingUnusedBlockIndex(size_t& index) const
+std::optional<size_t> Piece::getMissingUnusedBlockIndex() const
 {
-  if (bitfield_->getFirstMissingUnusedIndex(index)) {
-    bitfield_->setUseBit(index);
-    return true;
+  if (auto index = bitfield_->getFirstMissingUnusedIndex()) {
+    bitfield_->setUseBit(*index);
+    return index;
   }
   else {
-    return false;
+    return std::nullopt;
   }
 }
 
@@ -152,9 +154,9 @@ size_t Piece::getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
   return num;
 }
 
-bool Piece::getFirstMissingBlockIndexWithoutLock(size_t& index) const
+std::optional<size_t> Piece::getFirstMissingBlockIndexWithoutLock() const
 {
-  return bitfield_->getFirstMissingIndex(index);
+  return bitfield_->getFirstMissingIndex();
 }
 
 bool Piece::getAllMissingBlockIndexes(unsigned char* misbitfield,
@@ -172,19 +174,16 @@ std::string Piece::toString() const
 void Piece::reconfigure(int64_t length)
 {
   length_ = length;
-  // TODO currently, this function is only called from
-  // GrowSegment::updateWrittenLength().  If we use default block
-  // length (16K), and length_ gets large (e.g., 4GB), creating
-  // BitfieldMan for each call is very expensive.  Therefore, we use
-  // maximum block length for now to reduce the overhead.  Ideally, we
-  // check the code thoroughly and remove bitfield_ if we can.
+  // Called from GrowSegment::updateWrittenLength().  Use maximum
+  // block length to avoid expensive BitfieldMan reallocation when
+  // length_ grows large (e.g. 4 GB with 16 KB blocks).
   bitfield_ =
-      make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
+      std::make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
 }
 
-void Piece::setBitfield(const unsigned char* bitfield, size_t len)
+void Piece::setBitfield(std::span<const unsigned char> bitfield)
 {
-  bitfield_->setBitfield(bitfield, len);
+  bitfield_->setBitfield(bitfield);
 }
 
 int64_t Piece::getCompletedLength() { return bitfield_->getCompletedLength(); }
@@ -234,7 +233,7 @@ void updateHashWithRead(MessageDigest* mdctx,
   ldiv_t res = ldiv(len, buf.size());
   for (int j = 0; j < res.quot; ++j) {
     ssize_t nread = adaptor->readData(buf.data(), buf.size(), offset);
-    if ((size_t)nread != buf.size()) {
+    if (static_cast<size_t>(nread) != buf.size()) {
       throw DL_ABORT_EX(fmt(EX_FILE_READ, "n/a", "data is too short"));
     }
     mdctx->update(buf.data(), nread);
@@ -282,19 +281,19 @@ void Piece::destroyHashContext()
 
 bool Piece::usedBy(cuid_t cuid) const
 {
-  return std::find(users_.begin(), users_.end(), cuid) != users_.end();
+  return std::ranges::find(users_, cuid) != users_.end();
 }
 
 void Piece::addUser(cuid_t cuid)
 {
-  if (std::find(users_.begin(), users_.end(), cuid) == users_.end()) {
+  if (std::ranges::find(users_, cuid) == users_.end()) {
     users_.push_back(cuid);
   }
 }
 
 void Piece::removeUser(cuid_t cuid)
 {
-  users_.erase(std::remove(users_.begin(), users_.end(), cuid), users_.end());
+  std::erase(users_, cuid);
 }
 
 void Piece::initWrCache(WrDiskCache* diskCache,
@@ -304,8 +303,8 @@ void Piece::initWrCache(WrDiskCache* diskCache,
     return;
   }
   assert(!wrCache_);
-  wrCache_ = make_unique<WrDiskCacheEntry>(diskAdaptor);
-  bool rv = diskCache->add(wrCache_.get());
+  wrCache_ = std::make_unique<WrDiskCacheEntry>(diskAdaptor);
+  [[maybe_unused]] bool rv = diskCache->add(wrCache_.get());
   assert(rv);
 }
 
@@ -340,15 +339,16 @@ void Piece::updateWrCache(WrDiskCache* diskCache, unsigned char* data,
   }
   assert(wrCache_);
   A2_LOG_DEBUG(fmt("updateWrCache entry=%p", wrCache_.get()));
-  auto cell = new WrDiskCacheEntry::DataCell();
+  auto cell = std::make_unique<WrDiskCacheEntry::DataCell>();
   cell->goff = goff;
   cell->data = data;
   cell->offset = offset;
   cell->len = len;
   cell->capacity = capacity;
-  bool rv;
-  rv = wrCache_->cacheData(cell);
+  [[maybe_unused]] bool rv;
+  rv = wrCache_->cacheData(cell.get());
   assert(rv);
+  cell.release();
   rv = diskCache->update(wrCache_.get(), len);
   assert(rv);
 }
@@ -361,7 +361,7 @@ size_t Piece::appendWrCache(WrDiskCache* diskCache, int64_t goff,
   }
   assert(wrCache_);
   size_t delta = wrCache_->append(goff, data, len);
-  bool rv;
+  [[maybe_unused]] bool rv;
   if (delta > 0) {
     rv = diskCache->update(wrCache_.get(), delta);
     assert(rv);

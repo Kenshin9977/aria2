@@ -46,6 +46,7 @@ namespace aria2 {
 class DownloadEngine;
 class Exception;
 class Peer;
+class ISocketCore;
 class SocketCore;
 
 class PeerAbstractCommand : public Command {
@@ -53,19 +54,19 @@ private:
   Timer checkPoint_;
   std::chrono::seconds timeout_;
   DownloadEngine* e_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   std::shared_ptr<Peer> peer_;
 
   bool checkSocketIsReadable_;
   bool checkSocketIsWritable_;
-  std::shared_ptr<SocketCore> readCheckTarget_;
-  std::shared_ptr<SocketCore> writeCheckTarget_;
+  std::shared_ptr<ISocketCore> readCheckTarget_;
+  std::shared_ptr<ISocketCore> writeCheckTarget_;
   bool noCheck_;
 
 protected:
   DownloadEngine* getDownloadEngine() const { return e_; }
 
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
+  const std::shared_ptr<ISocketCore>& getSocket() const { return socket_; }
 
   void createSocket();
 
@@ -77,16 +78,21 @@ protected:
   }
 
   virtual bool prepareForNextPeer(time_t wait);
-  virtual void onAbort(){};
+  virtual void onAbort() {};
   // This function is called when DownloadFailureException is caught right after
   // the invocation of onAbort().
-  virtual void onFailure(const Exception& err){};
+  virtual void onFailure(const Exception& err) {};
   virtual bool exitBeforeExecute() = 0;
   virtual bool executeInternal() = 0;
-  void setReadCheckSocket(const std::shared_ptr<SocketCore>& socket);
-  void setWriteCheckSocket(const std::shared_ptr<SocketCore>& socket);
+  void setReadCheckSocket(const std::shared_ptr<ISocketCore>& socket);
+  void setWriteCheckSocket(const std::shared_ptr<ISocketCore>& socket);
   void disableReadCheckSocket();
   void disableWriteCheckSocket();
+
+  void transitionToWriting(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToWriting() { transitionToWriting(getSocket()); }
+  void transitionToReading(const std::shared_ptr<ISocketCore>& socket);
+  void transitionToReading() { transitionToReading(getSocket()); }
   void setNoCheck(bool check);
   void updateKeepAlive();
   void addCommandSelf();
@@ -94,11 +100,11 @@ protected:
 public:
   PeerAbstractCommand(
       cuid_t cuid, const std::shared_ptr<Peer>& peer, DownloadEngine* e,
-      const std::shared_ptr<SocketCore>& s = std::shared_ptr<SocketCore>());
+      const std::shared_ptr<ISocketCore>& s = std::shared_ptr<ISocketCore>());
 
-  virtual ~PeerAbstractCommand();
+  ~PeerAbstractCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

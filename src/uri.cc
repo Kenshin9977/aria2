@@ -39,9 +39,48 @@
 
 namespace aria2 {
 
+Protocol toProtocol(const std::string& s)
+{
+  using enum Protocol;
+  if (s == "http")
+    return HTTP;
+  if (s == "https")
+    return HTTPS;
+  if (s == "ftp")
+    return FTP;
+  if (s == "ftps")
+    return FTPS;
+  if (s == "sftp")
+    return SFTP;
+  return UNKNOWN;
+}
+
+std::string_view protocolToString(Protocol p)
+{
+  using enum Protocol;
+  switch (p) {
+  case HTTP:
+    return "http";
+  case HTTPS:
+    return "https";
+  case FTP:
+    return "ftp";
+  case FTPS:
+    return "ftps";
+  case SFTP:
+    return "sftp";
+  default:
+    return "";
+  }
+}
+
 namespace uri {
 
-UriStruct::UriStruct() : port(0), hasPassword(false), ipv6LiteralAddress(false)
+UriStruct::UriStruct()
+    : protocol(Protocol::UNKNOWN),
+      port(0),
+      hasPassword(false),
+      ipv6LiteralAddress(false)
 {
 }
 
@@ -85,23 +124,25 @@ void UriStruct::swap(UriStruct& other)
 
 void swap(UriStruct& lhs, UriStruct& rhs) { lhs.swap(rhs); }
 
-bool parse(UriStruct& result, const std::string& uri)
+std::expected<UriStruct, std::string> parse(const std::string& uri)
 {
   uri_split_result res;
   int rv;
   const char* p = uri.c_str();
   rv = uri_split(&res, p);
   if (rv != 0) {
-    return false;
+    return std::unexpected("URI syntax error");
   }
 
-  result.protocol.assign(p + res.fields[USR_SCHEME].off,
-                         res.fields[USR_SCHEME].len);
+  UriStruct result;
+  std::string scheme(p + res.fields[USR_SCHEME].off,
+                     res.fields[USR_SCHEME].len);
+  result.protocol = toProtocol(scheme);
   result.host.assign(p + res.fields[USR_HOST].off, res.fields[USR_HOST].len);
   if (res.port == 0) {
     uint16_t defPort;
     if ((defPort = getDefaultPort(result.protocol)) == 0) {
-      return false;
+      return std::unexpected("unknown protocol: " + scheme);
     }
     result.port = defPort;
   }
@@ -159,7 +200,7 @@ bool parse(UriStruct& result, const std::string& uri)
   }
 
   result.ipv6LiteralAddress = res.flags & USF_IPV6ADDR;
-  return true;
+  return result;
 }
 
 std::string getFieldString(const uri_split_result& res, int field,
@@ -174,7 +215,7 @@ std::string getFieldString(const uri_split_result& res, int field,
 std::string construct(const UriStruct& us)
 {
   std::string res;
-  res += us.protocol;
+  res += protocolToString(us.protocol);
   res += "://";
   if (!us.username.empty()) {
     res += util::percentEncode(us.username);
@@ -312,7 +353,7 @@ std::string normalizePath(std::string path)
     ++out;
   }
 
-  for (int i = 0; i < (int)range.size(); i += 2) {
+  for (int i = 0; i < static_cast<int>(range.size()); i += 2) {
     auto a = begin + range[i];
     auto b = begin + range[i + 1];
     if (a == out) {
@@ -358,15 +399,15 @@ std::string joinPath(const std::string& basePath, const std::string& newPath)
 
 std::string joinUri(const std::string& baseUri, const std::string& uri)
 {
-  UriStruct us;
-  if (parse(us, uri)) {
+  if (parse(uri)) {
     return uri;
   }
 
-  UriStruct bus;
-  if (!parse(bus, baseUri)) {
+  auto busResult = parse(baseUri);
+  if (!busResult) {
     return uri;
   }
+  auto& bus = *busResult;
 
   std::string::const_iterator qend;
   for (qend = uri.begin(); qend != uri.end(); ++qend) {

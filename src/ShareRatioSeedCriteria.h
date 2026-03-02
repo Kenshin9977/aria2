@@ -56,11 +56,11 @@ public:
   ShareRatioSeedCriteria(
       double ratio, const std::shared_ptr<DownloadContext>& downloadContext);
 
-  virtual ~ShareRatioSeedCriteria();
+  ~ShareRatioSeedCriteria() override;
 
-  virtual void reset() CXX11_OVERRIDE;
+  void reset() override;
 
-  virtual bool evaluate() CXX11_OVERRIDE;
+  bool evaluate() override;
 
   void setRatio(double ratio) { ratio_ = ratio; }
 

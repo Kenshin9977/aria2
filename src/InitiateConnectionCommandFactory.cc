@@ -33,6 +33,7 @@
  */
 /* copyright --> */
 #include "InitiateConnectionCommandFactory.h"
+#include "uri.h"
 #include "HttpInitiateConnectionCommand.h"
 #include "FtpInitiateConnectionCommand.h"
 #include "Request.h"
@@ -53,10 +54,11 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     DownloadEngine* e)
 {
-  if (req->getProtocol() == "http"
+  using enum Protocol;
+  if (req->getProtocol() == HTTP
 #ifdef ENABLE_SSL
       // for SSL
-      || req->getProtocol() == "https"
+      || req->getProtocol() == HTTPS
 #endif // ENABLE_SSL
   ) {
 
@@ -67,25 +69,29 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
       req->setPipeliningHint(true);
     }
 
-    return make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
+    return std::make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                       requestGroup, e);
   }
-  else if (req->getProtocol() == "ftp"
+  else if (req->getProtocol() == FTP
+#ifdef ENABLE_SSL
+           || req->getProtocol() == FTPS
+#endif // ENABLE_SSL
 #ifdef HAVE_LIBSSH2
-           || req->getProtocol() == "sftp"
+           || req->getProtocol() == SFTP
 #endif // HAVE_LIBSSH2
   ) {
     if (req->getFile().empty()) {
       throw DL_ABORT_EX(fmt("FTP/SFTP URI %s doesn't contain file path.",
                             req->getUri().c_str()));
     }
-    return make_unique<FtpInitiateConnectionCommand>(cuid, req, fileEntry,
+    return std::make_unique<FtpInitiateConnectionCommand>(cuid, req, fileEntry,
                                                      requestGroup, e);
   }
   else {
     // these protocols are not supported yet
     throw DL_ABORT_EX(
-        fmt("%s is not supported yet.", req->getProtocol().c_str()));
+        fmt("%s is not supported yet.",
+            std::string(protocolToString(req->getProtocol())).c_str()));
   }
 }
 

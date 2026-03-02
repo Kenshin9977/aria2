@@ -37,6 +37,7 @@
 #include "common.h"
 
 #include <string>
+#include <string_view>
 #include <memory>
 
 #include "TimerA2.h"
@@ -45,6 +46,9 @@
 namespace aria2 {
 
 class PeerStat;
+
+enum class HttpMethod { GET, HEAD };
+const char* httpMethodToString(HttpMethod m);
 
 class Request {
 private:
@@ -55,7 +59,7 @@ private:
    * URI used as Referer header field
    */
   std::string referer_;
-  std::string method_;
+  HttpMethod method_;
   std::string connectedHostname_;
   std::string connectedAddr_;
 
@@ -95,8 +99,8 @@ public:
   const std::string& getUri() const { return uri_; }
   const std::string& getCurrentUri() const { return currentUri_; }
   const std::string& getReferer() const { return referer_; }
-  void setReferer(const std::string& uri);
-  const std::string& getProtocol() const { return us_.protocol; }
+  void setReferer(std::string_view uri);
+  Protocol getProtocol() const { return us_.protocol; }
   const std::string& getHost() const { return us_.host; }
   // Same as getHost(), but for IPv6 literal addresses, enclose them
   // with square brackets and return.
@@ -137,7 +141,7 @@ public:
 
   int getMaxPipelinedRequest() const { return maxPipelinedRequest_; }
 
-  void setMethod(const std::string& method);
+  void setMethod(HttpMethod method);
 
   const std::string& getUsername() const { return us_.username; }
 
@@ -146,7 +150,7 @@ public:
   // Returns true if current URI has embedded password.
   bool hasPassword() const { return us_.hasPassword; }
 
-  const std::string& getMethod() const { return method_; }
+  HttpMethod getMethod() const { return method_; }
 
   const std::shared_ptr<PeerStat>& getPeerStat() const { return peerStat_; }
 
@@ -169,12 +173,9 @@ public:
 
   const Timer& getWakeTime() { return wakeTime_; }
 
-  static const std::string METHOD_GET;
-  static const std::string METHOD_HEAD;
+  static constexpr int MAX_REDIRECT = 20;
 
-  static const int MAX_REDIRECT = 20;
-
-  static const std::string DEFAULT_FILE;
+  static constexpr const char DEFAULT_FILE[] = "index.html";
 };
 
 } // namespace aria2

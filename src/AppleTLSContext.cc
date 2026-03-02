@@ -38,6 +38,8 @@
 #include <functional>
 #include <sstream>
 
+#include "a2functional.h"
+
 #ifdef __MAC_10_6
 #  include <Security/SecImportExport.h>
 #endif
@@ -93,8 +95,7 @@ static inline bool isWhitespace(char c)
 
 static inline std::string stripWhitespace(std::string str)
 {
-  str.erase(std::remove_if(std::begin(str), std::end(str), isWhitespace),
-            std::end(str));
+  std::erase_if(str, isWhitespace);
   return str;
 }
 
@@ -137,7 +138,7 @@ std::string errToString(OSStatus err)
     return rv;
   }
   size_t len = CFStringGetLength(cerr.get()) * 4;
-  auto buf = make_unique<char[]>(len);
+  auto buf = std::make_unique<char[]>(len);
   if (CFStringGetCString(cerr.get(), buf.get(), len, kCFStringEncodingUTF8)) {
     rv = buf.get();
   }
@@ -166,8 +167,8 @@ bool checkIdentity(const SecIdentityRef id, const std::string& fingerPrint,
   // future-proof. Also "usually" doesn't cut it; there is already software
   // using SHA-2 class algos, and SHA-3 is standardized and potential users
   // cannot be far.
-  return std::find_if(std::begin(supported), std::end(supported),
-                      hash_finder(data.get(), fingerPrint)) !=
+  return std::ranges::find_if(supported,
+                              hash_finder(data.get(), fingerPrint)) !=
          std::end(supported);
 }
 
@@ -176,9 +177,10 @@ bool checkIdentity(const SecIdentityRef id, const std::string& fingerPrint,
 
 namespace aria2 {
 
-TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion ver)
+std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
+                                              TLSVersion ver)
 {
-  return new AppleTLSContext(side, ver);
+  return std::make_unique<AppleTLSContext>(side, ver);
 }
 
 AppleTLSContext::~AppleTLSContext()
@@ -225,8 +227,7 @@ bool AppleTLSContext::tryAsFingerprint(const std::string& fingerprint)
 
   // Verify this can represent a hash
   auto ht = MessageDigest::getSupportedHashTypes();
-  if (std::find_if(std::begin(ht), std::end(ht), hash_validator(fp)) ==
-      std::end(ht)) {
+  if (std::ranges::find_if(ht, hash_validator(fp)) == std::end(ht)) {
     A2_LOG_INFO(fmt("%s is not a fingerprint, invalid hash representation",
                     fingerprint.c_str()));
     return false;

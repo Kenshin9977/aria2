@@ -55,6 +55,8 @@ DHTMessageTrackerEntry::DHTMessageTrackerEntry(
 {
 }
 
+DHTMessageTrackerEntry::~DHTMessageTrackerEntry() = default;
+
 bool DHTMessageTrackerEntry::isTimeout() const
 {
   return dispatchedTime_.difference(global::wallclock()) >= timeout_;
@@ -72,10 +74,10 @@ bool DHTMessageTrackerEntry::match(const std::string& transactionID,
   if (targetNode_->getIPAddress() == ipaddr) {
     return true;
   }
-  if (util::endsWith(targetNode_->getIPAddress(), ipaddr)) {
+  if (targetNode_->getIPAddress().ends_with(ipaddr)) {
     return targetNode_->getIPAddress() == "::ffff:" + ipaddr;
   }
-  else if (util::endsWith(ipaddr, targetNode_->getIPAddress())) {
+  else if (ipaddr.ends_with(targetNode_->getIPAddress())) {
     return ipaddr == "::ffff:" + targetNode_->getIPAddress();
   }
   return false;

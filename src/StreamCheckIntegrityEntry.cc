@@ -42,6 +42,11 @@
 
 namespace aria2 {
 
+StreamCheckIntegrityEntry::StreamCheckIntegrityEntry(RequestGroup* requestGroup)
+    : PieceHashCheckIntegrityEntry(requestGroup)
+{
+}
+
 StreamCheckIntegrityEntry::StreamCheckIntegrityEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : PieceHashCheckIntegrityEntry(requestGroup, std::move(nextCommand))
@@ -59,7 +64,7 @@ void StreamCheckIntegrityEntry::onDownloadIncomplete(
     return;
   }
   proceedFileAllocation(commands,
-                        make_unique<StreamFileAllocationEntry>(
+                        std::make_unique<StreamFileAllocationEntry>(
                             getRequestGroup(), popNextCommand()),
                         e);
 }

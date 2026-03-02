@@ -55,7 +55,7 @@ public:
 
   ~MetalinkMetaurl();
 
-  static const char MEDIATYPE_TORRENT[];
+  static constexpr char MEDIATYPE_TORRENT[] = "torrent";
 };
 
 } // namespace aria2

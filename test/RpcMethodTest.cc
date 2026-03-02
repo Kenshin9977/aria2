@@ -84,6 +84,32 @@ class RpcMethodTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testSystemMulticall_fail);
   CPPUNIT_TEST(testSystemListMethods);
   CPPUNIT_TEST(testSystemListNotifications);
+  CPPUNIT_TEST(testGetGlobalStat);
+  CPPUNIT_TEST(testGetGlobalOption);
+  CPPUNIT_TEST(testTellActive);
+  CPPUNIT_TEST(testTellStopped);
+  CPPUNIT_TEST(testPurgeDownloadResult);
+  CPPUNIT_TEST(testGetFiles);
+  CPPUNIT_TEST(testGetUris);
+  CPPUNIT_TEST(testRemove);
+  CPPUNIT_TEST(testTellStatus);
+  CPPUNIT_TEST(testTellStatus_withKeys);
+  CPPUNIT_TEST(testSaveSession);
+  CPPUNIT_TEST(testSaveSession_withoutFilename);
+  CPPUNIT_TEST(testForceRemove);
+  CPPUNIT_TEST(testRemoveDownloadResult);
+  CPPUNIT_TEST(testRemoveDownloadResult_notFound);
+  CPPUNIT_TEST(testChangeGlobalOption_maxConcurrent);
+  CPPUNIT_TEST(testChangeGlobalOption_maxDownloadResult);
+  CPPUNIT_TEST(testGetGlobalOption_specific);
+  CPPUNIT_TEST(testTellWaiting_withKeys);
+  CPPUNIT_TEST(testTellStopped_withResults);
+  CPPUNIT_TEST(testForcePause);
+#ifdef ENABLE_BITTORRENT
+  CPPUNIT_TEST(testGetPeers);
+#endif // ENABLE_BITTORRENT
+  CPPUNIT_TEST(testGetServers_fail);
+  CPPUNIT_TEST(testTellActive_withKeys);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -98,9 +124,9 @@ public:
     option_->put(PREF_PIECE_LENGTH, "1048576");
     option_->put(PREF_MAX_DOWNLOAD_RESULT, "10");
     File(option_->get(PREF_DIR)).mkdirs();
-    e_ = make_unique<DownloadEngine>(make_unique<SelectEventPoll>());
+    e_ = std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
     e_->setOption(option_.get());
-    e_->setRequestGroupMan(make_unique<RequestGroupMan>(
+    e_->setRequestGroupMan(std::make_unique<RequestGroupMan>(
         std::vector<std::shared_ptr<RequestGroup>>{}, 1, option_.get()));
   }
 
@@ -154,6 +180,32 @@ public:
   void testSystemMulticall_fail();
   void testSystemListMethods();
   void testSystemListNotifications();
+  void testGetGlobalStat();
+  void testGetGlobalOption();
+  void testTellActive();
+  void testTellStopped();
+  void testPurgeDownloadResult();
+  void testGetFiles();
+  void testGetUris();
+  void testRemove();
+  void testTellStatus();
+  void testTellStatus_withKeys();
+  void testSaveSession();
+  void testSaveSession_withoutFilename();
+  void testForceRemove();
+  void testRemoveDownloadResult();
+  void testRemoveDownloadResult_notFound();
+  void testChangeGlobalOption_maxConcurrent();
+  void testChangeGlobalOption_maxDownloadResult();
+  void testGetGlobalOption_specific();
+  void testTellWaiting_withKeys();
+  void testTellStopped_withResults();
+  void testForcePause();
+#ifdef ENABLE_BITTORRENT
+  void testGetPeers();
+#endif // ENABLE_BITTORRENT
+  void testGetServers_fail();
+  void testTellActive_withKeys();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RpcMethodTest);
@@ -621,7 +673,7 @@ void RpcMethodTest::testChangeOption()
   opt->put(PREF_MAX_UPLOAD_LIMIT->k, "50K");
 
   {
-    auto btObject = make_unique<BtObject>();
+    auto btObject = std::make_unique<BtObject>();
     btObject->btRuntime = std::make_shared<BtRuntime>();
     e_->getBtRegistry()->put(group->getGID(), std::move(btObject));
   }
@@ -964,11 +1016,13 @@ void RpcMethodTest::testGatherStoppedDownload_bt()
   auto d = std::make_shared<DownloadResult>();
   d->gid = GroupId::create();
   d->infoHash = "2089b05ecca3d829cee5497d2703803b52216d19";
-  d->attrs = std::vector<std::shared_ptr<ContextAttribute>>(MAX_CTX_ATTR);
+  d->attrs = std::vector<std::shared_ptr<ContextAttribute>>(
+      static_cast<size_t>(ContextAttributeType::MAX_CTX_ATTR));
 
   auto torrentAttr = std::make_shared<TorrentAttribute>();
   torrentAttr->creationDate = 1000000007;
-  d->attrs[CTX_ATTR_BT] = torrentAttr;
+  d->attrs[static_cast<size_t>(
+      ContextAttributeType::CTX_ATTR_BT)] = torrentAttr;
 
   auto entry = Dict::g();
   gatherStoppedDownload(entry.get(), d, {});
@@ -1452,6 +1506,403 @@ void RpcMethodTest::testSystemListNotifications()
     CPPUNIT_ASSERT(s);
     CPPUNIT_ASSERT_EQUAL(allNames[i], s->s());
   }
+}
+
+void RpcMethodTest::testGetGlobalStat()
+{
+  GetGlobalStatRpcMethod m;
+  auto res =
+      m.execute(createReq(GetGlobalStatRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const Dict* resParams = downcast<Dict>(res.param);
+  CPPUNIT_ASSERT(resParams->containsKey("downloadSpeed"));
+  CPPUNIT_ASSERT(resParams->containsKey("uploadSpeed"));
+  CPPUNIT_ASSERT(resParams->containsKey("numWaiting"));
+  CPPUNIT_ASSERT(resParams->containsKey("numActive"));
+  CPPUNIT_ASSERT(resParams->containsKey("numStopped"));
+  CPPUNIT_ASSERT(resParams->containsKey("numStoppedTotal"));
+}
+
+void RpcMethodTest::testGetGlobalOption()
+{
+  GetGlobalOptionRpcMethod m;
+  auto res =
+      m.execute(createReq(GetGlobalOptionRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const Dict* resParams = downcast<Dict>(res.param);
+  CPPUNIT_ASSERT(resParams);
+  CPPUNIT_ASSERT_EQUAL(option_->get(PREF_DIR),
+                       downcast<String>(resParams->get(PREF_DIR->k))->s());
+}
+
+void RpcMethodTest::testTellActive()
+{
+  addUri("http://localhost/file", e_);
+  TellActiveRpcMethod m;
+  auto res =
+      m.execute(createReq(TellActiveRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT_EQUAL((size_t)0, resParams->size());
+}
+
+void RpcMethodTest::testTellStopped()
+{
+  TellStoppedRpcMethod m;
+  auto req = createReq(TellStoppedRpcMethod::getMethodName());
+  req.params->append(Integer::g(0));
+  req.params->append(Integer::g(10));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT_EQUAL((size_t)0, resParams->size());
+}
+
+void RpcMethodTest::testPurgeDownloadResult()
+{
+  PurgeDownloadResultRpcMethod m;
+  auto res = m.execute(createReq(PurgeDownloadResultRpcMethod::getMethodName()),
+                       e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("OK"), downcast<String>(res.param)->s());
+}
+
+void RpcMethodTest::testGetFiles()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  GetFilesRpcMethod m;
+  auto req = createReq(GetFilesRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT(resParams->size() >= 1);
+  const Dict* file = downcast<Dict>(resParams->get(0));
+  CPPUNIT_ASSERT(file);
+  CPPUNIT_ASSERT(file->containsKey("index"));
+  CPPUNIT_ASSERT(file->containsKey("length"));
+}
+
+void RpcMethodTest::testGetUris()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  GetUrisRpcMethod m;
+  auto req = createReq(GetUrisRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT(resParams->size() >= 1);
+  const Dict* uri = downcast<Dict>(resParams->get(0));
+  CPPUNIT_ASSERT(uri);
+  CPPUNIT_ASSERT_EQUAL(std::string("http://localhost/file"),
+                       downcast<String>(uri->get("uri"))->s());
+}
+
+void RpcMethodTest::testRemove()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  RemoveRpcMethod m;
+  auto req = createReq(RemoveRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL((size_t)0,
+                       e_->getRequestGroupMan()->getReservedGroups().size());
+}
+
+void RpcMethodTest::testTellStatus()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  TellStatusRpcMethod m;
+  auto req = createReq(TellStatusRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const Dict* resParams = downcast<Dict>(res.param);
+  CPPUNIT_ASSERT(resParams);
+  CPPUNIT_ASSERT(resParams->containsKey("gid"));
+  CPPUNIT_ASSERT(resParams->containsKey("status"));
+  CPPUNIT_ASSERT_EQUAL(gid, getString(resParams, "gid"));
+  CPPUNIT_ASSERT_EQUAL(std::string("waiting"), getString(resParams, "status"));
+  // Verify additional fields are present
+  CPPUNIT_ASSERT(resParams->containsKey("totalLength"));
+  CPPUNIT_ASSERT(resParams->containsKey("completedLength"));
+  CPPUNIT_ASSERT(resParams->containsKey("downloadSpeed"));
+  CPPUNIT_ASSERT(resParams->containsKey("dir"));
+  CPPUNIT_ASSERT(resParams->containsKey("files"));
+}
+
+void RpcMethodTest::testTellStatus_withKeys()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  TellStatusRpcMethod m;
+  auto req = createReq(TellStatusRpcMethod::getMethodName());
+  req.params->append(gid);
+  // Request only specific keys
+  auto keys = List::g();
+  keys->append("gid");
+  keys->append("status");
+  req.params->append(std::move(keys));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const Dict* resParams = downcast<Dict>(res.param);
+  CPPUNIT_ASSERT(resParams);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, resParams->size());
+  CPPUNIT_ASSERT(resParams->containsKey("gid"));
+  CPPUNIT_ASSERT(resParams->containsKey("status"));
+}
+
+void RpcMethodTest::testSaveSession()
+{
+  std::string sessionFile = A2_TEST_OUT_DIR "/aria2_RpcMethodTest_session.txt";
+  e_->getOption()->put(PREF_SAVE_SESSION, sessionFile);
+  addUri("http://localhost/file", e_);
+
+  SaveSessionRpcMethod m;
+  auto res =
+      m.execute(createReq(SaveSessionRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("OK"), downcast<String>(res.param)->s());
+  CPPUNIT_ASSERT(File(sessionFile).exists());
+  File(sessionFile).remove();
+}
+
+void RpcMethodTest::testSaveSession_withoutFilename()
+{
+  // PREF_SAVE_SESSION is not set, so it should fail
+  SaveSessionRpcMethod m;
+  auto res =
+      m.execute(createReq(SaveSessionRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(1, res.code);
+}
+
+void RpcMethodTest::testForceRemove()
+{
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  ForceRemoveRpcMethod m;
+  auto req = createReq(ForceRemoveRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL((size_t)0,
+                       e_->getRequestGroupMan()->getReservedGroups().size());
+}
+
+void RpcMethodTest::testRemoveDownloadResult()
+{
+  auto dr = createDownloadResult(error_code::FINISHED, "http://host/fin");
+  a2_gid_t gid = dr->gid->getNumericId();
+  e_->getRequestGroupMan()->addDownloadResult(dr);
+  CPPUNIT_ASSERT_EQUAL((size_t)1,
+                       e_->getRequestGroupMan()->getDownloadResults().size());
+
+  RemoveDownloadResultRpcMethod m;
+  auto req = createReq(RemoveDownloadResultRpcMethod::getMethodName());
+  req.params->append(GroupId::toHex(gid));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("OK"), downcast<String>(res.param)->s());
+  CPPUNIT_ASSERT_EQUAL((size_t)0,
+                       e_->getRequestGroupMan()->getDownloadResults().size());
+}
+
+void RpcMethodTest::testRemoveDownloadResult_notFound()
+{
+  RemoveDownloadResultRpcMethod m;
+  auto req = createReq(RemoveDownloadResultRpcMethod::getMethodName());
+  req.params->append(GroupId::create()->toHex());
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(1, res.code);
+}
+
+void RpcMethodTest::testChangeGlobalOption_maxConcurrent()
+{
+  ChangeGlobalOptionRpcMethod m;
+  auto req = createReq(ChangeGlobalOptionRpcMethod::getMethodName());
+  auto opt = Dict::g();
+  opt->put(PREF_MAX_CONCURRENT_DOWNLOADS->k, "5");
+  req.params->append(std::move(opt));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("5"),
+                       e_->getOption()->get(PREF_MAX_CONCURRENT_DOWNLOADS));
+}
+
+void RpcMethodTest::testChangeGlobalOption_maxDownloadResult()
+{
+  ChangeGlobalOptionRpcMethod m;
+  auto req = createReq(ChangeGlobalOptionRpcMethod::getMethodName());
+  auto opt = Dict::g();
+  opt->put(PREF_MAX_DOWNLOAD_RESULT->k, "200");
+  req.params->append(std::move(opt));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("200"),
+                       e_->getOption()->get(PREF_MAX_DOWNLOAD_RESULT));
+}
+
+void RpcMethodTest::testGetGlobalOption_specific()
+{
+  // Set specific options, then verify they appear in the result
+  option_->put(PREF_MAX_CONCURRENT_DOWNLOADS, "7");
+  option_->put(PREF_MAX_DOWNLOAD_RESULT, "50");
+
+  GetGlobalOptionRpcMethod m;
+  auto res =
+      m.execute(createReq(GetGlobalOptionRpcMethod::getMethodName()), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const Dict* resParams = downcast<Dict>(res.param);
+  CPPUNIT_ASSERT(resParams);
+  // Verify dir option
+  CPPUNIT_ASSERT_EQUAL(option_->get(PREF_DIR),
+                       downcast<String>(resParams->get(PREF_DIR->k))->s());
+  // Verify piece-length option
+  CPPUNIT_ASSERT_EQUAL(
+      option_->get(PREF_PIECE_LENGTH),
+      downcast<String>(resParams->get(PREF_PIECE_LENGTH->k))->s());
+}
+
+void RpcMethodTest::testTellWaiting_withKeys()
+{
+  addUri("http://localhost/file1", e_);
+  addUri("http://localhost/file2", e_);
+
+  TellWaitingRpcMethod m;
+  auto req = createReq(TellWaitingRpcMethod::getMethodName());
+  req.params->append(Integer::g(0));
+  req.params->append(Integer::g(10));
+  // Request only specific keys
+  auto keys = List::g();
+  keys->append("gid");
+  keys->append("status");
+  req.params->append(std::move(keys));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, resParams->size());
+  // Each entry should only have the requested keys
+  const Dict* entry0 = downcast<Dict>(resParams->get(0));
+  CPPUNIT_ASSERT(entry0->containsKey("gid"));
+  CPPUNIT_ASSERT(entry0->containsKey("status"));
+  CPPUNIT_ASSERT_EQUAL((size_t)2, entry0->size());
+}
+
+void RpcMethodTest::testTellStopped_withResults()
+{
+  // Add download results so TellStopped has something to return
+  auto dr1 = createDownloadResult(error_code::FINISHED, "http://host/fin1");
+  auto dr2 = createDownloadResult(error_code::FINISHED, "http://host/fin2");
+  e_->getRequestGroupMan()->addDownloadResult(dr1);
+  e_->getRequestGroupMan()->addDownloadResult(dr2);
+
+  TellStoppedRpcMethod m;
+  auto req = createReq(TellStoppedRpcMethod::getMethodName());
+  req.params->append(Integer::g(0));
+  req.params->append(Integer::g(10));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, resParams->size());
+  // Verify each entry has expected keys
+  const Dict* entry0 = downcast<Dict>(resParams->get(0));
+  CPPUNIT_ASSERT(entry0);
+  CPPUNIT_ASSERT(entry0->containsKey("gid"));
+  CPPUNIT_ASSERT(entry0->containsKey("status"));
+  CPPUNIT_ASSERT_EQUAL(std::string("complete"), getString(entry0, "status"));
+}
+
+void RpcMethodTest::testForcePause()
+{
+  addUri("http://localhost/file", e_);
+  auto group = getReservedGroup(e_->getRequestGroupMan().get(), 0);
+  auto gid = GroupId::toHex(group->getGID());
+
+  ForcePauseRpcMethod m;
+  auto req = createReq(ForcePauseRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  CPPUNIT_ASSERT(group->isPauseRequested());
+
+  // Verify TellStatus shows paused status
+  TellStatusRpcMethod sm;
+  auto sreq = createReq(TellStatusRpcMethod::getMethodName());
+  sreq.params->append(gid);
+  auto sres = sm.execute(std::move(sreq), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, sres.code);
+  CPPUNIT_ASSERT_EQUAL(std::string("paused"),
+                       getString(downcast<Dict>(sres.param), "status"));
+}
+
+#ifdef ENABLE_BITTORRENT
+void RpcMethodTest::testGetPeers()
+{
+  addUri("http://localhost/file", e_);
+  auto group = getReservedGroup(e_->getRequestGroupMan().get(), 0);
+  auto gid = GroupId::toHex(group->getGID());
+
+  GetPeersRpcMethod m;
+  auto req = createReq(GetPeersRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  // Result is a list (empty because no BT peers exist)
+  const List* peers = downcast<List>(res.param);
+  CPPUNIT_ASSERT(peers);
+  CPPUNIT_ASSERT_EQUAL((size_t)0, peers->size());
+}
+#endif // ENABLE_BITTORRENT
+
+void RpcMethodTest::testGetServers_fail()
+{
+  // GetServers requires an active download; a reserved download
+  // should fail.
+  addUri("http://localhost/file", e_);
+  auto gid = GroupId::toHex(
+      getReservedGroup(e_->getRequestGroupMan().get(), 0)->getGID());
+
+  GetServersRpcMethod m;
+  auto req = createReq(GetServersRpcMethod::getMethodName());
+  req.params->append(gid);
+  auto res = m.execute(std::move(req), e_.get());
+  // Should fail because the download is not active
+  CPPUNIT_ASSERT_EQUAL(1, res.code);
+}
+
+void RpcMethodTest::testTellActive_withKeys()
+{
+  addUri("http://localhost/file", e_);
+
+  TellActiveRpcMethod m;
+  auto req = createReq(TellActiveRpcMethod::getMethodName());
+  auto keys = List::g();
+  keys->append("gid");
+  keys->append("status");
+  req.params->append(std::move(keys));
+  auto res = m.execute(std::move(req), e_.get());
+  CPPUNIT_ASSERT_EQUAL(0, res.code);
+  // No active downloads, so result should be empty list
+  const List* resParams = downcast<List>(res.param);
+  CPPUNIT_ASSERT_EQUAL((size_t)0, resParams->size());
 }
 
 } // namespace rpc

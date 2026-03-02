@@ -41,7 +41,7 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 #include "a2functional.h"
@@ -50,13 +50,13 @@ namespace aria2 {
 
 class MessageDigestImpl {
 public:
-  typedef std::function<std::unique_ptr<MessageDigestImpl>()> factory_t;
-  typedef std::tuple<factory_t, size_t> hash_info_t;
-  typedef std::map<std::string, hash_info_t> hashes_t;
+  using factory_t = std::function<std::unique_ptr<MessageDigestImpl>()>;
+  using hash_info_t = std::tuple<factory_t, size_t>;
+  using hashes_t = std::unordered_map<std::string, hash_info_t>;
 
   template <typename T> inline static hash_info_t make_hi()
   {
-    return std::make_tuple([]() { return make_unique<T>(); }, T::length());
+    return std::make_tuple([]() { return std::make_unique<T>(); }, T::length());
   }
 
 private:
@@ -72,26 +72,29 @@ public:
   inline static std::unique_ptr<MessageDigestImpl>
   create(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    if (i == hashes.end()) {
+    if (auto i = hashes.find(hashType);
+        i == hashes.end()) {
       return nullptr;
     }
-    return std::get<0>(i->second)();
+    else {
+      return std::get<0>(i->second)();
+    }
   }
 
   inline static bool supports(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    return i != hashes.end();
+    return hashes.find(hashType) != hashes.end();
   }
 
   inline static size_t getDigestLength(const std::string& hashType)
   {
-    auto i = hashes.find(hashType);
-    if (i == hashes.end()) {
+    if (auto i = hashes.find(hashType);
+        i == hashes.end()) {
       return 0;
     }
-    return std::get<1>(i->second);
+    else {
+      return std::get<1>(i->second);
+    }
   }
 
 public:

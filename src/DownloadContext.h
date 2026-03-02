@@ -39,6 +39,7 @@
 
 #include <cassert>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -107,16 +108,16 @@ public:
   }
 
   template <typename InputIterator>
-  void setPieceHashes(const std::string& hashType, InputIterator first,
+  void setPieceHashes(std::string_view hashType, InputIterator first,
                       InputIterator last)
   {
     pieceHashType_ = hashType;
     pieceHashes_.assign(first, last);
   }
 
-  int64_t getTotalLength() const;
+  [[nodiscard]] int64_t getTotalLength() const;
 
-  bool knowsTotalLength() const { return knowsTotalLength_; }
+  [[nodiscard]] bool knowsTotalLength() const { return knowsTotalLength_; }
 
   void markTotalLengthIsUnknown() { knowsTotalLength_ = false; }
 
@@ -150,7 +151,7 @@ public:
 
   void setPieceLength(int32_t length) { pieceLength_ = length; }
 
-  size_t getNumPieces() const;
+  [[nodiscard]] size_t getNumPieces() const;
 
   const std::string& getPieceHashType() const { return pieceHashType_; }
 
@@ -158,7 +159,7 @@ public:
 
   const std::string& getHashType() const { return hashType_; }
 
-  void setDigest(const std::string& hashType, const std::string& digest);
+  void setDigest(std::string_view hashType, std::string_view digest);
 
   // The representative path name for this context. It is used as a
   // part of .aria2 control file. If basePath_ is set, returns
@@ -186,13 +187,13 @@ public:
 
   // Returns true if hash check(whole file hash, not piece hash) is
   // need to be done
-  bool isChecksumVerificationNeeded() const;
+  [[nodiscard]] bool isChecksumVerificationNeeded() const;
 
   // Returns true if whole hash(not piece hash) is available.
-  bool isChecksumVerificationAvailable() const;
+  [[nodiscard]] bool isChecksumVerificationAvailable() const;
 
   // Returns true if piece hash(not whole file hash) is available.
-  bool isPieceHashVerificationAvailable() const;
+  [[nodiscard]] bool isPieceHashVerificationAvailable() const;
 
   void setChecksumVerified(bool f) { checksumVerified_ = f; }
 
@@ -202,7 +203,7 @@ public:
   const std::shared_ptr<ContextAttribute>&
   getAttribute(ContextAttributeType key);
 
-  bool hasAttribute(ContextAttributeType key) const;
+  [[nodiscard]] bool hasAttribute(ContextAttributeType key) const;
 
   const std::vector<std::shared_ptr<ContextAttribute>>& getAttributes() const;
 

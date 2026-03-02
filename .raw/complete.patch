@@ -1,0 +1,555 @@
+diff --git a/src/DefaultPieceStorage.cc b/src/DefaultPieceStorage.cc
+index e08b1b18..96591a43 100644
+--- a/src/DefaultPieceStorage.cc
++++ b/src/DefaultPieceStorage.cc
+@@ -235,10 +235,9 @@ void DefaultPieceStorage::getMissingPiece(
+       return;
+     }
+     while (misBlock < minMissingBlocks) {
+-      size_t index;
+-      if (pieceSelector_->select(index, misbitfield.get(), blocks)) {
+-        pieces.push_back(checkOutPiece(index, cuid));
+-        bitfield::flipBit(misbitfield.get(), blocks, index);
++      if (auto index = pieceSelector_->select(misbitfield.get(), blocks)) {
++        pieces.push_back(checkOutPiece(*index, cuid));
++        bitfield::flipBit(misbitfield.get(), blocks, *index);
+         misBlock += pieces.back()->countMissingBlock();
+       }
+       else {
+@@ -379,8 +378,7 @@ std::shared_ptr<Piece> DefaultPieceStorage::getMissingFastPiece(
+ 
+ bool DefaultPieceStorage::hasMissingUnusedPiece()
+ {
+-  size_t index;
+-  return bitfieldMan_->getFirstMissingUnusedIndex(index);
++  return bitfieldMan_->getFirstMissingUnusedIndex().has_value();
+ }
+ 
+ std::shared_ptr<Piece>
+@@ -388,10 +386,9 @@ DefaultPieceStorage::getMissingPiece(size_t minSplitSize,
+                                      const unsigned char* ignoreBitfield,
+                                      size_t length, cuid_t cuid)
+ {
+-  size_t index;
+-  if (streamPieceSelector_->select(index, minSplitSize, ignoreBitfield,
+-                                   length)) {
+-    return checkOutPiece(index, cuid);
++  if (auto index = streamPieceSelector_->select(minSplitSize, ignoreBitfield,
++                                                   length)) {
++    return checkOutPiece(*index, cuid);
+   }
+   else {
+     return nullptr;
+diff --git a/src/DefaultStreamPieceSelector.cc b/src/DefaultStreamPieceSelector.cc
+index 100cd070..48cda8ef 100644
+--- a/src/DefaultStreamPieceSelector.cc
++++ b/src/DefaultStreamPieceSelector.cc
+@@ -44,11 +44,12 @@ DefaultStreamPieceSelector::DefaultStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ DefaultStreamPieceSelector::~DefaultStreamPieceSelector() = default;
+ 
+-bool DefaultStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                        const unsigned char* ignoreBitfield,
+-                                        size_t length)
++std::optional<size_t>
++DefaultStreamPieceSelector::select(size_t minSplitSize,
++                                   const unsigned char* ignoreBitfield,
++                                   size_t length)
+ {
+-  return bitfieldMan_->getSparseMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getSparseMissingUnusedIndex(minSplitSize,
+                                                    ignoreBitfield, length);
+ }
+ 
+diff --git a/src/DefaultStreamPieceSelector.h b/src/DefaultStreamPieceSelector.h
+index 45e7e09f..510c50dc 100644
+--- a/src/DefaultStreamPieceSelector.h
++++ b/src/DefaultStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   DefaultStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~DefaultStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/GeomStreamPieceSelector.cc b/src/GeomStreamPieceSelector.cc
+index c6668c7f..fe5ae8dc 100644
+--- a/src/GeomStreamPieceSelector.cc
++++ b/src/GeomStreamPieceSelector.cc
+@@ -45,20 +45,19 @@ GeomStreamPieceSelector::GeomStreamPieceSelector(BitfieldMan* bitfieldMan,
+ 
+ GeomStreamPieceSelector::~GeomStreamPieceSelector() = default;
+ 
+-bool GeomStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                     const unsigned char* ignoreBitfield,
+-                                     size_t length)
++std::optional<size_t>
++GeomStreamPieceSelector::select(size_t minSplitSize,
++                                const unsigned char* ignoreBitfield,
++                                size_t length)
+ {
+   return bitfieldMan_->getGeomMissingUnusedIndex(
+-      index, minSplitSize, ignoreBitfield, length, base_, offsetIndex_);
++      minSplitSize, ignoreBitfield, length, base_, offsetIndex_);
+ }
+ 
+ void GeomStreamPieceSelector::onBitfieldInit()
+ {
+-  size_t index;
+-  bool r = bitfieldMan_->getFirstMissingIndex(index);
+-  if (r) {
+-    offsetIndex_ = index;
++  if (auto index = bitfieldMan_->getFirstMissingIndex()) {
++    offsetIndex_ = *index;
+   }
+ }
+ 
+diff --git a/src/GeomStreamPieceSelector.h b/src/GeomStreamPieceSelector.h
+index 225881af..c051dc20 100644
+--- a/src/GeomStreamPieceSelector.h
++++ b/src/GeomStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   GeomStreamPieceSelector(BitfieldMan* bitfieldMan, double base);
+   ~GeomStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/InorderStreamPieceSelector.cc b/src/InorderStreamPieceSelector.cc
+index 995838e8..e36e511c 100644
+--- a/src/InorderStreamPieceSelector.cc
++++ b/src/InorderStreamPieceSelector.cc
+@@ -44,11 +44,12 @@ InorderStreamPieceSelector::InorderStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ InorderStreamPieceSelector::~InorderStreamPieceSelector() = default;
+ 
+-bool InorderStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                        const unsigned char* ignoreBitfield,
+-                                        size_t length)
++std::optional<size_t>
++InorderStreamPieceSelector::select(size_t minSplitSize,
++                                   const unsigned char* ignoreBitfield,
++                                   size_t length)
+ {
+-  return bitfieldMan_->getInorderMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getInorderMissingUnusedIndex(minSplitSize,
+                                                     ignoreBitfield, length);
+ }
+ 
+diff --git a/src/InorderStreamPieceSelector.h b/src/InorderStreamPieceSelector.h
+index f134fe2f..c334254e 100644
+--- a/src/InorderStreamPieceSelector.h
++++ b/src/InorderStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   InorderStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~InorderStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/LongestSequencePieceSelector.cc b/src/LongestSequencePieceSelector.cc
+index 5686ad6b..6ada5eed 100644
+--- a/src/LongestSequencePieceSelector.cc
++++ b/src/LongestSequencePieceSelector.cc
+@@ -62,9 +62,9 @@ size_t getEndIndex(size_t from, const unsigned char* bitfield, size_t nbits)
+ }
+ } // namespace
+ 
+-bool LongestSequencePieceSelector::select(size_t& index,
+-                                          const unsigned char* bitfield,
+-                                          size_t nbits) const
++std::optional<size_t>
++LongestSequencePieceSelector::select(const unsigned char* bitfield,
++                                     size_t nbits) const
+ {
+   size_t mstartindex = 0;
+   size_t mendindex = 0;
+@@ -82,11 +82,10 @@ bool LongestSequencePieceSelector::select(size_t& index,
+     nextIndex = endindex;
+   }
+   if (mendindex - mstartindex > 0) {
+-    index = mendindex - 1;
+-    return true;
++    return mendindex - 1;
+   }
+   else {
+-    return false;
++    return std::nullopt;
+   }
+ }
+ 
+diff --git a/src/LongestSequencePieceSelector.h b/src/LongestSequencePieceSelector.h
+index 94b869bf..e777d55d 100644
+--- a/src/LongestSequencePieceSelector.h
++++ b/src/LongestSequencePieceSelector.h
+@@ -45,8 +45,8 @@ public:
+   // For example, if indexes of set bits in bitfield are
+   // { 1,2,3,4,7,10,11,12,13,14,15,100,112,113,114 }, then
+   // returns 15 because { 10, 11, 12, 13, 14, 15 } is the longest sequence.
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/Option.cc b/src/Option.cc
+index fb555bee..1f902d60 100644
+--- a/src/Option.cc
++++ b/src/Option.cc
+@@ -189,8 +189,7 @@ const std::shared_ptr<Option>& Option::getParent() const { return parent_; }
+ 
+ bool Option::emptyLocal() const
+ {
+-  size_t dst;
+-  return !bitfield::getFirstSetBitIndex(dst, use_, use_.size() * 8);
++  return !bitfield::getFirstSetBitIndex(use_, use_.size() * 8);
+ }
+ 
+ } // namespace aria2
+diff --git a/src/Piece.cc b/src/Piece.cc
+index eeefcad9..ebabd589 100644
+--- a/src/Piece.cc
++++ b/src/Piece.cc
+@@ -129,14 +129,14 @@ bool Piece::hasBlock(size_t blockIndex) const
+   return bitfield_->isBitSet(blockIndex);
+ }
+ 
+-bool Piece::getMissingUnusedBlockIndex(size_t& index) const
++std::optional<size_t> Piece::getMissingUnusedBlockIndex() const
+ {
+-  if (bitfield_->getFirstMissingUnusedIndex(index)) {
+-    bitfield_->setUseBit(index);
+-    return true;
++  if (auto index = bitfield_->getFirstMissingUnusedIndex()) {
++    bitfield_->setUseBit(*index);
++    return index;
+   }
+   else {
+-    return false;
++    return std::nullopt;
+   }
+ }
+ 
+@@ -154,9 +154,9 @@ size_t Piece::getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
+   return num;
+ }
+ 
+-bool Piece::getFirstMissingBlockIndexWithoutLock(size_t& index) const
++std::optional<size_t> Piece::getFirstMissingBlockIndexWithoutLock() const
+ {
+-  return bitfield_->getFirstMissingIndex(index);
++  return bitfield_->getFirstMissingIndex();
+ }
+ 
+ bool Piece::getAllMissingBlockIndexes(unsigned char* misbitfield,
+diff --git a/src/Piece.h b/src/Piece.h
+index 984ed496..345da716 100644
+--- a/src/Piece.h
++++ b/src/Piece.h
+@@ -38,9 +38,10 @@
+ #include "common.h"
+ 
+ #include <stdint.h>
+-#include <vector>
+-#include <string>
+ #include <memory>
++#include <optional>
++#include <string>
++#include <vector>
+ 
+ #include "Command.h"
+ #include "a2functional.h"
+@@ -84,7 +85,7 @@ public:
+   bool operator<(const Piece& piece) const { return index_ < piece.index_; }
+ 
+   // TODO This function only used by unit tests
+-  bool getMissingUnusedBlockIndex(size_t& index) const;
++  std::optional<size_t> getMissingUnusedBlockIndex() const;
+ 
+   // Appends at most n missing unused block index to indexes. For all
+   // i in retrieved indexes, call bitfield->setUseBit(i). This
+@@ -93,7 +94,7 @@ public:
+   size_t getMissingUnusedBlockIndex(std::vector<size_t>& indexes,
+                                     size_t n) const;
+ 
+-  bool getFirstMissingBlockIndexWithoutLock(size_t& index) const;
++  std::optional<size_t> getFirstMissingBlockIndexWithoutLock() const;
+   bool getAllMissingBlockIndexes(unsigned char* misbitfield,
+                                  size_t mislen) const;
+   void completeBlock(size_t blockIndex);
+diff --git a/src/PieceSelector.h b/src/PieceSelector.h
+index 16e47da7..4ed37d5f 100644
+--- a/src/PieceSelector.h
++++ b/src/PieceSelector.h
+@@ -38,6 +38,7 @@
+ #include "common.h"
+ 
+ #include <cstdlib>
++#include <optional>
+ 
+ namespace aria2 {
+ 
+@@ -45,8 +46,8 @@ class PieceSelector {
+ public:
+   virtual ~PieceSelector() = default;
+ 
+-  virtual bool select(size_t& index, const unsigned char* bitfield,
+-                      size_t nbits) const = 0;
++  virtual std::optional<size_t> select(const unsigned char* bitfield,
++                                       size_t nbits) const = 0;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/PiecedSegment.cc b/src/PiecedSegment.cc
+index 6e13fbc3..a596287d 100644
+--- a/src/PiecedSegment.cc
++++ b/src/PiecedSegment.cc
+@@ -42,10 +42,9 @@ PiecedSegment::PiecedSegment(int32_t pieceLength,
+                              const std::shared_ptr<Piece>& piece)
+     : piece_(piece), pieceLength_(pieceLength)
+ {
+-  size_t index;
+-  bool t = piece_->getFirstMissingBlockIndexWithoutLock(index);
+-  assert(t);
+-  writtenLength_ = index * piece_->getBlockLength();
++  auto index = piece_->getFirstMissingBlockIndexWithoutLock();
++  assert(index);
++  writtenLength_ = *index * piece_->getBlockLength();
+ }
+ 
+ PiecedSegment::~PiecedSegment() = default;
+diff --git a/src/PriorityPieceSelector.cc b/src/PriorityPieceSelector.cc
+index d2a7c356..c49e3296 100644
+--- a/src/PriorityPieceSelector.cc
++++ b/src/PriorityPieceSelector.cc
+@@ -43,16 +43,16 @@ PriorityPieceSelector::PriorityPieceSelector(
+ {
+ }
+ 
+-bool PriorityPieceSelector::select(size_t& index, const unsigned char* bitfield,
+-                                   size_t nbits) const
++std::optional<size_t>
++PriorityPieceSelector::select(const unsigned char* bitfield,
++                              size_t nbits) const
+ {
+   for (auto& p : prioritizedPieces_) {
+     if (bitfield::test(bitfield, nbits, p)) {
+-      index = p;
+-      return true;
++      return p;
+     }
+   }
+-  return selector_->select(index, bitfield, nbits);
++  return selector_->select(bitfield, nbits);
+ }
+ 
+ } // namespace aria2
+diff --git a/src/PriorityPieceSelector.h b/src/PriorityPieceSelector.h
+index 5559d595..c8612926 100644
+--- a/src/PriorityPieceSelector.h
++++ b/src/PriorityPieceSelector.h
+@@ -51,8 +51,8 @@ private:
+ public:
+   PriorityPieceSelector(const std::shared_ptr<PieceSelector>& selector);
+ 
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ 
+   template <typename InputIterator>
+   void setPriorityPiece(InputIterator first, InputIterator last)
+diff --git a/src/RandomStreamPieceSelector.cc b/src/RandomStreamPieceSelector.cc
+index e630598c..38e97bef 100644
+--- a/src/RandomStreamPieceSelector.cc
++++ b/src/RandomStreamPieceSelector.cc
+@@ -45,27 +45,26 @@ RandomStreamPieceSelector::RandomStreamPieceSelector(BitfieldMan* bitfieldMan)
+ 
+ RandomStreamPieceSelector::~RandomStreamPieceSelector() = default;
+ 
+-bool RandomStreamPieceSelector::select(size_t& index, size_t minSplitSize,
+-                                       const unsigned char* ignoreBitfield,
+-                                       size_t length)
++std::optional<size_t>
++RandomStreamPieceSelector::select(size_t minSplitSize,
++                                  const unsigned char* ignoreBitfield,
++                                  size_t length)
+ {
+   size_t start = SimpleRandomizer::getInstance()->getRandomNumber(
+       bitfieldMan_->countBlock());
+ 
+-  auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
+-      index, start, bitfieldMan_->countBlock(), minSplitSize, ignoreBitfield,
+-      length);
+-  if (rv) {
+-    return true;
++  if (auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
++          start, bitfieldMan_->countBlock(), minSplitSize, ignoreBitfield,
++          length)) {
++    return rv;
+   }
+-  rv = bitfieldMan_->getInorderMissingUnusedIndex(index, 0, start, minSplitSize,
+-                                                  ignoreBitfield, length);
+-  if (rv) {
+-    return true;
++  if (auto rv = bitfieldMan_->getInorderMissingUnusedIndex(
++          0, start, minSplitSize, ignoreBitfield, length)) {
++    return rv;
+   }
+   // Fall back to inorder search because randomized search may fail
+   // because of |minSplitSize| constraint.
+-  return bitfieldMan_->getInorderMissingUnusedIndex(index, minSplitSize,
++  return bitfieldMan_->getInorderMissingUnusedIndex(minSplitSize,
+                                                     ignoreBitfield, length);
+ }
+ 
+diff --git a/src/RandomStreamPieceSelector.h b/src/RandomStreamPieceSelector.h
+index 24ce8732..7f1fea90 100644
+--- a/src/RandomStreamPieceSelector.h
++++ b/src/RandomStreamPieceSelector.h
+@@ -46,8 +46,9 @@ public:
+   RandomStreamPieceSelector(BitfieldMan* bitfieldMan);
+   ~RandomStreamPieceSelector() override;
+ 
+-  bool select(size_t& index, size_t minSplitSize,
+-              const unsigned char* ignoreBitfield, size_t length) override;
++  std::optional<size_t> select(size_t minSplitSize,
++                               const unsigned char* ignoreBitfield,
++                               size_t length) override;
+ 
+   void onBitfieldInit() override;
+ 
+diff --git a/src/RarestPieceSelector.cc b/src/RarestPieceSelector.cc
+index d3fa703e..e851620a 100644
+--- a/src/RarestPieceSelector.cc
++++ b/src/RarestPieceSelector.cc
+@@ -48,8 +48,9 @@ RarestPieceSelector::RarestPieceSelector(
+ {
+ }
+ 
+-bool RarestPieceSelector::select(size_t& index, const unsigned char* bitfield,
+-                                 size_t nbits) const
++std::optional<size_t>
++RarestPieceSelector::select(const unsigned char* bitfield,
++                            size_t nbits) const
+ {
+   const std::vector<size_t>& order = pieceStatMan_->getOrder();
+   const std::vector<int>& counts = pieceStatMan_->getCounts();
+@@ -63,11 +64,10 @@ bool RarestPieceSelector::select(size_t& index, const unsigned char* bitfield,
+     }
+   }
+   if (bestIdx == nbits) {
+-    return false;
++    return std::nullopt;
+   }
+   else {
+-    index = bestIdx;
+-    return true;
++    return bestIdx;
+   }
+ }
+ 
+diff --git a/src/RarestPieceSelector.h b/src/RarestPieceSelector.h
+index a95081f7..a1a7fb16 100644
+--- a/src/RarestPieceSelector.h
++++ b/src/RarestPieceSelector.h
+@@ -50,8 +50,8 @@ private:
+ public:
+   RarestPieceSelector(const std::shared_ptr<PieceStatMan>& pieceStatMan);
+ 
+-  bool select(size_t& index, const unsigned char* bitfield,
+-              size_t nbits) const override;
++  std::optional<size_t> select(const unsigned char* bitfield,
++                               size_t nbits) const override;
+ };
+ 
+ } // namespace aria2
+diff --git a/src/StreamPieceSelector.h b/src/StreamPieceSelector.h
+index ccb49bed..87a4d691 100644
+--- a/src/StreamPieceSelector.h
++++ b/src/StreamPieceSelector.h
+@@ -38,6 +38,7 @@
+ #include "common.h"
+ 
+ #include <cstdlib>
++#include <optional>
+ 
+ namespace aria2 {
+ 
+@@ -55,8 +56,9 @@ public:
+   // is a advice to derived class not to select piece such which the
+   // distance between it and already selected piece is less than
+   // minSplitSize.
+-  virtual bool select(size_t& index, size_t minSplitSize,
+-                      const unsigned char* ignoreBitfield, size_t length) = 0;
++  virtual std::optional<size_t> select(
++      size_t minSplitSize, const unsigned char* ignoreBitfield,
++      size_t length) = 0;
+ 
+   // Called when initial bitfield was fixed. Optimize
+   // StreamPieceSelector to take advantages of the initial bitfield.
+diff --git a/src/bitfield.h b/src/bitfield.h
+index 9928d8bd..0e98ceed 100644
+--- a/src/bitfield.h
++++ b/src/bitfield.h
+@@ -40,6 +40,7 @@
+ #include <cassert>
+ #include <cstdlib>
+ #include <cstring>
++#include <optional>
+ 
+ #include "util.h"
+ 
+@@ -145,15 +146,14 @@ void flipBit(unsigned char* data, size_t length, size_t bitIndex);
+ // Stores first set bit index of bitfield to index.  bitfield contains
+ // nbits. Returns true if set bit is found. Otherwise returns false.
+ template <typename Array>
+-bool getFirstSetBitIndex(size_t& index, const Array& bitfield, size_t nbits)
++std::optional<size_t> getFirstSetBitIndex(const Array& bitfield, size_t nbits)
+ {
+   for (size_t i = 0; i < nbits; ++i) {
+     if (bitfield::test(bitfield, nbits, i)) {
+-      index = i;
+-      return true;
++      return i;
+     }
+   }
+-  return false;
++  return std::nullopt;
+ }
+ 
+ // Appends first at most n set bit index in bitfield to out.  bitfield
+diff --git a/test/MockPieceSelector.h b/test/MockPieceSelector.h
+index c1f9e3fc..20850b61 100644
+--- a/test/MockPieceSelector.h
++++ b/test/MockPieceSelector.h
+@@ -7,10 +7,10 @@ namespace aria2 {
+ 
+ class MockPieceSelector : public PieceSelector {
+ public:
+-  virtual bool select(size_t& index, const unsigned char* bitfield,
+-                      size_t nbits) const override
++  virtual std::optional<size_t> select(const unsigned char* bitfield,
++                                         size_t nbits) const override
+   {
+-    return false;
++    return std::nullopt;
+   }
+ };
+ 

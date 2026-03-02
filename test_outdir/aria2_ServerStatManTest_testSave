@@ -1,0 +1,3 @@
+host=localhost, protocol=ftp, dl_speed=30000, sc_avg_speed=0, mc_avg_speed=0, last_updated=1210000001, counter=0, status=OK
+host=localhost, protocol=http, dl_speed=25000, sc_avg_speed=100, mc_avg_speed=101, last_updated=1210000000, counter=5, status=OK
+host=mirror, protocol=http, dl_speed=0, sc_avg_speed=0, mc_avg_speed=0, last_updated=1210000002, counter=0, status=ERROR

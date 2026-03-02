@@ -79,8 +79,8 @@ void IteratableChecksumValidator::validateChunk()
                       util::toHex(dctx_->getDigest()).c_str(),
                       util::toHex(actualDigest).c_str()));
       BitfieldMan bitfield(dctx_->getPieceLength(), dctx_->getTotalLength());
-      pieceStorage_->setBitfield(bitfield.getBitfield(),
-                                 bitfield.getBitfieldLength());
+      pieceStorage_->setBitfield(
+          {bitfield.getBitfield(), bitfield.getBitfieldLength()});
     }
   }
 }

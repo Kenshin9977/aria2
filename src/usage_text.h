@@ -693,6 +693,14 @@
   _(" --ftp-proxy-user=USER        Set user for --ftp-proxy.")
 #define TEXT_FTP_PROXY_PASSWD                                           \
   _(" --ftp-proxy-passwd=PASSWD    Set password for --ftp-proxy.")
+#define TEXT_SOCKS5_PROXY                                               \
+  _(" --socks5-proxy=HOST:PORT     Use a SOCKS5 proxy server. Specify as\n" \
+    "                              host:port. Overrides protocol-specific\n" \
+    "                              HTTP/HTTPS/FTP proxy settings.")
+#define TEXT_SOCKS5_PROXY_USER                                          \
+  _(" --socks5-proxy-user=USER     Set user for --socks5-proxy.")
+#define TEXT_SOCKS5_PROXY_PASSWD                                        \
+  _(" --socks5-proxy-passwd=PASSWD Set password for --socks5-proxy.")
 #define TEXT_REMOVE_CONTROL_FILE                \
   _(" --remove-control-file[=true|false] Remove control file before download. Using\n" \
     "                              with --allow-overwrite=true, download always\n" \
@@ -843,7 +851,8 @@
     "                              on local loopback interface.")
 #define TEXT_RPC_LISTEN_PORT                                        \
   _(" --rpc-listen-port=PORT       Specify a port number for JSON-RPC/XML-RPC server\n" \
-    "                              to listen to.")
+    "                              to listen to.  If 0 is given, the operating\n" \
+    "                              system will choose an available port.")
 #define TEXT_SHOW_CONSOLE_READOUT                                       \
   _(" --show-console-readout[=true|false] Show console readout.")
 #define TEXT_METALINK_BASE_URI                  \

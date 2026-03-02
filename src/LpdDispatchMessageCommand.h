@@ -57,9 +57,9 @@ public:
       cuid_t cuid, const std::shared_ptr<LpdMessageDispatcher>& dispatcher,
       DownloadEngine* e);
 
-  ~LpdDispatchMessageCommand();
+  ~LpdDispatchMessageCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   void setBtRuntime(const std::shared_ptr<BtRuntime>& btRuntime)
   {

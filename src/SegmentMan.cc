@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "a2functional.h"
 #include "util.h"
 #include "message.h"
 #include "prefs.h"
@@ -158,8 +159,8 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
     segment = std::make_shared<PiecedSegment>(
         downloadContext_->getPieceLength(), piece);
   }
-  auto entry = std::make_shared<SegmentEntry>(cuid, segment);
-  usedSegmentEntries_.push_back(entry);
+  auto entry = std::make_unique<SegmentEntry>(cuid, segment);
+  usedSegmentEntries_.push_back(std::move(entry));
   A2_LOG_DEBUG(fmt("index=%lu, length=%" PRId64 ", segmentLength=%" PRId64 ","
                    " writtenLength=%" PRId64,
                    static_cast<unsigned long>(segment->getIndex()),
@@ -167,8 +168,9 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
                    segment->getWrittenLength()));
 
   if (piece->getLength() > 0) {
-    auto positr = segmentWrittenLengthMemo_.find(segment->getIndex());
-    if (positr != segmentWrittenLengthMemo_.end()) {
+    if (auto positr =
+            segmentWrittenLengthMemo_.find(segment->getIndex());
+        positr != segmentWrittenLengthMemo_.end()) {
       const auto writtenLength = (*positr).second;
       A2_LOG_DEBUG(fmt("writtenLength(in memo)=%" PRId64
                        ", writtenLength=%" PRId64,
@@ -190,10 +192,7 @@ SegmentMan::checkoutSegment(cuid_t cuid, const std::shared_ptr<Piece>& piece)
 void SegmentMan::getInFlightSegment(
     std::vector<std::shared_ptr<Segment>>& segments, cuid_t cuid)
 {
-  for (SegmentEntries::const_iterator itr = usedSegmentEntries_.begin(),
-                                      eoi = usedSegmentEntries_.end();
-       itr != eoi; ++itr) {
-    const std::shared_ptr<SegmentEntry>& segmentEntry = *itr;
+  for (const auto& segmentEntry : usedSegmentEntries_) {
     if (segmentEntry->cuid == cuid) {
       segments.push_back(segmentEntry->segment);
     }
@@ -234,11 +233,8 @@ void SegmentMan::getSegment(std::vector<std::shared_ptr<Segment>>& segments,
       segments.push_back(segment);
     }
   }
-  for (std::vector<std::shared_ptr<Segment>>::const_iterator
-           i = pending.begin(),
-           eoi = pending.end();
-       i != eoi; ++i) {
-    cancelSegment(cuid, *i);
+  for (const auto& seg : pending) {
+    cancelSegment(cuid, seg);
   }
 }
 
@@ -260,7 +256,7 @@ std::shared_ptr<Segment> SegmentMan::getCleanSegmentIfOwnerIsIdle(cuid_t cuid,
   for (SegmentEntries::const_iterator itr = usedSegmentEntries_.begin(),
                                       eoi = usedSegmentEntries_.end();
        itr != eoi; ++itr) {
-    const std::shared_ptr<SegmentEntry>& segmentEntry = *itr;
+    const auto& segmentEntry = *itr;
     if (segmentEntry->segment->getIndex() == index) {
       if (segmentEntry->segment->getWrittenLength() > 0) {
         return nullptr;
@@ -363,7 +359,7 @@ public:
   {
   }
 
-  bool operator()(const std::shared_ptr<SegmentEntry>& segmentEntry) const
+  bool operator()(const std::unique_ptr<SegmentEntry>& segmentEntry) const
   {
     return segmentEntry->segment->getIndex() == segment_->getIndex();
   }
@@ -376,8 +372,8 @@ bool SegmentMan::completeSegment(cuid_t cuid,
   pieceStorage_->completePiece(segment->getPiece());
   pieceStorage_->advertisePiece(cuid, segment->getPiece()->getIndex(),
                                 global::wallclock());
-  auto itr = std::find_if(usedSegmentEntries_.begin(),
-                          usedSegmentEntries_.end(), FindSegmentEntry(segment));
+  auto itr =
+      std::ranges::find_if(usedSegmentEntries_, FindSegmentEntry(segment));
   if (itr == usedSegmentEntries_.end()) {
     return false;
   }
@@ -409,12 +405,9 @@ void SegmentMan::registerPeerStat(const std::shared_ptr<PeerStat>& peerStat)
 
 std::shared_ptr<PeerStat> SegmentMan::getPeerStat(cuid_t cuid) const
 {
-  for (auto& e : peerStats_) {
-    if (e->getCuid() == cuid) {
-      return e;
-    }
-  }
-  return nullptr;
+  auto it = std::ranges::find_if(
+      peerStats_, [cuid](const auto& e) { return e->getCuid() == cuid; });
+  return it != peerStats_.end() ? *it : nullptr;
 }
 
 namespace {
@@ -439,8 +432,8 @@ public:
 void SegmentMan::updateFastestPeerStat(
     const std::shared_ptr<PeerStat>& peerStat)
 {
-  auto i = std::find_if(fastestPeerStats_.begin(), fastestPeerStats_.end(),
-                        PeerStatHostProtoEqual(peerStat));
+  auto i =
+      std::ranges::find_if(fastestPeerStats_, PeerStatHostProtoEqual(peerStat));
   if (i == fastestPeerStats_.end()) {
     fastestPeerStats_.push_back(peerStat);
   }

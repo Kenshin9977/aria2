@@ -50,12 +50,10 @@ namespace {
 
 // This is the hard limit of the number of "fresh peer" and "dropped
 // peer".  This number is treated as the sum of IPv4 and IPv6 peers.
-const size_t DEFAULT_MAX_FRESH_PEER = 50;
-const size_t DEFAULT_MAX_DROPPED_PEER = 50;
+constexpr size_t DEFAULT_MAX_FRESH_PEER = 50;
+constexpr size_t DEFAULT_MAX_DROPPED_PEER = 50;
 
 } // namespace
-
-const char UTPexExtensionMessage::EXTENSION_NAME[] = "ut_pex";
 
 constexpr std::chrono::minutes UTPexExtensionMessage::DEFAULT_INTERVAL;
 
@@ -70,22 +68,24 @@ UTPexExtensionMessage::UTPexExtensionMessage(uint8_t extensionMessageID)
 
 std::string UTPexExtensionMessage::getPayload()
 {
-  auto freshPeerPair = createCompactPeerListAndFlag(freshPeers_);
-  auto droppedPeerPair = createCompactPeerListAndFlag(droppedPeers_);
+  auto [freshV4, freshV6] =
+      createCompactPeerListAndFlag(freshPeers_);
+  auto [droppedV4, droppedV6] =
+      createCompactPeerListAndFlag(droppedPeers_);
   Dict dict;
-  if (!freshPeerPair.first.first.empty()) {
-    dict.put("added", freshPeerPair.first.first);
-    dict.put("added.f", freshPeerPair.first.second);
+  if (!freshV4.first.empty()) {
+    dict.put("added", freshV4.first);
+    dict.put("added.f", freshV4.second);
   }
-  if (!droppedPeerPair.first.first.empty()) {
-    dict.put("dropped", droppedPeerPair.first.first);
+  if (!droppedV4.first.empty()) {
+    dict.put("dropped", droppedV4.first);
   }
-  if (!freshPeerPair.second.first.empty()) {
-    dict.put("added6", freshPeerPair.second.first);
-    dict.put("added6.f", freshPeerPair.second.second);
+  if (!freshV6.first.empty()) {
+    dict.put("added6", freshV6.first);
+    dict.put("added6.f", freshV6.second);
   }
-  if (!droppedPeerPair.second.first.empty()) {
-    dict.put("dropped6", droppedPeerPair.second.first);
+  if (!droppedV6.first.empty()) {
+    dict.put("dropped6", droppedV6.first);
   }
 
   return bencode2::encode(&dict);
@@ -199,30 +199,31 @@ UTPexExtensionMessage::create(const unsigned char* data, size_t len)
     throw DL_ABORT_EX(fmt(MSG_TOO_SMALL_PAYLOAD_SIZE, EXTENSION_NAME,
                           static_cast<unsigned long>(len)));
   }
-  auto msg = make_unique<UTPexExtensionMessage>(*data);
+  auto msg = std::make_unique<UTPexExtensionMessage>(*data);
 
-  auto decoded = bencode2::decode(data + 1, len - 1);
-  const Dict* dict = downcast<Dict>(decoded);
-  if (dict) {
-    const String* added = downcast<String>(dict->get("added"));
-    if (added) {
+  auto decoded = bencode2::decode({data + 1, len - 1});
+  if (const auto* dict = downcast<Dict>(decoded)) {
+    if (const auto* added = downcast<String>(dict->get("added"))) {
       bittorrent::extractPeer(added, AF_INET,
                               std::back_inserter(msg->freshPeers_));
     }
-    const String* dropped = downcast<String>(dict->get("dropped"));
-    if (dropped) {
-      bittorrent::extractPeer(dropped, AF_INET,
-                              std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped =
+            downcast<String>(dict->get("dropped"))) {
+      bittorrent::extractPeer(
+          dropped, AF_INET,
+          std::back_inserter(msg->droppedPeers_));
     }
-    const String* added6 = downcast<String>(dict->get("added6"));
-    if (added6) {
-      bittorrent::extractPeer(added6, AF_INET6,
-                              std::back_inserter(msg->freshPeers_));
+    if (const auto* added6 =
+            downcast<String>(dict->get("added6"))) {
+      bittorrent::extractPeer(
+          added6, AF_INET6,
+          std::back_inserter(msg->freshPeers_));
     }
-    const String* dropped6 = downcast<String>(dict->get("dropped6"));
-    if (dropped6) {
-      bittorrent::extractPeer(dropped6, AF_INET6,
-                              std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped6 =
+            downcast<String>(dict->get("dropped6"))) {
+      bittorrent::extractPeer(
+          dropped6, AF_INET6,
+          std::back_inserter(msg->droppedPeers_));
     }
   }
   return msg;

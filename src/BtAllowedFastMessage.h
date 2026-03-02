@@ -43,16 +43,16 @@ class BtAllowedFastMessage : public IndexBtMessage {
 public:
   BtAllowedFastMessage(size_t index = 0);
 
-  static const uint8_t ID = 17;
+  static constexpr uint8_t ID = 17;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "allowed fast";
 
-  static std::unique_ptr<BtAllowedFastMessage> create(const unsigned char* data,
-                                                      size_t dataLength);
+  static std::unique_ptr<BtAllowedFastMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<ProgressUpdate> getProgressUpdate() CXX11_OVERRIDE;
+  std::unique_ptr<ProgressUpdate> getProgressUpdate() override;
 };
 
 } // namespace aria2

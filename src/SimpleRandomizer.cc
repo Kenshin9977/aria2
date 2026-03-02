@@ -41,9 +41,9 @@
 #include <cstring>
 #include <iostream>
 
-#ifdef __APPLE__
+#ifdef HAVE_APPLETLS
 #  include <Security/SecRandom.h>
-#endif // __APPLE__
+#endif // HAVE_APPLETLS
 
 #ifdef HAVE_LIBGNUTLS
 #  include <gnutls/crypto.h>
@@ -77,8 +77,9 @@ std::random_device rd;
 #ifdef __MINGW32__
 SimpleRandomizer::SimpleRandomizer()
 {
-  BOOL r = ::CryptAcquireContext(&provider_, 0, 0, PROV_RSA_FULL,
-                                 CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  [[maybe_unused]] BOOL r = ::CryptAcquireContext(
+      &provider_, 0, 0, PROV_RSA_FULL,
+      CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
   assert(r);
 }
 #else  // !__MINGW32__
@@ -106,8 +107,9 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
     assert(r);
     abort();
   }
-#elif defined(__APPLE__)
-  auto rv = SecRandomCopyBytes(kSecRandomDefault, len, buf);
+#elif defined(HAVE_APPLETLS)
+  [[maybe_unused]] auto rv =
+      SecRandomCopyBytes(kSecRandomDefault, len, buf);
   assert(errSecSuccess == rv);
 #elif defined(HAVE_LIBGNUTLS)
   auto rv = gnutls_rnd(GNUTLS_RND_RANDOM, buf, len);

@@ -50,18 +50,22 @@ SSHSession::~SSHSession() { closeConnection(); }
 int SSHSession::closeConnection()
 {
   if (sftph_) {
-    // TODO this could return LIBSSH2_ERROR_EAGAIN
-    libssh2_sftp_close(sftph_);
+    int rv;
+    while ((rv = libssh2_sftp_close(sftph_)) == LIBSSH2_ERROR_EAGAIN)
+      ;
     sftph_ = nullptr;
   }
   if (sftp_) {
-    // TODO this could return LIBSSH2_ERROR_EAGAIN
-    libssh2_sftp_shutdown(sftp_);
+    int rv;
+    while ((rv = libssh2_sftp_shutdown(sftp_)) == LIBSSH2_ERROR_EAGAIN)
+      ;
     sftp_ = nullptr;
   }
   if (ssh2_) {
-    // TODO this could return LIBSSH2_ERROR_EAGAIN
-    libssh2_session_disconnect(ssh2_, "bye");
+    int rv;
+    while ((rv = libssh2_session_disconnect(ssh2_, "bye")) ==
+           LIBSSH2_ERROR_EAGAIN)
+      ;
     libssh2_session_free(ssh2_);
     ssh2_ = nullptr;
   }

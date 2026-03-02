@@ -55,10 +55,10 @@ class LibuvEventPoll : public EventPoll {
 private:
   class KSocketEntry;
 
-  typedef Event<KSocketEntry> KEvent;
-  typedef CommandEvent<KSocketEntry, LibuvEventPoll> KCommandEvent;
-  typedef ADNSEvent<KSocketEntry, LibuvEventPoll> KADNSEvent;
-  typedef AsyncNameResolverEntry<LibuvEventPoll> KAsyncNameResolverEntry;
+  using KEvent = Event<KSocketEntry>;
+  using KCommandEvent = CommandEvent<KSocketEntry, LibuvEventPoll>;
+  using KADNSEvent = ADNSEvent<KSocketEntry, LibuvEventPoll>;
+  using KAsyncNameResolverEntry = AsyncNameResolverEntry<LibuvEventPoll>;
 
   friend class AsyncNameResolverEntry<LibuvEventPoll>;
   friend int accumulateEvent(int events, const KEvent& event);
@@ -109,14 +109,14 @@ private:
     }
   };
 
-  typedef std::map<sock_t, KSocketEntry> KSocketEntrySet;
+  using KSocketEntrySet = std::map<sock_t, KSocketEntry>;
 
-  typedef std::map<sock_t, KPoll*> KPolls;
+  using KPolls = std::map<sock_t, KPoll*>;
 
 #ifdef ENABLE_ASYNC_DNS
-  typedef std::map<std::pair<AsyncNameResolver*, Command*>,
-                   KAsyncNameResolverEntry>
-      KAsyncNameResolverEntrySet;
+  using KAsyncNameResolverEntrySet =
+      std::map<std::pair<AsyncNameResolver*, Command*>,
+               KAsyncNameResolverEntry>;
 #endif // ENABLE_ASYNC_DNS
 
   uv_loop_t* loop_;
@@ -142,33 +142,31 @@ private:
 
 public:
   LibuvEventPoll();
-  virtual ~LibuvEventPoll();
+  ~LibuvEventPoll() override;
 
   bool good() const { return loop_; }
 
-  virtual void poll(const struct timeval& tv) CXX11_OVERRIDE;
+  void poll(const struct timeval& tv) override;
 
-  virtual bool addEvents(sock_t socket, Command* command,
-                         EventPoll::EventType events) CXX11_OVERRIDE;
-  virtual bool deleteEvents(sock_t socket, Command* command,
-                            EventPoll::EventType events) CXX11_OVERRIDE;
+  bool addEvents(sock_t socket, Command* command,
+                 EventPoll::EventType events) override;
+  bool deleteEvents(sock_t socket, Command* command,
+                    EventPoll::EventType events) override;
 
 #ifdef ENABLE_ASYNC_DNS
-  virtual bool
-  addNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
-                  Command* command) CXX11_OVERRIDE;
-  virtual bool
-  deleteNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
-                     Command* command) CXX11_OVERRIDE;
+  bool addNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
+                       Command* command) override;
+  bool deleteNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
+                          Command* command) override;
 #endif // ENABLE_ASYNC_DNS
 
-  static const int IEV_READ = UV_READABLE;
-  static const int IEV_WRITE = UV_WRITABLE;
-  static const int IEV_RW = UV_READABLE | UV_WRITABLE;
+  static constexpr int IEV_READ = UV_READABLE;
+  static constexpr int IEV_WRITE = UV_WRITABLE;
+  static constexpr int IEV_RW = UV_READABLE | UV_WRITABLE;
 
   // Make sure these do not interfere with the uv_poll API later.
-  static const int IEV_ERROR = 128;
-  static const int IEV_HUP = 255;
+  static constexpr int IEV_ERROR = 128;
+  static constexpr int IEV_HUP = 255;
 };
 
 } // namespace aria2

@@ -36,6 +36,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 #include <sstream>
 
 #include "Logger.h"
@@ -84,69 +85,69 @@ namespace aria2 {
 namespace rpc {
 
 namespace {
-const char VLB_TRUE[] = "true";
-const char VLB_FALSE[] = "false";
-const char VLB_ACTIVE[] = "active";
-const char VLB_WAITING[] = "waiting";
-const char VLB_PAUSED[] = "paused";
-const char VLB_REMOVED[] = "removed";
-const char VLB_ERROR[] = "error";
-const char VLB_COMPLETE[] = "complete";
-const char VLB_USED[] = "used";
-const char VLB_ZERO[] = "0";
+constexpr char VLB_TRUE[] = "true";
+constexpr char VLB_FALSE[] = "false";
+constexpr char VLB_ACTIVE[] = "active";
+constexpr char VLB_WAITING[] = "waiting";
+constexpr char VLB_PAUSED[] = "paused";
+constexpr char VLB_REMOVED[] = "removed";
+constexpr char VLB_ERROR[] = "error";
+constexpr char VLB_COMPLETE[] = "complete";
+constexpr char VLB_USED[] = "used";
+constexpr char VLB_ZERO[] = "0";
 
-const char KEY_GID[] = "gid";
-const char KEY_ERROR_CODE[] = "errorCode";
-const char KEY_ERROR_MESSAGE[] = "errorMessage";
-const char KEY_STATUS[] = "status";
-const char KEY_TOTAL_LENGTH[] = "totalLength";
-const char KEY_COMPLETED_LENGTH[] = "completedLength";
-const char KEY_DOWNLOAD_SPEED[] = "downloadSpeed";
-const char KEY_UPLOAD_SPEED[] = "uploadSpeed";
-const char KEY_UPLOAD_LENGTH[] = "uploadLength";
-const char KEY_CONNECTIONS[] = "connections";
-const char KEY_BITFIELD[] = "bitfield";
-const char KEY_PIECE_LENGTH[] = "pieceLength";
-const char KEY_NUM_PIECES[] = "numPieces";
-const char KEY_FOLLOWED_BY[] = "followedBy";
-const char KEY_FOLLOWING[] = "following";
-const char KEY_BELONGS_TO[] = "belongsTo";
-const char KEY_INFO_HASH[] = "infoHash";
-const char KEY_NUM_SEEDERS[] = "numSeeders";
-const char KEY_PEER_ID[] = "peerId";
-const char KEY_IP[] = "ip";
-const char KEY_PORT[] = "port";
-const char KEY_AM_CHOKING[] = "amChoking";
-const char KEY_PEER_CHOKING[] = "peerChoking";
-const char KEY_SEEDER[] = "seeder";
-const char KEY_INDEX[] = "index";
-const char KEY_PATH[] = "path";
-const char KEY_SELECTED[] = "selected";
-const char KEY_LENGTH[] = "length";
-const char KEY_URI[] = "uri";
-const char KEY_CURRENT_URI[] = "currentUri";
-const char KEY_VERSION[] = "version";
-const char KEY_ENABLED_FEATURES[] = "enabledFeatures";
-const char KEY_METHOD_NAME[] = "methodName";
-const char KEY_PARAMS[] = "params";
-const char KEY_SESSION_ID[] = "sessionId";
-const char KEY_FILES[] = "files";
-const char KEY_DIR[] = "dir";
-const char KEY_URIS[] = "uris";
-const char KEY_BITTORRENT[] = "bittorrent";
-const char KEY_INFO[] = "info";
-const char KEY_NAME[] = "name";
-const char KEY_ANNOUNCE_LIST[] = "announceList";
-const char KEY_COMMENT[] = "comment";
-const char KEY_CREATION_DATE[] = "creationDate";
-const char KEY_MODE[] = "mode";
-const char KEY_SERVERS[] = "servers";
-const char KEY_NUM_WAITING[] = "numWaiting";
-const char KEY_NUM_STOPPED[] = "numStopped";
-const char KEY_NUM_ACTIVE[] = "numActive";
-const char KEY_NUM_STOPPED_TOTAL[] = "numStoppedTotal";
-const char KEY_VERIFIED_LENGTH[] = "verifiedLength";
-const char KEY_VERIFY_PENDING[] = "verifyIntegrityPending";
+constexpr char KEY_GID[] = "gid";
+constexpr char KEY_ERROR_CODE[] = "errorCode";
+constexpr char KEY_ERROR_MESSAGE[] = "errorMessage";
+constexpr char KEY_STATUS[] = "status";
+constexpr char KEY_TOTAL_LENGTH[] = "totalLength";
+constexpr char KEY_COMPLETED_LENGTH[] = "completedLength";
+constexpr char KEY_DOWNLOAD_SPEED[] = "downloadSpeed";
+constexpr char KEY_UPLOAD_SPEED[] = "uploadSpeed";
+constexpr char KEY_UPLOAD_LENGTH[] = "uploadLength";
+constexpr char KEY_CONNECTIONS[] = "connections";
+constexpr char KEY_BITFIELD[] = "bitfield";
+constexpr char KEY_PIECE_LENGTH[] = "pieceLength";
+constexpr char KEY_NUM_PIECES[] = "numPieces";
+constexpr char KEY_FOLLOWED_BY[] = "followedBy";
+constexpr char KEY_FOLLOWING[] = "following";
+constexpr char KEY_BELONGS_TO[] = "belongsTo";
+constexpr char KEY_INFO_HASH[] = "infoHash";
+constexpr char KEY_NUM_SEEDERS[] = "numSeeders";
+constexpr char KEY_PEER_ID[] = "peerId";
+constexpr char KEY_IP[] = "ip";
+constexpr char KEY_PORT[] = "port";
+constexpr char KEY_AM_CHOKING[] = "amChoking";
+constexpr char KEY_PEER_CHOKING[] = "peerChoking";
+constexpr char KEY_SEEDER[] = "seeder";
+constexpr char KEY_INDEX[] = "index";
+constexpr char KEY_PATH[] = "path";
+constexpr char KEY_SELECTED[] = "selected";
+constexpr char KEY_LENGTH[] = "length";
+constexpr char KEY_URI[] = "uri";
+constexpr char KEY_CURRENT_URI[] = "currentUri";
+constexpr char KEY_VERSION[] = "version";
+constexpr char KEY_ENABLED_FEATURES[] = "enabledFeatures";
+constexpr char KEY_METHOD_NAME[] = "methodName";
+constexpr char KEY_PARAMS[] = "params";
+constexpr char KEY_SESSION_ID[] = "sessionId";
+constexpr char KEY_FILES[] = "files";
+constexpr char KEY_DIR[] = "dir";
+constexpr char KEY_URIS[] = "uris";
+constexpr char KEY_BITTORRENT[] = "bittorrent";
+constexpr char KEY_INFO[] = "info";
+constexpr char KEY_NAME[] = "name";
+constexpr char KEY_ANNOUNCE_LIST[] = "announceList";
+constexpr char KEY_COMMENT[] = "comment";
+constexpr char KEY_CREATION_DATE[] = "creationDate";
+constexpr char KEY_MODE[] = "mode";
+constexpr char KEY_SERVERS[] = "servers";
+constexpr char KEY_NUM_WAITING[] = "numWaiting";
+constexpr char KEY_NUM_STOPPED[] = "numStopped";
+constexpr char KEY_NUM_ACTIVE[] = "numActive";
+constexpr char KEY_NUM_STOPPED_TOTAL[] = "numStoppedTotal";
+constexpr char KEY_VERIFIED_LENGTH[] = "verifiedLength";
+constexpr char KEY_VERIFY_PENDING[] = "verifyIntegrityPending";
 } // namespace
 
 namespace {
@@ -216,8 +217,7 @@ void extractUris(OutputIterator out, const List* src)
 {
   if (src) {
     for (auto& elem : *src) {
-      const String* uri = downcast<String>(elem);
-      if (uri) {
+      if (const auto* uri = downcast<String>(elem)) {
         out++ = uri->s();
       }
     }
@@ -586,8 +586,8 @@ void createFileEntry(List* files, InputIterator first, InputIterator last,
                      const std::string& bitfield)
 {
   BitfieldMan bf(pieceLength, totalLength);
-  bf.setBitfield(reinterpret_cast<const unsigned char*>(bitfield.data()),
-                 bitfield.size());
+  bf.setBitfield({reinterpret_cast<const unsigned char*>(bitfield.data()),
+                  bitfield.size()});
   createFileEntry(files, first, last, &bf);
 }
 } // namespace
@@ -600,7 +600,7 @@ void createFileEntry(List* files, InputIterator first, InputIterator last,
 {
   BitfieldMan bf(pieceLength, totalLength);
   if (ps) {
-    bf.setBitfield(ps->getBitfield(), ps->getBitfieldLength());
+    bf.setBitfield({ps->getBitfield(), ps->getBitfieldLength()});
   }
   createFileEntry(files, first, last, &bf);
 }
@@ -609,7 +609,7 @@ void createFileEntry(List* files, InputIterator first, InputIterator last,
 namespace {
 bool requested_key(const std::vector<std::string>& keys, const std::string& k)
 {
-  return keys.empty() || std::find(keys.begin(), keys.end(), k) != keys.end();
+  return keys.empty() || std::ranges::find(keys, k) != keys.end();
 }
 } // namespace
 
@@ -790,7 +790,8 @@ void gatherProgress(Dict* entryDict, const std::shared_ptr<RequestGroup>& group,
 {
   gatherProgressCommon(entryDict, group, keys);
 #ifdef ENABLE_BITTORRENT
-  if (group->getDownloadContext()->hasAttribute(CTX_ATTR_BT)) {
+  if (group->getDownloadContext()->hasAttribute(
+          ContextAttributeType::CTX_ATTR_BT)) {
     gatherProgressBitTorrent(
         entryDict, group,
         bittorrent::getTorrentAttrs(group->getDownloadContext()),
@@ -821,6 +822,7 @@ void gatherStoppedDownload(Dict* entryDict,
                            const std::shared_ptr<DownloadResult>& ds,
                            const std::vector<std::string>& keys)
 {
+  using enum ContextAttributeType;
   if (requested_key(keys, KEY_GID)) {
     entryDict->put(KEY_GID, ds->gid->toHex());
   }
@@ -910,9 +912,14 @@ void gatherStoppedDownload(Dict* entryDict,
   }
 
 #ifdef ENABLE_BITTORRENT
-  if (ds->attrs.size() > CTX_ATTR_BT && ds->attrs[CTX_ATTR_BT]) {
-    const auto attrs =
-        static_cast<TorrentAttribute*>(ds->attrs[CTX_ATTR_BT].get());
+  if (ds->attrs.size() >
+          static_cast<size_t>(CTX_ATTR_BT) &&
+      ds->attrs[static_cast<size_t>(
+          CTX_ATTR_BT)]) {
+    const auto attrs = static_cast<TorrentAttribute*>(
+        ds->attrs[static_cast<size_t>(
+                      CTX_ATTR_BT)]
+            .get());
     if (requested_key(keys, KEY_BITTORRENT)) {
       auto btDict = Dict::g();
       gatherBitTorrentMetadata(btDict.get(), attrs);
@@ -1318,16 +1325,16 @@ std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
   auto& s = files[index];
   size_t delcount = 0;
   for (auto& elem : *delUrisParam) {
-    const String* uri = downcast<String>(elem);
-    if (uri && s->removeUri(uri->s())) {
+    if (const auto* uri = downcast<String>(elem);
+        uri && s->removeUri(uri->s())) {
       ++delcount;
     }
   }
   size_t addcount = 0;
   if (posGiven) {
     for (auto& elem : *addUrisParam) {
-      const String* uri = downcast<String>(elem);
-      if (uri && s->insertUri(uri->s(), pos)) {
+      if (const auto* uri = downcast<String>(elem);
+          uri && s->insertUri(uri->s(), pos)) {
         ++addcount;
         ++pos;
       }
@@ -1335,8 +1342,8 @@ std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
   }
   else {
     for (auto& elem : *addUrisParam) {
-      const String* uri = downcast<String>(elem);
-      if (uri && s->addUri(uri->s())) {
+      if (const auto* uri = downcast<String>(elem);
+          uri && s->addUri(uri->s())) {
         ++addcount;
       }
     }
@@ -1360,7 +1367,7 @@ std::unique_ptr<ValueBase> goingShutdown(const RpcRequest& req,
   // Schedule shutdown after 3seconds to give time to client to
   // receive RPC response.
   e->addRoutineCommand(
-      make_unique<TimedHaltCommand>(e->newCUID(), e, 3_s, forceHalt));
+      std::make_unique<TimedHaltCommand>(e->newCUID(), e, 3_s, forceHalt));
   A2_LOG_INFO("Scheduled shutdown in 3 seconds.");
   return createOKResponse();
 }
@@ -1443,7 +1450,7 @@ RpcResponse SystemMulticallRpcMethod::execute(RpcRequest req, DownloadEngine* e)
             DL_ABORT_EX("Recursive system.multicall forbidden."), req));
         continue;
       }
-      // TODO what if params missing?
+      // Missing params are treated as an empty list (see else branch).
       auto tempParamsList = methodDict->get(KEY_PARAMS);
       std::unique_ptr<List> paramsList;
       if (downcast<List>(tempParamsList)) {
@@ -1557,10 +1564,12 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
   grOption->merge(option);
   if (option.defined(PREF_CHECKSUM)) {
     const std::string& checksum = grOption->get(PREF_CHECKSUM);
-    auto p = util::divide(std::begin(checksum), std::end(checksum), '=');
-    std::string hashType(p.first.first, p.first.second);
+    auto [hashRange, digestRange] =
+        util::divide(std::begin(checksum), std::end(checksum), '=');
+    std::string hashType(hashRange.first, hashRange.second);
     util::lowercase(hashType);
-    dctx->setDigest(hashType, util::fromHex(p.second.first, p.second.second));
+    dctx->setDigest(hashType,
+                    util::fromHex(digestRange.first, digestRange.second));
   }
   if (option.defined(PREF_SELECT_FILE)) {
     auto sgl = util::parseIntSegments(grOption->get(PREF_SELECT_FILE));
@@ -1600,7 +1609,7 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
     }
     else if (group->getMetadataInfo()
 #ifdef ENABLE_BITTORRENT
-             && !dctx->hasAttribute(CTX_ATTR_BT)
+             && !dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)
 #endif // ENABLE_BITTORRENT
     ) {
       // In case of Metalink
@@ -1614,16 +1623,13 @@ void changeOption(const std::shared_ptr<RequestGroup>& group,
   }
 #ifdef ENABLE_BITTORRENT
   if (option.defined(PREF_DIR) || option.defined(PREF_INDEX_OUT)) {
-    if (dctx->hasAttribute(CTX_ATTR_BT)) {
+    if (dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
       std::istringstream indexOutIn(grOption->get(PREF_INDEX_OUT));
       std::vector<std::pair<size_t, std::string>> indexPaths =
           util::createIndexPaths(indexOutIn);
-      for (std::vector<std::pair<size_t, std::string>>::const_iterator
-               i = indexPaths.begin(),
-               eoi = indexPaths.end();
-           i != eoi; ++i) {
+      for (const auto& [index, path] : indexPaths) {
         dctx->setFilePathWithIndex(
-            (*i).first, util::applyDir(grOption->get(PREF_DIR), (*i).second));
+            index, util::applyDir(grOption->get(PREF_DIR), path));
       }
     }
   }
@@ -1678,7 +1684,7 @@ void changeGlobalOption(const Option& option, DownloadEngine* e)
       LogFactory::reconfigure();
     }
     catch (RecoverableException& e) {
-      // TODO no exception handling
+      A2_LOG_WARN_EX("Failed to reconfigure log file", e);
     }
   }
   if (option.defined(PREF_BT_MAX_OPEN_FILES)) {

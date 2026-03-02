@@ -39,6 +39,7 @@
 
 #include <cassert>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 
@@ -56,7 +57,7 @@ class AuthConfig;
 
 class HttpRequest {
 private:
-  static const std::string USER_AGENT;
+  static constexpr const char USER_AGENT[] = "aria2";
 
   std::shared_ptr<Request> request_;
 
@@ -119,9 +120,9 @@ public:
 
   uint16_t getPort() const;
 
-  const std::string& getMethod() const;
+  HttpMethod getMethod() const;
 
-  const std::string& getProtocol() const;
+  Protocol getProtocol() const;
 
   const std::string& getCurrentURI() const;
 
@@ -169,7 +170,7 @@ public:
   void setUserAgent(std::string userAgent);
 
   // accepts multiline headers, delimited by LF
-  void addHeader(const std::string& headers);
+  void addHeader(std::string_view headers);
 
   void clearHeader();
 

@@ -122,7 +122,7 @@ void BtSeederStateChoke::unchoke(
 {
   int count = (round_ == 2) ? 4 : 3;
 
-  std::sort(std::begin(peers), std::end(peers));
+  std::sort(peers.begin(), peers.end());
 
   auto r = std::begin(peers);
   for (; r != std::end(peers) && count; ++r, --count) {
@@ -135,8 +135,7 @@ void BtSeederStateChoke::unchoke(
   }
 
   if (round_ < 2) {
-    std::for_each(std::begin(peers), std::end(peers),
-                  std::mem_fn(&PeerEntry::disableOptUnchoking));
+    std::ranges::for_each(peers, std::mem_fn(&PeerEntry::disableOptUnchoking));
     if (r != std::end(peers)) {
       std::shuffle(r, std::end(peers), *SimpleRandomizer::getInstance());
 
@@ -163,7 +162,7 @@ void BtSeederStateChoke::executeChoke(const PeerSet& peerSet)
 
     p->chokingRequired(true);
     if (p->peerInterested()) {
-      peerEntries.push_back(PeerEntry(p));
+      peerEntries.emplace_back(p);
       continue;
     }
 

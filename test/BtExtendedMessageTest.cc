@@ -43,14 +43,14 @@ void BtExtendedMessageTest::testCreate()
   bittorrent::createPeerMessageString((unsigned char*)msg, sizeof(msg), 13, 20);
   msg[5] = 1; // Set dummy extended message ID 1
   memcpy(msg + 6, payload.c_str(), payload.size());
-  auto pm = BtExtendedMessage::create(&exmsgFactory, peer, &msg[4], 13);
+  auto pm = BtExtendedMessage::create(&exmsgFactory, peer, {&msg[4], 13});
   CPPUNIT_ASSERT_EQUAL((uint8_t)20, pm->getId());
 
   // case: payload size is wrong
   try {
     unsigned char msg[5];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 20);
-    BtExtendedMessage::create(&exmsgFactory, peer, &msg[4], 1);
+    BtExtendedMessage::create(&exmsgFactory, peer, {&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (Exception& e) {
@@ -60,7 +60,7 @@ void BtExtendedMessageTest::testCreate()
   try {
     unsigned char msg[6];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 2, 21);
-    BtExtendedMessage::create(&exmsgFactory, peer, &msg[4], 2);
+    BtExtendedMessage::create(&exmsgFactory, peer, {&msg[4], 2});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (Exception& e) {
@@ -72,7 +72,7 @@ void BtExtendedMessageTest::testCreateMessage()
 {
   std::string payload = "4:name3:foo";
   uint8_t extendedMessageID = 1;
-  BtExtendedMessage msg{make_unique<MockExtensionMessage>(
+  BtExtendedMessage msg{std::make_unique<MockExtensionMessage>(
       "charlie", extendedMessageID, payload, nullptr)};
   unsigned char data[17];
   bittorrent::createPeerMessageString(data, sizeof(data), 13, 20);
@@ -87,7 +87,7 @@ void BtExtendedMessageTest::testDoReceivedAction()
 {
   auto evcheck = MockExtensionMessageEventCheck{};
   BtExtendedMessage msg{
-      make_unique<MockExtensionMessage>("charlie", 1, "", &evcheck)};
+      std::make_unique<MockExtensionMessage>("charlie", 1, "", &evcheck)};
   msg.doReceivedAction();
   CPPUNIT_ASSERT(evcheck.doReceivedActionCalled);
 }
@@ -96,7 +96,7 @@ void BtExtendedMessageTest::testToString()
 {
   std::string payload = "4:name3:foo";
   uint8_t extendedMessageID = 1;
-  BtExtendedMessage msg{make_unique<MockExtensionMessage>(
+  BtExtendedMessage msg{std::make_unique<MockExtensionMessage>(
       "charlie", extendedMessageID, payload, nullptr)};
   CPPUNIT_ASSERT_EQUAL(std::string("extended charlie"), msg.toString());
 }

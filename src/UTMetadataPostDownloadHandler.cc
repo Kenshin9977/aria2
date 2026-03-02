@@ -57,10 +57,10 @@ namespace aria2 {
 namespace {
 class Criteria : public RequestGroupCriteria {
 public:
-  virtual bool match(const RequestGroup* requestGroup) const CXX11_OVERRIDE
+  bool match(const RequestGroup* requestGroup) const override
   {
     auto& dctx = requestGroup->getDownloadContext();
-    if (dctx->hasAttribute(CTX_ATTR_BT)) {
+    if (dctx->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
       if (bittorrent::getTorrentAttrs(dctx)->metadata.empty()) {
         return true;
       }
@@ -72,7 +72,7 @@ public:
 
 UTMetadataPostDownloadHandler::UTMetadataPostDownloadHandler()
 {
-  setCriteria(make_unique<Criteria>());
+  setCriteria(std::make_unique<Criteria>());
 }
 
 void UTMetadataPostDownloadHandler::getNextRequestGroups(

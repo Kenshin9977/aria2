@@ -62,8 +62,8 @@ namespace aria2 {
 
 namespace {
 
-const size_t MAX_PAD_LENGTH = 512;
-const size_t CRYPTO_BITFIELD_LENGTH = 4;
+constexpr size_t MAX_PAD_LENGTH = 512;
+constexpr size_t CRYPTO_BITFIELD_LENGTH = 4;
 constexpr auto VC = std::array<unsigned char, MSEHandshake::VC_LENGTH>{};
 
 const unsigned char* PRIME = reinterpret_cast<const unsigned char*>(
@@ -113,7 +113,7 @@ MSEHandshake::HANDSHAKE_TYPE MSEHandshake::identifyHandshakeType()
 
 void MSEHandshake::initEncryptionFacility(bool initiator)
 {
-  dh_ = make_unique<DHKeyExchange>();
+  dh_ = std::make_unique<DHKeyExchange>();
   dh_->init(PRIME, PRIME_BITS, GENERATOR, 160);
   dh_->generatePublicKey();
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - DH initialized.", cuid_));
@@ -170,8 +170,15 @@ bool MSEHandshake::receivePublicKey()
     return false;
   }
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - public key received.", cuid_));
-  // TODO handle exception. in catch, resbufLength = 0;
-  dh_->computeSecret(secret_, sizeof(secret_), rbuf_, KEY_LENGTH);
+  try {
+    dh_->computeSecret(secret_, sizeof(secret_), rbuf_, KEY_LENGTH);
+  }
+  catch (RecoverableException& e) {
+    A2_LOG_DEBUG_EX(
+        fmt("CUID#%" PRId64 " - DH secret computation failed.", cuid_), e);
+    rbufLength_ = 0;
+    return false;
+  }
   // shift buffer
   shiftBuffer(KEY_LENGTH);
   return true;
@@ -190,7 +197,7 @@ void MSEHandshake::initCipher(const unsigned char* infoHash)
   sha1_->reset();
   message_digest::digest(localCipherKey, sizeof(localCipherKey), sha1_.get(), s,
                          sizeof(s));
-  encryptor_ = make_unique<ARC4Encryptor>();
+  encryptor_ = std::make_unique<ARC4Encryptor>();
   encryptor_->init(localCipherKey, sizeof(localCipherKey));
 
   unsigned char peerCipherKey[20];
@@ -198,7 +205,7 @@ void MSEHandshake::initCipher(const unsigned char* infoHash)
   sha1_->reset();
   message_digest::digest(peerCipherKey, sizeof(peerCipherKey), sha1_.get(), s,
                          sizeof(s));
-  decryptor_ = make_unique<ARC4Encryptor>();
+  decryptor_ = std::make_unique<ARC4Encryptor>();
   decryptor_->init(peerCipherKey, sizeof(peerCipherKey));
 
   // discard first 1024 bytes ARC4 output.
@@ -442,8 +449,8 @@ bool MSEHandshake::receiveReceiverHashAndPadCLength(
   // decrypt crypto_provide
   rbufptr += VC_LENGTH;
   decryptor_->encrypt(CRYPTO_BITFIELD_LENGTH, rbufptr, rbufptr);
-  // TODO choose the crypto type based on the preference.
-  // For now, choose ARC4.
+  // Select crypto type: prefer plaintext if allowed by policy,
+  // otherwise use ARC4 (the only encrypted option in MSE).
   if ((rbufptr[3] & CRYPTO_PLAIN_TEXT) &&
       !option_->getAsBool(PREF_BT_FORCE_ENCRYPTION) &&
       option_->get(PREF_BT_MIN_CRYPTO_LEVEL) == V_PLAIN) {

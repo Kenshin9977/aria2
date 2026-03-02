@@ -51,7 +51,7 @@ class HttpResponse;
 class HttpHeaderProcessor;
 class Option;
 class Segment;
-class SocketCore;
+class ISocketCore;
 class SocketRecvBuffer;
 
 class HttpRequestEntry {
@@ -76,12 +76,12 @@ public:
   const std::unique_ptr<HttpHeaderProcessor>& getHttpHeaderProcessor() const;
 };
 
-typedef std::deque<std::unique_ptr<HttpRequestEntry>> HttpRequestEntries;
+using HttpRequestEntries = std::deque<std::unique_ptr<HttpRequestEntry>>;
 
 class HttpConnection {
 private:
   cuid_t cuid_;
-  std::shared_ptr<SocketCore> socket_;
+  std::shared_ptr<ISocketCore> socket_;
   std::shared_ptr<SocketRecvBuffer> socketRecvBuffer_;
   SocketBuffer socketBuffer_;
 
@@ -92,7 +92,7 @@ private:
                    std::string request);
 
 public:
-  HttpConnection(cuid_t cuid, const std::shared_ptr<SocketCore>& socket,
+  HttpConnection(cuid_t cuid, const std::shared_ptr<ISocketCore>& socket,
                  const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer);
   ~HttpConnection();
 

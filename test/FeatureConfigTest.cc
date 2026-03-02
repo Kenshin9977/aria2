@@ -28,10 +28,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(FeatureConfigTest);
 
 void FeatureConfigTest::testGetDefaultPort()
 {
-  CPPUNIT_ASSERT_EQUAL((uint16_t)80, getDefaultPort("http"));
-  CPPUNIT_ASSERT_EQUAL((uint16_t)443, getDefaultPort("https"));
-  CPPUNIT_ASSERT_EQUAL((uint16_t)21, getDefaultPort("ftp"));
-  CPPUNIT_ASSERT_EQUAL((uint16_t)22, getDefaultPort("sftp"));
+  CPPUNIT_ASSERT_EQUAL((uint16_t)80, getDefaultPort(Protocol::HTTP));
+  CPPUNIT_ASSERT_EQUAL((uint16_t)443, getDefaultPort(Protocol::HTTPS));
+  CPPUNIT_ASSERT_EQUAL((uint16_t)21, getDefaultPort(Protocol::FTP));
+  CPPUNIT_ASSERT_EQUAL((uint16_t)22, getDefaultPort(Protocol::SFTP));
 }
 
 void FeatureConfigTest::testStrSupportedFeature()

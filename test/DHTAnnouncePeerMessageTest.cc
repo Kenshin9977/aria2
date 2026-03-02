@@ -38,10 +38,9 @@ public:
   class MockDHTMessageFactory2 : public MockDHTMessageFactory {
     virtual std::unique_ptr<DHTAnnouncePeerReplyMessage>
     createAnnouncePeerReplyMessage(const std::shared_ptr<DHTNode>& remoteNode,
-                                   const std::string& transactionID)
-        CXX11_OVERRIDE
+                                   const std::string& transactionID) override
     {
-      return make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
+      return std::make_unique<DHTAnnouncePeerReplyMessage>(localNode_, remoteNode,
                                                       transactionID);
     }
   };
@@ -115,7 +114,8 @@ void DHTAnnouncePeerMessageTest::testDoReceivedAction()
       dispatcher.messageQueue_[0].message_.get());
   CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
   CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-  CPPUNIT_ASSERT_EQUAL(std::string("announce_peer"), m->getMessageType());
+  CPPUNIT_ASSERT_EQUAL(std::string("announce_peer"),
+                       std::string(m->getMessageType()));
   CPPUNIT_ASSERT_EQUAL(transactionID, m->getTransactionID());
   std::vector<std::shared_ptr<Peer>> peers;
   peerAnnounceStorage.getPeers(peers, infoHash);

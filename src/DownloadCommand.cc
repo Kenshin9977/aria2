@@ -76,7 +76,7 @@ namespace aria2 {
 DownloadCommand::DownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& s,
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& s,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer)
     : AbstractCommand(cuid, req, fileEntry, requestGroup, e, s,
                       socketRecvBuffer),
@@ -98,7 +98,7 @@ DownloadCommand::DownloadCommand(
   peerStat_->downloadStart();
   getSegmentMan()->registerPeerStat(peerStat_);
 
-  streamFilter_ = make_unique<SinkStreamFilter>(
+  streamFilter_ = std::make_unique<SinkStreamFilter>(
       getPieceStorage()->getWrDiskCache(), pieceHashValidationEnabled_);
   streamFilter_->init();
   sinkFilterOnly_ = true;
@@ -247,9 +247,10 @@ bool DownloadCommand::executeInternal()
         if (pieceHashValidationEnabled_ && !expectedPieceHash.empty()) {
           if (
 #ifdef ENABLE_BITTORRENT
-              // TODO Is this necessary?
+              // Skip pre-calculated hash in BT end-game mode; pieces
+              // may be received from multiple peers simultaneously.
               (!getPieceStorage()->isEndGame() ||
-               !getDownloadContext()->hasAttribute(CTX_ATTR_BT)) &&
+               !getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) &&
 #endif // ENABLE_BITTORRENT
               segment->isHashCalculated()) {
             A2_LOG_DEBUG(fmt("Hash is available! index=%lu",
@@ -301,10 +302,12 @@ bool DownloadCommand::shouldEnableWriteCheck()
 
 void DownloadCommand::checkLowestDownloadSpeed() const
 {
+  int nowSpeed = peerStat_->calculateDownloadSpeed();
+  getFileEntry()->getSlowStart().update(nowSpeed);
+
   if (lowestDownloadSpeedLimit_ > 0 &&
       peerStat_->getDownloadStartTime().difference(global::wallclock()) >=
           startupIdleTime_) {
-    int nowSpeed = peerStat_->calculateDownloadSpeed();
     if (nowSpeed <= lowestDownloadSpeedLimit_) {
       throw DL_ABORT_EX2(fmt(EX_TOO_SLOW_DOWNLOAD_SPEED, nowSpeed,
                              lowestDownloadSpeedLimit_,
@@ -328,7 +331,7 @@ bool DownloadCommand::prepareForNextSegment()
       }
     }
     if (getDownloadContext()->getPieceHashType().empty()) {
-      auto entry = make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+      auto entry = std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
       if (entry->isValidationReady()) {
         entry->initValidator();
         entry->cutTrailingGarbage();
@@ -415,8 +418,9 @@ void DownloadCommand::installStreamFilter(
   }
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
-  const std::string& name = streamFilter_->getName();
-  sinkFilterOnly_ = util::endsWith(name, SinkStreamFilter::NAME);
+  const char* name = streamFilter_->getName();
+  sinkFilterOnly_ =
+      std::string_view(name).ends_with(SinkStreamFilter::NAME);
 }
 
 // We need to override noCheck() to return true in order to measure

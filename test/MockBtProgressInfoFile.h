@@ -11,21 +11,21 @@ private:
 
 public:
   MockBtProgressInfoFile() {}
-  virtual ~MockBtProgressInfoFile() {}
+  ~MockBtProgressInfoFile() override {}
 
-  virtual std::string getFilename() CXX11_OVERRIDE { return filename; }
+  std::string getFilename() override { return filename; }
 
   void setFilename(const std::string& filename) { this->filename = filename; }
 
-  virtual bool exists() CXX11_OVERRIDE { return false; }
+  bool exists() override { return false; }
 
-  virtual void save() CXX11_OVERRIDE {}
+  void save() override {}
 
-  virtual void load() CXX11_OVERRIDE {}
+  void load() override {}
 
-  virtual void removeFile() CXX11_OVERRIDE {}
+  void removeFile() override {}
 
-  virtual void updateFilename() CXX11_OVERRIDE {}
+  void updateFilename() override {}
 };
 
 } // namespace aria2

@@ -1,3 +1,65 @@
+aria2 2.0.0
+===========
+
+Release Note
+------------
+
+First major release of this modernised fork (160+ commits over
+upstream v1.37.0).  See CHANGELOG.md for the full list of changes.
+
+New features:
+
+* HTTP/2 support via libnghttp2
+* HTTP Digest authentication (RFC 7616, MD5 + SHA-256)
+* Brotli and Zstd content-encoding decompression
+* FTPS (explicit FTP over TLS: AUTH TLS + PROT P)
+* SOCKS5 proxy support (RFC 1928/1929) with auth
+* HSTS (RFC 6797) with automatic HTTP→HTTPS upgrade
+* Slow-start connection scaling (AIMD ramp-up)
+* io_uring event poll backend for Linux
+* TTL-based DNS cache expiration
+* Cookie SameSite attribute support
+* NO_COLOR environment variable support
+* Max connections per server raised from 16 to 10,000
+* RPC port 0 for OS-assigned port allocation
+* Thread pool for parallel checksum verification
+* TLS 1.3 on Windows (WinTLS/Schannel)
+* HTTP/3 build system detection (ngtcp2 + nghttp3)
+* CMake build system (alternative to Autotools)
+* Deflate raw mode fallback for broken servers
+
+Bug fixes (upstream cherry-picks and new):
+
+* CPU spin on unauthorised RPC response (#2209)
+* Memory leak in Piece/SinkStreamFilter (#1777)
+* HTTP 404 now respects --retry-wait (#1714)
+* BT handshake bounds checking
+* HTTP header injection prevention
+* fcntl/MSE DH error handling
+* ares_init_options return value check
+* SSHSession EAGAIN retry in closeConnection
+* Transfer-Encoding comma-separated parsing
+* WinTLS certificate revocation offline fallback
+
+Performance:
+
+* pwrite/pread for all disk I/O
+* O(1) event poll socket lookup (all backends)
+* O(1) BT endgame request and peer lookups
+* Eliminated heap allocations in DNS/piece/server-stat lookups
+* Template inlining replacing std::function
+* HTTP request string capacity reservation
+
+Codebase:
+
+* Full C++23 migration (GCC 14+ / Clang 18+)
+* std::ranges, operator<=>, structured bindings, enum class
+* std::expected, std::span, std::string_view throughout
+* ISocketCore interface for testable command pipelines
+* 310+ end-to-end tests, 1,300+ unit tests
+* GitHub Actions CI with ASan, UBSan, TSan
+* Release workflow for 5 platforms
+
 aria2 1.37.0
 ============
 

@@ -47,11 +47,11 @@ public:
   TimedHaltCommand(cuid_t cuid, DownloadEngine* e,
                    std::chrono::seconds secondsToHalt, bool forceHalt = false);
 
-  virtual ~TimedHaltCommand();
+  ~TimedHaltCommand() override;
 
-  virtual void preProcess() CXX11_OVERRIDE;
+  void preProcess() override;
 
-  virtual void process() CXX11_OVERRIDE;
+  void process() override;
 };
 
 } // namespace aria2

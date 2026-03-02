@@ -44,6 +44,9 @@
 #include "prefs.h"
 #include "Request.h"
 #include "util.h"
+#include "HttpDigestAuth.h"
+#include "MessageDigest.h"
+#include "fmt.h"
 
 namespace aria2 {
 
@@ -60,10 +63,12 @@ std::unique_ptr<AuthConfig>
 AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
                                     const Option* op)
 {
-  if (request->getProtocol() == "http" || request->getProtocol() == "https") {
+  using enum Protocol;
+  if (request->getProtocol() == HTTP ||
+      request->getProtocol() == HTTPS) {
     if (op->getAsBool(PREF_HTTP_AUTH_CHALLENGE)) {
       if (!request->getUsername().empty()) {
-        updateBasicCred(make_unique<BasicCred>(
+        updateBasicCred(std::make_unique<BasicCred>(
             request->getUsername(), request->getPassword(), request->getHost(),
             request->getPort(), request->getDir(), true));
         return AuthConfig::create(request->getUsername(),
@@ -89,8 +94,9 @@ AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
       }
     }
   }
-  else if (request->getProtocol() == "ftp" ||
-           request->getProtocol() == "sftp") {
+  else if (request->getProtocol() == FTP ||
+           request->getProtocol() == FTPS ||
+           request->getProtocol() == SFTP) {
     if (!request->getUsername().empty()) {
       if (request->hasPassword()) {
         return AuthConfig::create(request->getUsername(),
@@ -128,10 +134,10 @@ AuthConfigFactory::createHttpAuthResolver(const Option* op) const
 {
   std::unique_ptr<AbstractAuthResolver> resolver;
   if (op->getAsBool(PREF_NO_NETRC)) {
-    resolver = make_unique<DefaultAuthResolver>();
+    resolver = std::make_unique<DefaultAuthResolver>();
   }
   else {
-    auto authResolver = make_unique<NetrcAuthResolver>();
+    auto authResolver = std::make_unique<NetrcAuthResolver>();
     authResolver->setNetrc(netrc_.get());
     authResolver->ignoreDefault();
     resolver = std::move(authResolver);
@@ -146,10 +152,10 @@ AuthConfigFactory::createFtpAuthResolver(const Option* op) const
 {
   std::unique_ptr<AbstractAuthResolver> resolver;
   if (op->getAsBool(PREF_NO_NETRC)) {
-    resolver = make_unique<DefaultAuthResolver>();
+    resolver = std::make_unique<DefaultAuthResolver>();
   }
   else {
-    auto authResolver = make_unique<NetrcAuthResolver>();
+    auto authResolver = std::make_unique<NetrcAuthResolver>();
     authResolver->setNetrc(netrc_.get());
     resolver = std::move(authResolver);
   }
@@ -187,7 +193,7 @@ bool AuthConfigFactory::activateBasicCred(const std::string& host,
       return false;
     }
     else {
-      basicCreds_.insert(make_unique<BasicCred>(authConfig->getUser(),
+      basicCreds_.insert(std::make_unique<BasicCred>(authConfig->getUser(),
                                                 authConfig->getPassword(), host,
                                                 port, path, true));
       return true;
@@ -233,16 +239,96 @@ AuthConfigFactory::BasicCredSet::iterator
 AuthConfigFactory::findBasicCred(const std::string& host, uint16_t port,
                                  const std::string& path)
 {
-  auto bc = make_unique<BasicCred>("", "", host, port, path);
+  auto bc = std::make_unique<BasicCred>("", "", host, port, path);
   auto i = basicCreds_.lower_bound(bc);
   for (;
        i != std::end(basicCreds_) && (*i)->host_ == host && (*i)->port_ == port;
        ++i) {
-    if (util::startsWith(bc->path_, (*i)->path_)) {
+    if (bc->path_.starts_with((*i)->path_)) {
       return i;
     }
   }
   return std::end(basicCreds_);
+}
+
+std::string AuthConfigFactory::makeDigestKey(const std::string& host,
+                                             uint16_t port)
+{
+  return host + ":" + util::uitos(port);
+}
+
+void AuthConfigFactory::updateDigestCred(const std::string& host,
+                                         uint16_t port,
+                                         DigestChallenge challenge)
+{
+  auto key = makeDigestKey(host, port);
+  digestCreds_[key] = std::make_unique<DigestCred>(host, port,
+                                                   std::move(challenge));
+}
+
+DigestCred* AuthConfigFactory::findDigestCred(const std::string& host,
+                                              uint16_t port)
+{
+  auto key = makeDigestKey(host, port);
+  auto it = digestCreds_.find(key);
+  if (it != digestCreds_.end()) {
+    return it->second.get();
+  }
+  return nullptr;
+}
+
+bool AuthConfigFactory::activateDigestCred(const std::string& host,
+                                           uint16_t port,
+                                           const std::string& wwwAuth,
+                                           const Option* op)
+{
+  // Check if it's a Digest challenge
+  std::string prefix = "Digest ";
+  auto pos = wwwAuth.find(prefix);
+  if (pos == std::string::npos) {
+    // case-insensitive check
+    std::string lower = wwwAuth;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    pos = lower.find("digest ");
+    if (pos == std::string::npos) {
+      return false;
+    }
+  }
+
+  auto headerPart = wwwAuth.substr(pos + prefix.size());
+  DigestChallenge challenge;
+  if (!http_digest_auth::parseChallenge(headerPart, challenge)) {
+    return false;
+  }
+
+  // Verify we support the algorithm
+  auto algo = challenge.algorithm.empty() ? "MD5" : challenge.algorithm;
+  auto hashType = http_digest_auth::mapAlgorithm(algo);
+  if (hashType.empty() || !MessageDigest::supports(hashType)) {
+    return false;
+  }
+
+  updateDigestCred(host, port, std::move(challenge));
+
+  // Also need to ensure we have credentials. Try to activate
+  // BasicCred (which stores user/password regardless of scheme).
+  auto i = findBasicCred(host, port, "/");
+  if (i == std::end(basicCreds_)) {
+    auto authConfig =
+        createHttpAuthResolver(op)->resolveAuthConfig(host);
+    if (!authConfig) {
+      return false;
+    }
+    basicCreds_.insert(std::make_unique<BasicCred>(
+        authConfig->getUser(), authConfig->getPassword(), host, port,
+        "/", true));
+  }
+  else {
+    (*i)->activate();
+  }
+
+  return true;
 }
 
 } // namespace aria2

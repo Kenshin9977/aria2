@@ -95,7 +95,7 @@ bool parseDate(time_t& time, std::string::const_iterator first,
     std::string::const_iterator s = i;
     for (; s != eoi && !isDelimiter(static_cast<unsigned char>(*s)); ++s)
       ;
-    dateTokens.push_back(std::string(i, s));
+    dateTokens.emplace_back(i, s);
     i = s;
   }
   int dayOfMonth = 0;
@@ -252,6 +252,7 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
   std::string cookiePath;
   bool secure = false;
   bool httpOnly = false;
+  std::string sameSite;
 
   if (nvEnd != end) {
     ++nvEnd;
@@ -291,21 +292,20 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
           return nullptr;
         }
       }
-      int64_t delta;
-      if (util::parseLLIntNoThrow(delta,
-                                  std::string(attrp.first, attrp.second))) {
+      auto delta = util::parseLLInt(std::string(attrp.first, attrp.second));
+      if (delta) {
         foundMaxAge = true;
-        if (delta <= 0) {
+        if (*delta <= 0) {
           maxAge = 0;
         }
         else {
           int64_t n = creationTime;
 
-          if (n > std::numeric_limits<int64_t>::max() - delta) {
+          if (n > std::numeric_limits<int64_t>::max() - *delta) {
             maxAge = std::numeric_limits<time_t>::max();
           }
           else {
-            n += delta;
+            n += *delta;
 
             if (n < 0 || std::numeric_limits<time_t>::max() < n) {
               maxAge = std::numeric_limits<time_t>::max();
@@ -347,6 +347,18 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
     else if (util::strieq(p.first, p.second, "httponly")) {
       httpOnly = true;
     }
+    else if (util::strieq(p.first, p.second, "samesite")) {
+      std::string val(attrp.first, attrp.second);
+      if (util::strieq(val, "strict")) {
+        sameSite = "Strict";
+      }
+      else if (util::strieq(val, "lax")) {
+        sameSite = "Lax";
+      }
+      else if (util::strieq(val, "none")) {
+        sameSite = "None";
+      }
+    }
   }
 
   if (foundMaxAge) {
@@ -377,7 +389,7 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
     cookiePath = defaultPath;
   }
 
-  auto cookie = make_unique<Cookie>();
+  auto cookie = std::make_unique<Cookie>();
   cookie->setName(cookieName.first, cookieName.second);
   cookie->setValue(cookieValue.first, cookieValue.second);
   cookie->setExpiryTime(expiryTime);
@@ -387,6 +399,9 @@ std::unique_ptr<Cookie> parse(const std::string& cookieStr,
   cookie->setPath(std::move(cookiePath));
   cookie->setSecure(secure);
   cookie->setHttpOnly(httpOnly);
+  if (!sameSite.empty()) {
+    cookie->setSameSite(std::move(sameSite));
+  }
   cookie->setCreationTime(creationTime);
   cookie->setLastAccessTime(creationTime);
 
@@ -407,7 +422,7 @@ std::string canonicalizeHost(const std::string& host)
 bool domainMatch(const std::string& requestHost, const std::string& domain)
 {
   return requestHost == domain ||
-         (util::endsWith(requestHost, domain) &&
+         (requestHost.ends_with(domain) &&
           requestHost[requestHost.size() - domain.size() - 1] == '.' &&
           !util::isNumericHost(requestHost));
 }
@@ -415,7 +430,7 @@ bool domainMatch(const std::string& requestHost, const std::string& domain)
 bool pathMatch(const std::string& requestPath, const std::string& path)
 {
   return requestPath == path ||
-         (util::startsWith(requestPath, path) &&
+         (requestPath.starts_with(path) &&
           (path[path.size() - 1] == '/' || requestPath[path.size()] == '/'));
 }
 

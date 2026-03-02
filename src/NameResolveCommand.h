@@ -72,9 +72,9 @@ public:
   NameResolveCommand(cuid_t cuid, DownloadEngine* e,
                      const std::shared_ptr<UDPTrackerRequest>& req);
 
-  virtual ~NameResolveCommand();
+  ~NameResolveCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 };
 
 } // namespace aria2

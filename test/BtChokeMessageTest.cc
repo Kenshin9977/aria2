@@ -48,15 +48,9 @@ public:
     {
     }
 
-    virtual void doChokedAction() CXX11_OVERRIDE
-    {
-      doChokedActionCalled = true;
-    }
+    virtual void doChokedAction() override { doChokedActionCalled = true; }
 
-    virtual void doChokingAction() CXX11_OVERRIDE
-    {
-      doChokingActionCalled = true;
-    }
+    virtual void doChokingAction() override { doChokingActionCalled = true; }
   };
 
   class MockBtRequestFactory2 : public MockBtRequestFactory {
@@ -66,10 +60,7 @@ public:
   public:
     MockBtRequestFactory2() : doChokedActionCalled{false} {}
 
-    virtual void doChokedAction() CXX11_OVERRIDE
-    {
-      doChokedActionCalled = true;
-    }
+    virtual void doChokedAction() override { doChokedActionCalled = true; }
   };
 };
 
@@ -79,14 +70,14 @@ void BtChokeMessageTest::testCreate()
 {
   unsigned char msg[5];
   bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 0);
-  auto pm = BtChokeMessage::create(&msg[4], 1);
+  auto pm = BtChokeMessage::create({&msg[4], 1});
   CPPUNIT_ASSERT_EQUAL((uint8_t)0, pm->getId());
 
   // case: payload size is wrong
   try {
     unsigned char msg[6];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 2, 0);
-    BtChokeMessage::create(&msg[4], 2);
+    BtChokeMessage::create({&msg[4], 2});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -95,7 +86,7 @@ void BtChokeMessageTest::testCreate()
   try {
     unsigned char msg[5];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 1, 1);
-    BtChokeMessage::create(&msg[4], 1);
+    BtChokeMessage::create({&msg[4], 1});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -117,9 +108,9 @@ void BtChokeMessageTest::testDoReceivedAction()
   BtChokeMessage msg;
   msg.setPeer(peer);
 
-  auto dispatcher = make_unique<MockBtMessageDispatcher2>();
+  auto dispatcher = std::make_unique<MockBtMessageDispatcher2>();
   msg.setBtMessageDispatcher(dispatcher.get());
-  auto requestFactory = make_unique<MockBtRequestFactory2>();
+  auto requestFactory = std::make_unique<MockBtRequestFactory2>();
   msg.setBtRequestFactory(requestFactory.get());
 
   msg.doReceivedAction();

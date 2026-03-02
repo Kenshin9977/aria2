@@ -56,23 +56,21 @@ public:
 
   class MockPieceStorage2 : public MockPieceStorage {
   public:
-    virtual bool hasPiece(size_t index) CXX11_OVERRIDE { return index == 1; }
+    virtual bool hasPiece(size_t index) override { return index == 1; }
   };
 
   class MockBtMessageFactory2 : public MockBtMessageFactory {
   public:
     virtual std::unique_ptr<BtPieceMessage>
-    createPieceMessage(size_t index, int32_t begin,
-                       int32_t length) CXX11_OVERRIDE
+    createPieceMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtPieceMessage>(index, begin, length);
+      return std::make_unique<BtPieceMessage>(index, begin, length);
     }
 
     virtual std::unique_ptr<BtRejectMessage>
-    createRejectMessage(size_t index, int32_t begin,
-                        int32_t length) CXX11_OVERRIDE
+    createRejectMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtRejectMessage>(index, begin, length);
+      return std::make_unique<BtRejectMessage>(index, begin, length);
     }
   };
 
@@ -84,16 +82,16 @@ public:
 
   void setUp()
   {
-    pieceStorage_ = make_unique<MockPieceStorage2>();
+    pieceStorage_ = std::make_unique<MockPieceStorage2>();
 
     peer_ = std::make_shared<Peer>("host", 6969);
     peer_->allocateSessionResource(16_k, 256_k);
 
-    dispatcher_ = make_unique<MockBtMessageDispatcher>();
+    dispatcher_ = std::make_unique<MockBtMessageDispatcher>();
 
-    messageFactory_ = make_unique<MockBtMessageFactory2>();
+    messageFactory_ = std::make_unique<MockBtMessageFactory2>();
 
-    msg = make_unique<BtRequestMessage>();
+    msg = std::make_unique<BtRequestMessage>();
     msg->setPeer(peer_);
     msg->setIndex(1);
     msg->setBegin(16);
@@ -114,7 +112,7 @@ void BtRequestMessageTest::testCreate()
   bittorrent::setIntParam(&msg[5], 12345);
   bittorrent::setIntParam(&msg[9], 256);
   bittorrent::setIntParam(&msg[13], 1_k);
-  auto pm = BtRequestMessage::create(&msg[4], 13);
+  auto pm = BtRequestMessage::create({&msg[4], 13});
   CPPUNIT_ASSERT_EQUAL((uint8_t)6, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
   CPPUNIT_ASSERT_EQUAL(256, pm->getBegin());
@@ -124,7 +122,7 @@ void BtRequestMessageTest::testCreate()
   try {
     unsigned char msg[18];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 14, 6);
-    BtRequestMessage::create(&msg[4], 14);
+    BtRequestMessage::create({&msg[4], 14});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -133,7 +131,7 @@ void BtRequestMessageTest::testCreate()
   try {
     unsigned char msg[17];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 13, 7);
-    BtRequestMessage::create(&msg[4], 13);
+    BtRequestMessage::create({&msg[4], 13});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -260,7 +258,7 @@ void BtRequestMessageTest::testValidate()
 {
   BtRequestMessage msg(0, 0, 16_k);
   msg.setBtMessageValidator(
-      make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
+      std::make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
   msg.validate();
 }
 
@@ -268,7 +266,7 @@ void BtRequestMessageTest::testValidate_lengthTooLong()
 {
   BtRequestMessage msg(0, 0, MAX_BLOCK_LENGTH + 1);
   msg.setBtMessageValidator(
-      make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
+      std::make_unique<RangeBtMessageValidator>(&msg, 1_k, 256_k));
   try {
     msg.validate();
     CPPUNIT_FAIL("exception must be thrown.");

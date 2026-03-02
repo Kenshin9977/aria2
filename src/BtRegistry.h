@@ -84,21 +84,21 @@ private:
 public:
   BtRegistry();
 
-  const std::shared_ptr<DownloadContext>&
+  [[nodiscard]] const std::shared_ptr<DownloadContext>&
   getDownloadContext(a2_gid_t gid) const;
 
-  const std::shared_ptr<DownloadContext>&
+  [[nodiscard]] const std::shared_ptr<DownloadContext>&
   getDownloadContext(const std::string& infoHash) const;
 
   void put(a2_gid_t gid, std::unique_ptr<BtObject> obj);
 
-  BtObject* get(a2_gid_t gid) const;
+  [[nodiscard]] BtObject* get(a2_gid_t gid) const;
 
   template <typename OutputIterator>
   OutputIterator getAllDownloadContext(OutputIterator dest)
   {
-    for (auto& kv : pool_) {
-      *dest++ = kv.second->downloadContext;
+    for (auto& [gid, obj] : pool_) {
+      *dest++ = obj->downloadContext;
     }
     return dest;
   }

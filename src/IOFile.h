@@ -46,12 +46,12 @@ namespace aria2 {
 // fopen/fclose/fread/fwrite/fgets functionality.
 class IOFile : public OutputFile {
 private:
-  typedef void (IOFile::*unspecified_bool_type)() const;
+  using unspecified_bool_type = void (IOFile::*)() const;
   void goodState() const {}
 
 public:
   IOFile() {}
-  virtual ~IOFile() = default;
+  ~IOFile() override = default;
   // Returns true if file is opened and ferror returns 0. Otherwise
   // returns false.
   operator unspecified_bool_type() const;
@@ -59,7 +59,7 @@ public:
   size_t read(void* ptr, size_t count);
   // wrapper for fwrite. Using 1 for 2nd argument of fwrite.
   size_t write(const void* ptr, size_t count);
-  virtual size_t write(const char* str) CXX11_OVERRIDE;
+  size_t write(const char* str) override;
   // wrapper for fgets
   char* gets(char* s, int size);
   // wrapper for fgets, but trailing '\n' is replaced with '\0'.
@@ -69,22 +69,22 @@ public:
   // wrapper for fclose
   int close();
   // wrapper for fflush
-  int flush() CXX11_OVERRIDE;
+  int flush() override;
   // Return true if file is opened && feof(fp_) != 0. Otherwise
   // returns false.
   bool eof();
   // Returns true if file supports ANSI color escape codes.
-  bool supportsColor() CXX11_OVERRIDE;
+  bool supportsColor() override;
   // Convenient method. Read data to end of file and write them into
   // given stream. Returns written size.
   size_t transfer(std::ostream& out);
-  int vprintf(const char* format, va_list va) CXX11_OVERRIDE;
+  int vprintf(const char* format, va_list va) override;
   // Mode for reading
-  static const char READ[];
+  static constexpr char READ[] = "rb";
   // Mode for writing
-  static const char WRITE[];
+  static constexpr char WRITE[] = "wb";
   // Mode for append
-  static const char APPEND[];
+  static constexpr char APPEND[] = "ab";
 
 protected:
   virtual size_t onRead(void* ptr, size_t count) = 0;

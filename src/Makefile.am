@@ -118,6 +118,7 @@ SRCS =  \
 	HaveEraseCommand.cc HaveEraseCommand.h\
 	help_tags.cc help_tags.h\
 	HttpConnection.cc HttpConnection.h\
+	HttpDigestAuth.cc HttpDigestAuth.h\
 	HttpDownloadCommand.cc HttpDownloadCommand.h\
 	HttpHeader.cc HttpHeader.h\
 	HttpHeaderProcessor.cc HttpHeaderProcessor.h\
@@ -136,6 +137,7 @@ SRCS =  \
 	HttpServerCommand.cc HttpServerCommand.h\
 	HttpServerResponseCommand.cc HttpServerResponseCommand.h\
 	HttpSkipResponseCommand.cc HttpSkipResponseCommand.h\
+	HstsStore.cc HstsStore.h\
 	IndexedList.h\
 	InitiateConnectionCommand.cc InitiateConnectionCommand.h\
 	InitiateConnectionCommandFactory.cc InitiateConnectionCommandFactory.h\
@@ -228,6 +230,10 @@ SRCS =  \
 	SingleFileAllocationIterator.cc SingleFileAllocationIterator.h\
 	SingletonHolder.h\
 	SinkStreamFilter.cc SinkStreamFilter.h\
+	SlowStartController.h\
+	Socks5ConnectCommand.cc Socks5ConnectCommand.h\
+	Socks5HandshakeCommand.cc Socks5HandshakeCommand.h\
+	Socks5RequestConnectChain.h\
 	SocketBuffer.cc SocketBuffer.h\
 	SocketCore.cc SocketCore.h\
 	SocketRecvBuffer.cc SocketRecvBuffer.h\
@@ -255,6 +261,7 @@ SRCS =  \
 	uri_split.c uri_split.h\
 	usage_text.h\
 	util.cc util.h\
+	util_string.cc util_string.h\
 	util_security.cc util_security.h\
 	ValueBase.cc ValueBase.h\
 	ValueBaseDiskWriter.h\
@@ -320,6 +327,10 @@ endif # HAVE_SOME_FALLOCATE
 if HAVE_EPOLL
 SRCS += EpollEventPoll.cc EpollEventPoll.h
 endif # HAVE_EPOLL
+
+if HAVE_IOURING
+SRCS += IouringEventPoll.cc IouringEventPoll.h
+endif # HAVE_IOURING
 
 if ENABLE_SSL
 SRCS += TLSContext.h TLSSession.h
@@ -407,6 +418,16 @@ SRCS += \
 	Adler32MessageDigestImpl.cc Adler32MessageDigestImpl.h
 endif # HAVE_ZLIB
 
+if HAVE_LIBBROTLIDEC
+SRCS += \
+	BrotliDecodingStreamFilter.cc BrotliDecodingStreamFilter.h
+endif # HAVE_LIBBROTLIDEC
+
+if HAVE_LIBZSTD
+SRCS += \
+	ZstdDecodingStreamFilter.cc ZstdDecodingStreamFilter.h
+endif # HAVE_LIBZSTD
+
 if HAVE_SQLITE3
 SRCS += \
 	Sqlite3CookieParser.cc Sqlite3CookieParser.h\
@@ -420,6 +441,11 @@ SRCS += SSHSession.cc SSHSession.h \
 	SftpDownloadCommand.cc SftpDownloadCommand.h \
 	SftpFinishDownloadCommand.cc SftpFinishDownloadCommand.h
 endif # HAVE_LIBSSH2
+
+if HAVE_LIBNGHTTP2
+SRCS += Http2Session.cc Http2Session.h \
+	Http2RequestCommand.cc Http2RequestCommand.h
+endif # HAVE_LIBNGHTTP2
 
 if ENABLE_ASYNC_DNS
 SRCS += \
@@ -702,6 +728,8 @@ AM_CPPFLAGS = \
 	-DLOCALEDIR=\"@localedir@\" @DEFS@ \
 	@EXTRACPPFLAGS@ \
 	@ZLIB_CFLAGS@ \
+	@LIBBROTLIDEC_CFLAGS@ \
+	@LIBZSTD_CFLAGS@ \
 	@LIBUV_CFLAGS@ \
 	@LIBXML2_CFLAGS@ \
 	@EXPAT_CFLAGS@ \
@@ -712,7 +740,12 @@ AM_CPPFLAGS = \
 	@LIBGMP_CFLAGS@ \
 	@LIBGCRYPT_CFLAGS@ \
 	@LIBSSH2_CFLAGS@ \
+	@LIBNGHTTP2_CFLAGS@ \
+	@LIBNGTCP2_CFLAGS@ \
+	@LIBNGTCP2_CRYPTO_QUICTLS_CFLAGS@ \
+	@LIBNGHTTP3_CFLAGS@ \
 	@LIBCARES_CFLAGS@ \
+	@LIBURING_CFLAGS@ \
 	@WSLAY_CFLAGS@ \
 	@TCMALLOC_CFLAGS@ \
 	@JEMALLOC_CFLAGS@
@@ -724,6 +757,8 @@ AM_LDFLAGS = \
 EXTLDADD = @ALLOCA@ \
 	@EXTRALIBS@ \
 	@ZLIB_LIBS@ \
+	@LIBBROTLIDEC_LIBS@ \
+	@LIBZSTD_LIBS@ \
 	@LIBUV_LIBS@ \
 	@LIBXML2_LIBS@ \
 	@EXPAT_LIBS@ \
@@ -735,7 +770,12 @@ EXTLDADD = @ALLOCA@ \
 	@LIBGMP_LIBS@ \
 	@LIBGCRYPT_LIBS@ \
 	@LIBSSH2_LIBS@ \
+	@LIBNGHTTP2_LIBS@ \
+	@LIBNGTCP2_LIBS@ \
+	@LIBNGTCP2_CRYPTO_QUICTLS_LIBS@ \
+	@LIBNGHTTP3_LIBS@ \
 	@LIBCARES_LIBS@ \
+	@LIBURING_LIBS@ \
 	@WSLAY_LIBS@ \
 	@TCMALLOC_LIBS@ \
 	@JEMALLOC_LIBS@ \

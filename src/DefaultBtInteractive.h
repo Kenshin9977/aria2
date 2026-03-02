@@ -164,33 +164,32 @@ public:
   DefaultBtInteractive(const std::shared_ptr<DownloadContext>& downloadContext,
                        const std::shared_ptr<Peer>& peer);
 
-  virtual ~DefaultBtInteractive();
+  ~DefaultBtInteractive() override;
 
-  virtual void initiateHandshake() CXX11_OVERRIDE;
+  void initiateHandshake() override;
 
-  virtual std::unique_ptr<BtHandshakeMessage>
-  receiveHandshake(bool quickReply = false) CXX11_OVERRIDE;
+  std::unique_ptr<BtHandshakeMessage>
+  receiveHandshake(bool quickReply = false) override;
 
-  virtual std::unique_ptr<BtHandshakeMessage>
-  receiveAndSendHandshake() CXX11_OVERRIDE;
+  std::unique_ptr<BtHandshakeMessage> receiveAndSendHandshake() override;
 
-  virtual void doPostHandshakeProcessing() CXX11_OVERRIDE;
+  void doPostHandshakeProcessing() override;
 
-  virtual void doInteractionProcessing() CXX11_OVERRIDE;
+  void doInteractionProcessing() override;
 
-  virtual void cancelAllPiece() CXX11_OVERRIDE;
+  void cancelAllPiece() override;
 
-  virtual void sendPendingMessage() CXX11_OVERRIDE;
+  void sendPendingMessage() override;
 
   size_t receiveMessages();
 
-  virtual size_t countPendingMessage() CXX11_OVERRIDE;
+  size_t countPendingMessage() override;
 
-  virtual bool isSendingMessageInProgress() CXX11_OVERRIDE;
+  bool isSendingMessageInProgress() override;
 
-  virtual size_t countReceivedMessageInIteration() const CXX11_OVERRIDE;
+  size_t countReceivedMessageInIteration() const override;
 
-  virtual size_t countOutstandingRequest() CXX11_OVERRIDE;
+  size_t countOutstandingRequest() override;
 
   void setCuid(cuid_t cuid) { cuid_ = cuid; }
 

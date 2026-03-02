@@ -49,18 +49,20 @@ namespace aria2 {
 class OpenSSLTLSSession : public TLSSession {
 public:
   OpenSSLTLSSession(OpenSSLTLSContext* tlsContext);
-  virtual ~OpenSSLTLSSession();
-  virtual int init(sock_t sockfd) CXX11_OVERRIDE;
-  virtual int setSNIHostname(const std::string& hostname) CXX11_OVERRIDE;
-  virtual int closeConnection() CXX11_OVERRIDE;
-  virtual int checkDirection() CXX11_OVERRIDE;
-  virtual ssize_t writeData(const void* data, size_t len) CXX11_OVERRIDE;
-  virtual ssize_t readData(void* data, size_t len) CXX11_OVERRIDE;
-  virtual int tlsConnect(const std::string& hostname, TLSVersion& version,
-                         std::string& handshakeErr) CXX11_OVERRIDE;
-  virtual int tlsAccept(TLSVersion& version) CXX11_OVERRIDE;
-  virtual std::string getLastErrorString() CXX11_OVERRIDE;
-  virtual size_t getRecvBufferedLength() CXX11_OVERRIDE { return 0; }
+  ~OpenSSLTLSSession() override;
+  int init(sock_t sockfd) override;
+  int setSNIHostname(const std::string& hostname) override;
+  int closeConnection() override;
+  TLSDirection checkDirection() override;
+  ssize_t writeData(const void* data, size_t len) override;
+  ssize_t readData(void* data, size_t len) override;
+  int tlsConnect(const std::string& hostname, TLSVersion& version,
+                 std::string& handshakeErr) override;
+  int tlsAccept(TLSVersion& version) override;
+  std::string getLastErrorString() override;
+  int setALPNProtocols(const std::vector<std::string>& protocols) override;
+  std::string getNegotiatedProtocol() const override;
+  size_t getRecvBufferedLength() override { return 0; }
 
 private:
   int handshake(TLSVersion& version);

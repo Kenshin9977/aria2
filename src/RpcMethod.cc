@@ -56,8 +56,6 @@ namespace rpc {
 
 RpcMethod::RpcMethod() : optionParser_(OptionParser::getInstance()) {}
 
-RpcMethod::~RpcMethod() = default;
-
 std::unique_ptr<ValueBase> RpcMethod::createErrorResponse(const Exception& e,
                                                           const RpcRequest& req)
 {
@@ -75,9 +73,8 @@ void RpcMethod::authorize(RpcRequest& req, DownloadEngine* e)
   // we don't have to add conditionals to all RPCMethod
   // implementations.
   if (req.params && !req.params->empty()) {
-    auto t = downcast<String>(req.params->get(0));
-    if (t) {
-      if (util::startsWith(t->s(), "token:")) {
+    if (auto t = downcast<String>(req.params->get(0))) {
+      if (t->s().starts_with("token:")) {
         token = t->s().substr(6);
         req.params->pop_front();
       }
@@ -111,24 +108,21 @@ void gatherOption(InputIterator first, InputIterator last, Pred pred,
                   const std::shared_ptr<OptionParser>& optionParser)
 {
   for (; first != last; ++first) {
-    const std::string& optionName = (*first).first;
+    const auto& [optionName, optionValue] = *first;
     PrefPtr pref = option::k2p(optionName);
     const OptionHandler* handler = optionParser->find(pref);
     if (!handler || !pred(handler)) {
       // Just ignore the unacceptable options in this context.
       continue;
     }
-    const String* opval = downcast<String>((*first).second);
-    if (opval) {
+    if (const auto* opval = downcast<String>(optionValue)) {
       handler->parse(*option, opval->s());
     }
     else if (handler->getCumulative()) {
       // header and index-out option can take array as value
-      const List* oplist = downcast<List>((*first).second);
-      if (oplist) {
+      if (const auto* oplist = downcast<List>(optionValue)) {
         for (auto& elem : *oplist) {
-          const String* opval = downcast<String>(elem);
-          if (opval) {
+          if (const auto* opval = downcast<String>(elem)) {
             handler->parse(*option, opval->s());
           }
         }
@@ -154,11 +148,7 @@ void RpcMethod::gatherChangeableOption(Option* option, Option* pendingOption,
     return;
   }
 
-  auto first = optionsDict->begin();
-  auto last = optionsDict->end();
-
-  for (; first != last; ++first) {
-    const auto& optionName = (*first).first;
+  for (const auto& [optionName, optionValue] : *optionsDict) {
     auto pref = option::k2p(optionName);
     auto handler = optionParser_->find(pref);
     if (!handler) {
@@ -178,17 +168,14 @@ void RpcMethod::gatherChangeableOption(Option* option, Option* pendingOption,
       continue;
     }
 
-    const auto opval = downcast<String>((*first).second);
-    if (opval) {
+    if (const auto* opval = downcast<String>(optionValue)) {
       handler->parse(*dst, opval->s());
     }
     else if (handler->getCumulative()) {
       // header and index-out option can take array as value
-      const auto oplist = downcast<List>((*first).second);
-      if (oplist) {
+      if (const auto* oplist = downcast<List>(optionValue)) {
         for (auto& elem : *oplist) {
-          const auto opval = downcast<String>(elem);
-          if (opval) {
+          if (const auto opval = downcast<String>(elem)) {
             handler->parse(*dst, opval->s());
           }
         }

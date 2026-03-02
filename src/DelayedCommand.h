@@ -46,7 +46,7 @@ private:
   bool noWait_;
 
 public:
-  virtual void process() CXX11_OVERRIDE
+  void process() override
   {
     auto e = getDownloadEngine();
     e->addCommand(std::move(command_));
@@ -65,7 +65,7 @@ public:
   {
   }
 
-  virtual ~DelayedCommand() {}
+  ~DelayedCommand() override {}
 };
 
 } // namespace aria2

@@ -37,6 +37,8 @@
 
 #include "SimpleBtMessage.h"
 
+#include <span>
+
 namespace aria2 {
 
 class DHTNode;
@@ -47,7 +49,7 @@ class DHTTaskFactory;
 class BtPortMessage : public SimpleBtMessage {
 private:
   uint16_t port_;
-  static const size_t MESSAGE_LENGTH = 7;
+  static constexpr size_t MESSAGE_LENGTH = 7;
 
   DHTNode* localNode_;
 
@@ -60,20 +62,20 @@ private:
 public:
   BtPortMessage(uint16_t port);
 
-  static const uint8_t ID = 9;
+  static constexpr uint8_t ID = 9;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "port";
 
   uint16_t getPort() const { return port_; }
 
-  static std::unique_ptr<BtPortMessage> create(const unsigned char* data,
-                                               size_t dataLength);
+  static std::unique_ptr<BtPortMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
   void setLocalNode(DHTNode* localNode);
 

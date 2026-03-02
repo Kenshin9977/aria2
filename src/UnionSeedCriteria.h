@@ -48,11 +48,11 @@ private:
 
 public:
   UnionSeedCriteria();
-  virtual ~UnionSeedCriteria();
+  ~UnionSeedCriteria() override;
 
-  virtual void reset() CXX11_OVERRIDE;
+  void reset() override;
 
-  virtual bool evaluate() CXX11_OVERRIDE;
+  bool evaluate() override;
 
   void addSeedCriteria(std::unique_ptr<SeedCriteria> cri);
 

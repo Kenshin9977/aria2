@@ -48,16 +48,16 @@ private:
 
 public:
   BtNotInterestedMessage();
-  virtual ~BtNotInterestedMessage();
+  ~BtNotInterestedMessage() override;
 
-  static const uint8_t ID = 3;
+  static constexpr uint8_t ID = 3;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "not interested";
 
   static std::unique_ptr<BtNotInterestedMessage>
-  create(const unsigned char* data, size_t dataLength);
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
   void setPeerStorage(PeerStorage* peerStorage);
 };

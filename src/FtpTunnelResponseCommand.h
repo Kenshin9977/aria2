@@ -39,7 +39,7 @@
 
 namespace aria2 {
 
-class SocketCore;
+class ISocketCore;
 
 class FtpTunnelResponseCommand : public AbstractProxyResponseCommand {
 public:
@@ -47,10 +47,10 @@ public:
       cuid_t cuid, const std::shared_ptr<Request>& req,
       const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
       const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-      const std::shared_ptr<SocketCore>& s);
-  virtual ~FtpTunnelResponseCommand();
+      const std::shared_ptr<ISocketCore>& s);
+  ~FtpTunnelResponseCommand() override;
 
-  virtual std::unique_ptr<Command> getNextCommand() CXX11_OVERRIDE;
+  std::unique_ptr<Command> getNextCommand() override;
 };
 
 } // namespace aria2

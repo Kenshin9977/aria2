@@ -37,6 +37,8 @@
 
 #include "AbstractBtMessage.h"
 
+#include <span>
+
 namespace aria2 {
 
 class Piece;
@@ -63,11 +65,11 @@ private:
 public:
   BtPieceMessage(size_t index = 0, int32_t begin = 0, int32_t blockLength = 0);
 
-  virtual ~BtPieceMessage();
+  ~BtPieceMessage() override;
 
-  static const uint8_t ID = 7;
+  static constexpr uint8_t ID = 7;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "piece";
 
   size_t getIndex() const { return index_; }
 
@@ -91,23 +93,23 @@ public:
 
   void setPeerStorage(PeerStorage* peerStorage);
 
-  static std::unique_ptr<BtPieceMessage> create(const unsigned char* data,
-                                                size_t dataLength);
+  static std::unique_ptr<BtPieceMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
   void createMessageHeader(unsigned char* msgHeader) const;
 
   size_t getMessageHeaderLength();
 
-  virtual void send() CXX11_OVERRIDE;
+  void send() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 
-  virtual void onChokingEvent(const BtChokingEvent& event) CXX11_OVERRIDE;
+  void onChokingEvent(const BtChokingEvent& event) override;
 
-  virtual void onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event)
-      CXX11_OVERRIDE;
+  void
+  onCancelSendingPieceEvent(const BtCancelSendingPieceEvent& event) override;
 };
 
 } // namespace aria2

@@ -58,7 +58,7 @@ std::string digest(MessageDigest* ctx, const std::shared_ptr<BinaryStream>& bs,
   size_t tail = res.rem;
   for (int64_t i = 0; i < iteration; ++i) {
     ssize_t readLength = bs->readData(buf.data(), buf.size(), offset);
-    if ((size_t)readLength != buf.size()) {
+    if (static_cast<size_t>(readLength) != buf.size()) {
       throw DL_ABORT_EX(fmt(EX_FILE_READ, "n/a", "data is too short"));
     }
     ctx->update(buf.data(), readLength);
@@ -66,7 +66,7 @@ std::string digest(MessageDigest* ctx, const std::shared_ptr<BinaryStream>& bs,
   }
   if (tail) {
     ssize_t readLength = bs->readData(buf.data(), tail, offset);
-    if ((size_t)readLength != tail) {
+    if (static_cast<size_t>(readLength) != tail) {
       throw DL_ABORT_EX(fmt(EX_FILE_READ, "n/a", "data is too short"));
     }
     ctx->update(buf.data(), readLength);

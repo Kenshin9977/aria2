@@ -61,9 +61,9 @@ public:
                      const std::shared_ptr<DHTNode>& remoteNode,
                      const std::string& transactionID = A2STR::NIL);
 
-  virtual bool send() CXX11_OVERRIDE;
+  bool send() override;
 
-  virtual const std::string& getType() const = 0;
+  virtual const char* getType() const = 0;
 
   virtual void fillMessage(Dict* msgDict) = 0;
 

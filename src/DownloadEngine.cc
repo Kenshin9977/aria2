@@ -49,12 +49,14 @@
 #include "StatCalc.h"
 #include "LogFactory.h"
 #include "Logger.h"
+#include "ISocketCore.h"
 #include "SocketCore.h"
 #include "util.h"
 #include "a2functional.h"
 #include "DlAbortEx.h"
 #include "ServerStatMan.h"
 #include "CookieStorage.h"
+#include "HstsStore.h"
 #include "A2STR.h"
 #include "AuthConfigFactory.h"
 #include "AuthConfig.h"
@@ -100,11 +102,12 @@ DownloadEngine::DownloadEngine(std::unique_ptr<EventPoll> eventPoll)
       noWait_(true),
       refreshInterval_(DEFAULT_REFRESH_INTERVAL),
       lastRefresh_(Timer::zero()),
-      cookieStorage_(make_unique<CookieStorage>()),
+      cookieStorage_(std::make_unique<CookieStorage>()),
+      hstsStore_(std::make_unique<HstsStore>()),
 #ifdef ENABLE_BITTORRENT
-      btRegistry_(make_unique<BtRegistry>()),
+      btRegistry_(std::make_unique<BtRegistry>()),
 #endif // ENABLE_BITTORRENT
-      dnsCache_(make_unique<DNSCache>()),
+      dnsCache_(std::make_unique<DNSCache>()),
       option_(nullptr)
 {
   unsigned char sessionId[20];
@@ -200,28 +203,28 @@ void DownloadEngine::waitData()
 }
 
 bool DownloadEngine::addSocketForReadCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->addEvents(socket->getSockfd(), command,
                                EventPoll::EVENT_READ);
 }
 
 bool DownloadEngine::deleteSocketForReadCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->deleteEvents(socket->getSockfd(), command,
                                   EventPoll::EVENT_READ);
 }
 
 bool DownloadEngine::addSocketForWriteCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->addEvents(socket->getSockfd(), command,
                                EventPoll::EVENT_WRITE);
 }
 
 bool DownloadEngine::deleteSocketForWriteCheck(
-    const std::shared_ptr<SocketCore>& socket, Command* command)
+    const std::shared_ptr<ISocketCore>& socket, Command* command)
 {
   return eventPoll_->deleteEvents(socket->getSockfd(), command,
                                   EventPoll::EVENT_WRITE);
@@ -301,12 +304,23 @@ void DownloadEngine::addRoutineCommand(std::unique_ptr<Command> command)
   routineCommands_.push_back(std::move(command));
 }
 
-void DownloadEngine::poolSocket(const std::string& key,
-                                const SocketPoolEntry& entry)
+void DownloadEngine::poolSocket(const std::string& key, SocketPoolEntry entry)
 {
-  A2_LOG_INFO(fmt("Pool socket for %s", key.c_str()));
-  std::multimap<std::string, SocketPoolEntry>::value_type p(key, entry);
-  socketPool_.insert(p);
+  static constexpr size_t MAX_POOL_SIZE = 256;
+  if (socketPool_.size() >= MAX_POOL_SIZE) {
+    // Evict the oldest entry (first timed out, or just first)
+    auto oldest = socketPool_.begin();
+    for (auto i = socketPool_.begin(); i != socketPool_.end(); ++i) {
+      if (i->second.isTimeout()) {
+        oldest = i;
+        break;
+      }
+    }
+    A2_LOG_DEBUG(A2_FMT("Pool full, evicting socket for {}", oldest->first));
+    socketPool_.erase(oldest);
+  }
+  A2_LOG_INFO(A2_FMT("Pool socket for {}", key));
+  socketPool_.emplace(key, std::move(entry));
 }
 
 void DownloadEngine::evictSocketPool()
@@ -317,14 +331,13 @@ void DownloadEngine::evictSocketPool()
 
   std::multimap<std::string, SocketPoolEntry> newPool;
   A2_LOG_DEBUG("Scanning SocketPool and erasing timed out entry.");
-  for (auto& elem : socketPool_) {
-    if (!elem.second.isTimeout()) {
-      newPool.insert(elem);
+  for (auto& [key, entry] : socketPool_) {
+    if (!entry.isTimeout()) {
+      newPool.insert({key, entry});
     }
   }
   A2_LOG_DEBUG(
-      fmt("%lu entries removed.",
-          static_cast<unsigned long>(socketPool_.size() - newPool.size())));
+      A2_FMT("{} entries removed.", socketPool_.size() - newPool.size()));
   socketPool_ = std::move(newPool);
 }
 
@@ -338,9 +351,9 @@ std::string createSockPoolKey(const std::string& host, uint16_t port,
     key += util::percentEncode(username);
     key += "@";
   }
-  key += fmt("%s(%u)", host.c_str(), port);
+  key += A2_FMT("{}({})", host, port);
   if (!proxyhost.empty()) {
-    key += fmt("/%s(%u)", proxyhost.c_str(), proxyport);
+    key += A2_FMT("/{}({})", proxyhost, proxyport);
   }
   return key;
 }
@@ -430,17 +443,21 @@ void DownloadEngine::poolSocket(const std::shared_ptr<Request>& request,
 std::multimap<std::string, DownloadEngine::SocketPoolEntry>::iterator
 DownloadEngine::findSocketPoolEntry(const std::string& key)
 {
-  std::pair<std::multimap<std::string, SocketPoolEntry>::iterator,
-            std::multimap<std::string, SocketPoolEntry>::iterator>
-      range = socketPool_.equal_range(key);
-  for (auto i = range.first, eoi = range.second; i != eoi; ++i) {
-    const SocketPoolEntry& e = (*i).second;
+  auto [first, last] = socketPool_.equal_range(key);
+  for (auto i = first; i != last;) {
+    const auto& [k, entry] = *i;
+    // Lazily evict expired entries while scanning
+    if (entry.isTimeout()) {
+      i = socketPool_.erase(i);
+      continue;
+    }
     // We assume that if socket is readable it means peer shutdowns
     // connection and the socket will receive EOF. So skip it.
-    if (!e.isTimeout() && !e.getSocket()->isReadable(0)) {
-      A2_LOG_INFO(fmt("Found socket for %s", key.c_str()));
+    if (!entry.getSocket()->isReadable(0)) {
+      A2_LOG_INFO(A2_FMT("Found socket for {}", key));
       return i;
     }
+    ++i;
   }
   return socketPool_.end();
 }
@@ -454,7 +471,7 @@ DownloadEngine::popPooledSocket(const std::string& ipaddr, uint16_t port,
   auto i = findSocketPoolEntry(
       createSockPoolKey(ipaddr, port, A2STR::NIL, proxyhost, proxyport));
   if (i != socketPool_.end()) {
-    s = (*i).second.getSocket();
+    s = i->second.getSocket();
     socketPool_.erase(i);
   }
   return s;
@@ -470,8 +487,8 @@ DownloadEngine::popPooledSocket(std::string& options, const std::string& ipaddr,
   auto i = findSocketPoolEntry(
       createSockPoolKey(ipaddr, port, username, proxyhost, proxyport));
   if (i != socketPool_.end()) {
-    s = (*i).second.getSocket();
-    options = (*i).second.getOptions();
+    s = i->second.getSocket();
+    options = i->second.getOptions();
     socketPool_.erase(i);
   }
   return s;
@@ -507,9 +524,11 @@ DownloadEngine::popPooledSocket(std::string& options,
 }
 
 DownloadEngine::SocketPoolEntry::SocketPoolEntry(
-    const std::shared_ptr<SocketCore>& socket, const std::string& options,
+    const std::shared_ptr<SocketCore>& socket, std::string options,
     std::chrono::seconds timeout)
-    : socket_(socket), options_(options), timeout_(std::move(timeout))
+    : socket_(socket),
+      options_(std::move(options)),
+      timeout_(std::move(timeout))
 {
 }
 
@@ -530,7 +549,7 @@ cuid_t DownloadEngine::newCUID() { return cuidCounter_.newID(); }
 
 const std::string&
 DownloadEngine::findCachedIPAddress(const std::string& hostname,
-                                    uint16_t port) const
+                                    uint16_t port)
 {
   return dnsCache_->find(hostname, port);
 }
@@ -626,7 +645,7 @@ bool DownloadEngine::validateToken(const std::string& token)
       A2_LOG_ERROR("Failed to create HMAC");
       return false;
     }
-    tokenExpected_ = make_unique<HMACResult>(
+    tokenExpected_ = std::make_unique<HMACResult>(
         tokenHMAC_->getResult(option_->get(PREF_RPC_SECRET)));
   }
 

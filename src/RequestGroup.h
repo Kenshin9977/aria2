@@ -70,6 +70,7 @@ struct DownloadResult;
 class URISelector;
 class URIResult;
 class RequestGroupMan;
+class RequestGroupContext;
 #ifdef ENABLE_BITTORRENT
 class BtRuntime;
 class PeerStorage;
@@ -99,23 +100,23 @@ private:
   // options applied on restart
   std::shared_ptr<Option> pendingOption_;
 
-  std::shared_ptr<SegmentMan> segmentMan_;
+  std::unique_ptr<SegmentMan> segmentMan_;
 
   std::shared_ptr<DownloadContext> downloadContext_;
 
   std::shared_ptr<PieceStorage> pieceStorage_;
 
-  std::shared_ptr<BtProgressInfoFile> progressInfoFile_;
+  std::unique_ptr<BtProgressInfoFile> progressInfoFile_;
 
   std::shared_ptr<DiskWriterFactory> diskWriterFactory_;
 
-  std::shared_ptr<Dependency> dependency_;
+  std::unique_ptr<Dependency> dependency_;
 
   std::unique_ptr<URISelector> uriSelector_;
 
   std::shared_ptr<MetadataInfo> metadataInfo_;
 
-  RequestGroupMan* requestGroupMan_;
+  RequestGroupContext* groupContext_;
 
 #ifdef ENABLE_BITTORRENT
   BtRuntime* btRuntime_;
@@ -206,8 +207,7 @@ private:
   // returns error_code::UNKNOWN_ERROR.
   std::pair<error_code::Value, std::string> downloadResult() const;
 
-  void removeDefunctControlFile(
-      const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void removeDefunctControlFile(BtProgressInfoFile* progressInfoFile);
 
 public:
   RequestGroup(const std::shared_ptr<GroupId>& gid,
@@ -219,12 +219,10 @@ public:
 
   void tryAutoFileRenaming();
 
-  const std::shared_ptr<SegmentMan>& getSegmentMan() const
-  {
-    return segmentMan_;
-  }
+  SegmentMan* getSegmentMan() const { return segmentMan_.get(); }
 
-  std::unique_ptr<CheckIntegrityEntry> createCheckIntegrityEntry();
+  [[nodiscard]] std::unique_ptr<CheckIntegrityEntry>
+  createCheckIntegrityEntry();
 
   // Returns first bootstrap commands to initiate a download.
   // If this is HTTP/FTP download and file size is unknown, only 1 command
@@ -241,17 +239,17 @@ public:
   void createNextCommand(std::vector<std::unique_ptr<Command>>& commands,
                          DownloadEngine* e);
 
-  bool downloadFinished() const;
+  [[nodiscard]] bool downloadFinished() const;
 
-  bool allDownloadFinished() const;
+  [[nodiscard]] bool allDownloadFinished() const;
 
   void closeFile();
 
   std::string getFirstFilePath() const;
 
-  int64_t getTotalLength() const;
+  [[nodiscard]] int64_t getTotalLength() const;
 
-  int64_t getCompletedLength() const;
+  [[nodiscard]] int64_t getCompletedLength() const;
 
   inline int64_t getPendingLength() const
   {
@@ -287,18 +285,17 @@ public:
 
   // This function also calls
   // downloadContext->setOwnerRequestGroup(this).
-  void
-  setDownloadContext(const std::shared_ptr<DownloadContext>& downloadContext);
+  void setDownloadContext(std::shared_ptr<DownloadContext> downloadContext);
 
   const std::shared_ptr<PieceStorage>& getPieceStorage() const
   {
     return pieceStorage_;
   }
 
-  void setPieceStorage(const std::shared_ptr<PieceStorage>& pieceStorage);
+  void setPieceStorage(std::shared_ptr<PieceStorage> pieceStorage);
 
-  void setProgressInfoFile(
-      const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void
+  setProgressInfoFile(std::unique_ptr<BtProgressInfoFile> progressInfoFile);
 
   void increaseStreamCommand();
 
@@ -318,8 +315,8 @@ public:
 
   // TODO is it better to move the following 2 methods to
   // SingleFileDownloadContext?
-  void setDiskWriterFactory(
-      const std::shared_ptr<DiskWriterFactory>& diskWriterFactory);
+  void
+  setDiskWriterFactory(std::shared_ptr<DiskWriterFactory> diskWriterFactory);
 
   const std::shared_ptr<DiskWriterFactory>& getDiskWriterFactory() const
   {
@@ -345,9 +342,12 @@ public:
 
   void setForceHaltRequested(bool f, HaltReason = SHUTDOWN_SIGNAL);
 
-  bool isHaltRequested() const { return haltRequested_; }
+  [[nodiscard]] bool isHaltRequested() const { return haltRequested_; }
 
-  bool isForceHaltRequested() const { return forceHaltRequested_; }
+  [[nodiscard]] bool isForceHaltRequested() const
+  {
+    return forceHaltRequested_;
+  }
 
   void setPauseRequested(bool f);
 
@@ -357,7 +357,7 @@ public:
 
   bool isRestartRequested() const { return restartRequested_; }
 
-  void dependsOn(const std::shared_ptr<Dependency>& dep);
+  void dependsOn(std::unique_ptr<Dependency> dep);
 
   bool isDependencyResolved();
 
@@ -390,14 +390,14 @@ public:
 
   bool downloadFinishedByFileLength();
 
-  void
-  loadAndOpenFile(const std::shared_ptr<BtProgressInfoFile>& progressInfoFile);
+  void loadAndOpenFile(std::unique_ptr<BtProgressInfoFile> progressInfoFile);
 
   void shouldCancelDownloadForSafety();
 
-  void adjustFilename(const std::shared_ptr<BtProgressInfoFile>& infoFile);
+  void adjustFilename(BtProgressInfoFile* infoFile);
 
-  std::shared_ptr<DownloadResult> createDownloadResult() const;
+  [[nodiscard]] std::shared_ptr<DownloadResult>
+  createDownloadResult() const;
 
   const std::shared_ptr<Option>& getOption() const { return option_; }
 
@@ -479,12 +479,13 @@ public:
 
   a2_gid_t belongsTo() const { return belongsToGID_; }
 
-  void setRequestGroupMan(RequestGroupMan* requestGroupMan)
-  {
-    requestGroupMan_ = requestGroupMan;
-  }
+  void setRequestGroupMan(RequestGroupMan* requestGroupMan);
 
-  RequestGroupMan* getRequestGroupMan() { return requestGroupMan_; }
+  RequestGroupMan* getRequestGroupMan() const;
+
+  void setGroupContext(RequestGroupContext* ctx) { groupContext_ = ctx; }
+
+  RequestGroupContext* getGroupContext() { return groupContext_; }
 
   int getResumeFailureCount() const { return resumeFailureCount_; }
 
@@ -511,7 +512,7 @@ public:
   void enableSeedOnly();
 
   // Returns true if this download is now seeding.
-  bool isSeeder() const;
+  [[nodiscard]] bool isSeeder() const;
 
   void setPendingOption(std::shared_ptr<Option> option);
   const std::shared_ptr<Option>& getPendingOption() const

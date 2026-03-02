@@ -49,9 +49,9 @@ public:
         const std::shared_ptr<DHTNode>& remoteNode,
         std::vector<std::shared_ptr<DHTNode>> closestKNodes,
         std::vector<std::shared_ptr<Peer>> peers, const std::string& token,
-        const std::string& transactionID) CXX11_OVERRIDE
+        const std::string& transactionID) override
     {
-      auto m = make_unique<DHTGetPeersReplyMessage>(
+      auto m = std::make_unique<DHTGetPeersReplyMessage>(
           AF_INET, localNode_, remoteNode, token, transactionID);
       m->setClosestKNodes(closestKNodes);
       m->setValues(peers);
@@ -112,7 +112,7 @@ void DHTGetPeersMessageTest::testDoReceivedAction()
   torrentAttrs->infoHash = std::string(infoHash, infoHash + DHT_ID_LENGTH);
 
   auto dctx = std::make_shared<DownloadContext>();
-  dctx->setAttribute(CTX_ATTR_BT, torrentAttrs);
+  dctx->setAttribute(ContextAttributeType::CTX_ATTR_BT, torrentAttrs);
 
   auto option = std::make_shared<Option>();
   option->put(PREF_BT_EXTERNAL_IP, "192.168.0.1");
@@ -124,7 +124,7 @@ void DHTGetPeersMessageTest::testDoReceivedAction()
   BtRegistry btReg;
   btReg.put(
       gid->getNumericId(),
-      make_unique<BtObject>(dctx, nullptr, nullptr, nullptr, nullptr, nullptr));
+      std::make_unique<BtObject>(dctx, nullptr, nullptr, nullptr, nullptr, nullptr));
   btReg.setTcpPort(6890);
 
   DHTGetPeersMessage msg(localNode_, remoteNode_, infoHash, transactionID);
@@ -149,7 +149,8 @@ void DHTGetPeersMessageTest::testDoReceivedAction()
         dispatcher.messageQueue_[0].message_.get());
     CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
     CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-    CPPUNIT_ASSERT_EQUAL(std::string("get_peers"), m->getMessageType());
+    CPPUNIT_ASSERT_EQUAL(std::string("get_peers"),
+                       std::string(m->getMessageType()));
     CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
     CPPUNIT_ASSERT_EQUAL(tokenTracker.generateToken(infoHash,
                                                     remoteNode_->getIPAddress(),
@@ -192,7 +193,8 @@ void DHTGetPeersMessageTest::testDoReceivedAction()
         dispatcher.messageQueue_[0].message_.get());
     CPPUNIT_ASSERT(*localNode_ == *m->getLocalNode());
     CPPUNIT_ASSERT(*remoteNode_ == *m->getRemoteNode());
-    CPPUNIT_ASSERT_EQUAL(std::string("get_peers"), m->getMessageType());
+    CPPUNIT_ASSERT_EQUAL(std::string("get_peers"),
+                       std::string(m->getMessageType()));
     CPPUNIT_ASSERT_EQUAL(msg.getTransactionID(), m->getTransactionID());
     CPPUNIT_ASSERT_EQUAL(tokenTracker.generateToken(infoHash,
                                                     remoteNode_->getIPAddress(),

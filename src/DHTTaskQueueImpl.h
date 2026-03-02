@@ -51,18 +51,15 @@ private:
 public:
   DHTTaskQueueImpl();
 
-  virtual ~DHTTaskQueueImpl();
+  ~DHTTaskQueueImpl() override;
 
-  virtual void executeTask() CXX11_OVERRIDE;
+  void executeTask() override;
 
-  virtual void
-  addPeriodicTask1(const std::shared_ptr<DHTTask>& task) CXX11_OVERRIDE;
+  void addPeriodicTask1(const std::shared_ptr<DHTTask>& task) override;
 
-  virtual void
-  addPeriodicTask2(const std::shared_ptr<DHTTask>& task) CXX11_OVERRIDE;
+  void addPeriodicTask2(const std::shared_ptr<DHTTask>& task) override;
 
-  virtual void
-  addImmediateTask(const std::shared_ptr<DHTTask>& task) CXX11_OVERRIDE;
+  void addImmediateTask(const std::shared_ptr<DHTTask>& task) override;
 };
 
 } // namespace aria2

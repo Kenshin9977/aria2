@@ -64,6 +64,12 @@ public:
 
   const std::string& getPassword() const { return password_; }
 
+  void setAuthScheme(std::string scheme) { authScheme_ = std::move(scheme); }
+
+  const std::string& getAuthScheme() const { return authScheme_; }
+
+  bool isDigest() const { return authScheme_ == "digest"; }
+
   static std::unique_ptr<AuthConfig> create(std::string user,
                                             std::string password);
 };

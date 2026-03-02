@@ -47,20 +47,20 @@ private:
   std::vector<std::shared_ptr<DHTNode>> closestKNodes_;
 
 protected:
-  virtual std::string toStringOptional() const CXX11_OVERRIDE;
+  std::string toStringOptional() const override;
 
 public:
   DHTFindNodeReplyMessage(int family, const std::shared_ptr<DHTNode>& localNode,
                           const std::shared_ptr<DHTNode>& remoteNode,
                           const std::string& transactionID);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::unique_ptr<Dict> getResponse() CXX11_OVERRIDE;
+  std::unique_ptr<Dict> getResponse() override;
 
-  virtual const std::string& getMessageType() const CXX11_OVERRIDE;
+  const char* getMessageType() const override;
 
-  virtual void accept(DHTMessageCallback* callback) CXX11_OVERRIDE;
+  void accept(DHTMessageCallback* callback) override;
 
   const std::vector<std::shared_ptr<DHTNode>>& getClosestKNodes() const
   {
@@ -69,11 +69,11 @@ public:
 
   void setClosestKNodes(std::vector<std::shared_ptr<DHTNode>> closestKNodes);
 
-  static const std::string FIND_NODE;
+  static constexpr const char FIND_NODE[] = "find_node";
 
-  static const std::string NODES;
+  static constexpr const char NODES[] = "nodes";
 
-  static const std::string NODES6;
+  static constexpr const char NODES6[] = "nodes6";
 };
 
 } // namespace aria2

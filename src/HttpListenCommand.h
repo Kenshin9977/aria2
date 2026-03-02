@@ -54,9 +54,9 @@ private:
 public:
   HttpListenCommand(cuid_t cuid, DownloadEngine* e, int family, bool secure);
 
-  virtual ~HttpListenCommand();
+  ~HttpListenCommand() override;
 
-  virtual bool execute() CXX11_OVERRIDE;
+  bool execute() override;
 
   bool bindPort(uint16_t port);
 };

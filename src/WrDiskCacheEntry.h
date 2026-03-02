@@ -63,7 +63,7 @@ public:
     bool operator<(const DataCell& rhs) const { return goff < rhs.goff; }
   };
 
-  typedef std::set<DataCell*, DerefLess<DataCell*>> DataCellSet;
+  using DataCellSet = std::set<DataCell*, DerefLess<DataCell*>>;
 
   WrDiskCacheEntry(const std::shared_ptr<DiskAdaptor>& diskAdaptor);
   ~WrDiskCacheEntry();

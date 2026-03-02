@@ -121,9 +121,10 @@ inline static uint32_t getProtocolVersion(CtxtHandle* handle)
 
 namespace aria2 {
 
-TLSSession* TLSSession::make(TLSContext* ctx)
+std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return new WinTLSSession(static_cast<WinTLSContext*>(ctx));
+  return std::make_unique<WinTLSSession>(
+      static_cast<WinTLSContext*>(ctx));
 }
 
 WinTLSSession::WinTLSSession(WinTLSContext* ctx)
@@ -227,8 +228,9 @@ int WinTLSSession::closeConnection()
   return TLS_ERR_OK;
 }
 
-int WinTLSSession::checkDirection()
+TLSDirection WinTLSSession::checkDirection()
 {
+  using enum TLSDirection;
   if (state_ == st_handshake_write || state_ == st_handshake_write_last) {
     return TLS_WANT_WRITE;
   }
@@ -697,7 +699,7 @@ restart:
 
     // Need to copy the data, as Schannel is free to mess with it. But we
     // might later need unmodified data from the original read buffer.
-    auto bufcopy = make_unique<char[]>(readBuf_.size());
+    auto bufcopy = std::make_unique<char[]>(readBuf_.size());
     memcpy(bufcopy.get(), readBuf_.data(), readBuf_.size());
 
     // Set up buffers. inbufs will be the raw bytes the library has to decode.
@@ -794,9 +796,14 @@ restart:
     case 0x303:
       version = TLS_PROTO_TLS12;
       break;
+    case 0x304:
+      version = TLS_PROTO_TLS13;
+      break;
     default:
-      assert(0);
-      abort();
+      A2_LOG_WARN(fmt("WinTLS: unknown protocol version: 0x%x",
+                      getProtocolVersion(&handle_)));
+      version = TLS_PROTO_TLS12;
+      break;
     }
     return TLS_ERR_OK;
   }

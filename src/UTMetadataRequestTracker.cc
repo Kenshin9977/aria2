@@ -35,6 +35,7 @@
 #include "UTMetadataRequestTracker.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include "Logger.h"
 #include "LogFactory.h"
@@ -46,19 +47,18 @@ UTMetadataRequestTracker::UTMetadataRequestTracker() {}
 
 void UTMetadataRequestTracker::add(size_t index)
 {
-  trackedRequests_.push_back(RequestEntry(index));
+  trackedRequests_.emplace_back(index);
 }
 
 bool UTMetadataRequestTracker::tracks(size_t index)
 {
-  return std::find(trackedRequests_.begin(), trackedRequests_.end(),
-                   RequestEntry(index)) != trackedRequests_.end();
+  return std::ranges::find(trackedRequests_, RequestEntry(index)) !=
+         trackedRequests_.end();
 }
 
 void UTMetadataRequestTracker::remove(size_t index)
 {
-  auto i = std::find(trackedRequests_.begin(), trackedRequests_.end(),
-                     RequestEntry(index));
+  auto i = std::ranges::find(trackedRequests_, RequestEntry(index));
   if (i != trackedRequests_.end()) {
     trackedRequests_.erase(i);
   }
@@ -71,19 +71,15 @@ constexpr auto TIMEOUT = 20_s;
 std::vector<size_t> UTMetadataRequestTracker::removeTimeoutEntry()
 {
   std::vector<size_t> indexes;
-  trackedRequests_.erase(
-      std::remove_if(std::begin(trackedRequests_), std::end(trackedRequests_),
-                     [&indexes](const RequestEntry& ent) {
-                       if (ent.elapsed(TIMEOUT)) {
-                         A2_LOG_DEBUG(
-                             fmt("ut_metadata request timeout. index=%lu",
-                                 static_cast<unsigned long>(ent.index_)));
-                         indexes.push_back(ent.index_);
-                         return true;
-                       }
-                       return false;
-                     }),
-      std::end(trackedRequests_));
+  std::erase_if(trackedRequests_, [&indexes](const RequestEntry& ent) {
+    if (ent.elapsed(TIMEOUT)) {
+      A2_LOG_DEBUG(fmt("ut_metadata request timeout. index=%lu",
+                       static_cast<unsigned long>(ent.index_)));
+      indexes.push_back(ent.index_);
+      return true;
+    }
+    return false;
+  });
   return indexes;
 }
 

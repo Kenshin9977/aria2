@@ -37,7 +37,7 @@
 #include <cassert>
 #include <algorithm>
 
-#include "SocketCore.h"
+#include "ISocketCore.h"
 #include "DlAbortEx.h"
 #include "message.h"
 #include "fmt.h"
@@ -55,9 +55,8 @@ SocketBuffer::ByteArrayBufEntry::ByteArrayBufEntry(
 
 SocketBuffer::ByteArrayBufEntry::~ByteArrayBufEntry() = default;
 
-ssize_t
-SocketBuffer::ByteArrayBufEntry::send(const std::shared_ptr<SocketCore>& socket,
-                                      size_t offset)
+ssize_t SocketBuffer::ByteArrayBufEntry::send(
+    const std::shared_ptr<ISocketCore>& socket, size_t offset)
 {
   return socket->writeData(bytes_.data() + offset, bytes_.size() - offset);
 }
@@ -84,7 +83,7 @@ SocketBuffer::StringBufEntry::StringBufEntry(
 }
 
 ssize_t
-SocketBuffer::StringBufEntry::send(const std::shared_ptr<SocketCore>& socket,
+SocketBuffer::StringBufEntry::send(const std::shared_ptr<ISocketCore>& socket,
                                    size_t offset)
 {
   return socket->writeData(str_.data() + offset, str_.size() - offset);
@@ -102,7 +101,7 @@ const unsigned char* SocketBuffer::StringBufEntry::getData() const
   return reinterpret_cast<const unsigned char*>(str_.c_str());
 }
 
-SocketBuffer::SocketBuffer(std::shared_ptr<SocketCore> socket)
+SocketBuffer::SocketBuffer(std::shared_ptr<ISocketCore> socket)
     : socket_(std::move(socket)), offset_(0)
 {
 }
@@ -113,7 +112,7 @@ void SocketBuffer::pushBytes(std::vector<unsigned char> bytes,
                              std::unique_ptr<ProgressUpdate> progressUpdate)
 {
   if (!bytes.empty()) {
-    bufq_.push_back(make_unique<ByteArrayBufEntry>(std::move(bytes),
+    bufq_.push_back(std::make_unique<ByteArrayBufEntry>(std::move(bytes),
                                                    std::move(progressUpdate)));
   }
 }
@@ -122,7 +121,7 @@ void SocketBuffer::pushStr(std::string data,
                            std::unique_ptr<ProgressUpdate> progressUpdate)
 {
   if (!data.empty()) {
-    bufq_.push_back(make_unique<StringBufEntry>(std::move(data),
+    bufq_.push_back(std::make_unique<StringBufEntry>(std::move(data),
                                                 std::move(progressUpdate)));
   }
 }

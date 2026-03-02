@@ -83,9 +83,11 @@ std::string toString(const char* str)
 namespace {
 bool parseTime(int64_t& time, const std::string& s)
 {
-  if (!util::parseLLIntNoThrow(time, s)) {
+  auto r = util::parseLLInt(s);
+  if (!r) {
     return false;
   }
+  time = *r;
   if (std::numeric_limits<time_t>::max() < time) {
     time = std::numeric_limits<time_t>::max();
   }
@@ -123,7 +125,7 @@ int cookieRowMapper(void* data, int columns, char** values, char** names)
     return 0;
   }
   bool numericHost = util::isNumericHost(cookieDomain);
-  cookies.push_back(make_unique<Cookie>(
+  cookies.push_back(std::make_unique<Cookie>(
       std::move(cookieName),
       toString(values[5]), // value
       expiryTime,

@@ -36,6 +36,7 @@
 #define D_UTIL_H
 
 #include "common.h"
+#include "util_string.h"
 
 #include <sys/time.h>
 #include <limits.h>
@@ -53,6 +54,8 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <string_view>
+#include <expected>
 
 #include "a2time.h"
 #include "a2netcompat.h"
@@ -111,68 +114,8 @@ std::string toForwardSlash(const std::string& src);
 
 namespace util {
 
-extern const char DEFAULT_STRIP_CHARSET[];
-
-template <typename InputIterator>
-std::pair<InputIterator, InputIterator>
-stripIter(InputIterator first, InputIterator last,
-          const char* chars = DEFAULT_STRIP_CHARSET)
-{
-  for (; first != last && strchr(chars, *first) != 0; ++first)
-    ;
-  if (first == last) {
-    return std::make_pair(first, last);
-  }
-  InputIterator left = last - 1;
-  for (; left != first && strchr(chars, *left) != 0; --left)
-    ;
-  return std::make_pair(first, left + 1);
-}
-
-template <typename InputIterator>
-InputIterator lstripIter(InputIterator first, InputIterator last, char ch)
-{
-  for (; first != last && *first == ch; ++first)
-    ;
-  return first;
-}
-
-template <typename InputIterator>
-InputIterator lstripIter(InputIterator first, InputIterator last,
-                         const char* chars)
-{
-  for (; first != last && strchr(chars, *first) != 0; ++first)
-    ;
-  return first;
-}
-
-template <typename InputIterator>
-InputIterator lstripIter(InputIterator first, InputIterator last)
-{
-  return lstripIter(first, last, DEFAULT_STRIP_CHARSET);
-}
-
-std::string strip(const std::string& str,
-                  const char* chars = DEFAULT_STRIP_CHARSET);
-
-template <typename InputIterator>
-std::pair<std::pair<InputIterator, InputIterator>,
-          std::pair<InputIterator, InputIterator>>
-divide(InputIterator first, InputIterator last, char delim, bool strip = true)
-{
-  auto dpos = std::find(first, last, delim);
-  if (dpos == last) {
-    if (strip) {
-      return {stripIter(first, last), {last, last}};
-    }
-    return {{first, last}, {last, last}};
-  }
-
-  if (strip) {
-    return {stripIter(first, dpos), stripIter(dpos + 1, last)};
-  }
-  return {{first, dpos}, {dpos + 1, last}};
-}
+// String utilities (strip, split, case-insensitive compare, etc.)
+// are defined in util_string.h, included above.
 
 template <typename T> std::string uitos(T n, bool comma = false)
 {
@@ -209,14 +152,11 @@ std::string itos(int64_t value, bool comma = false);
 int64_t difftv(struct timeval tv1, struct timeval tv2);
 int32_t difftvsec(struct timeval tv1, struct timeval tv2);
 
-std::string replace(const std::string& target, const std::string& oldstr,
-                    const std::string& newstr);
-
 std::string percentEncode(const unsigned char* target, size_t len);
 
-std::string percentEncode(const std::string& target);
+std::string percentEncode(std::string_view target);
 
-std::string percentEncodeMini(const std::string& target);
+std::string percentEncodeMini(std::string_view target);
 
 bool inRFC3986ReservedChars(const char c);
 
@@ -231,20 +171,20 @@ bool inRFC5987AttrChar(const char c);
 // Returns true if |c| is in ISO/IEC 8859-1 character set.
 bool isIso8859p1(unsigned char c);
 
-bool isUtf8(const std::string& str);
+bool isUtf8(std::string_view str);
 
 std::string percentDecode(std::string::const_iterator first,
                           std::string::const_iterator last);
 
 std::string torrentPercentEncode(const unsigned char* target, size_t len);
 
-std::string torrentPercentEncode(const std::string& target);
+std::string torrentPercentEncode(std::string_view target);
 
 std::string toHex(const unsigned char* src, size_t len);
 
 std::string toHex(const char* src, size_t len);
 
-std::string toHex(const std::string& src);
+std::string toHex(std::string_view src);
 
 unsigned int hexCharToUInt(unsigned char ch);
 
@@ -273,18 +213,18 @@ std::string fromHex(InputIterator first, InputIterator last)
 
 std::string secfmt(time_t sec);
 
-bool parseIntNoThrow(int32_t& res, const std::string& s, int base = 10);
+std::expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
 
 // Valid range: [0, INT32_MAX]
-bool parseUIntNoThrow(uint32_t& res, const std::string& s, int base = 10);
+std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
+                                                      int base = 10);
 
-bool parseLLIntNoThrow(int64_t& res, const std::string& s, int base = 10);
+std::expected<int64_t, std::string> parseLLInt(std::string_view s,
+                                               int base = 10);
 
-// Parses |s| as floating point number, and stores the result into
-// |res|.  This function returns true if it succeeds.
-bool parseDoubleNoThrow(double& res, const std::string& s);
+std::expected<double, std::string> parseDouble(std::string_view s);
 
-SegList<int> parseIntSegments(const std::string& src);
+SegList<int> parseIntSegments(std::string_view src);
 
 // Parses string which specifies the range of piece index for higher
 // priority and appends those indexes into result.  The input string
@@ -305,7 +245,7 @@ void parsePrioritizePieceRange(
 
 // Converts ISO/IEC 8859-1 string src to utf-8.
 std::string iso8859p1ToUtf8(const char* src, size_t len);
-std::string iso8859p1ToUtf8(const std::string& src);
+std::string iso8859p1ToUtf8(std::string_view src);
 
 // Parses Content-Disposition header field value |in| with its length
 // |len| in a manner conforming to RFC 6266 and extracts filename
@@ -314,7 +254,7 @@ std::string iso8859p1ToUtf8(const std::string& src);
 // NUL character after filename in |dest|. This function does not
 // support RFC 2231 Continuation. If the function sees RFC 2231/5987
 // encoding and charset, it stores its first pointer to |*charsetp|
-// and its length in |*charsetlenp|. Otherwise, they are NULL and 0
+// and its length in |*charsetlenp|. Otherwise, they are nullptr and 0
 // respectively.  In RFC 2231/5987 encoding, percent-encoded string
 // will be decoded to original form and stored in |dest|.
 //
@@ -332,21 +272,9 @@ ssize_t parse_content_disposition(char* dest, size_t destlen,
 std::string getContentDispositionFilename(const std::string& header,
                                           bool defaultUTF8);
 
-std::string toUpper(std::string src);
+bool isNumericHost(std::string_view name);
 
-std::string toLower(std::string src);
-
-void uppercase(std::string& s);
-
-void lowercase(std::string& s);
-
-char toUpperChar(char c);
-
-char toLowerChar(char c);
-
-bool isNumericHost(const std::string& name);
-
-typedef void (*signal_handler_t)(int);
+using signal_handler_t = void (*)(int);
 void setGlobalSignalHandler(int signal, sigset_t* mask,
                             signal_handler_t handler, int flags);
 
@@ -359,7 +287,7 @@ std::string getConfigFile();
 
 std::string getDHTFile(bool ipv6);
 
-int64_t getRealSize(const std::string& sizeWithUnit);
+int64_t getRealSize(std::string_view sizeWithUnit);
 
 std::string abbrevSize(int64_t size);
 
@@ -387,60 +315,6 @@ void sleep(long seconds);
 
 void usleep(long microseconds);
 
-template <typename InputIterator>
-bool isNumber(InputIterator first, InputIterator last)
-{
-  if (first == last) {
-    return false;
-  }
-  for (; first != last; ++first) {
-    if ('0' > *first || *first > '9') {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool isAlpha(const char c);
-
-bool isDigit(const char c);
-
-bool isHexDigit(const char c);
-
-bool isHexDigit(const std::string& s);
-
-bool isLws(const char c);
-
-bool isCRLF(const char c);
-
-template <typename InputIterator>
-bool isLowercase(InputIterator first, InputIterator last)
-{
-  if (first == last) {
-    return false;
-  }
-  for (; first != last; ++first) {
-    if ('a' > *first || *first > 'z') {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <typename InputIterator>
-bool isUppercase(InputIterator first, InputIterator last)
-{
-  if (first == last) {
-    return false;
-  }
-  for (; first != last; ++first) {
-    if ('A' > *first || *first > 'Z') {
-      return false;
-    }
-  }
-  return true;
-}
-
 void mkdirs(const std::string& dirpath);
 
 void convertBitfield(BitfieldMan* dest, const BitfieldMan* src);
@@ -454,7 +328,7 @@ void* allocateAlignedMemory(size_t alignment, size_t size);
 
 Endpoint getNumericNameInfo(const struct sockaddr* sockaddr, socklen_t len);
 
-std::string htmlEscape(const std::string& src);
+std::string htmlEscape(std::string_view src);
 
 // Joins path element specified in [first, last).  If ".." is found,
 // it eats the previous element if it exists.  If "." is found, it
@@ -481,234 +355,9 @@ std::string joinPath(InputIterator first, InputIterator last)
 
 // Parses INDEX=PATH format string. INDEX must be an unsigned
 // integer.
-std::pair<size_t, std::string> parseIndexPath(const std::string& line);
+std::pair<size_t, std::string> parseIndexPath(std::string_view line);
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i);
-
-/**
- * Take a string [first, last) which is a delimited list and add its
- * elements into result as iterator pair. result is stored in out.
- */
-template <typename InputIterator, typename OutputIterator>
-OutputIterator splitIter(InputIterator first, InputIterator last,
-                         OutputIterator out, char delim, bool doStrip = false,
-                         bool allowEmpty = false)
-{
-  for (InputIterator i = first; i != last;) {
-    InputIterator j = std::find(i, last, delim);
-    std::pair<InputIterator, InputIterator> p(i, j);
-    if (doStrip) {
-      p = stripIter(i, j);
-    }
-    if (allowEmpty || p.first != p.second) {
-      *out++ = p;
-    }
-    i = j;
-    if (j != last) {
-      ++i;
-    }
-  }
-  if (allowEmpty && (first == last || *(last - 1) == delim)) {
-    *out++ = std::make_pair(last, last);
-  }
-  return out;
-}
-
-template <typename InputIterator, typename OutputIterator>
-OutputIterator splitIterM(InputIterator first, InputIterator last,
-                          OutputIterator out, const char* delims,
-                          bool doStrip = false, bool allowEmpty = false)
-{
-  size_t numDelims = strlen(delims);
-  const char* dlast = delims + numDelims;
-  for (InputIterator i = first; i != last;) {
-    InputIterator j = i;
-    for (; j != last && std::find(delims, dlast, *j) == dlast; ++j)
-      ;
-    std::pair<InputIterator, InputIterator> p(i, j);
-    if (doStrip) {
-      p = stripIter(i, j);
-    }
-    if (allowEmpty || p.first != p.second) {
-      *out++ = p;
-    }
-    i = j;
-    if (j != last) {
-      ++i;
-    }
-  }
-  if (allowEmpty &&
-      (first == last || std::find(delims, dlast, *(last - 1)) != dlast)) {
-    *out++ = std::make_pair(last, last);
-  }
-  return out;
-}
-
-template <typename InputIterator, typename OutputIterator>
-OutputIterator split(InputIterator first, InputIterator last,
-                     OutputIterator out, char delim, bool doStrip = false,
-                     bool allowEmpty = false)
-{
-  for (InputIterator i = first; i != last;) {
-    InputIterator j = std::find(i, last, delim);
-    std::pair<InputIterator, InputIterator> p(i, j);
-    if (doStrip) {
-      p = stripIter(i, j);
-    }
-    if (allowEmpty || p.first != p.second) {
-      *out++ = std::string(p.first, p.second);
-    }
-    i = j;
-    if (j != last) {
-      ++i;
-    }
-  }
-  if (allowEmpty && (first == last || *(last - 1) == delim)) {
-    *out++ = std::string(last, last);
-  }
-  return out;
-}
-
-template <typename InputIterator1, typename InputIterator2>
-bool streq(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
-           InputIterator2 last2)
-{
-  if (last1 - first1 != last2 - first2) {
-    return false;
-  }
-  return std::equal(first1, last1, first2);
-}
-
-template <typename InputIterator>
-bool streq(InputIterator first, InputIterator last, const char* b)
-{
-  for (; first != last && *b != '\0'; ++first, ++b) {
-    if (*first != *b) {
-      return false;
-    }
-  }
-  return first == last && *b == '\0';
-}
-
-struct CaseCmp {
-  bool operator()(char lhs, char rhs) const
-  {
-    if ('A' <= lhs && lhs <= 'Z') {
-      lhs += 'a' - 'A';
-    }
-    if ('A' <= rhs && rhs <= 'Z') {
-      rhs += 'a' - 'A';
-    }
-    return lhs == rhs;
-  }
-};
-
-template <typename InputIterator1, typename InputIterator2>
-InputIterator1 strifind(InputIterator1 first1, InputIterator1 last1,
-                        InputIterator2 first2, InputIterator2 last2)
-{
-  return std::search(first1, last1, first2, last2, CaseCmp());
-}
-
-template <typename InputIterator1, typename InputIterator2>
-bool strieq(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
-            InputIterator2 last2)
-{
-  if (last1 - first1 != last2 - first2) {
-    return false;
-  }
-  return std::equal(first1, last1, first2, CaseCmp());
-}
-
-template <typename InputIterator>
-bool strieq(InputIterator first, InputIterator last, const char* b)
-{
-  CaseCmp cmp;
-  for (; first != last && *b != '\0'; ++first, ++b) {
-    if (!cmp(*first, *b)) {
-      return false;
-    }
-  }
-  return first == last && *b == '\0';
-}
-
-bool strieq(const std::string& a, const char* b);
-bool strieq(const std::string& a, const std::string& b);
-
-template <typename InputIterator1, typename InputIterator2>
-bool startsWith(InputIterator1 first1, InputIterator1 last1,
-                InputIterator2 first2, InputIterator2 last2)
-{
-  if (last1 - first1 < last2 - first2) {
-    return false;
-  }
-  return std::equal(first2, last2, first1);
-}
-
-template <typename InputIterator>
-bool startsWith(InputIterator first, InputIterator last, const char* b)
-{
-  for (; first != last && *b != '\0'; ++first, ++b) {
-    if (*first != *b) {
-      return false;
-    }
-  }
-  return *b == '\0';
-}
-
-bool startsWith(const std::string& a, const char* b);
-bool startsWith(const std::string& a, const std::string& b);
-
-template <typename InputIterator1, typename InputIterator2>
-bool istartsWith(InputIterator1 first1, InputIterator1 last1,
-                 InputIterator2 first2, InputIterator2 last2)
-{
-  if (last1 - first1 < last2 - first2) {
-    return false;
-  }
-  return std::equal(first2, last2, first1, CaseCmp());
-}
-
-template <typename InputIterator>
-bool istartsWith(InputIterator first, InputIterator last, const char* b)
-{
-  CaseCmp cmp;
-  for (; first != last && *b != '\0'; ++first, ++b) {
-    if (!cmp(*first, *b)) {
-      return false;
-    }
-  }
-  return *b == '\0';
-}
-
-bool istartsWith(const std::string& a, const char* b);
-bool istartsWith(const std::string& a, const std::string& b);
-
-template <typename InputIterator1, typename InputIterator2>
-bool endsWith(InputIterator1 first1, InputIterator1 last1,
-              InputIterator2 first2, InputIterator2 last2)
-{
-  if (last1 - first1 < last2 - first2) {
-    return false;
-  }
-  return std::equal(first2, last2, last1 - (last2 - first2));
-}
-
-bool endsWith(const std::string& a, const char* b);
-bool endsWith(const std::string& a, const std::string& b);
-
-template <typename InputIterator1, typename InputIterator2>
-bool iendsWith(InputIterator1 first1, InputIterator1 last1,
-               InputIterator2 first2, InputIterator2 last2)
-{
-  if (last1 - first1 < last2 - first2) {
-    return false;
-  }
-  return std::equal(first2, last2, last1 - (last2 - first2), CaseCmp());
-}
-
-bool iendsWith(const std::string& a, const char* b);
-bool iendsWith(const std::string& a, const std::string& b);
 
 // Returns true if strcmp(a, b) < 0
 bool strless(const char* a, const char* b);
@@ -737,24 +386,24 @@ std::string applyDir(const std::string& dir, const std::string& relPath);
 // should be non-percent-encoded basename.  Currently, this function
 // replaces '/' with '_' and result string is passed to escapePath()
 // function and its result is returned.
-std::string fixTaintedBasename(const std::string& src);
+std::string fixTaintedBasename(std::string_view src);
 
 // Generates 20 bytes random key and store it to the address pointed
 // by key.  Caller must allocate at least 20 bytes for generated key.
 void generateRandomKey(unsigned char* key);
 
 // Returns true is given numeric ipv4addr is in Private Address Space.
-bool inPrivateAddress(const std::string& ipv4addr);
+bool inPrivateAddress(std::string_view ipv4addr);
 
 // Returns true if s contains directory traversal path component such
 // as '..' or it contains null or control character which may fool
 // user.
-bool detectDirTraversal(const std::string& s);
+bool detectDirTraversal(std::string_view s);
 
 // Replaces null(0x00) and control character(0x01-0x1f) with '_'. If
 // __MINGW32__ is defined, following characters are also replaced with
 // '_': '"', '*', ':', '<', '>', '?', '\', '|'.
-std::string escapePath(const std::string& s);
+std::string escapePath(std::string_view s);
 
 // Returns true if ip1 and ip2 are in the same CIDR block.  ip1 and
 // ip2 must be numeric IPv4 or IPv6 address. If either of them or both
@@ -776,14 +425,14 @@ std::string createSafePath(const std::string& dir, const std::string& filename);
 
 std::string createSafePath(const std::string& filename);
 
-std::string encodeNonUtf8(const std::string& s);
+std::string encodeNonUtf8(std::string_view s);
 
-// Create string safely. If str is NULL, returns empty string.
+// Create string safely. If str is nullptr, returns empty string.
 // Otherwise, returns std::string(str).
 std::string makeString(const char* str);
 
 // This function is basically the same with strerror(errNum) but when
-// strerror returns NULL, this function returns empty string.
+// strerror returns nullptr, this function returns empty string.
 std::string safeStrerror(int errNum);
 
 // Parses sequence [first, last) and find name=value pair delimited by
@@ -854,13 +503,13 @@ template <typename T> std::shared_ptr<T> copy(const std::shared_ptr<T>& a)
 //
 // * noProxyDomainMatch("aria2.sf.net", ".sf.net") returns true.
 // * noProxyDomainMatch("sf.net", ".sf.net") returns false.
-bool noProxyDomainMatch(const std::string& hostname, const std::string& domain);
+bool noProxyDomainMatch(std::string_view hostname, std::string_view domain);
 
 // Checks hostname matches pattern as described in RFC 6125.
-bool tlsHostnameMatch(const std::string& pattern, const std::string& hostname);
+bool tlsHostnameMatch(std::string_view pattern, std::string_view hostname);
 
 #ifdef ENABLE_SSL
-TLSVersion toTLSVersion(const std::string& ver);
+TLSVersion toTLSVersion(std::string_view ver);
 #endif // ENABLE_SSL
 
 #ifdef __MINGW32__

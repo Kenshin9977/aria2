@@ -50,6 +50,7 @@
 #include "InitiateConnectionCommandFactory.h"
 #include "StreamCheckIntegrityEntry.h"
 #include "PieceStorage.h"
+#include "ISocketCore.h"
 #include "SocketCore.h"
 #include "message.h"
 #include "prefs.h"
@@ -77,7 +78,7 @@ namespace aria2 {
 AbstractCommand::AbstractCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
-    DownloadEngine* e, const std::shared_ptr<SocketCore>& s,
+    DownloadEngine* e, const std::shared_ptr<ISocketCore>& s,
     const std::shared_ptr<SocketRecvBuffer>& socketRecvBuffer,
     bool incNumConnection)
     : Command(cuid),
@@ -86,7 +87,7 @@ AbstractCommand::AbstractCommand(
       socket_(s),
       socketRecvBuffer_(socketRecvBuffer),
 #ifdef ENABLE_ASYNC_DNS
-      asyncNameResolverMan_(make_unique<AsyncNameResolverMan>()),
+      asyncNameResolverMan_(std::make_unique<AsyncNameResolverMan>()),
 #endif // ENABLE_ASYNC_DNS
       requestGroup_(requestGroup),
       e_(e),
@@ -213,7 +214,8 @@ bool AbstractCommand::execute()
         // accessed the remote server and discovered that the server
         // supports pipelining.
         if (req_ && req_->isPipeliningEnabled()) {
-          e_->poolSocket(req_, createProxyRequest(), socket_);
+          e_->poolSocket(req_, createProxyRequest(),
+                         std::static_pointer_cast<SocketCore>(socket_));
         }
         return prepareForRetry(0);
       }
@@ -222,8 +224,8 @@ bool AbstractCommand::execute()
       // Find faster Request when no segment split is allowed.
       if (req_ && fileEntry_->countPooledRequest() > 0 &&
           requestGroup_->getPendingLength() < calculateMinSplitSize() * 2) {
-        auto fasterRequest = fileEntry_->findFasterRequest(req_);
-        if (fasterRequest) {
+        if (auto fasterRequest =
+                fileEntry_->findFasterRequest(req_)) {
           useFasterRequest(fasterRequest);
           return true;
         }
@@ -239,9 +241,9 @@ bool AbstractCommand::execute()
         if (getOption()->getAsBool(PREF_SELECT_LEAST_USED_HOST)) {
           getDownloadEngine()->getRequestGroupMan()->getUsedHosts(usedHosts);
         }
-        auto fasterRequest = fileEntry_->findFasterRequest(
-            req_, usedHosts, e_->getRequestGroupMan()->getServerStatMan());
-        if (fasterRequest) {
+        if (auto fasterRequest = fileEntry_->findFasterRequest(
+                req_, usedHosts,
+                e_->getRequestGroupMan()->getServerStatMan())) {
           useFasterRequest(fasterRequest);
           return true;
         }
@@ -270,9 +272,8 @@ bool AbstractCommand::execute()
           segments_.push_back(segment);
         }
         if (segments_.empty()) {
-          // TODO socket could be pooled here if pipelining is
-          // enabled...  Hmm, I don't think if pipelining is enabled
-          // it does not go here.
+          // With pipelining enabled, this path is not reachable
+          // because segments are always available.
           A2_LOG_INFO(fmt(MSG_NO_SEGMENT_AVAILABLE, getCuid()));
           // When all segments are ignored in SegmentMan, there are
           // no URIs available, so don't retry.
@@ -306,17 +307,18 @@ bool AbstractCommand::execute()
     if (errorEventEnabled()) {
       // older kernel may report "connection refused" here.
       auto ss = e_->getRequestGroupMan()->getOrCreateServerStat(
-          req_->getHost(), req_->getProtocol());
+          req_->getHost(), std::string(protocolToString(req_->getProtocol())));
       ss->setError();
 
-      throw DL_RETRY_EX(
-          fmt(MSG_NETWORK_PROBLEM, socket_->getSocketError().c_str()));
+      throw DL_RETRY_EX2(
+          fmt(MSG_NETWORK_PROBLEM, socket_->getSocketError().c_str()),
+          error_code::NETWORK_PROBLEM);
     }
 
     if (checkPoint_.difference(global::wallclock()) >= timeout_) {
       // timeout triggers ServerStat error state.
       auto ss = e_->getRequestGroupMan()->getOrCreateServerStat(
-          req_->getHost(), req_->getProtocol());
+          req_->getHost(), std::string(protocolToString(req_->getProtocol())));
       ss->setError();
       // When DNS query was timeout, req_->getConnectedAddr() is
       // empty.
@@ -386,7 +388,10 @@ bool AbstractCommand::execute()
       return true;
     }
 
-    if (err.getErrorCode() == error_code::HTTP_SERVICE_UNAVAILABLE) {
+    if (err.getErrorCode() == error_code::HTTP_SERVICE_UNAVAILABLE ||
+        err.getErrorCode() == error_code::RESOURCE_NOT_FOUND) {
+      A2_LOG_DEBUG(fmt(MSG_RETRY_WAITING, getCuid(), getOption()->getAsInt(PREF_RETRY_WAIT),
+        req_->getUri().c_str()));
       Timer wakeTime(global::wallclock());
       wakeTime.advance(
           std::chrono::seconds(getOption()->getAsInt(PREF_RETRY_WAIT)));
@@ -456,7 +461,7 @@ bool AbstractCommand::prepareForRetry(time_t wait)
   }
 
   auto command =
-      make_unique<CreateRequestCommand>(getCuid(), requestGroup_, e_);
+      std::make_unique<CreateRequestCommand>(getCuid(), requestGroup_, e_);
   if (wait == 0) {
     e_->setNoWait(true);
   }
@@ -520,8 +525,8 @@ void AbstractCommand::onAbort()
   getPieceStorage()->markPiecesDone(0);
   std::vector<std::string> uris;
   uris.reserve(res.size());
-  std::transform(std::begin(res), std::end(res), std::back_inserter(uris),
-                 std::mem_fn(&URIResult::getURI));
+  std::ranges::transform(res, std::back_inserter(uris),
+                         std::mem_fn(&URIResult::getURI));
   A2_LOG_DEBUG(fmt("CUID#%" PRId64 " - %lu URIs found.", getCuid(),
                    static_cast<unsigned long int>(uris.size())));
   fileEntry_->addUris(std::begin(uris), std::end(uris));
@@ -540,7 +545,7 @@ void AbstractCommand::disableReadCheckSocket()
 }
 
 void AbstractCommand::setReadCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableReadCheckSocket();
@@ -548,7 +553,7 @@ void AbstractCommand::setReadCheckSocket(
   }
 
   if (checkSocketIsReadable_) {
-    if (*readCheckTarget_ != *socket) {
+    if (readCheckTarget_->getSockfd() != socket->getSockfd()) {
       e_->deleteSocketForReadCheck(readCheckTarget_, this);
       e_->addSocketForReadCheck(socket, this);
       readCheckTarget_ = socket;
@@ -562,7 +567,7 @@ void AbstractCommand::setReadCheckSocket(
 }
 
 void AbstractCommand::setReadCheckSocketIf(
-    const std::shared_ptr<SocketCore>& socket, bool pred)
+    const std::shared_ptr<ISocketCore>& socket, bool pred)
 {
   if (pred) {
     setReadCheckSocket(socket);
@@ -583,7 +588,7 @@ void AbstractCommand::disableWriteCheckSocket()
 }
 
 void AbstractCommand::setWriteCheckSocket(
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
 {
   if (!socket->isOpen()) {
     disableWriteCheckSocket();
@@ -591,7 +596,7 @@ void AbstractCommand::setWriteCheckSocket(
   }
 
   if (checkSocketIsWritable_) {
-    if (*writeCheckTarget_ != *socket) {
+    if (writeCheckTarget_->getSockfd() != socket->getSockfd()) {
       e_->deleteSocketForWriteCheck(writeCheckTarget_, this);
       e_->addSocketForWriteCheck(socket, this);
       writeCheckTarget_ = socket;
@@ -605,7 +610,7 @@ void AbstractCommand::setWriteCheckSocket(
 }
 
 void AbstractCommand::setWriteCheckSocketIf(
-    const std::shared_ptr<SocketCore>& socket, bool pred)
+    const std::shared_ptr<ISocketCore>& socket, bool pred)
 {
   if (pred) {
     setWriteCheckSocket(socket);
@@ -615,7 +620,7 @@ void AbstractCommand::setWriteCheckSocketIf(
   disableWriteCheckSocket();
 }
 
-void AbstractCommand::swapSocket(std::shared_ptr<SocketCore>& socket)
+void AbstractCommand::swapSocket(std::shared_ptr<ISocketCore>& socket)
 {
   disableReadCheckSocket();
   disableWriteCheckSocket();
@@ -628,18 +633,18 @@ namespace {
 std::string makeProxyUri(PrefPtr proxyPref, PrefPtr proxyUser,
                          PrefPtr proxyPasswd, const Option* option)
 {
-  uri::UriStruct us;
-  if (!uri::parse(us, option->get(proxyPref))) {
+  auto us = uri::parse(option->get(proxyPref));
+  if (!us) {
     return "";
   }
   if (option->defined(proxyUser)) {
-    us.username = option->get(proxyUser);
+    us->username = option->get(proxyUser);
   }
   if (option->defined(proxyPasswd)) {
-    us.password = option->get(proxyPasswd);
-    us.hasPassword = true;
+    us->password = option->get(proxyPasswd);
+    us->hasPassword = true;
   }
-  return uri::construct(us);
+  return uri::construct(*us);
 }
 } // namespace
 
@@ -658,21 +663,52 @@ std::string getProxyOptionFor(PrefPtr proxyPref, PrefPtr proxyUser,
 }
 } // namespace
 
+void AbstractCommand::transitionToWriting(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableReadCheckSocket();
+  setWriteCheckSocket(socket);
+}
+
+void AbstractCommand::transitionToReading(
+    const std::shared_ptr<ISocketCore>& socket)
+{
+  disableWriteCheckSocket();
+  setReadCheckSocket(socket);
+}
+
+void AbstractCommand::initConnectTimeout()
+{
+  setTimeout(
+      std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
+  transitionToWriting();
+}
+
 // Returns proxy URI for given protocol.  If no proxy URI is defined,
 // then returns an empty string.
-std::string getProxyUri(const std::string& protocol, const Option* option)
+// SOCKS5 proxy takes priority when set; falls back to protocol-specific
+// HTTP proxies.
+std::string getProxyUri(Protocol protocol, const Option* option)
 {
-  if (protocol == "http") {
+  using enum Protocol;
+  // SOCKS5 proxy overrides all protocol-specific proxies
+  std::string socks5 = option->get(PREF_SOCKS5_PROXY);
+  if (!socks5.empty()) {
+    return socks5;
+  }
+
+  if (protocol == HTTP) {
     return getProxyOptionFor(PREF_HTTP_PROXY, PREF_HTTP_PROXY_USER,
                              PREF_HTTP_PROXY_PASSWD, option);
   }
 
-  if (protocol == "https") {
+  if (protocol == HTTPS) {
     return getProxyOptionFor(PREF_HTTPS_PROXY, PREF_HTTPS_PROXY_USER,
                              PREF_HTTPS_PROXY_PASSWD, option);
   }
 
-  if (protocol == "ftp" || protocol == "sftp") {
+  if (protocol == FTP || protocol == FTPS ||
+      protocol == SFTP) {
     return getProxyOptionFor(PREF_FTP_PROXY, PREF_FTP_PROXY_USER,
                              PREF_FTP_PROXY_PASSWD, option);
   }
@@ -680,11 +716,15 @@ std::string getProxyUri(const std::string& protocol, const Option* option)
   return A2STR::NIL;
 }
 
+bool AbstractCommand::isSocks5Proxy() const
+{
+  return !getOption()->get(PREF_SOCKS5_PROXY).empty();
+}
+
 namespace {
 // Returns true if proxy is defined for the given protocol. Otherwise
 // returns false.
-bool isProxyRequest(const std::string& protocol,
-                    const std::shared_ptr<Option>& option)
+bool isProxyRequest(Protocol protocol, const std::shared_ptr<Option>& option)
 {
   std::string proxyUri = getProxyUri(protocol, option.get());
   return !proxyUri.empty();
@@ -701,11 +741,10 @@ bool inNoProxy(const std::shared_ptr<Request>& req, const std::string& noProxy)
     return false;
   }
 
-  for (const auto& e : entries) {
-    const auto slashpos = std::find(e.first, e.second, '/');
-    if (slashpos == e.second) {
-      if (util::noProxyDomainMatch(req->getHost(),
-                                   std::string(e.first, e.second))) {
+  for (const auto& [first, last] : entries) {
+    const auto slashpos = std::find(first, last, '/');
+    if (slashpos == last) {
+      if (util::noProxyDomainMatch(req->getHost(), std::string(first, last))) {
         return true;
       }
 
@@ -715,12 +754,12 @@ bool inNoProxy(const std::shared_ptr<Request>& req, const std::string& noProxy)
     // implementation is that we should first resolve
     // hostname(which may result in several IP addresses) and
     // evaluates against all of them
-    std::string ip(e.first, slashpos);
-    uint32_t bits;
-    if (!util::parseUIntNoThrow(bits, std::string(slashpos + 1, e.second))) {
+    std::string ip(first, slashpos);
+    auto bits = util::parseUIntNoThrow(std::string(slashpos + 1, last));
+    if (!bits) {
       continue;
     }
-    if (util::inSameCidrBlock(ip, req->getHost(), bits)) {
+    if (util::inSameCidrBlock(ip, req->getHost(), *bits)) {
       return true;
     }
   }
@@ -783,7 +822,9 @@ std::string AbstractCommand::resolveHostname(std::vector<std::string>& addrs,
     case -1:
       if (!isProxyRequest(req_->getProtocol(), getOption())) {
         e_->getRequestGroupMan()
-            ->getOrCreateServerStat(req_->getHost(), req_->getProtocol())
+            ->getOrCreateServerStat(
+                req_->getHost(),
+                std::string(protocolToString(req_->getProtocol())))
             ->setError();
       }
       throw DL_ABORT_EX2(fmt(MSG_NAME_RESOLUTION_FAILED, getCuid(),
@@ -833,7 +874,7 @@ void AbstractCommand::prepareForNextAction(
 }
 
 bool AbstractCommand::checkIfConnectionEstablished(
-    const std::shared_ptr<SocketCore>& socket,
+    const std::shared_ptr<ISocketCore>& socket,
     const std::string& connectedHostname, const std::string& connectedAddr,
     uint16_t connectedPort)
 {
@@ -850,10 +891,13 @@ bool AbstractCommand::checkIfConnectionEstablished(
     if (resolveProxyMethod(req_->getProtocol()) != V_GET ||
         !isProxyRequest(req_->getProtocol(), getOption())) {
       e_->getRequestGroupMan()
-          ->getOrCreateServerStat(req_->getHost(), req_->getProtocol())
+          ->getOrCreateServerStat(req_->getHost(), std::string(protocolToString(
+                                                       req_->getProtocol())))
           ->setError();
     }
-    throw DL_RETRY_EX(fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()));
+    throw DL_RETRY_EX2(
+        fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()),
+        error_code::NETWORK_PROBLEM);
   }
 
   A2_LOG_INFO(fmt(MSG_CONNECT_FAILED_AND_RETRY, getCuid(),
@@ -865,11 +909,12 @@ bool AbstractCommand::checkIfConnectionEstablished(
   return false;
 }
 
-const std::string&
-AbstractCommand::resolveProxyMethod(const std::string& protocol) const
+const std::string& AbstractCommand::resolveProxyMethod(Protocol protocol) const
 {
-  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL || protocol == "https" ||
-      protocol == "sftp") {
+  using enum Protocol;
+  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL ||
+      protocol == HTTPS || protocol == FTPS ||
+      protocol == SFTP) {
     return V_TUNNEL;
   }
   return V_GET;
@@ -894,9 +939,9 @@ int32_t AbstractCommand::calculateMinSplitSize() const
   return getOption()->getAsInt(PREF_MIN_SPLIT_SIZE);
 }
 
-void AbstractCommand::setRequest(const std::shared_ptr<Request>& request)
+void AbstractCommand::setRequest(std::shared_ptr<Request> request)
 {
-  req_ = request;
+  req_ = std::move(request);
 }
 
 void AbstractCommand::resetRequest() { req_.reset(); }
@@ -906,9 +951,9 @@ void AbstractCommand::setFileEntry(const std::shared_ptr<FileEntry>& fileEntry)
   fileEntry_ = fileEntry;
 }
 
-void AbstractCommand::setSocket(const std::shared_ptr<SocketCore>& s)
+void AbstractCommand::setSocket(std::shared_ptr<ISocketCore> s)
 {
-  socket_ = s;
+  socket_ = std::move(s);
 }
 
 const std::shared_ptr<DownloadContext>&
@@ -917,7 +962,7 @@ AbstractCommand::getDownloadContext() const
   return requestGroup_->getDownloadContext();
 }
 
-const std::shared_ptr<SegmentMan>& AbstractCommand::getSegmentMan() const
+SegmentMan* AbstractCommand::getSegmentMan() const
 {
   return requestGroup_->getSegmentMan();
 }

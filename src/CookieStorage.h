@@ -129,7 +129,7 @@ private:
 
 class CookieStorage {
 public:
-  static const size_t MAX_COOKIE_PER_DOMAIN = 50;
+  static constexpr size_t MAX_COOKIE_PER_DOMAIN = 50;
 
 private:
   // typedef std::set<std::shared_ptr<DomainEntry>,
@@ -180,8 +180,8 @@ public:
   template <typename OutputIterator>
   OutputIterator dumpCookie(OutputIterator out) const
   {
-    for (auto& i : lruTracker_) {
-      out = i.second->dumpCookie(out);
+    for (auto& [accessTime, node] : lruTracker_) {
+      out = node->dumpCookie(out);
     }
     return out;
   }

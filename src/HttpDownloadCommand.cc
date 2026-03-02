@@ -61,7 +61,7 @@ HttpDownloadCommand::HttpDownloadCommand(
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     std::unique_ptr<HttpResponse> httpResponse,
     const std::shared_ptr<HttpConnection>& httpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& socket)
+    const std::shared_ptr<ISocketCore>& socket)
     : DownloadCommand(cuid, req, fileEntry, requestGroup, e, socket,
                       httpConnection->getSocketRecvBuffer()),
       httpResponse_(std::move(httpResponse)),
@@ -75,7 +75,7 @@ bool HttpDownloadCommand::prepareForNextSegment()
 {
   bool downloadFinished = getRequestGroup()->downloadFinished();
   if (getRequest()->isPipeliningEnabled() && !downloadFinished) {
-    auto command = make_unique<HttpRequestCommand>(
+    auto command = std::make_unique<HttpRequestCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         httpConnection_, getDownloadEngine(), getSocket());
     // Set proxy request here. aria2 sends the HTTP request specialized for
@@ -87,12 +87,13 @@ bool HttpDownloadCommand::prepareForNextSegment()
     return true;
   }
 
-  const std::string& streamFilterName = getStreamFilter()->getName();
+  const char* streamFilterName = getStreamFilter()->getName();
   if (getRequest()->isPipeliningEnabled() ||
       (getRequest()->isKeepAliveEnabled() &&
        (
            // Make sure that all filters are finished to pool socket
-           (!util::endsWith(streamFilterName, SinkStreamFilter::NAME) &&
+           (!std::string_view(streamFilterName)
+                 .ends_with(SinkStreamFilter::NAME) &&
             getStreamFilter()->finished()) ||
            getRequestEndOffset() ==
                getFileEntry()->gtoloff(
@@ -102,8 +103,9 @@ bool HttpDownloadCommand::prepareForNextSegment()
     // pool terminated socket.  In HTTP/1.1, keep-alive is default,
     // so closing connection without Connection: close header means
     // that server is broken or not configured properly.
-    getDownloadEngine()->poolSocket(getRequest(), createProxyRequest(),
-                                    getSocket());
+    getDownloadEngine()->poolSocket(
+        getRequest(), createProxyRequest(),
+        std::static_pointer_cast<SocketCore>(getSocket()));
   }
 
   // The request was sent assuming that server supported pipelining, but

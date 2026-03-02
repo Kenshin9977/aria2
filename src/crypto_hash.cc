@@ -78,7 +78,7 @@ using namespace crypto::hash;
 template <typename word_, uint_fast8_t bsize, uint_fast8_t ssize>
 class AlgorithmImpl : public Algorithm {
 public:
-  typedef word_ word_t;
+  using word_t = word_;
 
 protected:
   template <uint_fast8_t size> union buffer_t {
@@ -95,7 +95,8 @@ protected:
 
   virtual std::string digest()
   {
-    return std::string((const char*)state_.bytes, sizeof(state_.bytes));
+    return std::string(reinterpret_cast<const char*>(state_.bytes),
+                       sizeof(state_.bytes));
   }
 
 public:
@@ -113,7 +114,8 @@ public:
     // We have data buffered...
     if (unlikely(offset_)) {
       const uint32_t rem = sizeof(buffer_) - offset_;
-      const uint32_t turn = (uint32_t)(len + ((rem - len) & (rem - len) >> 31));
+      const uint32_t turn = static_cast<uint32_t>(
+          len + ((rem - len) & (rem - len) >> 31));
       memcpy(buffer_.bytes + offset_, bytes, turn);
       len -= turn;
       bytes += turn;
@@ -137,7 +139,8 @@ public:
     // Buffer remaining bytes, if any.
     if (unlikely(len)) {
       const uint32_t rem = sizeof(buffer_) - offset_;
-      const uint32_t turn = (uint32_t)(len + ((rem - len) & (rem - len) >> 31));
+      const uint32_t turn = static_cast<uint32_t>(
+          len + ((rem - len) & (rem - len) >> 31));
       memcpy(buffer_.bytes + offset_, bytes, turn);
       offset_ += turn;
     }
@@ -348,7 +351,9 @@ public:
     state_.words[3] = __crypto_bswap(state_.words[3]);
 #endif // LITTLE_ENDIAN == BYTE_ORDER
 
-    auto rv = std::string((const char*)state_.bytes, sizeof(state_.bytes));
+    auto rv = std::string(
+        reinterpret_cast<const char*>(state_.bytes),
+        sizeof(state_.bytes));
     reset();
     return rv;
   }
@@ -735,23 +740,23 @@ private:
 protected:
   virtual std::string digest()
   {
-    return std::string((const char*)state_.bytes,
+    return std::string(reinterpret_cast<const char*>(state_.bytes),
                        sizeof(state_.bytes) - sizeof(word_t));
   }
 
 public:
   SHA224() { reset(); }
 
-  virtual ~SHA224() { reset(); }
+  ~SHA224() override { reset(); }
 
-  virtual void reset()
+  void reset() override
   {
     memset(buffer_.bytes, 0, sizeof(buffer_));
     memcpy(state_.bytes, initvec, sizeof(state_));
     count_ = offset_ = 0;
   }
 
-  virtual inline uint_fast16_t length() const { return 28; }
+  inline uint_fast16_t length() const override { return 28; }
 };
 
 const SHA224::word_t SHA224::initvec[] = {0xc1059ed8, 0x367cd507, 0x3070dd17,
@@ -1000,23 +1005,23 @@ private:
 protected:
   virtual std::string digest()
   {
-    return std::string((const char*)state_.bytes,
+    return std::string(reinterpret_cast<const char*>(state_.bytes),
                        sizeof(state_.bytes) - sizeof(word_t) * 2);
   }
 
 public:
   SHA384() { reset(); }
 
-  virtual ~SHA384() { reset(); }
+  ~SHA384() override { reset(); }
 
-  virtual void reset()
+  void reset() override
   {
     memset(buffer_.bytes, 0, sizeof(buffer_));
     memcpy(state_.bytes, initvec, sizeof(state_));
     count_ = offset_ = 0;
   }
 
-  virtual inline uint_fast16_t length() const { return 48; }
+  inline uint_fast16_t length() const override { return 48; }
 };
 
 const SHA384::word_t SHA384::initvec[] = {
@@ -1045,33 +1050,34 @@ const std::set<std::string>& crypto::hash::all() { return names; }
 
 Algorithms crypto::hash::lookup(const std::string& name)
 {
-  auto i = mapped.find(name);
-  if (unlikely(i == mapped_end)) {
+  if (auto i = mapped.find(name); unlikely(i == mapped_end)) {
     return algoNone;
   }
-  return i->second;
+  else {
+    return i->second;
+  }
 }
 
 std::unique_ptr<Algorithm> crypto::hash::create(Algorithms algo)
 {
   switch (algo) {
   case algoMD5:
-    return aria2::make_unique<MD5>();
+    return aria2::std::make_unique<MD5>();
 
   case algoSHA1:
-    return aria2::make_unique<SHA1>();
+    return aria2::std::make_unique<SHA1>();
 
   case algoSHA224:
-    return aria2::make_unique<SHA224>();
+    return aria2::std::make_unique<SHA224>();
 
   case algoSHA256:
-    return aria2::make_unique<SHA256>();
+    return aria2::std::make_unique<SHA256>();
 
   case algoSHA384:
-    return aria2::make_unique<SHA384>();
+    return aria2::std::make_unique<SHA384>();
 
   case algoSHA512:
-    return aria2::make_unique<SHA512>();
+    return aria2::std::make_unique<SHA512>();
 
   default:
     throw std::domain_error("Invalid hash algorithm");

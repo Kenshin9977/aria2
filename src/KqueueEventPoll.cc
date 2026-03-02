@@ -89,7 +89,7 @@ size_t KqueueEventPoll::KSocketEntry::getEvents(struct kevent* eventlist)
 
 KqueueEventPoll::KqueueEventPoll()
     : kqEventsSize_(KQUEUE_EVENTS_MAX),
-      kqEvents_(make_unique<struct kevent[]>(kqEventsSize_))
+      kqEvents_(std::make_unique<struct kevent[]>(kqEventsSize_))
 {
   kqfd_ = kqueue();
 }
@@ -140,16 +140,13 @@ void KqueueEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& r : nameResolverEntries_) {
-    auto& ent = r.second;
-    ent.processTimeout();
-    ent.removeSocketEvents(this);
-    ent.addSocketEvents(this);
+  for (auto& [key, entry] : nameResolverEntries_) {
+    entry.processTimeout();
+    entry.removeSocketEvents(this);
+    entry.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 namespace {
@@ -169,22 +166,22 @@ int translateEvents(EventPoll::EventType events)
 bool KqueueEventPoll::addEvents(sock_t socket,
                                 const KqueueEventPoll::KEvent& event)
 {
-  auto i = socketEntries_.lower_bound(socket);
+  auto i = socketEntries_.find(socket);
   int r = 0;
   struct timespec zeroTimeout = {0, 0};
   struct kevent changelist[2];
   size_t n;
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    auto& socketEntry = (*i).second;
+  if (i != socketEntries_.end()) {
+    auto& socketEntry = i->second;
     event.addSelf(&socketEntry);
     n = socketEntry.getEvents(changelist);
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, KSocketEntry(socket)));
-    auto& socketEntry = (*i).second;
+    auto p = socketEntries_.emplace(socket, KSocketEntry(socket));
+    auto& socketEntry = p.first->second;
     if (socketEntries_.size() > kqEventsSize_) {
       kqEventsSize_ *= 2;
-      kqEvents_ = make_unique<struct kevent[]>(kqEventsSize_);
+      kqEvents_ = std::make_unique<struct kevent[]>(kqEventsSize_);
     }
     event.addSelf(&socketEntry);
     n = socketEntry.getEvents(changelist);

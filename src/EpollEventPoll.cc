@@ -83,7 +83,7 @@ struct epoll_event EpollEventPoll::KSocketEntry::getEvents()
 
 EpollEventPoll::EpollEventPoll()
     : epEventsSize_(EPOLL_EVENTS_MAX),
-      epEvents_(make_unique<struct epoll_event[]>(epEventsSize_))
+      epEvents_(std::make_unique<struct epoll_event[]>(epEventsSize_))
 {
   epfd_ = epoll_create(EPOLL_EVENTS_MAX);
 }
@@ -130,16 +130,13 @@ void EpollEventPoll::poll(const struct timeval& tv)
   // own timeout and ares may create new sockets or closes socket in
   // their API. So we call ares_process_fd for all ares_channel and
   // re-register their sockets.
-  for (auto& i : nameResolverEntries_) {
-    auto& ent = i.second;
+  for (auto& [key, ent] : nameResolverEntries_) {
     ent.processTimeout();
     ent.removeSocketEvents(this);
     ent.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
 
-  // TODO timeout of name resolver is determined in Command(AbstractCommand,
-  // DHTEntryPoint...Command)
 }
 
 namespace {
@@ -165,11 +162,11 @@ int translateEvents(EventPoll::EventType events)
 bool EpollEventPoll::addEvents(sock_t socket,
                                const EpollEventPoll::KEvent& event)
 {
-  auto i = socketEntries_.lower_bound(socket);
+  auto i = socketEntries_.find(socket);
   int r = 0;
   int errNum = 0;
-  if (i != std::end(socketEntries_) && (*i).first == socket) {
-    auto& socketEntry = (*i).second;
+  if (i != socketEntries_.end()) {
+    auto& socketEntry = i->second;
 
     event.addSelf(&socketEntry);
 
@@ -185,11 +182,11 @@ bool EpollEventPoll::addEvents(sock_t socket,
     }
   }
   else {
-    i = socketEntries_.insert(i, std::make_pair(socket, KSocketEntry(socket)));
-    auto& socketEntry = (*i).second;
+    auto p = socketEntries_.emplace(socket, KSocketEntry(socket));
+    auto& socketEntry = p.first->second;
     if (socketEntries_.size() > epEventsSize_) {
       epEventsSize_ *= 2;
-      epEvents_ = make_unique<struct epoll_event[]>(epEventsSize_);
+      epEvents_ = std::make_unique<struct epoll_event[]>(epEventsSize_);
     }
 
     event.addSelf(&socketEntry);

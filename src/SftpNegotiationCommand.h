@@ -39,6 +39,7 @@
 
 namespace aria2 {
 
+class ISocketCore;
 class SocketCore;
 class AuthConfig;
 
@@ -74,15 +75,15 @@ private:
   std::string digest_;
 
 protected:
-  virtual bool executeInternal() CXX11_OVERRIDE;
+  bool executeInternal() override;
 
 public:
   SftpNegotiationCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                          const std::shared_ptr<FileEntry>& fileEntry,
                          RequestGroup* requestGroup, DownloadEngine* e,
-                         const std::shared_ptr<SocketCore>& s,
+                         const std::shared_ptr<ISocketCore>& s,
                          Seq seq = SEQ_HANDSHAKE);
-  virtual ~SftpNegotiationCommand();
+  ~SftpNegotiationCommand() override;
 };
 
 } // namespace aria2

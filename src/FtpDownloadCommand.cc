@@ -52,7 +52,7 @@ FtpDownloadCommand::FtpDownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
     const std::shared_ptr<FtpConnection>& ftpConnection, DownloadEngine* e,
-    const std::shared_ptr<SocketCore>& dataSocket,
+    const std::shared_ptr<ISocketCore>& dataSocket,
     const std::shared_ptr<SocketCore>& ctrlSocket)
     : DownloadCommand(cuid, req, fileEntry, requestGroup, e, dataSocket,
                       std::make_shared<SocketRecvBuffer>(dataSocket)),
@@ -68,7 +68,7 @@ bool FtpDownloadCommand::prepareForNextSegment()
   if (getOption()->getAsBool(PREF_FTP_REUSE_CONNECTION) &&
       getFileEntry()->gtoloff(getSegments().front()->getPositionToWrite()) ==
           getFileEntry()->getLength()) {
-    getDownloadEngine()->addCommand(make_unique<FtpFinishDownloadCommand>(
+    getDownloadEngine()->addCommand(std::make_unique<FtpFinishDownloadCommand>(
         getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
         ftpConnection_, getDownloadEngine(), ctrlSocket_));
 

@@ -45,6 +45,12 @@
 namespace aria2 {
 
 ChecksumCheckIntegrityEntry::ChecksumCheckIntegrityEntry(
+    RequestGroup* requestGroup)
+    : CheckIntegrityEntry{requestGroup}, redownload_{false}
+{
+}
+
+ChecksumCheckIntegrityEntry::ChecksumCheckIntegrityEntry(
     RequestGroup* requestGroup, std::unique_ptr<Command> nextCommand)
     : CheckIntegrityEntry{requestGroup, std::move(nextCommand)},
       redownload_{false}
@@ -62,7 +68,7 @@ bool ChecksumCheckIntegrityEntry::isValidationReady()
 
 void ChecksumCheckIntegrityEntry::initValidator()
 {
-  auto validator = make_unique<IteratableChecksumValidator>(
+  auto validator = std::make_unique<IteratableChecksumValidator>(
       getRequestGroup()->getDownloadContext(),
       getRequestGroup()->getPieceStorage());
   validator->init();
@@ -79,7 +85,7 @@ void ChecksumCheckIntegrityEntry::onDownloadIncomplete(
 {
   if (redownload_) {
     proceedFileAllocation(commands,
-                          make_unique<StreamFileAllocationEntry>(
+                          std::make_unique<StreamFileAllocationEntry>(
                               getRequestGroup(), popNextCommand()),
                           e);
     return;

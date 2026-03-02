@@ -198,9 +198,9 @@ void IntXmlRpcRequestParserState::endElement(
     XmlRpcRequestParserStateMachine* psm, const char* name,
     std::string characters)
 {
-  int32_t value;
-  if (util::parseIntNoThrow(value, characters)) {
-    psm->setCurrentFrameValue(Integer::g(value));
+  auto value = util::parseInt(characters);
+  if (value) {
+    psm->setCurrentFrameValue(Integer::g(*value));
   }
   else {
     // nothing to do here: We just leave current frame value to null.

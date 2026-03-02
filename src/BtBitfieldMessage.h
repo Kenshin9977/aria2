@@ -37,6 +37,8 @@
 
 #include "SimpleBtMessage.h"
 
+#include <span>
+
 namespace aria2 {
 
 class BtBitfieldMessage : public SimpleBtMessage {
@@ -48,26 +50,26 @@ public:
 
   BtBitfieldMessage(const unsigned char* bitfield, size_t bitfieldLength);
 
-  virtual ~BtBitfieldMessage();
+  ~BtBitfieldMessage() override;
 
-  static const uint8_t ID = 5;
+  static constexpr uint8_t ID = 5;
 
-  static const char NAME[];
+  static constexpr char NAME[] = "bitfield";
 
-  void setBitfield(const unsigned char* bitfield, size_t bitfieldLength);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   const unsigned char* getBitfield() const { return bitfield_.data(); }
 
   size_t getBitfieldLength() const { return bitfield_.size(); }
 
-  static std::unique_ptr<BtBitfieldMessage> create(const unsigned char* data,
-                                                   size_t dataLength);
+  static std::unique_ptr<BtBitfieldMessage>
+  create(std::span<const unsigned char> data);
 
-  virtual void doReceivedAction() CXX11_OVERRIDE;
+  void doReceivedAction() override;
 
-  virtual std::vector<unsigned char> createMessage() CXX11_OVERRIDE;
+  std::vector<unsigned char> createMessage() override;
 
-  virtual std::string toString() const CXX11_OVERRIDE;
+  std::string toString() const override;
 };
 
 } // namespace aria2

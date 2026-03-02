@@ -39,14 +39,12 @@
 
 namespace aria2 {
 
-const char BtHaveNoneMessage::NAME[] = "have none";
-
 BtHaveNoneMessage::BtHaveNoneMessage() : ZeroBtMessage(ID, NAME) {}
 
 std::unique_ptr<BtHaveNoneMessage>
-BtHaveNoneMessage::create(const unsigned char* data, size_t dataLength)
+BtHaveNoneMessage::create(std::span<const unsigned char> data)
 {
-  return ZeroBtMessage::create<BtHaveNoneMessage>(data, dataLength);
+  return ZeroBtMessage::create<BtHaveNoneMessage>(data);
 }
 
 void BtHaveNoneMessage::doReceivedAction()

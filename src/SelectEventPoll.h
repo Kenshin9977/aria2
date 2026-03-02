@@ -37,8 +37,11 @@
 
 #include "EventPoll.h"
 
+#include <compare>
+
 #include <deque>
 #include <map>
+#include <unordered_map>
 
 #include "a2functional.h"
 #ifdef ENABLE_ASYNC_DNS
@@ -90,14 +93,14 @@ private:
     SocketEntry(const SocketEntry&) = delete;
     SocketEntry(SocketEntry&&) = default;
 
+    auto operator<=>(const SocketEntry& entry) const
+    {
+      return socket_ <=> entry.socket_;
+    }
+
     bool operator==(const SocketEntry& entry) const
     {
       return socket_ == entry.socket_;
-    }
-
-    bool operator<(const SocketEntry& entry) const
-    {
-      return socket_ < entry.socket_;
     }
 
     void addCommandEvent(Command* command, int events);
@@ -157,12 +160,12 @@ private:
   sock_t dummySocket_;
 #endif // __MINGW32__
 
-  typedef std::map<sock_t, SocketEntry> SocketEntrySet;
+  using SocketEntrySet = std::unordered_map<sock_t, SocketEntry>;
   SocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
-  typedef std::map<std::pair<AsyncNameResolver*, Command*>,
-                   AsyncNameResolverEntry>
-      AsyncNameResolverEntrySet;
+  using AsyncNameResolverEntrySet =
+      std::map<std::pair<AsyncNameResolver*, Command*>,
+               AsyncNameResolverEntry>;
   AsyncNameResolverEntrySet nameResolverEntries_;
 #endif // ENABLE_ASYNC_DNS
 
@@ -171,23 +174,21 @@ private:
 public:
   SelectEventPoll();
 
-  virtual ~SelectEventPoll();
+  ~SelectEventPoll() override;
 
-  virtual void poll(const struct timeval& tv) CXX11_OVERRIDE;
+  void poll(const struct timeval& tv) override;
 
-  virtual bool addEvents(sock_t socket, Command* command,
-                         EventPoll::EventType events) CXX11_OVERRIDE;
+  bool addEvents(sock_t socket, Command* command,
+                 EventPoll::EventType events) override;
 
-  virtual bool deleteEvents(sock_t socket, Command* command,
-                            EventPoll::EventType events) CXX11_OVERRIDE;
+  bool deleteEvents(sock_t socket, Command* command,
+                    EventPoll::EventType events) override;
 #ifdef ENABLE_ASYNC_DNS
 
-  virtual bool
-  addNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
-                  Command* command) CXX11_OVERRIDE;
-  virtual bool
-  deleteNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
-                     Command* command) CXX11_OVERRIDE;
+  bool addNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
+                       Command* command) override;
+  bool deleteNameResolver(const std::shared_ptr<AsyncNameResolver>& resolver,
+                          Command* command) override;
 #endif // ENABLE_ASYNC_DNS
 };
 

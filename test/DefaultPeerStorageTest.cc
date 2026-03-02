@@ -9,6 +9,7 @@
 #include "Peer.h"
 #include "Option.h"
 #include "BtRuntime.h"
+#include "MockPieceStorage.h"
 #include "array_fun.h"
 
 namespace aria2 {
@@ -25,6 +26,13 @@ class DefaultPeerStorageTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testReturnPeer);
   CPPUNIT_TEST(testOnErasingPeer);
   CPPUNIT_TEST(testAddBadPeer);
+  CPPUNIT_TEST(testAddPeerVector);
+  CPPUNIT_TEST(testAddPeerVectorFull);
+  CPPUNIT_TEST(testReturnPeerActive);
+  CPPUNIT_TEST(testDeleteUnusedPeerLargerThanSize);
+  CPPUNIT_TEST(testAddDroppedPeerDuplicate);
+  CPPUNIT_TEST(testExecuteChoke);
+  CPPUNIT_TEST(testAddBadPeerDuplicate);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -49,6 +57,13 @@ public:
   void testReturnPeer();
   void testOnErasingPeer();
   void testAddBadPeer();
+  void testAddPeerVector();
+  void testAddPeerVectorFull();
+  void testReturnPeerActive();
+  void testDeleteUnusedPeerLargerThanSize();
+  void testAddDroppedPeerDuplicate();
+  void testExecuteChoke();
+  void testAddBadPeerDuplicate();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DefaultPeerStorageTest);
@@ -222,7 +237,19 @@ void DefaultPeerStorageTest::testReturnPeer()
 
 void DefaultPeerStorageTest::testOnErasingPeer()
 {
-  // test this
+  // onErasingPeer is called internally by deleteUnusedPeer.
+  // Test indirectly via deleteUnusedPeer to maintain invariants.
+  DefaultPeerStorage ps;
+
+  auto peer1 = std::make_shared<Peer>("192.168.0.1", 6889);
+  auto peer2 = std::make_shared<Peer>("192.168.0.2", 6889);
+  ps.addPeer(peer1);
+  ps.addPeer(peer2);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, ps.countAllPeer());
+
+  // deleteUnusedPeer calls onErasingPeer internally
+  ps.deleteUnusedPeer(1);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, ps.countAllPeer());
 }
 
 void DefaultPeerStorageTest::testAddBadPeer()
@@ -231,6 +258,146 @@ void DefaultPeerStorageTest::testAddBadPeer()
   ps.addBadPeer("192.168.0.1");
   CPPUNIT_ASSERT(ps.isBadPeer("192.168.0.1"));
   CPPUNIT_ASSERT(!ps.isBadPeer("192.168.0.2"));
+}
+
+void DefaultPeerStorageTest::testAddPeerVector()
+{
+  DefaultPeerStorage ps;
+  ps.setBtRuntime(btRuntime);
+
+  std::vector<std::shared_ptr<Peer>> peers;
+  peers.push_back(std::make_shared<Peer>("192.168.0.1", 6889));
+  peers.push_back(std::make_shared<Peer>("192.168.0.2", 6889));
+  peers.push_back(std::make_shared<Peer>("192.168.0.3", 6889));
+  // Duplicate of first peer
+  peers.push_back(std::make_shared<Peer>("192.168.0.1", 6889));
+
+  ps.addPeer(peers);
+
+  // Only 3 unique peers should be added
+  CPPUNIT_ASSERT_EQUAL((size_t)3, ps.getUnusedPeers().size());
+  CPPUNIT_ASSERT_EQUAL((size_t)3, ps.countAllPeer());
+}
+
+void DefaultPeerStorageTest::testAddPeerVectorFull()
+{
+  DefaultPeerStorage ps;
+  ps.setBtRuntime(btRuntime);
+  ps.setMaxPeerListSize(2);
+
+  // First fill the list to capacity
+  auto p1 = std::make_shared<Peer>("192.168.0.1", 6889);
+  auto p2 = std::make_shared<Peer>("192.168.0.2", 6889);
+  ps.addPeer(p1);
+  ps.addPeer(p2);
+  CPPUNIT_ASSERT_EQUAL((size_t)2, ps.getUnusedPeers().size());
+
+  // Now try to add a vector; list is already full
+  std::vector<std::shared_ptr<Peer>> peers;
+  peers.push_back(std::make_shared<Peer>("192.168.0.3", 6889));
+  peers.push_back(std::make_shared<Peer>("192.168.0.4", 6889));
+  ps.addPeer(peers);
+
+  // No new peers should be added since list was full
+  CPPUNIT_ASSERT_EQUAL((size_t)2, ps.getUnusedPeers().size());
+}
+
+void DefaultPeerStorageTest::testReturnPeerActive()
+{
+  DefaultPeerStorage ps;
+  auto pieceStorage = std::make_shared<MockPieceStorage>();
+  ps.setPieceStorage(pieceStorage);
+  ps.setBtRuntime(btRuntime);
+
+  auto peer1 = std::make_shared<Peer>("192.168.0.1", 6889);
+  ps.addPeer(peer1);
+  auto checked = ps.checkoutPeer(1);
+  CPPUNIT_ASSERT(checked);
+
+  // Make the peer active by allocating session resource
+  checked->allocateSessionResource(1_k, 1_m);
+  checked->setDisconnectedGracefully(true);
+
+  // Return the active, gracefully-disconnected peer
+  ps.returnPeer(checked);
+  CPPUNIT_ASSERT_EQUAL((size_t)0, ps.getUsedPeers().size());
+  // Peer should be in dropped peers
+  CPPUNIT_ASSERT_EQUAL((size_t)1, ps.getDroppedPeers().size());
+}
+
+void DefaultPeerStorageTest::testDeleteUnusedPeerLargerThanSize()
+{
+  DefaultPeerStorage ps;
+
+  auto peer1 = std::make_shared<Peer>("192.168.0.1", 6889);
+  ps.addPeer(peer1);
+
+  // Delete more than available -- should not crash
+  ps.deleteUnusedPeer(100);
+  CPPUNIT_ASSERT(ps.getUnusedPeers().empty());
+  CPPUNIT_ASSERT_EQUAL((size_t)0, ps.countAllPeer());
+}
+
+void DefaultPeerStorageTest::testAddDroppedPeerDuplicate()
+{
+  DefaultPeerStorage ps;
+  auto pieceStorage = std::make_shared<MockPieceStorage>();
+  ps.setPieceStorage(pieceStorage);
+  ps.setBtRuntime(btRuntime);
+
+  // Add and checkout peer, make it active and gracefully disconnected
+  auto peer1 = std::make_shared<Peer>("192.168.0.1", 6889);
+  ps.addPeer(peer1);
+  auto c1 = ps.checkoutPeer(1);
+  c1->allocateSessionResource(1_k, 1_m);
+  c1->setDisconnectedGracefully(true);
+  ps.returnPeer(c1);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, ps.getDroppedPeers().size());
+
+  // Add same ip:port again and return again
+  auto peer1b = std::make_shared<Peer>("192.168.0.1", 6889);
+  ps.addPeer(peer1b);
+  auto c1b = ps.checkoutPeer(2);
+  c1b->allocateSessionResource(1_k, 1_m);
+  c1b->setDisconnectedGracefully(true);
+  ps.returnPeer(c1b);
+  // Still only 1 entry in dropped peers (duplicate replaced)
+  CPPUNIT_ASSERT_EQUAL((size_t)1, ps.getDroppedPeers().size());
+}
+
+void DefaultPeerStorageTest::testExecuteChoke()
+{
+  DefaultPeerStorage ps;
+  auto pieceStorage = std::make_shared<MockPieceStorage>();
+  ps.setPieceStorage(pieceStorage);
+  ps.setBtRuntime(btRuntime);
+
+  // With no used peers, executeChoke should not crash
+  pieceStorage->setDownloadFinished(false);
+  ps.executeChoke();
+
+  // With seeder mode
+  pieceStorage->setDownloadFinished(true);
+  ps.executeChoke();
+}
+
+void DefaultPeerStorageTest::testAddBadPeerDuplicate()
+{
+  DefaultPeerStorage ps;
+
+  ps.addBadPeer("192.168.0.1");
+  CPPUNIT_ASSERT(ps.isBadPeer("192.168.0.1"));
+
+  // Adding same bad peer again should not cause issues
+  ps.addBadPeer("192.168.0.1");
+  CPPUNIT_ASSERT(ps.isBadPeer("192.168.0.1"));
+
+  // A peer not in bad list should still be false
+  CPPUNIT_ASSERT(!ps.isBadPeer("192.168.0.2"));
+
+  // Bad peer should be rejected from addPeer
+  auto peer = std::make_shared<Peer>("192.168.0.1", 6889);
+  CPPUNIT_ASSERT(!ps.addPeer(peer));
 }
 
 } // namespace aria2

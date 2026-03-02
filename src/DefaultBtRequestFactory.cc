@@ -35,6 +35,7 @@
 #include "DefaultBtRequestFactory.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include "LogFactory.h"
 #include "Logger.h"
@@ -90,19 +91,14 @@ public:
 
 void DefaultBtRequestFactory::removeCompletedPiece()
 {
-  std::for_each(pieces_.begin(), pieces_.end(),
-                AbortCompletedPieceRequest(dispatcher_));
-  pieces_.erase(std::remove_if(pieces_.begin(), pieces_.end(),
-                               std::mem_fn(&Piece::pieceComplete)),
-                pieces_.end());
+  std::ranges::for_each(pieces_, AbortCompletedPieceRequest(dispatcher_));
+  std::erase_if(pieces_, std::mem_fn(&Piece::pieceComplete));
 }
 
 void DefaultBtRequestFactory::removeTargetPiece(
     const std::shared_ptr<Piece>& piece)
 {
-  pieces_.erase(
-      std::remove_if(pieces_.begin(), pieces_.end(), derefEqual(piece)),
-      pieces_.end());
+  std::erase_if(pieces_, derefEqual(piece));
   dispatcher_->doAbortOutstandingRequestAction(piece);
   pieceStorage_->cancelPiece(piece, cuid_);
 }
@@ -147,11 +143,9 @@ public:
 
 void DefaultBtRequestFactory::doChokedAction()
 {
-  std::for_each(pieces_.begin(), pieces_.end(),
-                ProcessChokedPiece(peer_, pieceStorage_, cuid_));
-  pieces_.erase(
-      std::remove_if(pieces_.begin(), pieces_.end(), FindChokedPiece(peer_)),
-      pieces_.end());
+  std::ranges::for_each(pieces_,
+                        ProcessChokedPiece(peer_, pieceStorage_, cuid_));
+  std::erase_if(pieces_, FindChokedPiece(peer_));
 }
 
 void DefaultBtRequestFactory::removeAllTargetPiece()
@@ -198,15 +192,16 @@ std::vector<std::unique_ptr<BtRequestMessage>>
 DefaultBtRequestFactory::createRequestMessagesOnEndGame(size_t max)
 {
   auto requests = std::vector<std::unique_ptr<BtRequestMessage>>{};
+  auto missingBlockIndexes = std::vector<size_t>{};
   for (auto itr = std::begin(pieces_), eoi = std::end(pieces_);
        itr != eoi && requests.size() < max; ++itr) {
     auto& piece = *itr;
     const size_t mislen = piece->getBitfieldLength();
-    auto misbitfield = make_unique<unsigned char[]>(mislen);
+    auto misbitfield = std::make_unique<unsigned char[]>(mislen);
 
     piece->getAllMissingBlockIndexes(misbitfield.get(), mislen);
 
-    auto missingBlockIndexes = std::vector<size_t>{};
+    missingBlockIndexes.clear();
     size_t blockIndex = 0;
     for (size_t i = 0; i < mislen; ++i) {
       unsigned char bits = misbitfield[i];
@@ -257,16 +252,16 @@ public:
 
 size_t DefaultBtRequestFactory::countMissingBlock()
 {
-  return std::for_each(pieces_.begin(), pieces_.end(), CountMissingBlock())
-      .getNumMissingBlock();
+  return std::ranges::for_each(pieces_, CountMissingBlock())
+      .fun.getNumMissingBlock();
 }
 
 std::vector<size_t> DefaultBtRequestFactory::getTargetPieceIndexes() const
 {
   auto res = std::vector<size_t>{};
   res.reserve(pieces_.size());
-  std::transform(std::begin(pieces_), std::end(pieces_),
-                 std::back_inserter(res), std::mem_fn(&Piece::getIndex));
+  std::ranges::transform(pieces_, std::back_inserter(res),
+                         std::mem_fn(&Piece::getIndex));
   return res;
 }
 

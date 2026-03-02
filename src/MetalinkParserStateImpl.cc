@@ -68,7 +68,7 @@ std::vector<XmlAttr>::const_iterator findAttr(const std::vector<XmlAttr>& attrs,
                                               const char* localname,
                                               const char* nsUri)
 {
-  return std::find_if(attrs.begin(), attrs.end(), FindAttr(localname, nsUri));
+  return std::ranges::find_if(attrs, FindAttr(localname, nsUri));
 }
 
 void InitialMetalinkParserState::beginElement(MetalinkParserStateMachine* psm,

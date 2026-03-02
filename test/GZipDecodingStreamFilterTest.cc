@@ -29,12 +29,12 @@ class GZipDecodingStreamFilterTest : public CppUnit::TestFixture {
   public:
     MockSegment2() : positionToWrite_(0) {}
 
-    virtual void updateWrittenLength(int64_t bytes) CXX11_OVERRIDE
+    virtual void updateWrittenLength(int64_t bytes) override
     {
       positionToWrite_ += bytes;
     }
 
-    virtual int64_t getPositionToWrite() const CXX11_OVERRIDE
+    virtual int64_t getPositionToWrite() const override
     {
       return positionToWrite_;
     }
@@ -48,9 +48,9 @@ public:
   void setUp()
   {
     writer_ = std::make_shared<ByteArrayDiskWriter>();
-    auto sinkFilter = make_unique<SinkStreamFilter>();
+    auto sinkFilter = std::make_unique<SinkStreamFilter>();
     sinkFilter->init();
-    filter_ = make_unique<GZipDecodingStreamFilter>(std::move(sinkFilter));
+    filter_ = std::make_unique<GZipDecodingStreamFilter>(std::move(sinkFilter));
     filter_->init();
     segment_ = std::make_shared<MockSegment2>();
   }

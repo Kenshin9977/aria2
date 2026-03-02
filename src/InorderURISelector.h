@@ -42,12 +42,11 @@ class InorderURISelector : public URISelector {
 public:
   InorderURISelector();
 
-  virtual ~InorderURISelector();
+  ~InorderURISelector() override;
 
-  virtual std::string
+  std::string
   select(FileEntry* fileEntry,
-         const std::vector<std::pair<size_t, std::string>>& usedHosts)
-      CXX11_OVERRIDE;
+         const std::vector<std::pair<size_t, std::string>>& usedHosts) override;
 };
 
 } // namespace aria2

@@ -57,14 +57,6 @@ Range& Range::operator=(const Range& c)
   return *this;
 }
 
-bool Range::operator==(const Range& range) const
-{
-  return startByte == range.startByte && endByte == range.endByte &&
-         entityLength == range.entityLength;
-}
-
-bool Range::operator!=(const Range& range) const { return !(*this == range); }
-
 int64_t Range::getContentLength() const
 {
   if (endByte >= startByte) {

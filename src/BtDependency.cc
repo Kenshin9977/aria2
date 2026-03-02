@@ -99,7 +99,7 @@ bool BtDependency::resolve()
           dependee->getPieceStorage()->getDiskAdaptor();
       diskAdaptor->openExistingFile();
       std::string content = util::toString(diskAdaptor);
-      if (dependee->getDownloadContext()->hasAttribute(CTX_ATTR_BT)) {
+      if (dependee->getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
         auto attrs =
             bittorrent::getTorrentAttrs(dependee->getDownloadContext());
         bittorrent::loadFromMemory(bittorrent::metadata2Torrent(content, attrs),
@@ -128,7 +128,7 @@ bool BtDependency::resolve()
       // always assumed.
       if (fileEntries.size() == 1 && dependantFileEntries.size() == 1 &&
           dependantFileEntries[0]->getOriginalName().empty()) {
-        // TODO this may be dead code
+        // Single-file torrent with Metalink3 (no original name).
         copyValues(fileEntries[0], dependantFileEntries[0]);
       }
       else {
@@ -138,7 +138,7 @@ bool BtDependency::resolve()
           e->setRequested(false);
           destFiles.push_back(e);
         }
-        std::sort(std::begin(destFiles), std::end(destFiles), EntryCmp());
+        std::ranges::sort(destFiles, EntryCmp());
         // Copy file path in dependant_'s FileEntries to newly created
         // context's FileEntries to endorse the path structure of
         // dependant_.  URIs and singleHostMultiConnection are also copied.

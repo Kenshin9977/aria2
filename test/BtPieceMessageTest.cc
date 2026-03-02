@@ -52,10 +52,9 @@ public:
   class MockBtMessageFactory2 : public MockBtMessageFactory {
   public:
     virtual std::unique_ptr<BtRejectMessage>
-    createRejectMessage(size_t index, int32_t begin,
-                        int32_t length) CXX11_OVERRIDE
+    createRejectMessage(size_t index, int32_t begin, int32_t length) override
     {
-      return make_unique<BtRejectMessage>(index, begin, length);
+      return std::make_unique<BtRejectMessage>(index, begin, length);
     }
   };
 
@@ -67,16 +66,16 @@ public:
 
   void setUp()
   {
-    dctx_ = make_unique<DownloadContext>(16_k, 256_k, "/path/to/file");
+    dctx_ = std::make_unique<DownloadContext>(16_k, 256_k, "/path/to/file");
 
     peer = std::make_shared<Peer>("host", 6969);
     peer->allocateSessionResource(dctx_->getPieceLength(),
                                   dctx_->getTotalLength());
 
-    btMessageDispatcher = make_unique<MockBtMessageDispatcher>();
-    btMessageFactory_ = make_unique<MockBtMessageFactory2>();
+    btMessageDispatcher = std::make_unique<MockBtMessageDispatcher>();
+    btMessageFactory_ = std::make_unique<MockBtMessageFactory2>();
 
-    msg = make_unique<BtPieceMessage>();
+    msg = std::make_unique<BtPieceMessage>();
     msg->setIndex(1);
     msg->setBegin(1_k);
     msg->setBlockLength(16_k);
@@ -98,7 +97,7 @@ void BtPieceMessageTest::testCreate()
   bittorrent::setIntParam(&msg[5], 12345);
   bittorrent::setIntParam(&msg[9], 256);
   memcpy(&msg[13], data, sizeof(data));
-  std::shared_ptr<BtPieceMessage> pm(BtPieceMessage::create(&msg[4], 11));
+  std::shared_ptr<BtPieceMessage> pm(BtPieceMessage::create({&msg[4], 11}));
   CPPUNIT_ASSERT_EQUAL((uint8_t)7, pm->getId());
   CPPUNIT_ASSERT_EQUAL((size_t)12345, pm->getIndex());
   CPPUNIT_ASSERT_EQUAL(256, pm->getBegin());
@@ -108,7 +107,7 @@ void BtPieceMessageTest::testCreate()
   try {
     unsigned char msg[13];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 9, 7);
-    BtPieceMessage::create(&msg[4], 9);
+    BtPieceMessage::create({&msg[4], 9});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {
@@ -117,7 +116,7 @@ void BtPieceMessageTest::testCreate()
   try {
     unsigned char msg[13 + 2];
     bittorrent::createPeerMessageString(msg, sizeof(msg), 11, 8);
-    BtPieceMessage::create(&msg[4], 11);
+    BtPieceMessage::create({&msg[4], 11});
     CPPUNIT_FAIL("exception must be thrown.");
   }
   catch (...) {

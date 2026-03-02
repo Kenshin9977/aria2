@@ -78,6 +78,39 @@ FtpConnection::FtpConnection(cuid_t cuid,
 
 FtpConnection::~FtpConnection() = default;
 
+bool FtpConnection::sendAuthTls()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "AUTH TLS\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
+bool FtpConnection::sendPbsz()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "PBSZ 0\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
+bool FtpConnection::sendProtP()
+{
+  if (socketBuffer_.sendBufferIsEmpty()) {
+    std::string request = "PROT P\r\n";
+    A2_LOG_INFO(fmt(MSG_SENDING_REQUEST, cuid_, request.c_str()));
+    socketBuffer_.pushStr(std::move(request));
+  }
+  socketBuffer_.send();
+  return socketBuffer_.sendBufferIsEmpty();
+}
+
 bool FtpConnection::sendUser()
 {
   if (socketBuffer_.sendBufferIsEmpty()) {
@@ -259,42 +292,40 @@ bool FtpConnection::sendRetr()
   return socketBuffer_.sendBufferIsEmpty();
 }
 
-int FtpConnection::getStatus(const std::string& response) const
+int FtpConnection::getStatus(std::string_view response) const
 {
-  int status;
   // When the response is not like "%d %*s",
   // we return 0.
+  if (response.size() < 4) {
+    return 0;
+  }
   if (response.find_first_not_of("0123456789") != 3 ||
-      !(response.find(" ") == 3 || response.find("-") == 3)) {
+      (response[3] != ' ' && response[3] != '-')) {
     return 0;
   }
-  if (sscanf(response.c_str(), "%d %*s", &status) == 1) {
-    return status;
-  }
-  else {
-    return 0;
-  }
+  auto r = util::parseInt(response.substr(0, 3));
+  return r ? *r : 0;
 }
 
 // Returns the length of the response if the whole response has been received.
 // The length includes \r\n.
 // If the whole response has not been received, then returns std::string::npos.
 std::string::size_type
-FtpConnection::findEndOfResponse(int status, const std::string& buf) const
+FtpConnection::findEndOfResponse(int status, std::string_view buf) const
 {
   if (buf.size() <= 4) {
     return std::string::npos;
   }
   // if 4th character of buf is '-', then multi line response is expected.
-  if (buf.at(3) == '-') {
+  if (buf[3] == '-') {
     // multi line response
-    std::string::size_type p;
-    p = buf.find(fmt("\r\n%d ", status));
-    if (p == std::string::npos) {
+    auto needle = fmt("\r\n%d ", status);
+    auto p = buf.find(needle);
+    if (p == std::string_view::npos) {
       return std::string::npos;
     }
     p = buf.find("\r\n", p + 6);
-    if (p == std::string::npos) {
+    if (p == std::string_view::npos) {
       return std::string::npos;
     }
     else {
@@ -303,8 +334,8 @@ FtpConnection::findEndOfResponse(int status, const std::string& buf) const
   }
   else {
     // single line response
-    std::string::size_type p = buf.find("\r\n");
-    if (p == std::string::npos) {
+    auto p = buf.find("\r\n");
+    if (p == std::string_view::npos) {
       return std::string::npos;
     }
     else {
@@ -386,13 +417,23 @@ int FtpConnection::receiveSizeResponse(int64_t& size)
   std::pair<int, std::string> response;
   if (bulkReceiveResponse(response)) {
     if (response.first == 213) {
-      auto rp = util::divide(std::begin(response.second),
-                             std::end(response.second), ' ');
-      if (!util::parseLLIntNoThrow(
-              size, std::string(rp.second.first, rp.second.second)) ||
-          size < 0) {
+      std::string_view sv = response.second;
+      auto sp = sv.find(' ');
+      if (sp == std::string_view::npos) {
         throw DL_ABORT_EX("Size must be positive integer");
       }
+      auto sizeStr = sv.substr(sp + 1);
+      // strip trailing whitespace (\r\n)
+      while (!sizeStr.empty() &&
+             (sizeStr.back() == '\r' || sizeStr.back() == '\n' ||
+              sizeStr.back() == ' ')) {
+        sizeStr.remove_suffix(1);
+      }
+      auto s = util::parseLLInt(sizeStr);
+      if (!s || *s < 0) {
+        throw DL_ABORT_EX("Size must be positive integer");
+      }
+      size = *s;
     }
     return response.first;
   }
@@ -465,22 +506,38 @@ int FtpConnection::receiveEpsvResponse(uint16_t& port)
   if (bulkReceiveResponse(response)) {
     if (response.first == 229) {
       port = 0;
-      std::string::size_type leftParen = response.second.find("(");
-      std::string::size_type rightParen = response.second.find(")");
-      if (leftParen == std::string::npos || rightParen == std::string::npos ||
-          leftParen > rightParen) {
+      std::string_view sv = response.second;
+      auto leftParen = sv.find('(');
+      auto rightParen = sv.find(')');
+      if (leftParen == std::string_view::npos ||
+          rightParen == std::string_view::npos || leftParen > rightParen) {
         return response.first;
       }
-      std::vector<Scip> rd;
-      util::splitIter(response.second.begin() + leftParen + 1,
-                      response.second.begin() + rightParen,
-                      std::back_inserter(rd), '|', true, true);
-      uint32_t portTemp = 0;
-      if (rd.size() == 5 &&
-          util::parseUIntNoThrow(portTemp,
-                                 std::string(rd[3].first, rd[3].second))) {
-        if (0 < portTemp && portTemp <= UINT16_MAX) {
-          port = portTemp;
+      // Parse (|||port|) — 5 fields separated by '|'
+      auto inner = sv.substr(leftParen + 1, rightParen - leftParen - 1);
+      // Count delimiters and extract the 4th field (index 3)
+      size_t fieldIdx = 0;
+      std::string_view::size_type start = 0;
+      std::string_view portField;
+      size_t fieldCount = 0;
+      for (auto pos = inner.find('|');; pos = inner.find('|', start)) {
+        auto field = (pos == std::string_view::npos)
+                         ? inner.substr(start)
+                         : inner.substr(start, pos - start);
+        if (fieldIdx == 3) {
+          portField = field;
+        }
+        ++fieldIdx;
+        if (pos == std::string_view::npos) {
+          break;
+        }
+        start = pos + 1;
+      }
+      fieldCount = fieldIdx;
+      if (fieldCount == 5 && !portField.empty()) {
+        auto r = util::parseInt(portField);
+        if (r && *r > 0 && *r <= UINT16_MAX) {
+          port = static_cast<uint16_t>(*r);
         }
       }
     }
@@ -498,19 +555,33 @@ int FtpConnection::receivePasvResponse(std::pair<std::string, uint16_t>& dest)
     if (response.first == 227) {
       // we assume the format of response is "227 Entering Passive
       // Mode (h1,h2,h3,h4,p1,p2)."
-      int h1, h2, h3, h4, p1, p2;
-      std::string::size_type p = response.second.find("(");
-      if (p >= 4) {
-        sscanf(response.second.c_str() + p, "(%d,%d,%d,%d,%d,%d).", &h1, &h2,
-               &h3, &h4, &p1, &p2);
-        // ip address
-        dest.first = fmt("%d.%d.%d.%d", h1, h2, h3, h4);
-        // port number
-        dest.second = 256 * p1 + p2;
-      }
-      else {
+      std::string_view sv = response.second;
+      auto lp = sv.find('(');
+      auto rp = sv.find(')');
+      if (lp == std::string_view::npos || lp < 4 ||
+          rp == std::string_view::npos || rp <= lp) {
         throw DL_RETRY_EX(EX_INVALID_RESPONSE);
       }
+      auto inner = sv.substr(lp + 1, rp - lp - 1);
+      // Parse 6 comma-separated integers: h1,h2,h3,h4,p1,p2
+      int32_t vals[6];
+      size_t vi = 0;
+      std::string_view::size_type start = 0;
+      for (size_t i = 0; i < 6; ++i) {
+        auto comma = inner.find(',', start);
+        auto field =
+            (i < 5) ? inner.substr(start, comma - start) : inner.substr(start);
+        auto r = util::parseInt(field);
+        if (!r) {
+          throw DL_RETRY_EX(EX_INVALID_RESPONSE);
+        }
+        vals[vi++] = *r;
+        start = (comma == std::string_view::npos) ? comma : comma + 1;
+      }
+      // ip address
+      dest.first = A2_FMT("{}.{}.{}.{}", vals[0], vals[1], vals[2], vals[3]);
+      // port number
+      dest.second = 256 * vals[4] + vals[5];
     }
     return response.first;
   }
@@ -524,13 +595,17 @@ int FtpConnection::receivePwdResponse(std::string& pwd)
   std::pair<int, std::string> response;
   if (bulkReceiveResponse(response)) {
     if (response.first == 257) {
-      std::string::size_type first;
-      std::string::size_type last;
-
-      if ((first = response.second.find("\"")) != std::string::npos &&
-          (last = response.second.find("\"", ++first)) != std::string::npos) {
-        pwd.assign(response.second.begin() + first,
-                   response.second.begin() + last);
+      std::string_view sv = response.second;
+      auto first = sv.find('"');
+      if (first != std::string_view::npos) {
+        auto last = sv.find('"', first + 1);
+        if (last != std::string_view::npos) {
+          pwd.assign(sv.data() + first + 1, last - first - 1);
+        }
+        else {
+          throw DL_ABORT_EX2(EX_INVALID_RESPONSE,
+                             error_code::FTP_PROTOCOL_ERROR);
+        }
       }
       else {
         throw DL_ABORT_EX2(EX_INVALID_RESPONSE, error_code::FTP_PROTOCOL_ERROR);

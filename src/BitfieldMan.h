@@ -37,6 +37,9 @@
 
 #include "common.h"
 
+#include <compare>
+#include <optional>
+#include <span>
 #include <vector>
 
 namespace aria2 {
@@ -48,9 +51,9 @@ private:
   int64_t cachedFilteredCompletedLength_;
   int64_t cachedFilteredTotalLength_;
 
-  unsigned char* bitfield_;
-  unsigned char* useBitfield_;
-  unsigned char* filterBitfield_;
+  std::vector<unsigned char> bitfield_;
+  std::vector<unsigned char> useBitfield_;
+  std::vector<unsigned char> filterBitfield_;
 
   size_t bitfieldLength_;
   size_t cachedNumMissingBlock_;
@@ -81,7 +84,7 @@ public:
     Range(size_t startIndex = 0, size_t endIndex = 0);
     size_t getSize() const;
     size_t getMidIndex() const;
-    bool operator<(const Range& range) const;
+    std::strong_ordering operator<=>(const Range& range) const;
     bool operator==(const Range& range) const;
   };
 
@@ -104,10 +107,10 @@ public:
   // but not set in this object.
   //
   // affected by filter
-  bool hasMissingPiece(const unsigned char* bitfield, size_t len) const;
+  bool hasMissingPiece(std::span<const unsigned char> bitfield) const;
 
   // affected by filter
-  bool getFirstMissingUnusedIndex(size_t& index) const;
+  std::optional<size_t> getFirstMissingUnusedIndex() const;
 
   // Appends at most n missing unused index to out. This function
   // doesn't delete existing elements in out.  Returns the number of
@@ -120,7 +123,7 @@ public:
   // index is found. Otherwise returns false.
   //
   // affected by filter
-  bool getFirstMissingIndex(size_t& index) const;
+  std::optional<size_t> getFirstMissingIndex() const;
 
   // Stores missing bit index to index. index is selected so that it
   // divides longest missing bit subarray into 2 equally sized
@@ -128,9 +131,9 @@ public:
   // if such bit index is found. Otherwise returns false.
   //
   // affected by filter
-  bool getSparseMissingUnusedIndex(size_t& index, int32_t minSplitSize,
-                                   const unsigned char* ignoreBitfield,
-                                   size_t ignoreBitfieldLength) const;
+  std::optional<size_t> getSparseMissingUnusedIndex(
+      int32_t minSplitSize,
+      std::span<const unsigned char> ignoreBitfield) const;
 
   // Stores missing bit index to index. This function first try to
   // select smallest index starting offsetIndex in the order:
@@ -146,10 +149,10 @@ public:
   // result.
   //
   // affected by filter
-  bool getGeomMissingUnusedIndex(size_t& index, int32_t minSplitSize,
-                                 const unsigned char* ignoreBitfield,
-                                 size_t ignoreBitfieldLength, double base,
-                                 size_t offsetIndex) const;
+  std::optional<size_t>
+  getGeomMissingUnusedIndex(int32_t minSplitSize,
+                            std::span<const unsigned char> ignoreBitfield,
+                            double base, size_t offsetIndex) const;
 
   // Stores missing bit index to index. This function selects smallest
   // index of missing piece, considering minSplitSize.  Set bits in
@@ -157,30 +160,29 @@ public:
   // found. Otherwise returns false.
   //
   // affected by filter
-  bool getInorderMissingUnusedIndex(size_t& index, int32_t minSplitSize,
-                                    const unsigned char* ignoreBitfield,
-                                    size_t ignoreBitfieldLength) const;
+  std::optional<size_t> getInorderMissingUnusedIndex(
+      int32_t minSplitSize,
+      std::span<const unsigned char> ignoreBitfield) const;
 
   // Just like getInorderMissingUnusedIndex() above, but limit the
   // search area in [startIndex, endIndex).  |endIndex| is normalized
   // to min(|endIndex|, blocks_)
   //
   // affected by filter
-  bool getInorderMissingUnusedIndex(size_t& index, size_t startIndex,
-                                    size_t endIndex, int32_t minSplitSize,
-                                    const unsigned char* ignoreBitfield,
-                                    size_t ignoreBitfieldLength) const;
+  std::optional<size_t> getInorderMissingUnusedIndex(
+      size_t startIndex, size_t endIndex, int32_t minSplitSize,
+      std::span<const unsigned char> ignoreBitfield) const;
 
   // affected by filter
   bool getAllMissingIndexes(unsigned char* misbitfield, size_t mislen) const;
 
   // affected by filter
   bool getAllMissingIndexes(unsigned char* misbitfield, size_t mislen,
-                            const unsigned char* bitfield, size_t len) const;
+                            std::span<const unsigned char> bitfield) const;
   // affected by filter
-  bool getAllMissingUnusedIndexes(unsigned char* misbitfield, size_t mislen,
-                                  const unsigned char* bitfield,
-                                  size_t len) const;
+  bool
+  getAllMissingUnusedIndexes(unsigned char* misbitfield, size_t mislen,
+                             std::span<const unsigned char> bitfield) const;
   // affected by filter
   size_t countMissingBlock() const;
 
@@ -203,10 +205,10 @@ public:
 
   bool isAllFilterBitSet() const;
   // Returns true if index bit is set in filterBitfield_.  If
-  // filterBitfield_ is NULL, returns false.
+  // filterBitfield_ is nullptr, returns false.
   bool isFilterBitSet(size_t index) const;
 
-  const unsigned char* getBitfield() const { return bitfield_; }
+  const unsigned char* getBitfield() const { return bitfield_.data(); }
 
   size_t getBitfieldLength() const { return bitfieldLength_; }
 
@@ -220,7 +222,7 @@ public:
 
   size_t getMaxIndex() const { return blocks_ - 1; }
 
-  void setBitfield(const unsigned char* bitfield, size_t bitfieldLength);
+  void setBitfield(std::span<const unsigned char> bitfield);
 
   void clearAllBit();
   void setAllBit();
@@ -275,7 +277,10 @@ public:
 
   int64_t getMissingUnusedLength(size_t startingIndex) const;
 
-  const unsigned char* getFilterBitfield() const { return filterBitfield_; }
+  const unsigned char* getFilterBitfield() const
+  {
+    return filterBitfield_.empty() ? nullptr : filterBitfield_.data();
+  }
 };
 
 } // namespace aria2
