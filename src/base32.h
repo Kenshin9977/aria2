@@ -87,6 +87,7 @@ std::string decode(InputIterator first, InputIterator last)
     bits = bits / 8 * 8;
     buf = hton64(buf);
     char* p = reinterpret_cast<char*>(&buf);
+    // cppcheck-suppress objectIndex
     ret.append(&p[(64 - bits) / 8], &p[8]);
   }
   return ret;

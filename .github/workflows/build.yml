@@ -54,7 +54,7 @@ jobs:
       run: |
         echo 'CC=clang-18' >> $GITHUB_ENV
         echo 'CXX=clang++-18' >> $GITHUB_ENV
-        echo 'CPLUS_INCLUDE_PATH=/usr/include/c++/14:/usr/include/x86_64-linux-gnu/c++/14' >> $GITHUB_ENV
+        echo 'CXXFLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14' >> $GITHUB_ENV
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |
@@ -149,8 +149,7 @@ jobs:
         echo 'FEATURE_FLAGS=--disable-bittorrent' >> $GITHUB_ENV
     - name: Build and test
       run: |
-        (cd deps/wslay && autoreconf -i)
-        autoreconf -i
+        autoreconf -i --no-recursive
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \

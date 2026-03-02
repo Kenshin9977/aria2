@@ -417,12 +417,14 @@ void FileEntry::reuseUri(const std::vector<std::string>& ignore)
   }
   std::deque<std::string> uris = spentUris_;
   std::ranges::sort(uris);
+  // cppcheck-suppress mismatchingContainerExpression
   uris.erase(std::ranges::unique(uris).begin(), uris.end());
 
   std::vector<std::string> errorUris(uriResults_.size());
   std::ranges::transform(uriResults_, errorUris.begin(),
                          std::mem_fn(&URIResult::getURI));
   std::ranges::sort(errorUris);
+  // cppcheck-suppress mismatchingContainerExpression
   errorUris.erase(std::ranges::unique(errorUris).begin(), errorUris.end());
   if (A2_LOG_DEBUG_ENABLED) {
     for (const auto& uri : errorUris) {
