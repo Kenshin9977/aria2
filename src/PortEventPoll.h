@@ -76,9 +76,8 @@ private:
   friend int accumulateEvent(int events, const KEvent& event);
 
 private:
-  using KSocketEntrySet =
-      std::set<std::shared_ptr<KSocketEntry>,
-               DerefLess<std::shared_ptr<KSocketEntry>>>;
+  using KSocketEntrySet = std::set<std::shared_ptr<KSocketEntry>,
+                                   DerefLess<std::shared_ptr<KSocketEntry>>>;
   KSocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
   using KAsyncNameResolverEntrySet =

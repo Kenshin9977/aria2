@@ -64,14 +64,15 @@ namespace aria2 {
 
 HttpRequestEntry::HttpRequestEntry(std::unique_ptr<HttpRequest> httpRequest)
     : httpRequest_{std::move(httpRequest)},
-      proc_{
-          std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER)}
+      proc_{std::make_unique<HttpHeaderProcessor>(
+          HttpHeaderProcessor::CLIENT_PARSER)}
 {
 }
 
 void HttpRequestEntry::resetHttpHeaderProcessor()
 {
-  proc_ = std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER);
+  proc_ =
+      std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::CLIENT_PARSER);
 }
 
 std::unique_ptr<HttpRequest> HttpRequestEntry::popHttpRequest()

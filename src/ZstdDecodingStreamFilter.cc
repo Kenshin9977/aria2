@@ -77,10 +77,10 @@ void ZstdDecodingStreamFilter::release()
   }
 }
 
-ssize_t ZstdDecodingStreamFilter::transform(
-    const std::shared_ptr<BinaryStream>& out,
-    const std::shared_ptr<Segment>& segment, const unsigned char* inbuf,
-    size_t inlen)
+ssize_t
+ZstdDecodingStreamFilter::transform(const std::shared_ptr<BinaryStream>& out,
+                                    const std::shared_ptr<Segment>& segment,
+                                    const unsigned char* inbuf, size_t inlen)
 {
   bytesProcessed_ = 0;
   ssize_t outlen = 0;
@@ -98,16 +98,14 @@ ssize_t ZstdDecodingStreamFilter::transform(
 
     if (ZSTD_isError(ret)) {
       throw DL_ABORT_EX(
-          fmt("ZSTD_decompressStream failed: %s",
-              ZSTD_getErrorName(ret)));
+          fmt("ZSTD_decompressStream failed: %s", ZSTD_getErrorName(ret)));
     }
 
     if (ret == 0) {
       finished_ = true;
     }
 
-    outlen +=
-        getDelegate()->transform(out, segment, outbuf, output.pos);
+    outlen += getDelegate()->transform(out, segment, outbuf, output.pos);
     if (output.pos < output.size) {
       break;
     }

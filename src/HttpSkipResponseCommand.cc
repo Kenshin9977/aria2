@@ -93,8 +93,7 @@ void HttpSkipResponseCommand::installStreamFilter(
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
   const char* name = streamFilter_->getName();
-  sinkFilterOnly_ =
-      std::string_view(name).ends_with(SinkStreamFilter::NAME);
+  sinkFilterOnly_ = std::string_view(name).ends_with(SinkStreamFilter::NAME);
 }
 
 bool HttpSkipResponseCommand::executeInternal()
@@ -212,13 +211,12 @@ bool HttpSkipResponseCommand::processResponse()
           !httpResponse_->getHttpRequest()->authenticationUsed()) {
         auto* factory = getDownloadEngine()->getAuthConfigFactory().get();
         // Try Digest auth first (RFC 7616)
-        auto wwwAuthHeaders =
-            httpResponse_->getHttpHeader()->findAll(
-                HttpHeader::WWW_AUTHENTICATE);
+        auto wwwAuthHeaders = httpResponse_->getHttpHeader()->findAll(
+            HttpHeader::WWW_AUTHENTICATE);
         for (const auto& wwwAuth : wwwAuthHeaders) {
-          if (factory->activateDigestCred(
-                  getRequest()->getHost(), getRequest()->getPort(),
-                  wwwAuth, getOption().get())) {
+          if (factory->activateDigestCred(getRequest()->getHost(),
+                                          getRequest()->getPort(), wwwAuth,
+                                          getOption().get())) {
             return prepareForRetry(0);
           }
         }

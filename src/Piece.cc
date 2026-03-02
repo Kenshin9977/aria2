@@ -177,8 +177,8 @@ void Piece::reconfigure(int64_t length)
   // Called from GrowSegment::updateWrittenLength().  Use maximum
   // block length to avoid expensive BitfieldMan reallocation when
   // length_ grows large (e.g. 4 GB with 16 KB blocks).
-  bitfield_ =
-      std::make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(), length_);
+  bitfield_ = std::make_unique<BitfieldMan>(std::numeric_limits<int32_t>::max(),
+                                            length_);
 }
 
 void Piece::setBitfield(std::span<const unsigned char> bitfield)
@@ -291,10 +291,7 @@ void Piece::addUser(cuid_t cuid)
   }
 }
 
-void Piece::removeUser(cuid_t cuid)
-{
-  std::erase(users_, cuid);
-}
+void Piece::removeUser(cuid_t cuid) { std::erase(users_, cuid); }
 
 void Piece::initWrCache(WrDiskCache* diskCache,
                         const std::shared_ptr<DiskAdaptor>& diskAdaptor)

@@ -548,8 +548,7 @@ bool DownloadEngine::SocketPoolEntry::isTimeout() const
 cuid_t DownloadEngine::newCUID() { return cuidCounter_.newID(); }
 
 const std::string&
-DownloadEngine::findCachedIPAddress(const std::string& hostname,
-                                    uint16_t port)
+DownloadEngine::findCachedIPAddress(const std::string& hostname, uint16_t port)
 {
   return dnsCache_->find(hostname, port);
 }

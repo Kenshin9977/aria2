@@ -396,8 +396,7 @@ public:
 
   void adjustFilename(BtProgressInfoFile* infoFile);
 
-  [[nodiscard]] std::shared_ptr<DownloadResult>
-  createDownloadResult() const;
+  [[nodiscard]] std::shared_ptr<DownloadResult> createDownloadResult() const;
 
   const std::shared_ptr<Option>& getOption() const { return option_; }
 

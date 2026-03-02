@@ -74,8 +74,7 @@ public:
 
   void parseDefaultValues(Option& option) const;
 
-  void setOptionHandlers(
-      std::vector<std::unique_ptr<OptionHandler>> handlers);
+  void setOptionHandlers(std::vector<std::unique_ptr<OptionHandler>> handlers);
 
   void addOptionHandler(std::unique_ptr<OptionHandler> handler);
 

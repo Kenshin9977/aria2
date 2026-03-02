@@ -57,8 +57,7 @@
 
 namespace aria2 {
 
-OptionParser::OptionParser()
-    : handlers_(option::countOption()), shortOpts_(256)
+OptionParser::OptionParser() : handlers_(option::countOption()), shortOpts_(256)
 {
 }
 
@@ -238,8 +237,7 @@ void OptionParser::parse(Option& option, std::istream& is) const
     if (line.empty() || line[0] == '#') {
       continue;
     }
-    auto [name, value] =
-        util::divide(std::begin(line), std::end(line), '=');
+    auto [name, value] = util::divide(std::begin(line), std::end(line), '=');
     if (name.first == name.second) {
       continue;
     }

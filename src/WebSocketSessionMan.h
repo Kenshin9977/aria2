@@ -54,8 +54,7 @@ class WebSocketSession;
 class WebSocketSessionMan : public DownloadEventListener {
 public:
   using WebSocketSessions =
-      std::set<std::shared_ptr<WebSocketSession>,
-               RefLess<WebSocketSession>>;
+      std::set<std::shared_ptr<WebSocketSession>, RefLess<WebSocketSession>>;
   WebSocketSessionMan();
   ~WebSocketSessionMan() override;
   void addSession(const std::shared_ptr<WebSocketSession>& wsSession);

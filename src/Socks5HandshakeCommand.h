@@ -45,8 +45,7 @@ namespace aria2 {
 // transitions to Socks5ConnectCommand.
 class Socks5HandshakeCommand : public AbstractCommand {
 public:
-  Socks5HandshakeCommand(cuid_t cuid,
-                         const std::shared_ptr<Request>& req,
+  Socks5HandshakeCommand(cuid_t cuid, const std::shared_ptr<Request>& req,
                          const std::shared_ptr<FileEntry>& fileEntry,
                          RequestGroup* requestGroup, DownloadEngine* e,
                          const std::shared_ptr<Request>& proxyRequest,
@@ -57,13 +56,7 @@ protected:
   bool executeInternal() override;
 
 private:
-  enum State {
-    GREETING_WRITE,
-    GREETING_READ,
-    AUTH_WRITE,
-    AUTH_READ,
-    DONE
-  };
+  enum State { GREETING_WRITE, GREETING_READ, AUTH_WRITE, AUTH_READ, DONE };
 
   State state_;
   std::shared_ptr<Request> proxyRequest_;

@@ -79,8 +79,9 @@ DefaultPieceStorage::DefaultPieceStorage(
     const std::shared_ptr<DownloadContext>& downloadContext,
     const Option* option)
     : downloadContext_(downloadContext),
-      bitfieldMan_(std::make_unique<BitfieldMan>(downloadContext->getPieceLength(),
-                                            downloadContext->getTotalLength())),
+      bitfieldMan_(
+          std::make_unique<BitfieldMan>(downloadContext->getPieceLength(),
+                                        downloadContext->getTotalLength())),
       diskWriterFactory_(std::make_shared<DefaultDiskWriterFactory>()),
       endGame_(false),
       endGamePieceNum_(END_GAME_PIECE_NUM),
@@ -563,23 +564,21 @@ int64_t DefaultPieceStorage::getFilteredCompletedLength()
 
 int64_t DefaultPieceStorage::getInFlightPieceCompletedLength() const
 {
-  return std::accumulate(
-      usedPieces_.begin(), usedPieces_.end(), int64_t{0},
-      [](int64_t len, const auto& entry) {
-        return len + entry.second->getCompletedLength();
-      });
+  return std::accumulate(usedPieces_.begin(), usedPieces_.end(), int64_t{0},
+                         [](int64_t len, const auto& entry) {
+                           return len + entry.second->getCompletedLength();
+                         });
 }
 
 int64_t DefaultPieceStorage::getInFlightPieceFilteredCompletedLength() const
 {
-  return std::accumulate(
-      usedPieces_.begin(), usedPieces_.end(), int64_t{0},
-      [this](int64_t len, const auto& entry) {
-        if (bitfieldMan_->isFilterBitSet(entry.first)) {
-          return len + entry.second->getCompletedLength();
-        }
-        return len;
-      });
+  return std::accumulate(usedPieces_.begin(), usedPieces_.end(), int64_t{0},
+                         [this](int64_t len, const auto& entry) {
+                           if (bitfieldMan_->isFilterBitSet(entry.first)) {
+                             return len + entry.second->getCompletedLength();
+                           }
+                           return len;
+                         });
 }
 
 // not unittested

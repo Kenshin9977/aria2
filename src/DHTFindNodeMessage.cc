@@ -73,10 +73,7 @@ std::unique_ptr<Dict> DHTFindNodeMessage::getArgument()
   return aDict;
 }
 
-const char* DHTFindNodeMessage::getMessageType() const
-{
-  return FIND_NODE;
-}
+const char* DHTFindNodeMessage::getMessageType() const { return FIND_NODE; }
 
 std::string DHTFindNodeMessage::toStringOptional() const
 {

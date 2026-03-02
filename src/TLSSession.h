@@ -58,8 +58,7 @@ enum TLSErrorCode {
 //
 class TLSSession {
 public:
-  [[nodiscard]] static std::unique_ptr<TLSSession>
-  make(TLSContext* ctx);
+  [[nodiscard]] static std::unique_ptr<TLSSession> make(TLSContext* ctx);
 
   // MUST deallocate all resources
   virtual ~TLSSession() = default;
@@ -118,18 +117,14 @@ public:
   // protocol names (e.g., "h2", "http/1.1"). Must be called after
   // init() but before handshake. Returns TLS_ERR_OK on success.
   // Default implementation is a no-op for backends without ALPN.
-  virtual int
-  setALPNProtocols(const std::vector<std::string>& /* protocols */)
+  virtual int setALPNProtocols(const std::vector<std::string>& /* protocols */)
   {
     return TLS_ERR_OK;
   }
 
   // Returns the negotiated ALPN protocol after handshake, or empty
   // string if ALPN was not negotiated or not supported.
-  virtual std::string getNegotiatedProtocol() const
-  {
-    return std::string();
-  }
+  virtual std::string getNegotiatedProtocol() const { return std::string(); }
 
   // Returns buffered length, which can be read immediately without
   // contacting network.

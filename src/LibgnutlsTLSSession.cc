@@ -68,8 +68,7 @@ namespace aria2 {
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return std::make_unique<GnuTLSSession>(
-      static_cast<GnuTLSContext*>(ctx));
+  return std::make_unique<GnuTLSSession>(static_cast<GnuTLSContext*>(ctx));
 }
 
 GnuTLSSession::GnuTLSSession(GnuTLSContext* tlsContext)

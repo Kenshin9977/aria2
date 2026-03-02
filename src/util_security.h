@@ -73,6 +73,19 @@ inline bool compare(const char* a, const char* b, size_t length)
 }
 
 /**
+ * Compare two std::strings in constant time.
+ *
+ * @param a First string.
+ * @param b Second string.
+ * @return True if both have equal length and contents, false otherwise.
+ */
+inline bool compare(const std::string& a, const std::string& b)
+{
+  return a.size() == b.size() &&
+         compare(a.data(), b.data(), a.size());
+}
+
+/**
  * HMAC Result wrapper. While it is still possible to get the raw result bytes,
  * when using this wrapper it is ensured that constant-time comparison is used.
  * Also, this wrapper makes it an error to compare results of a different

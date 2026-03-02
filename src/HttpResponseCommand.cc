@@ -462,8 +462,7 @@ bool HttpResponseCommand::handleOtherEncoding(
   // chunk markers(0\r\n\r\n, for example).
   bool chunkedUsed =
       streamFilter &&
-      strcmp(streamFilter->getName(),
-             ChunkedDecodingStreamFilter::NAME) == 0;
+      strcmp(streamFilter->getName(), ChunkedDecodingStreamFilter::NAME) == 0;
 
   // For zero-length file, check existing file comparing its size
   if (!chunkedUsed && getDownloadContext()->knowsTotalLength() &&
@@ -475,7 +474,8 @@ bool HttpResponseCommand::handleOtherEncoding(
     // See also FtpNegotiationCommand::onFileSizeDetermined()
     if (getDownloadContext()->isChecksumVerificationNeeded()) {
       A2_LOG_DEBUG("Zero length file exists. Verify checksum.");
-      auto entry = std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+      auto entry =
+          std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
       entry->initValidator();
       getPieceStorage()->getDiskAdaptor()->openExistingFile();
       getDownloadEngine()->getCheckIntegrityMan()->pushEntry(std::move(entry));
@@ -508,7 +508,8 @@ bool HttpResponseCommand::handleOtherEncoding(
     // See also FtpNegotiationCommand::onFileSizeDetermined()
     if (getDownloadContext()->isChecksumVerificationNeeded()) {
       A2_LOG_DEBUG("Verify checksum for zero-length file");
-      auto entry = std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+      auto entry =
+          std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
       entry->initValidator();
       getDownloadEngine()->getCheckIntegrityMan()->pushEntry(std::move(entry));
     }

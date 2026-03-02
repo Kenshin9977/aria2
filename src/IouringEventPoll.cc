@@ -63,11 +63,11 @@ int accumulateEvent(int events, const IouringEventPoll::KEvent& event)
 int IouringEventPoll::KSocketEntry::getEvents()
 {
 #ifdef ENABLE_ASYNC_DNS
-  return std::accumulate(
-      adnsEvents_.begin(), adnsEvents_.end(),
-      std::accumulate(commandEvents_.begin(), commandEvents_.end(), 0,
-                      aria2::accumulateEvent),
-      aria2::accumulateEvent);
+  return std::accumulate(adnsEvents_.begin(), adnsEvents_.end(),
+                         std::accumulate(commandEvents_.begin(),
+                                         commandEvents_.end(), 0,
+                                         aria2::accumulateEvent),
+                         aria2::accumulateEvent);
 #else  // !ENABLE_ASYNC_DNS
   return std::accumulate(commandEvents_.begin(), commandEvents_.end(), 0,
                          aria2::accumulateEvent);
@@ -82,8 +82,8 @@ IouringEventPoll::IouringEventPoll() : ringInitialized_(false)
     ringInitialized_ = true;
   }
   else {
-    A2_LOG_ERROR(
-        fmt("io_uring_queue_init failed: %s", util::safeStrerror(-ret).c_str()));
+    A2_LOG_ERROR(fmt("io_uring_queue_init failed: %s",
+                     util::safeStrerror(-ret).c_str()));
   }
 }
 
@@ -153,8 +153,7 @@ void IouringEventPoll::poll(const struct timeval& tv)
     io_uring_for_each_cqe(&ring_, head, cqe)
     {
       ++count;
-      auto* entry =
-          reinterpret_cast<KSocketEntry*>(io_uring_cqe_get_data(cqe));
+      auto* entry = reinterpret_cast<KSocketEntry*>(io_uring_cqe_get_data(cqe));
       if (!entry) {
         // This is a cancel completion or internal event
         continue;
@@ -163,9 +162,9 @@ void IouringEventPoll::poll(const struct timeval& tv)
       if (cqe->res < 0) {
         // Error on poll — might be cancelled or socket closed
         if (cqe->res != -ECANCELED) {
-          A2_LOG_DEBUG(
-              fmt("io_uring poll error on fd %d: %s", entry->getSocket(),
-                  util::safeStrerror(-cqe->res).c_str()));
+          A2_LOG_DEBUG(fmt("io_uring poll error on fd %d: %s",
+                           entry->getSocket(),
+                           util::safeStrerror(-cqe->res).c_str()));
         }
         continue;
       }
@@ -183,9 +182,8 @@ void IouringEventPoll::poll(const struct timeval& tv)
     io_uring_cq_advance(&ring_, count);
   }
   else if (ret != -ETIME && ret != -EINTR) {
-    A2_LOG_INFO(
-        fmt("io_uring_wait_cqe_timeout error: %s",
-            util::safeStrerror(-ret).c_str()));
+    A2_LOG_INFO(fmt("io_uring_wait_cqe_timeout error: %s",
+                    util::safeStrerror(-ret).c_str()));
   }
 
 #ifdef ENABLE_ASYNC_DNS

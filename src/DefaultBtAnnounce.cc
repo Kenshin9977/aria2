@@ -298,48 +298,41 @@ void DefaultBtAnnounce::processAnnounceResponse(
   if (!dict) {
     throw DL_ABORT_EX(MSG_NULL_TRACKER_RESPONSE);
   }
-  if (const auto* failure = downcast<String>(
-          dict->get(BtAnnounce::FAILURE_REASON))) {
-    throw DL_ABORT_EX(
-        fmt(EX_TRACKER_FAILURE, failure->s().c_str()));
+  if (const auto* failure =
+          downcast<String>(dict->get(BtAnnounce::FAILURE_REASON))) {
+    throw DL_ABORT_EX(fmt(EX_TRACKER_FAILURE, failure->s().c_str()));
   }
-  if (const auto* warn = downcast<String>(
-          dict->get(BtAnnounce::WARNING_MESSAGE))) {
-    A2_LOG_WARN(
-        fmt(MSG_TRACKER_WARNING_MESSAGE, warn->s().c_str()));
+  if (const auto* warn =
+          downcast<String>(dict->get(BtAnnounce::WARNING_MESSAGE))) {
+    A2_LOG_WARN(fmt(MSG_TRACKER_WARNING_MESSAGE, warn->s().c_str()));
   }
-  if (const auto* tid = downcast<String>(
-          dict->get(BtAnnounce::TRACKER_ID))) {
+  if (const auto* tid = downcast<String>(dict->get(BtAnnounce::TRACKER_ID))) {
     trackerId_ = tid->s();
     A2_LOG_DEBUG(fmt("Tracker ID:%s", trackerId_.c_str()));
   }
-  if (const auto* ival = downcast<Integer>(
-          dict->get(BtAnnounce::INTERVAL));
+  if (const auto* ival = downcast<Integer>(dict->get(BtAnnounce::INTERVAL));
       ival && ival->i() > 0) {
     interval_ = std::chrono::seconds(ival->i());
-    A2_LOG_DEBUG(fmt("Interval:%ld",
-                     static_cast<long int>(interval_.count())));
+    A2_LOG_DEBUG(fmt("Interval:%ld", static_cast<long int>(interval_.count())));
   }
-  if (const auto* mival = downcast<Integer>(
-          dict->get(BtAnnounce::MIN_INTERVAL));
+  if (const auto* mival =
+          downcast<Integer>(dict->get(BtAnnounce::MIN_INTERVAL));
       mival && mival->i() > 0) {
     minInterval_ = std::chrono::seconds(mival->i());
-    A2_LOG_DEBUG(fmt("Min interval:%ld",
-                     static_cast<long int>(minInterval_.count())));
+    A2_LOG_DEBUG(
+        fmt("Min interval:%ld", static_cast<long int>(minInterval_.count())));
     minInterval_ = std::min(minInterval_, interval_);
   }
   else {
     // Use interval as a minInterval if minInterval is not supplied.
     minInterval_ = interval_;
   }
-  if (const auto* comp = downcast<Integer>(
-          dict->get(BtAnnounce::COMPLETE));
+  if (const auto* comp = downcast<Integer>(dict->get(BtAnnounce::COMPLETE));
       comp && comp->i() >= 0) {
     complete_ = comp->i();
     A2_LOG_DEBUG(fmt("Complete:%d", complete_));
   }
-  if (const auto* incomp = downcast<Integer>(
-          dict->get(BtAnnounce::INCOMPLETE));
+  if (const auto* incomp = downcast<Integer>(dict->get(BtAnnounce::INCOMPLETE));
       incomp && incomp->i() >= 0) {
     incomplete_ = incomp->i();
     A2_LOG_DEBUG(fmt("Incomplete:%d", incomplete_));

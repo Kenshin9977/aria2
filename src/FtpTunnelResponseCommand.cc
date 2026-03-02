@@ -68,9 +68,9 @@ std::unique_ptr<Command> FtpTunnelResponseCommand::getNextCommand()
   }
 #endif // HAVE_LIBSSH2
 
-  return std::make_unique<FtpNegotiationCommand>(getCuid(), getRequest(),
-                                            getFileEntry(), getRequestGroup(),
-                                            getDownloadEngine(), getSocket());
+  return std::make_unique<FtpNegotiationCommand>(
+      getCuid(), getRequest(), getFileEntry(), getRequestGroup(),
+      getDownloadEngine(), getSocket());
 }
 
 } // namespace aria2

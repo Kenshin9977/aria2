@@ -146,7 +146,6 @@ void KqueueEventPoll::poll(const struct timeval& tv)
     entry.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
-
 }
 
 namespace {

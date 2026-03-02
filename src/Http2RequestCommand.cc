@@ -111,8 +111,8 @@ bool Http2RequestCommand::executeInternal()
       return false;
     }
 
-    A2_LOG_INFO(fmt("CUID#%" PRId64 " - HTTP2: Response status=%d",
-                    getCuid(), sd->statusCode));
+    A2_LOG_INFO(fmt("CUID#%" PRId64 " - HTTP2: Response status=%d", getCuid(),
+                    sd->statusCode));
     for (const auto& h : sd->headers) {
       A2_LOG_DEBUG(
           fmt("HTTP2: Header %s: %s", h.first.c_str(), h.second.c_str()));
@@ -179,8 +179,8 @@ bool Http2RequestCommand::executeInternal()
     if (sd) {
       uint8_t buf[16384];
       size_t nread;
-      while ((nread = h2session_->readStreamData(streamId_, buf,
-                                                  sizeof(buf))) > 0) {
+      while ((nread = h2session_->readStreamData(streamId_, buf, sizeof(buf))) >
+             0) {
         if (getPieceStorage()) {
           getPieceStorage()->getDiskAdaptor()->writeData(buf, nread,
                                                          totalReceived_);
@@ -205,13 +205,12 @@ bool Http2RequestCommand::executeInternal()
   // Download complete
   const Http2StreamData* sd = h2session_->getStreamData(streamId_);
   if (sd && sd->errorCode != 0) {
-    throw DL_ABORT_EX(
-        fmt("HTTP2: Stream error (code=%u)", sd->errorCode));
+    throw DL_ABORT_EX(fmt("HTTP2: Stream error (code=%u)", sd->errorCode));
   }
 
-  A2_LOG_INFO(
-      fmt("CUID#%" PRId64 " - HTTP2: Download complete (%" PRId64 " bytes)",
-          getCuid(), totalReceived_));
+  A2_LOG_INFO(fmt("CUID#%" PRId64 " - HTTP2: Download complete (%" PRId64
+                  " bytes)",
+                  getCuid(), totalReceived_));
 
   // Mark pieces as complete
   if (getPieceStorage()) {

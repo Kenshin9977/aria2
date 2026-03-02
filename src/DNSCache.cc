@@ -93,17 +93,15 @@ bool DNSCache::CacheEntry::add(const std::string& addr)
 std::vector<DNSCache::AddrEntry>::iterator
 DNSCache::CacheEntry::find(const std::string& addr)
 {
-  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
-    return entry.addr_ == addr;
-  });
+  return std::ranges::find_if(
+      addrEntries_, [&addr](const auto& entry) { return entry.addr_ == addr; });
 }
 
 std::vector<DNSCache::AddrEntry>::const_iterator
 DNSCache::CacheEntry::find(const std::string& addr) const
 {
-  return std::ranges::find_if(addrEntries_, [&addr](const auto& entry) {
-    return entry.addr_ == addr;
-  });
+  return std::ranges::find_if(
+      addrEntries_, [&addr](const auto& entry) { return entry.addr_ == addr; });
 }
 
 bool DNSCache::CacheEntry::contains(const std::string& addr) const
@@ -113,8 +111,8 @@ bool DNSCache::CacheEntry::contains(const std::string& addr) const
 
 const std::string& DNSCache::CacheEntry::getGoodAddr() const
 {
-  auto it = std::ranges::find_if(
-      addrEntries_, [](const auto& elem) { return elem.good_; });
+  auto it = std::ranges::find_if(addrEntries_,
+                                 [](const auto& elem) { return elem.good_; });
   return it != addrEntries_.end() ? it->addr_ : A2STR::NIL;
 }
 
@@ -150,11 +148,9 @@ bool DNSCache::isExpired(const CacheEntry& entry) const
   return now - entry.createdAt_ > ttl_;
 }
 
-const std::string& DNSCache::find(const std::string& hostname,
-                                  uint16_t port)
+const std::string& DNSCache::find(const std::string& hostname, uint16_t port)
 {
-  if (auto i = entries_.find({hostname, port});
-      i == entries_.end()) {
+  if (auto i = entries_.find({hostname, port}); i == entries_.end()) {
     return A2STR::NIL;
   }
   else if (isExpired(i->second)) {
@@ -185,8 +181,7 @@ void DNSCache::put(const std::string& hostname, const std::string& ipaddr,
 void DNSCache::markBad(const std::string& hostname, const std::string& ipaddr,
                        uint16_t port)
 {
-  if (auto i = entries_.find({hostname, port});
-      i != entries_.end()) {
+  if (auto i = entries_.find({hostname, port}); i != entries_.end()) {
     i->second.markBad(ipaddr);
   }
 }

@@ -252,8 +252,16 @@ bool FtpConnection::sendPort(const std::shared_ptr<SocketCore>& serverSocket)
   if (socketBuffer_.sendBufferIsEmpty()) {
     auto endpoint = socket_->getAddrInfo();
     int ipaddr[4];
-    sscanf(endpoint.addr.c_str(), "%d.%d.%d.%d", &ipaddr[0], &ipaddr[1],
-           &ipaddr[2], &ipaddr[3]);
+    int rc = sscanf(endpoint.addr.c_str(), "%d.%d.%d.%d", &ipaddr[0],
+                    &ipaddr[1], &ipaddr[2], &ipaddr[3]);
+    if (rc != 4 || ipaddr[0] < 0 || ipaddr[0] > 255 || ipaddr[1] < 0 ||
+        ipaddr[1] > 255 || ipaddr[2] < 0 || ipaddr[2] > 255 ||
+        ipaddr[3] < 0 || ipaddr[3] > 255) {
+      throw DL_ABORT_EX2(
+          fmt("Invalid IPv4 address for PORT command: %s",
+              endpoint.addr.c_str()),
+          error_code::FTP_PROTOCOL_ERROR);
+    }
     auto svEndpoint = serverSocket->getAddrInfo();
     auto request =
         fmt("PORT %d,%d,%d,%d,%d,%d\r\n", ipaddr[0], ipaddr[1], ipaddr[2],
@@ -513,14 +521,20 @@ int FtpConnection::receiveEpsvResponse(uint16_t& port)
           rightParen == std::string_view::npos || leftParen > rightParen) {
         return response.first;
       }
-      // Parse (|||port|) — 5 fields separated by '|'
+      // RFC 2428: format is (<d><d><d><tcp-port><d>) where <d> is a
+      // delimiter character chosen by the server (first char after '(').
       auto inner = sv.substr(leftParen + 1, rightParen - leftParen - 1);
-      // Count delimiters and extract the 4th field (index 3)
+      if (inner.size() < 5) {
+        // Need at least <d><d><d><1-digit-port><d>
+        return response.first;
+      }
+      char delim = inner[0];
+      // Extract the 4th field (port) from <d><d><d><tcp-port><d>
       size_t fieldIdx = 0;
       std::string_view::size_type start = 0;
       std::string_view portField;
       size_t fieldCount = 0;
-      for (auto pos = inner.find('|');; pos = inner.find('|', start)) {
+      for (auto pos = inner.find(delim);; pos = inner.find(delim, start)) {
         auto field = (pos == std::string_view::npos)
                          ? inner.substr(start)
                          : inner.substr(start, pos - start);
@@ -577,6 +591,12 @@ int FtpConnection::receivePasvResponse(std::pair<std::string, uint16_t>& dest)
         }
         vals[vi++] = *r;
         start = (comma == std::string_view::npos) ? comma : comma + 1;
+      }
+      // Validate all 6 octets are in [0,255]
+      for (size_t i = 0; i < 6; ++i) {
+        if (vals[i] < 0 || vals[i] > 255) {
+          throw DL_RETRY_EX(EX_INVALID_RESPONSE);
+        }
       }
       // ip address
       dest.first = A2_FMT("{}.{}.{}.{}", vals[0], vals[1], vals[2], vals[3]);

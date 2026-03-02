@@ -164,8 +164,7 @@ private:
   SocketEntrySet socketEntries_;
 #ifdef ENABLE_ASYNC_DNS
   using AsyncNameResolverEntrySet =
-      std::map<std::pair<AsyncNameResolver*, Command*>,
-               AsyncNameResolverEntry>;
+      std::map<std::pair<AsyncNameResolver*, Command*>, AsyncNameResolverEntry>;
   AsyncNameResolverEntrySet nameResolverEntries_;
 #endif // ENABLE_ASYNC_DNS
 

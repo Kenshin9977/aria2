@@ -56,8 +56,7 @@ private:
   static constexpr size_t OUTBUF_LENGTH = 16_k;
 
 public:
-  BrotliDecodingStreamFilter(
-      std::unique_ptr<StreamFilter> delegate = nullptr);
+  BrotliDecodingStreamFilter(std::unique_ptr<StreamFilter> delegate = nullptr);
 
   ~BrotliDecodingStreamFilter() override;
 

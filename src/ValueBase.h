@@ -109,11 +109,11 @@ public:
   [[nodiscard]] static std::unique_ptr<String> g(ValueType&& string);
 
   [[nodiscard]] static std::unique_ptr<String> g(const unsigned char* data,
-                                                  size_t length);
+                                                 size_t length);
 
   template <typename InputIterator>
   [[nodiscard]] static std::unique_ptr<String> g(InputIterator first,
-                                                  InputIterator last)
+                                                 InputIterator last)
   {
     return std::make_unique<String>(first, last);
   }

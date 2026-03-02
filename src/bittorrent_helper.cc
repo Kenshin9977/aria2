@@ -269,17 +269,15 @@ void extractFileEntries(const std::shared_ptr<DownloadContext>& ctx,
                              error_code::BITTORRENT_PARSE_ERROR);
         }
       }
-      std::string utf8Path = strjoin(
-          pathelem.begin(), pathelem.end(), "/",
-          util::encodeNonUtf8);
+      std::string utf8Path =
+          strjoin(pathelem.begin(), pathelem.end(), "/", util::encodeNonUtf8);
       if (util::detectDirTraversal(utf8Path)) {
         throw DL_ABORT_EX2(fmt(MSG_DIR_TRAVERSAL_DETECTED, utf8Path.c_str()),
                            error_code::BITTORRENT_PARSE_ERROR);
       }
-      std::string pePath =
-          strjoin(pathelem.begin(), pathelem.end(), "/",
-                  static_cast<std::string (*)(std::string_view)>(
-                      util::percentEncode));
+      std::string pePath = strjoin(
+          pathelem.begin(), pathelem.end(), "/",
+          static_cast<std::string (*)(std::string_view)>(util::percentEncode));
       std::vector<std::string> uris;
       createUri(urlList.begin(), urlList.end(), std::back_inserter(uris),
                 pePath);
@@ -358,8 +356,7 @@ void extractAnnounce(TorrentAttribute* torrent, const Dict* rootDict)
       std::vector<std::string> ntier;
       for (auto& t : *tier) {
         if (const auto* uri = downcast<String>(t)) {
-          ntier.push_back(
-              util::encodeNonUtf8(util::strip(uri->s())));
+          ntier.push_back(util::encodeNonUtf8(util::strip(uri->s())));
         }
       }
       if (!ntier.empty()) {
@@ -604,7 +601,8 @@ TorrentAttribute* getTorrentAttrs(const std::shared_ptr<DownloadContext>& dctx)
 
 TorrentAttribute* getTorrentAttrs(DownloadContext* dctx)
 {
-  return static_cast<TorrentAttribute*>(dctx->getAttribute(ContextAttributeType::CTX_ATTR_BT).get());
+  return static_cast<TorrentAttribute*>(
+      dctx->getAttribute(ContextAttributeType::CTX_ATTR_BT).get());
 }
 
 const unsigned char* getInfoHash(const std::shared_ptr<DownloadContext>& dctx)

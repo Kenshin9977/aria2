@@ -271,8 +271,7 @@ std::unique_ptr<RpcMethod> createMethod(const std::string& methodName)
 
 RpcMethod* getMethod(const std::string& methodName)
 {
-  if (auto itr = cache.find(methodName);
-      itr == std::end(cache)) {
+  if (auto itr = cache.find(methodName); itr == std::end(cache)) {
     auto m = createMethod(methodName);
     if (m) {
       auto [it, inserted] =

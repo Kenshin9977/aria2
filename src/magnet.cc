@@ -52,8 +52,7 @@ std::unique_ptr<Dict> parse(const std::string& magnet)
   for (const auto& [qbegin, qend] : queries) {
     auto [namePart, valuePart] = util::divide(qbegin, qend, '=');
     std::string name(namePart.first, namePart.second);
-    std::string value(
-        util::percentDecode(valuePart.first, valuePart.second));
+    std::string value(util::percentDecode(valuePart.first, valuePart.second));
     List* l = downcast<List>(dict->get(name));
     if (l) {
       l->append(String::g(value));

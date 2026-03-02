@@ -361,8 +361,7 @@ namespace aria2 {
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return std::make_unique<AppleTLSSession>(
-      static_cast<AppleTLSContext*>(ctx));
+  return std::make_unique<AppleTLSSession>(static_cast<AppleTLSContext*>(ctx));
 }
 
 AppleTLSSession::AppleTLSSession(AppleTLSContext* ctx)
@@ -547,15 +546,14 @@ int AppleTLSSession::setSNIHostname(const std::string& hostname)
   return (lastError_ != noErr) ? TLS_ERR_ERROR : TLS_ERR_OK;
 }
 
-int AppleTLSSession::setALPNProtocols(
-    const std::vector<std::string>& protocols)
+int AppleTLSSession::setALPNProtocols(const std::vector<std::string>& protocols)
 {
 #if defined(__MAC_10_13)
   if (!sslCtx_) {
     return TLS_ERR_ERROR;
   }
-  CFMutableArrayRef alpnArray = CFArrayCreateMutable(
-      nullptr, protocols.size(), &kCFTypeArrayCallBacks);
+  CFMutableArrayRef alpnArray =
+      CFArrayCreateMutable(nullptr, protocols.size(), &kCFTypeArrayCallBacks);
   if (!alpnArray) {
     return TLS_ERR_ERROR;
   }

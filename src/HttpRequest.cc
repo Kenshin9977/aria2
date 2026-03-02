@@ -147,19 +147,16 @@ std::string HttpRequest::createRequest()
 {
   using enum Protocol;
   authConfig_ = authConfigFactory_->createAuthConfig(request_, option_);
-  if (authConfig_ &&
-      authConfigFactory_->findDigestCred(request_->getHost(),
-                                         request_->getPort())) {
+  if (authConfig_ && authConfigFactory_->findDigestCred(request_->getHost(),
+                                                        request_->getPort())) {
     authConfig_->setAuthScheme("digest");
   }
   std::string requestLine(httpMethodToString(request_->getMethod()));
   requestLine.reserve(512);
   requestLine += ' ';
   if (proxyRequest_) {
-    if ((getProtocol() == FTP ||
-         getProtocol() == FTPS) &&
-        request_->getUsername().empty() &&
-        authConfig_) {
+    if ((getProtocol() == FTP || getProtocol() == FTPS) &&
+        request_->getUsername().empty() && authConfig_) {
       // Insert user into URI, like ftp://USER@host/
       auto uri = getCurrentURI();
       assert(uri.size() >= 6);
@@ -246,24 +243,22 @@ std::string HttpRequest::createRequest()
   }
   if (authConfig_) {
     if (authConfig_->isDigest() && authConfigFactory_) {
-      auto* dc = authConfigFactory_->findDigestCred(
-          request_->getHost(), request_->getPort());
+      auto* dc = authConfigFactory_->findDigestCred(request_->getHost(),
+                                                    request_->getPort());
       if (dc) {
         ++dc->nc;
         auto uri = getDir() + getFile();
-        std::string method =
-            getMethod() == HttpMethod::HEAD ? "HEAD" : "GET";
+        std::string method = getMethod() == HttpMethod::HEAD ? "HEAD" : "GET";
         auto val = http_digest_auth::computeAuthHeader(
-            authConfig_->getUser(), authConfig_->getPassword(),
-            method, uri, dc->challenge, dc->nc);
+            authConfig_->getUser(), authConfig_->getPassword(), method, uri,
+            dc->challenge, dc->nc);
         builtinHds.emplace_back("Authorization:", val);
       }
     }
     else {
       auto authText = authConfig_->getAuthText();
       std::string val = "Basic ";
-      val +=
-          base64::encode(std::begin(authText), std::end(authText));
+      val += base64::encode(std::begin(authText), std::end(authText));
       builtinHds.emplace_back("Authorization:", val);
     }
   }
@@ -274,9 +269,8 @@ std::string HttpRequest::createRequest()
     std::string cookiesValue;
     auto path = getDir();
     path += getFile();
-    auto cookies =
-        cookieStorage_->criteriaFind(getHost(), path, Time().getTimeFromEpoch(),
-                                     getProtocol() == HTTPS);
+    auto cookies = cookieStorage_->criteriaFind(
+        getHost(), path, Time().getTimeFromEpoch(), getProtocol() == HTTPS);
     for (auto c : cookies) {
       cookiesValue += c->toString();
       cookiesValue += ';';

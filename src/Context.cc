@@ -214,10 +214,9 @@ Context::Context(bool standalone, int argc, char** argv, const KeyVals& options)
     }
     else {
       rlim_new = op->getAsInt(PREF_RLIMIT_NOFILE);
-      A2_LOG_DEBUG(
-          fmt("Not setting rlimit NO_FILE: %" PRIu64 " >= %" PRIu64,
-              static_cast<uint64_t>(r.rlim_cur),
-              static_cast<uint64_t>(rlim_new)));
+      A2_LOG_DEBUG(fmt("Not setting rlimit NO_FILE: %" PRIu64 " >= %" PRIu64,
+                       static_cast<uint64_t>(r.rlim_cur),
+                       static_cast<uint64_t>(rlim_new)));
     }
   }
 #endif // defined(HAVE_SYS_RESOURCE_H) && defined(RLIMIT_NOFILE)

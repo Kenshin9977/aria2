@@ -148,7 +148,6 @@ void LibuvEventPoll::poll(const struct timeval& tv)
     ent.addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
-
 }
 
 int LibuvEventPoll::translateEvents(EventPoll::EventType events)

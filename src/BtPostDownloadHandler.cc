@@ -58,8 +58,8 @@ namespace aria2 {
 
 BtPostDownloadHandler::BtPostDownloadHandler()
 {
-  setCriteria(std::make_unique<ContentTypeRequestGroupCriteria>(getBtContentTypes(),
-                                                           getBtExtensions()));
+  setCriteria(std::make_unique<ContentTypeRequestGroupCriteria>(
+      getBtContentTypes(), getBtExtensions()));
 }
 
 void BtPostDownloadHandler::getNextRequestGroups(

@@ -83,8 +83,7 @@ bool isHexDigit(const char c)
 
 bool isHexDigit(std::string_view s)
 {
-  return std::ranges::all_of(
-      s, [](char c) { return isHexDigit(c); });
+  return std::ranges::all_of(s, [](char c) { return isHexDigit(c); });
 }
 
 bool isLws(const char c) { return c == ' ' || c == '\t'; }

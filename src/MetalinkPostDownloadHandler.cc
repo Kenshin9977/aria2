@@ -108,8 +108,7 @@ void MetalinkPostDownloadHandler::getNextRequestGroups(
       rg->following(requestGroup->getGID());
     }
     if (auto mi = createMetadataInfoFromFirstFileEntry(
-            requestGroup->getGroupId(),
-            requestGroup->getDownloadContext())) {
+            requestGroup->getGroupId(), requestGroup->getDownloadContext())) {
       setMetadataInfo(newRgs.begin(), newRgs.end(), mi);
     }
 

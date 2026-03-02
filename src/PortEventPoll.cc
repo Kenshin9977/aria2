@@ -141,7 +141,6 @@ void PortEventPoll::poll(const struct timeval& tv)
     (*i)->addSocketEvents(this);
   }
 #endif // ENABLE_ASYNC_DNS
-
 }
 
 namespace {

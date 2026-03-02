@@ -94,7 +94,7 @@ using x509_sk_t = std::unique_ptr<STACK_OF(X509), x509_sk_deleter>;
 namespace aria2 {
 
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
-                                              TLSVersion minVer)
+                                             TLSVersion minVer)
 {
   return std::make_unique<OpenSSLTLSContext>(side, minVer);
 }

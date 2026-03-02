@@ -250,7 +250,8 @@ bool DownloadCommand::executeInternal()
               // Skip pre-calculated hash in BT end-game mode; pieces
               // may be received from multiple peers simultaneously.
               (!getPieceStorage()->isEndGame() ||
-               !getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) &&
+               !getDownloadContext()->hasAttribute(
+                   ContextAttributeType::CTX_ATTR_BT)) &&
 #endif // ENABLE_BITTORRENT
               segment->isHashCalculated()) {
             A2_LOG_DEBUG(fmt("Hash is available! index=%lu",
@@ -331,7 +332,8 @@ bool DownloadCommand::prepareForNextSegment()
       }
     }
     if (getDownloadContext()->getPieceHashType().empty()) {
-      auto entry = std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
+      auto entry =
+          std::make_unique<ChecksumCheckIntegrityEntry>(getRequestGroup());
       if (entry->isValidationReady()) {
         entry->initValidator();
         entry->cutTrailingGarbage();
@@ -419,8 +421,7 @@ void DownloadCommand::installStreamFilter(
   streamFilter->installDelegate(std::move(streamFilter_));
   streamFilter_ = std::move(streamFilter);
   const char* name = streamFilter_->getName();
-  sinkFilterOnly_ =
-      std::string_view(name).ends_with(SinkStreamFilter::NAME);
+  sinkFilterOnly_ = std::string_view(name).ends_with(SinkStreamFilter::NAME);
 }
 
 // We need to override noCheck() to return true in order to measure

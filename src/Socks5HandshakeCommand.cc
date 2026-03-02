@@ -108,8 +108,7 @@ bool Socks5HandshakeCommand::doWrite()
   if (writeBuf_.empty()) {
     return true;
   }
-  ssize_t written =
-      getSocket()->writeData(writeBuf_.data(), writeBuf_.size());
+  ssize_t written = getSocket()->writeData(writeBuf_.data(), writeBuf_.size());
   if (written > 0) {
     writeBuf_.erase(0, written);
   }
@@ -214,8 +213,8 @@ bool Socks5HandshakeCommand::executeInternal()
       uint8_t ver = static_cast<uint8_t>(readBuf_[0]);
       uint8_t status = static_cast<uint8_t>(readBuf_[1]);
       if (ver != USERPASS_VERSION) {
-        throw DL_ABORT_EX(fmt("SOCKS5: unexpected auth version %d",
-                              static_cast<int>(ver)));
+        throw DL_ABORT_EX(
+            fmt("SOCKS5: unexpected auth version %d", static_cast<int>(ver)));
       }
       if (status != USERPASS_SUCCESS) {
         throw DL_ABORT_EX("SOCKS5: authentication failed");

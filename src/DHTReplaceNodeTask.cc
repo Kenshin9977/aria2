@@ -69,7 +69,8 @@ void DHTReplaceNodeTask::sendMessage()
   else {
     getMessageDispatcher()->addMessageToQueue(
         getMessageFactory()->createPingMessage(questionableNode), timeout_,
-        std::make_unique<DHTPingReplyMessageCallback<DHTReplaceNodeTask>>(this));
+        std::make_unique<DHTPingReplyMessageCallback<DHTReplaceNodeTask>>(
+            this));
   }
 }
 

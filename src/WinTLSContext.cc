@@ -121,7 +121,7 @@ WinTLSContext::WinTLSContext(TLSSessionSide side, TLSVersion ver)
 }
 
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
-                                              TLSVersion ver)
+                                             TLSVersion ver)
 {
   return std::make_unique<WinTLSContext>(side, ver);
 }

@@ -58,8 +58,8 @@ void GZipEncoder::init()
   strm_->avail_in = 0;
   strm_->next_in = Z_NULL;
 
-  if (Z_OK != deflateInit2(strm_.get(), Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 9,
-                           Z_DEFAULT_STRATEGY)) {
+  if (Z_OK != deflateInit2(strm_.get(), Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31,
+                           9, Z_DEFAULT_STRATEGY)) {
     throw DL_ABORT_EX("Initializing z_stream failed.");
   }
 }

@@ -224,8 +224,7 @@ bool AbstractCommand::execute()
       // Find faster Request when no segment split is allowed.
       if (req_ && fileEntry_->countPooledRequest() > 0 &&
           requestGroup_->getPendingLength() < calculateMinSplitSize() * 2) {
-        if (auto fasterRequest =
-                fileEntry_->findFasterRequest(req_)) {
+        if (auto fasterRequest = fileEntry_->findFasterRequest(req_)) {
           useFasterRequest(fasterRequest);
           return true;
         }
@@ -390,8 +389,9 @@ bool AbstractCommand::execute()
 
     if (err.getErrorCode() == error_code::HTTP_SERVICE_UNAVAILABLE ||
         err.getErrorCode() == error_code::RESOURCE_NOT_FOUND) {
-      A2_LOG_DEBUG(fmt(MSG_RETRY_WAITING, getCuid(), getOption()->getAsInt(PREF_RETRY_WAIT),
-        req_->getUri().c_str()));
+      A2_LOG_DEBUG(fmt(MSG_RETRY_WAITING, getCuid(),
+                       getOption()->getAsInt(PREF_RETRY_WAIT),
+                       req_->getUri().c_str()));
       Timer wakeTime(global::wallclock());
       wakeTime.advance(
           std::chrono::seconds(getOption()->getAsInt(PREF_RETRY_WAIT)));
@@ -679,8 +679,7 @@ void AbstractCommand::transitionToReading(
 
 void AbstractCommand::initConnectTimeout()
 {
-  setTimeout(
-      std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
+  setTimeout(std::chrono::seconds(getOption()->getAsInt(PREF_CONNECT_TIMEOUT)));
   transitionToWriting();
 }
 
@@ -707,8 +706,7 @@ std::string getProxyUri(Protocol protocol, const Option* option)
                              PREF_HTTPS_PROXY_PASSWD, option);
   }
 
-  if (protocol == FTP || protocol == FTPS ||
-      protocol == SFTP) {
+  if (protocol == FTP || protocol == FTPS || protocol == SFTP) {
     return getProxyOptionFor(PREF_FTP_PROXY, PREF_FTP_PROXY_USER,
                              PREF_FTP_PROXY_PASSWD, option);
   }
@@ -895,9 +893,8 @@ bool AbstractCommand::checkIfConnectionEstablished(
                                                        req_->getProtocol())))
           ->setError();
     }
-    throw DL_RETRY_EX2(
-        fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()),
-        error_code::NETWORK_PROBLEM);
+    throw DL_RETRY_EX2(fmt(MSG_ESTABLISHING_CONNECTION_FAILED, error.c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
 
   A2_LOG_INFO(fmt(MSG_CONNECT_FAILED_AND_RETRY, getCuid(),
@@ -912,9 +909,8 @@ bool AbstractCommand::checkIfConnectionEstablished(
 const std::string& AbstractCommand::resolveProxyMethod(Protocol protocol) const
 {
   using enum Protocol;
-  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL ||
-      protocol == HTTPS || protocol == FTPS ||
-      protocol == SFTP) {
+  if (getOption()->get(PREF_PROXY_METHOD) == V_TUNNEL || protocol == HTTPS ||
+      protocol == FTPS || protocol == SFTP) {
     return V_TUNNEL;
   }
   return V_GET;

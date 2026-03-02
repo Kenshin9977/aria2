@@ -92,7 +92,6 @@ private:
     }
 
     void markBad(const std::string& addr);
-
   };
 
   using CacheKey = std::pair<std::string, uint16_t>;
@@ -112,11 +111,9 @@ public:
   const std::string& find(const std::string& hostname, uint16_t port);
 
   template <typename OutputIterator>
-  void findAll(OutputIterator out, const std::string& hostname,
-               uint16_t port)
+  void findAll(OutputIterator out, const std::string& hostname, uint16_t port)
   {
-    if (auto i = entries_.find({hostname, port});
-        i != entries_.end()) {
+    if (auto i = entries_.find({hostname, port}); i != entries_.end()) {
       if (isExpired(i->second)) {
         entries_.erase(i);
         return;

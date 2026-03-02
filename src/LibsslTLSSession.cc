@@ -319,8 +319,7 @@ int OpenSSLTLSSession::tlsConnect(const std::string& hostname,
             continue;
           }
           size_t len = altName->d.iPAddress->length;
-          ipAddrs.emplace_back(
-              reinterpret_cast<const char*>(ipAddr), len);
+          ipAddrs.emplace_back(reinterpret_cast<const char*>(ipAddr), len);
         }
       }
     }

@@ -68,10 +68,8 @@ UTPexExtensionMessage::UTPexExtensionMessage(uint8_t extensionMessageID)
 
 std::string UTPexExtensionMessage::getPayload()
 {
-  auto [freshV4, freshV6] =
-      createCompactPeerListAndFlag(freshPeers_);
-  auto [droppedV4, droppedV6] =
-      createCompactPeerListAndFlag(droppedPeers_);
+  auto [freshV4, freshV6] = createCompactPeerListAndFlag(freshPeers_);
+  auto [droppedV4, droppedV6] = createCompactPeerListAndFlag(droppedPeers_);
   Dict dict;
   if (!freshV4.first.empty()) {
     dict.put("added", freshV4.first);
@@ -207,23 +205,17 @@ UTPexExtensionMessage::create(const unsigned char* data, size_t len)
       bittorrent::extractPeer(added, AF_INET,
                               std::back_inserter(msg->freshPeers_));
     }
-    if (const auto* dropped =
-            downcast<String>(dict->get("dropped"))) {
-      bittorrent::extractPeer(
-          dropped, AF_INET,
-          std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped = downcast<String>(dict->get("dropped"))) {
+      bittorrent::extractPeer(dropped, AF_INET,
+                              std::back_inserter(msg->droppedPeers_));
     }
-    if (const auto* added6 =
-            downcast<String>(dict->get("added6"))) {
-      bittorrent::extractPeer(
-          added6, AF_INET6,
-          std::back_inserter(msg->freshPeers_));
+    if (const auto* added6 = downcast<String>(dict->get("added6"))) {
+      bittorrent::extractPeer(added6, AF_INET6,
+                              std::back_inserter(msg->freshPeers_));
     }
-    if (const auto* dropped6 =
-            downcast<String>(dict->get("dropped6"))) {
-      bittorrent::extractPeer(
-          dropped6, AF_INET6,
-          std::back_inserter(msg->droppedPeers_));
+    if (const auto* dropped6 = downcast<String>(dict->get("dropped6"))) {
+      bittorrent::extractPeer(dropped6, AF_INET6,
+                              std::back_inserter(msg->droppedPeers_));
     }
   }
   return msg;

@@ -72,10 +72,9 @@ int Http2Session::init()
                                                        onFrameRecvCallback);
   nghttp2_session_callbacks_set_on_data_chunk_recv_callback(
       callbacks, onDataChunkRecvCallback);
-  nghttp2_session_callbacks_set_on_stream_close_callback(
-      callbacks, onStreamCloseCallback);
-  nghttp2_session_callbacks_set_on_header_callback(callbacks,
-                                                    onHeaderCallback);
+  nghttp2_session_callbacks_set_on_stream_close_callback(callbacks,
+                                                         onStreamCloseCallback);
+  nghttp2_session_callbacks_set_on_header_callback(callbacks, onHeaderCallback);
 
   rv = nghttp2_session_client_new(&session_, callbacks, this);
   nghttp2_session_callbacks_del(callbacks);
@@ -93,14 +92,14 @@ int Http2Session::init()
   rv = nghttp2_submit_settings(session_, NGHTTP2_FLAG_NONE, settings,
                                sizeof(settings) / sizeof(settings[0]));
   if (rv != 0) {
-    A2_LOG_ERROR(fmt("HTTP2: nghttp2_submit_settings failed: %s",
-                     nghttp2_strerror(rv)));
+    A2_LOG_ERROR(
+        fmt("HTTP2: nghttp2_submit_settings failed: %s", nghttp2_strerror(rv)));
     return -1;
   }
 
   // Increase connection-level window size
   rv = nghttp2_submit_window_update(session_, NGHTTP2_FLAG_NONE, 0,
-                                     1048576); // +1MB
+                                    1048576); // +1MB
   if (rv != 0) {
     A2_LOG_WARN(fmt("HTTP2: nghttp2_submit_window_update failed: %s",
                     nghttp2_strerror(rv)));
@@ -122,11 +121,11 @@ int32_t Http2Session::submitRequest(
   auto makeNv = [](const std::string& name,
                    const std::string& value) -> nghttp2_nv {
     nghttp2_nv nv;
-    nv.name = const_cast<uint8_t*>(
-        reinterpret_cast<const uint8_t*>(name.c_str()));
+    nv.name =
+        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(name.c_str()));
     nv.namelen = name.size();
-    nv.value = const_cast<uint8_t*>(
-        reinterpret_cast<const uint8_t*>(value.c_str()));
+    nv.value =
+        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.c_str()));
     nv.valuelen = value.size();
     nv.flags = NGHTTP2_NV_FLAG_NO_COPY_NAME | NGHTTP2_NV_FLAG_NO_COPY_VALUE;
     return nv;
@@ -194,12 +193,10 @@ int Http2Session::recvData()
     return 1;
   }
 
-  ssize_t rv =
-      nghttp2_session_mem_recv(session_, buf, len);
+  ssize_t rv = nghttp2_session_mem_recv(session_, buf, len);
   if (rv < 0) {
-    A2_LOG_ERROR(
-        fmt("HTTP2: nghttp2_session_mem_recv failed: %s",
-            nghttp2_strerror(static_cast<int>(rv))));
+    A2_LOG_ERROR(fmt("HTTP2: nghttp2_session_mem_recv failed: %s",
+                     nghttp2_strerror(static_cast<int>(rv))));
     fatal_ = true;
     return -1;
   }
@@ -216,8 +213,7 @@ const Http2StreamData* Http2Session::getStreamData(int32_t streamId) const
   return nullptr;
 }
 
-size_t Http2Session::readStreamData(int32_t streamId, void* buf,
-                                    size_t len)
+size_t Http2Session::readStreamData(int32_t streamId, void* buf, size_t len)
 {
   auto it = streams_.find(streamId);
   if (it == streams_.end()) {
@@ -264,8 +260,8 @@ Http2StreamData& Http2Session::getOrCreateStream(int32_t streamId)
 // --- nghttp2 callbacks ---
 
 ssize_t Http2Session::sendCallback(nghttp2_session* /* session */,
-                                    const uint8_t* data, size_t length,
-                                    int /* flags */, void* userData)
+                                   const uint8_t* data, size_t length,
+                                   int /* flags */, void* userData)
 {
   auto* self = static_cast<Http2Session*>(userData);
   ssize_t written = self->socket_->writeData(data, length);
@@ -282,8 +278,8 @@ ssize_t Http2Session::sendCallback(nghttp2_session* /* session */,
 }
 
 int Http2Session::onFrameRecvCallback(nghttp2_session* /* session */,
-                                       const nghttp2_frame* frame,
-                                       void* userData)
+                                      const nghttp2_frame* frame,
+                                      void* userData)
 {
   auto* self = static_cast<Http2Session*>(userData);
   switch (frame->hd.type) {
@@ -302,8 +298,7 @@ int Http2Session::onFrameRecvCallback(nghttp2_session* /* session */,
   case NGHTTP2_GOAWAY: {
     A2_LOG_INFO(fmt("HTTP2: Received GOAWAY (last_stream_id=%d, "
                     "error_code=%u)",
-                    frame->goaway.last_stream_id,
-                    frame->goaway.error_code));
+                    frame->goaway.last_stream_id, frame->goaway.error_code));
     break;
   }
   default:
@@ -313,10 +308,9 @@ int Http2Session::onFrameRecvCallback(nghttp2_session* /* session */,
 }
 
 int Http2Session::onDataChunkRecvCallback(nghttp2_session* /* session */,
-                                           uint8_t /* flags */,
-                                           int32_t streamId,
-                                           const uint8_t* data, size_t len,
-                                           void* userData)
+                                          uint8_t /* flags */, int32_t streamId,
+                                          const uint8_t* data, size_t len,
+                                          void* userData)
 {
   auto* self = static_cast<Http2Session*>(userData);
   auto& stream = self->getOrCreateStream(streamId);
@@ -325,9 +319,8 @@ int Http2Session::onDataChunkRecvCallback(nghttp2_session* /* session */,
 }
 
 int Http2Session::onStreamCloseCallback(nghttp2_session* /* session */,
-                                         int32_t streamId,
-                                         uint32_t errorCode,
-                                         void* userData)
+                                        int32_t streamId, uint32_t errorCode,
+                                        void* userData)
 {
   auto* self = static_cast<Http2Session*>(userData);
   auto& stream = self->getOrCreateStream(streamId);
@@ -339,10 +332,10 @@ int Http2Session::onStreamCloseCallback(nghttp2_session* /* session */,
 }
 
 int Http2Session::onHeaderCallback(nghttp2_session* /* session */,
-                                    const nghttp2_frame* frame,
-                                    const uint8_t* name, size_t namelen,
-                                    const uint8_t* value, size_t valuelen,
-                                    uint8_t /* flags */, void* userData)
+                                   const nghttp2_frame* frame,
+                                   const uint8_t* name, size_t namelen,
+                                   const uint8_t* value, size_t valuelen,
+                                   uint8_t /* flags */, void* userData)
 {
   auto* self = static_cast<Http2Session*>(userData);
   if (frame->hd.type != NGHTTP2_HEADERS ||

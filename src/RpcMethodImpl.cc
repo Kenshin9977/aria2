@@ -912,14 +912,10 @@ void gatherStoppedDownload(Dict* entryDict,
   }
 
 #ifdef ENABLE_BITTORRENT
-  if (ds->attrs.size() >
-          static_cast<size_t>(CTX_ATTR_BT) &&
-      ds->attrs[static_cast<size_t>(
-          CTX_ATTR_BT)]) {
+  if (ds->attrs.size() > static_cast<size_t>(CTX_ATTR_BT) &&
+      ds->attrs[static_cast<size_t>(CTX_ATTR_BT)]) {
     const auto attrs = static_cast<TorrentAttribute*>(
-        ds->attrs[static_cast<size_t>(
-                      CTX_ATTR_BT)]
-            .get());
+        ds->attrs[static_cast<size_t>(CTX_ATTR_BT)].get());
     if (requested_key(keys, KEY_BITTORRENT)) {
       auto btDict = Dict::g();
       gatherBitTorrentMetadata(btDict.get(), attrs);

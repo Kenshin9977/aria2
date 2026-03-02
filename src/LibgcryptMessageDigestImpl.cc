@@ -78,8 +78,7 @@ public:
     auto bytes = reinterpret_cast<const uint8_t*>(data);
     while (length) {
       size_t l = std::min(
-          length,
-          static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
+          length, static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       gcry_md_write(ctx_.get(), bytes, length);
       length -= l;
       bytes += l;
