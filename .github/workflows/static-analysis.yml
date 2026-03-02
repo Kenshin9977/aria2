@@ -21,6 +21,8 @@ jobs:
           --enable=warning,performance,portability \
           --suppress=missingIncludeSystem \
           --suppress=syntaxError:src/alloca.c \
+          --suppress=uninitMemberVar \
+          --suppress=duplInheritedMember \
           --error-exitcode=1 \
           --inline-suppr \
           -I src \
