@@ -52,11 +52,30 @@ jobs:
     - name: Setup clang (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'clang'
       run: |
-        # clang-18 may pick gcc-13 libstdc++ which lacks full C++23;
-        # remove it so clang auto-detects gcc-14 headers instead.
-        sudo apt-get remove -y libstdc++-13-dev 2>/dev/null || true
         echo 'CC=clang-18' >> $GITHUB_ENV
         echo 'CXX=clang++-18' >> $GITHUB_ENV
+        echo 'CXXFLAGS=-nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14' >> $GITHUB_ENV
+    - name: Debug clang C++23 headers
+      if: runner.os == 'Linux' && matrix.compiler == 'clang'
+      run: |
+        echo "=== C++ header dirs ==="
+        ls -d /usr/include/c++/*/
+        echo "=== expected header location ==="
+        find /usr/include/c++/14 -name expected -type f 2>/dev/null || echo "NOT FOUND"
+        echo "=== bits/version.h location ==="
+        find /usr/include/c++/14 -name version.h -path '*/bits/*' 2>/dev/null || echo "NOT FOUND"
+        echo "=== Feature test macros ==="
+        echo | clang++-18 -std=gnu++23 -dM -E -x c++ - 2>&1 | grep -E '__cplusplus|__cpp_concepts'
+        echo "=== Include search paths (default) ==="
+        echo | clang++-18 -std=gnu++23 -v -E -x c++ - 2>&1 | sed -n '/#include.*search/,/End of search/p'
+        echo "=== Include search paths (with flags) ==="
+        echo | clang++-18 -std=gnu++23 -nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14 -v -E -x c++ - 2>&1 | sed -n '/#include.*search/,/End of search/p'
+        echo "=== Preprocess expected header ==="
+        echo '#include <expected>' | clang++-18 -std=gnu++23 -nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14 -dM -E -x c++ - 2>&1 | grep -E 'glibcxx_expected|cpp_lib_expected' || echo "MACRO NOT DEFINED"
+        echo "=== Test compile ==="
+        echo 'int main() { return __cpp_concepts >= 202002L ? 0 : 1; }' | clang++-18 -std=gnu++23 -nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14 -x c++ - -o /dev/null 2>&1 && echo "concepts OK" || echo "concepts FAIL"
+        echo '#include <expected>
+        int main() { std::expected<int,int> e{42}; }' | clang++-18 -std=gnu++23 -nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14 -x c++ - -o /dev/null 2>&1 && echo "expected OK" || echo "expected FAIL"
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |
