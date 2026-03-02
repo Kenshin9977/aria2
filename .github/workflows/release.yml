@@ -19,7 +19,7 @@ jobs:
       run: |
         apk add --no-cache \
           build-base autoconf automake libtool pkgconf gettext-dev \
-          openssl-dev openssl-libs-static c-ares-dev c-ares-static \
+          openssl-dev openssl-libs-static c-ares-dev \
           zlib-dev zlib-static sqlite-dev sqlite-static \
           libssh2-dev libssh2-static libxml2-dev libxml2-static \
           brotli-dev brotli-static zstd-dev zstd-static
@@ -50,7 +50,7 @@ jobs:
         run: |
           apk add --no-cache \
             build-base autoconf automake libtool pkgconf gettext-dev \
-            openssl-dev openssl-libs-static c-ares-dev c-ares-static \
+            openssl-dev openssl-libs-static c-ares-dev \
             zlib-dev zlib-static sqlite-dev sqlite-static \
             libssh2-dev libssh2-static libxml2-dev libxml2-static \
             brotli-dev brotli-static zstd-dev zstd-static
@@ -145,7 +145,7 @@ jobs:
           gettext-devel
     - name: Build
       run: |
-        autoreconf -i
+        autoreconf -i --no-recursive
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2

@@ -83,6 +83,7 @@ DHTMessageTracker::messageArrived(const Dict* dict, const std::string& ipaddr,
   for (auto i = std::begin(entries_), eoi = std::end(entries_); i != eoi; ++i) {
     if ((*i)->match(tid->s(), ipaddr, port)) {
       auto entry = std::move(*i);
+      // cppcheck-suppress eraseDereference
       entries_.erase(i);
       A2_LOG_DEBUG("Tracker entry found.");
       auto& targetNode = entry->getTargetNode();

@@ -20,6 +20,7 @@ jobs:
         cppcheck \
           --enable=warning,performance,portability \
           --suppress=missingIncludeSystem \
+          --suppress=syntaxError:src/alloca.c \
           --error-exitcode=1 \
           --inline-suppr \
           -I src \

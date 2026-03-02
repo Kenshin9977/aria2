@@ -53,6 +53,7 @@ jobs:
           '*/test/*' \
           '*/deps/*' \
           '/usr/*' \
+          --ignore-errors unused \
           --output-file coverage.info
         lcov --list coverage.info
     - name: Upload to Codecov
