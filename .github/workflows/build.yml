@@ -54,7 +54,7 @@ jobs:
       run: |
         echo 'CC=clang-18' >> $GITHUB_ENV
         echo 'CXX=clang++-18' >> $GITHUB_ENV
-        echo 'CXXFLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14' >> $GITHUB_ENV
+        echo 'CXXFLAGS=-nostdinc++ -isystem /usr/include/c++/14 -isystem /usr/include/x86_64-linux-gnu/c++/14' >> $GITHUB_ENV
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |
