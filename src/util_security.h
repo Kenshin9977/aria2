@@ -81,8 +81,7 @@ inline bool compare(const char* a, const char* b, size_t length)
  */
 inline bool compare(const std::string& a, const std::string& b)
 {
-  return a.size() == b.size() &&
-         compare(a.data(), b.data(), a.size());
+  return a.size() == b.size() && compare(a.data(), b.data(), a.size());
 }
 
 /**

@@ -47,7 +47,8 @@ jobs:
           --directory src \
           --output-file coverage.info \
           --gcov-tool gcov-14 \
-          --ignore-errors mismatch
+          --ignore-errors mismatch \
+          --ignore-errors gcov
         lcov --remove coverage.info \
           '*/test/*' \
           '*/deps/*' \

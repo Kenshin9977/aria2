@@ -59,6 +59,7 @@ OptionHandlerException::OptionHandlerException(const char* file, int line,
 {
 }
 
+// cppcheck-suppress internalAstError
 OptionHandlerException::~OptionHandlerException() throw() = default;
 
 std::shared_ptr<Exception> OptionHandlerException::copy() const

@@ -95,6 +95,7 @@ Exception::Exception(const char* file, int line, int errNum,
 {
 }
 
+// cppcheck-suppress internalAstError
 Exception::~Exception() throw() = default;
 
 std::string Exception::stackTrace() const

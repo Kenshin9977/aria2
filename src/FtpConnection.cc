@@ -255,12 +255,11 @@ bool FtpConnection::sendPort(const std::shared_ptr<SocketCore>& serverSocket)
     int rc = sscanf(endpoint.addr.c_str(), "%d.%d.%d.%d", &ipaddr[0],
                     &ipaddr[1], &ipaddr[2], &ipaddr[3]);
     if (rc != 4 || ipaddr[0] < 0 || ipaddr[0] > 255 || ipaddr[1] < 0 ||
-        ipaddr[1] > 255 || ipaddr[2] < 0 || ipaddr[2] > 255 ||
-        ipaddr[3] < 0 || ipaddr[3] > 255) {
-      throw DL_ABORT_EX2(
-          fmt("Invalid IPv4 address for PORT command: %s",
-              endpoint.addr.c_str()),
-          error_code::FTP_PROTOCOL_ERROR);
+        ipaddr[1] > 255 || ipaddr[2] < 0 || ipaddr[2] > 255 || ipaddr[3] < 0 ||
+        ipaddr[3] > 255) {
+      throw DL_ABORT_EX2(fmt("Invalid IPv4 address for PORT command: %s",
+                             endpoint.addr.c_str()),
+                         error_code::FTP_PROTOCOL_ERROR);
     }
     auto svEndpoint = serverSocket->getAddrInfo();
     auto request =

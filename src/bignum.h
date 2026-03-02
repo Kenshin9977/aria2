@@ -34,18 +34,17 @@ private:
   std::unique_ptr<uchar_t[]> buf_;
 
 public:
-  inline ulong() : buf_(aria2::std::make_unique<uchar_t[]>(dim)) {}
-  inline ulong(size_t t) : buf_(aria2::std::make_unique<uchar_t[]>(dim))
+  inline ulong() : buf_(std::make_unique<uchar_t[]>(dim)) {}
+  inline ulong(size_t t) : buf_(std::make_unique<uchar_t[]>(dim))
   {
     memcpy(buf_.get(), (uchar_t*)&t, sizeof(t));
   }
-  inline ulong(const ulong<dim>& rhs)
-      : buf_(aria2::std::make_unique<uchar_t[]>(dim))
+  inline ulong(const ulong<dim>& rhs) : buf_(std::make_unique<uchar_t[]>(dim))
   {
     memcpy(buf_.get(), rhs.buf_.get(), dim);
   }
   explicit inline ulong(const uchar_t* data, size_t size)
-      : buf_(aria2::std::make_unique<uchar_t[]>(dim))
+      : buf_(std::make_unique<uchar_t[]>(dim))
   {
     if (size > dim) {
       throw std::bad_alloc();
