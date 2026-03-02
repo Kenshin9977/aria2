@@ -124,14 +124,14 @@ void UriStruct::swap(UriStruct& other)
 
 void swap(UriStruct& lhs, UriStruct& rhs) { lhs.swap(rhs); }
 
-std::expected<UriStruct, std::string> parse(const std::string& uri)
+Expected<UriStruct, std::string> parse(const std::string& uri)
 {
   uri_split_result res;
   int rv;
   const char* p = uri.c_str();
   rv = uri_split(&res, p);
   if (rv != 0) {
-    return std::unexpected("URI syntax error");
+    return makeUnexpected("URI syntax error");
   }
 
   UriStruct result;
@@ -142,7 +142,7 @@ std::expected<UriStruct, std::string> parse(const std::string& uri)
   if (res.port == 0) {
     uint16_t defPort;
     if ((defPort = getDefaultPort(result.protocol)) == 0) {
-      return std::unexpected("unknown protocol: " + scheme);
+      return makeUnexpected("unknown protocol: " + scheme);
     }
     result.port = defPort;
   }

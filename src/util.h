@@ -55,7 +55,7 @@
 #include <vector>
 #include <memory>
 #include <string_view>
-#include <expected>
+#include "Expected.h"
 
 #include "a2time.h"
 #include "a2netcompat.h"
@@ -213,16 +213,15 @@ std::string fromHex(InputIterator first, InputIterator last)
 
 std::string secfmt(time_t sec);
 
-std::expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
+Expected<int32_t, std::string> parseInt(std::string_view s, int base = 10);
 
 // Valid range: [0, INT32_MAX]
-std::expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
-                                                      int base = 10);
+Expected<uint32_t, std::string> parseUIntNoThrow(std::string_view s,
+                                                 int base = 10);
 
-std::expected<int64_t, std::string> parseLLInt(std::string_view s,
-                                               int base = 10);
+Expected<int64_t, std::string> parseLLInt(std::string_view s, int base = 10);
 
-std::expected<double, std::string> parseDouble(std::string_view s);
+Expected<double, std::string> parseDouble(std::string_view s);
 
 SegList<int> parseIntSegments(std::string_view src);
 

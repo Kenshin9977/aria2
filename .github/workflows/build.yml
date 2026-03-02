@@ -54,9 +54,6 @@ jobs:
       run: |
         echo 'CC=clang-18' >> $GITHUB_ENV
         echo 'CXX=clang++-18' >> $GITHUB_ENV
-        # clang-18 reports __cpp_concepts=201907L but libstdc++ guards
-        # std::expected behind __cpp_concepts>=202002L; override it.
-        echo 'CXXFLAGS=-Wno-macro-redefined -D__cpp_concepts=202002L' >> $GITHUB_ENV
     - name: Setup clang (MacOS)
       if: runner.os == 'macOS' && matrix.compiler == 'clang'
       run: |

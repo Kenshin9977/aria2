@@ -116,21 +116,21 @@ groupEntryByMetaurlName(
   return result;
 }
 
-std::expected<std::unique_ptr<Metalinker>, std::string>
+Expected<std::unique_ptr<Metalinker>, std::string>
 parseFile(const std::string& filename, const std::string& baseUri)
 {
   MetalinkParserStateMachine psm;
   psm.setBaseUri(baseUri);
   if (!xml::parseFile(filename, &psm)) {
-    return std::unexpected("Could not parse Metalink XML document.");
+    return makeUnexpected("Could not parse Metalink XML document.");
   }
   if (!psm.getErrors().empty()) {
-    return std::unexpected(psm.getErrorString());
+    return makeUnexpected(psm.getErrorString());
   }
   return psm.getResult();
 }
 
-std::expected<std::unique_ptr<Metalinker>, std::string>
+Expected<std::unique_ptr<Metalinker>, std::string>
 parseBinaryStream(BinaryStream* bs, const std::string& baseUri)
 {
   MetalinkParserStateMachine psm;
@@ -153,10 +153,10 @@ parseBinaryStream(BinaryStream* bs, const std::string& baseUri)
     }
   }
   if (!retval) {
-    return std::unexpected("Could not parse Metalink XML document.");
+    return makeUnexpected("Could not parse Metalink XML document.");
   }
   if (!psm.getErrors().empty()) {
-    return std::unexpected(psm.getErrorString());
+    return makeUnexpected(psm.getErrorString());
   }
   return psm.getResult();
 }

@@ -38,7 +38,6 @@
 #include "common.h"
 
 #include <cstring>
-#include <expected>
 #include <string>
 #include <vector>
 #include <utility>
@@ -109,14 +108,14 @@ void loadFromMemory(const ValueBase* torrent,
                     const std::string& overrideName = "");
 
 // Parses BitTorrent Magnet URI and returns
-// std::expected<std::unique_ptr<TorrentAttribute>, std::string> which
+// Expected<std::unique_ptr<TorrentAttribute>, std::string> which
 // includes infoHash, name and announceList on success, or an error
 // message string on failure.
 //
 // magnet:?xt=urn:btih:<info-hash>&dn=<name>&tr=<tracker-url>
 // <info-hash> comes in 2 flavors: 40bytes hexadecimal ascii string,
 // or 32bytes Base32 encoded string.
-std::expected<std::unique_ptr<TorrentAttribute>, std::string>
+Expected<std::unique_ptr<TorrentAttribute>, std::string>
 parseMagnet(const std::string& magnet);
 
 // Parses BitTorrent Magnet URI and set them in ctx as a
