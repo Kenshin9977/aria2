@@ -4,6 +4,8 @@
 #include "DHTPeerAnnounceCommand.h"
 #include "DHTGetPeersCommand.h"
 
+#include <cstring>
+
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "TestEngineHelper.h"
