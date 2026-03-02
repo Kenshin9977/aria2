@@ -290,10 +290,7 @@ public:
 
   const std::unique_ptr<CookieStorage>& getCookieStorage() const;
 
-  const std::unique_ptr<HstsStore>& getHstsStore() const
-  {
-    return hstsStore_;
-  }
+  const std::unique_ptr<HstsStore>& getHstsStore() const { return hstsStore_; }
 
 #ifdef ENABLE_BITTORRENT
   const std::unique_ptr<BtRegistry>& getBtRegistry() const

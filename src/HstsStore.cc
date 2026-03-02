@@ -40,8 +40,7 @@
 
 namespace aria2 {
 
-void HstsStore::processHeader(const std::string& host,
-                               const std::string& value)
+void HstsStore::processHeader(const std::string& host, const std::string& value)
 {
   int64_t maxAge = -1;
   bool includeSubdomains = false;
@@ -50,9 +49,8 @@ void HstsStore::processHeader(const std::string& host,
   std::string::size_type pos = 0;
   while (pos < value.size()) {
     auto semi = value.find(';', pos);
-    auto directive = value.substr(pos, semi == std::string::npos
-                                           ? std::string::npos
-                                           : semi - pos);
+    auto directive = value.substr(
+        pos, semi == std::string::npos ? std::string::npos : semi - pos);
     pos = (semi == std::string::npos) ? value.size() : semi + 1;
 
     // Trim whitespace
@@ -91,8 +89,7 @@ void HstsStore::processHeader(const std::string& host,
   entries_[host] = entry;
   A2_LOG_DEBUG(fmt("HSTS: added entry for %s (max-age=%" PRId64
                    ", includeSubDomains=%d)",
-                   host.c_str(), maxAge,
-                   static_cast<int>(includeSubdomains)));
+                   host.c_str(), maxAge, static_cast<int>(includeSubdomains)));
 }
 
 bool HstsStore::shouldUpgrade(const std::string& host) const

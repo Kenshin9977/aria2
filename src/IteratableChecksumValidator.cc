@@ -38,6 +38,7 @@
 #include <cstdlib>
 
 #include "util.h"
+#include "util_security.h"
 #include "message.h"
 #include "PieceStorage.h"
 #include "MessageDigest.h"
@@ -70,7 +71,7 @@ void IteratableChecksumValidator::validateChunk()
   currentOffset_ += length;
   if (finished()) {
     std::string actualDigest = ctx_->digest();
-    if (dctx_->getDigest() == actualDigest) {
+    if (util::security::compare(actualDigest, dctx_->getDigest())) {
       pieceStorage_->markAllPiecesDone();
       dctx_->setChecksumVerified(true);
     }

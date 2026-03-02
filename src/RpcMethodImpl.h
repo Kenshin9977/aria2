@@ -235,7 +235,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.purgeDownloadResult"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.purgeDownloadResult";
+  }
 };
 
 class RemoveDownloadResultRpcMethod : public RpcMethod {
@@ -244,7 +247,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.removeDownloadResult"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.removeDownloadResult";
+  }
 };
 
 class GetUrisRpcMethod : public RpcMethod {
@@ -418,7 +424,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.changeGlobalOption"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.changeGlobalOption";
+  }
 };
 
 class GetVersionRpcMethod : public RpcMethod {
@@ -445,7 +454,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.getGlobalOption"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.getGlobalOption";
+  }
 };
 
 class ChangePositionRpcMethod : public RpcMethod {
@@ -454,7 +466,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.changePosition"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.changePosition";
+  }
 };
 
 class ChangeUriRpcMethod : public RpcMethod {
@@ -472,7 +487,10 @@ protected:
                                      DownloadEngine* e) override;
 
 public:
-  static constexpr const char* getMethodName() { return "aria2.getSessionInfo"; }
+  static constexpr const char* getMethodName()
+  {
+    return "aria2.getSessionInfo";
+  }
 };
 
 class ShutdownRpcMethod : public RpcMethod {
@@ -541,7 +559,10 @@ protected:
 public:
   RpcResponse execute(RpcRequest req, DownloadEngine* e) override;
 
-  static constexpr const char* getMethodName() { return "system.listNotifications"; }
+  static constexpr const char* getMethodName()
+  {
+    return "system.listNotifications";
+  }
 };
 
 class NoSuchMethodRpcMethod : public RpcMethod {

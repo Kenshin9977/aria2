@@ -48,8 +48,8 @@ struct Socks5RequestConnectChain : public ControlChain<ConnectCommand*> {
   int run(ConnectCommand* t, DownloadEngine* e) override
   {
     auto c = std::make_unique<Socks5HandshakeCommand>(
-        t->getCuid(), t->getRequest(), t->getFileEntry(),
-        t->getRequestGroup(), e, t->getProxyRequest(), t->getSocket());
+        t->getCuid(), t->getRequest(), t->getFileEntry(), t->getRequestGroup(),
+        e, t->getProxyRequest(), t->getSocket());
     c->setStatus(Command::STATUS_ONESHOT_REALTIME);
     e->setNoWait(true);
     e->addCommand(std::move(c));

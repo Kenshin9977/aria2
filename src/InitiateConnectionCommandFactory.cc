@@ -70,7 +70,7 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
     }
 
     return std::make_unique<HttpInitiateConnectionCommand>(cuid, req, fileEntry,
-                                                      requestGroup, e);
+                                                           requestGroup, e);
   }
   else if (req->getProtocol() == FTP
 #ifdef ENABLE_SSL
@@ -85,7 +85,7 @@ InitiateConnectionCommandFactory::createInitiateConnectionCommand(
                             req->getUri().c_str()));
     }
     return std::make_unique<FtpInitiateConnectionCommand>(cuid, req, fileEntry,
-                                                     requestGroup, e);
+                                                          requestGroup, e);
   }
   else {
     // these protocols are not supported yet

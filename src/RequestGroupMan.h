@@ -63,8 +63,7 @@ class UriListParser;
 class WrDiskCache;
 class OpenedFileCounter;
 
-using RequestGroupList =
-    IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>>;
+using RequestGroupList = IndexedList<a2_gid_t, std::shared_ptr<RequestGroup>>;
 using DownloadResultList =
     IndexedList<a2_gid_t, std::shared_ptr<DownloadResult>>;
 
@@ -343,10 +342,7 @@ public:
 
   NetStat& getNetStat() { return netStat_; }
 
-  WrDiskCache* getWrDiskCache() const override
-  {
-    return wrDiskCache_.get();
-  }
+  WrDiskCache* getWrDiskCache() const override { return wrDiskCache_.get(); }
 
   // Initializes WrDiskCache according to PREF_DISK_CACHE option.  If
   // its value is 0, cache storage will not be initialized.

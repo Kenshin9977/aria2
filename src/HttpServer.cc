@@ -64,8 +64,8 @@ HttpServer::HttpServer(const std::shared_ptr<SocketCore>& socket)
     : socket_(socket),
       socketRecvBuffer_(std::make_shared<SocketRecvBuffer>(socket_)),
       socketBuffer_(socket),
-      headerProcessor_(
-          std::make_unique<HttpHeaderProcessor>(HttpHeaderProcessor::SERVER_PARSER)),
+      headerProcessor_(std::make_unique<HttpHeaderProcessor>(
+          HttpHeaderProcessor::SERVER_PARSER)),
       lastContentLength_(0),
       bodyConsumed_(0),
       reqType_(RPC_TYPE_NONE),
@@ -334,8 +334,7 @@ bool HttpServer::authenticate()
     return false;
   }
 
-  std::string userpass =
-      base64::decode(credPart.first, credPart.second);
+  std::string userpass = base64::decode(credPart.first, credPart.second);
   auto [userPart, passPart] =
       util::divide(std::begin(userpass), std::end(userpass), ':', false);
   std::string username(userPart.first, userPart.second);

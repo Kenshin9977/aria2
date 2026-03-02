@@ -345,8 +345,8 @@ void RequestGroup::createInitialCommand(
     btRegistry->put(
         gid_->getNumericId(),
         std::make_unique<BtObject>(downloadContext_, pieceStorage_, peerStorage,
-                              btAnnounce, btRuntime,
-                              std::shared_ptr<BtProgressInfoFile>{}));
+                                   btAnnounce, btRuntime,
+                                   std::shared_ptr<BtProgressInfoFile>{}));
 
     if (option_->getAsBool(PREF_ENABLE_DHT) ||
         (!e->getOption()->getAsBool(PREF_DISABLE_IPV6) &&
@@ -431,7 +431,7 @@ void RequestGroup::createInitialCommand(
       if (!option_->getAsBool(PREF_CHECK_INTEGRITY) &&
           !option_->getAsBool(PREF_ALLOW_OVERWRITE) &&
           !option_->getAsBool(PREF_BT_SEED_UNVERIFIED)) {
-          throw DOWNLOAD_FAILURE_EXCEPTION2(
+        throw DOWNLOAD_FAILURE_EXCEPTION2(
             fmt(MSG_FILE_ALREADY_EXISTS,
                 downloadContext_->getBasePath().c_str()),
             error_code::FILE_ALREADY_EXISTS);
@@ -518,8 +518,8 @@ void RequestGroup::createInitialCommand(
     pieceStorage_->getDiskAdaptor()->openFile();
   }
   progressInfoFile_ = std::move(progressInfoFile);
-  processCheckIntegrityEntry(commands,
-                             std::make_unique<StreamCheckIntegrityEntry>(this), e);
+  processCheckIntegrityEntry(
+      commands, std::make_unique<StreamCheckIntegrityEntry>(this), e);
 }
 
 void RequestGroup::processCheckIntegrityEntry(
@@ -611,7 +611,8 @@ void RequestGroup::initPieceStorage()
     tempPieceStorage->getDiskAdaptor()->setOpenedFileCounter(
         groupContext_->getOpenedFileCounter());
   }
-  segmentMan_ = std::make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
+  segmentMan_ =
+      std::make_unique<SegmentMan>(downloadContext_, tempPieceStorage);
   pieceStorage_ = tempPieceStorage;
 
 #ifdef __MINGW32__

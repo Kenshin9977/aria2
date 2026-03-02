@@ -73,10 +73,9 @@ std::unique_ptr<BtHandshakeMessage>
 BtHandshakeMessage::create(std::span<const unsigned char> data)
 {
   if (data.size() < MESSAGE_LENGTH) {
-    throw DL_ABORT_EX(
-        fmt("BtHandshake message too short: %lu < %lu",
-            static_cast<unsigned long>(data.size()),
-            static_cast<unsigned long>(MESSAGE_LENGTH)));
+    throw DL_ABORT_EX(fmt("BtHandshake message too short: %lu < %lu",
+                          static_cast<unsigned long>(data.size()),
+                          static_cast<unsigned long>(MESSAGE_LENGTH)));
   }
   auto msg = std::make_unique<BtHandshakeMessage>();
   msg->pstrlen_ = data[0];

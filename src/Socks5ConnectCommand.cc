@@ -103,8 +103,7 @@ bool Socks5ConnectCommand::doWrite()
   if (writeBuf_.empty()) {
     return true;
   }
-  ssize_t written =
-      getSocket()->writeData(writeBuf_.data(), writeBuf_.size());
+  ssize_t written = getSocket()->writeData(writeBuf_.data(), writeBuf_.size());
   if (written > 0) {
     writeBuf_.erase(0, written);
   }
@@ -220,8 +219,7 @@ bool Socks5ConnectCommand::executeInternal()
           msg = "unknown error";
           break;
         }
-        throw DL_ABORT_EX(
-            fmt("SOCKS5: CONNECT failed: %s (0x%02x)", msg, rep));
+        throw DL_ABORT_EX(fmt("SOCKS5: CONNECT failed: %s (0x%02x)", msg, rep));
       }
 
       // Determine remaining bytes to read based on address type
@@ -239,8 +237,8 @@ bool Socks5ConnectCommand::executeInternal()
         break;
       }
       default:
-        throw DL_ABORT_EX(fmt("SOCKS5: unsupported address type %d",
-                              static_cast<int>(atyp)));
+        throw DL_ABORT_EX(
+            fmt("SOCKS5: unsupported address type %d", static_cast<int>(atyp)));
       }
     }
     state_ = CONNECT_READ_ADDR;

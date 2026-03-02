@@ -114,9 +114,9 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandProxied(
 
     getRequest()->setConnectedAddrInfo(hostname, addr, port);
 
-    auto c = std::make_unique<ConnectCommand>(getCuid(), getRequest(), proxyRequest,
-                                         getFileEntry(), getRequestGroup(),
-                                         getDownloadEngine(), getSocket());
+    auto c = std::make_unique<ConnectCommand>(
+        getCuid(), getRequest(), proxyRequest, getFileEntry(),
+        getRequestGroup(), getDownloadEngine(), getSocket());
     if (isSocks5Proxy()) {
       c->setControlChain(std::make_shared<Socks5RequestConnectChain>());
     }
@@ -196,8 +196,8 @@ std::unique_ptr<Command> FtpInitiateConnectionCommand::createNextCommandPlain(
         ->establishConnection(addr, port);
     getRequest()->setConnectedAddrInfo(hostname, addr, port);
     auto c = std::make_unique<ConnectCommand>(getCuid(), getRequest(), nullptr,
-                                         getFileEntry(), getRequestGroup(),
-                                         getDownloadEngine(), getSocket());
+                                              getFileEntry(), getRequestGroup(),
+                                              getDownloadEngine(), getSocket());
 
     if (getRequest()->getProtocol() == Protocol::SFTP) {
 #ifdef HAVE_LIBSSH2

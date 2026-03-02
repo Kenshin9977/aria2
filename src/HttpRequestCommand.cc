@@ -229,9 +229,8 @@ bool HttpRequestCommand::executeInternal()
 bool HttpRequestCommand::createHttp2Command()
 {
 #ifdef HAVE_LIBNGHTTP2
-  A2_LOG_INFO(
-      fmt("CUID#%" PRId64 " - ALPN negotiated h2, switching to HTTP/2",
-          getCuid()));
+  A2_LOG_INFO(fmt("CUID#%" PRId64 " - ALPN negotiated h2, switching to HTTP/2",
+                  getCuid()));
 
   auto h2session = std::make_shared<Http2Session>(
       std::static_pointer_cast<SocketCore>(getSocket()));

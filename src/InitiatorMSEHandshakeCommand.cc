@@ -167,11 +167,12 @@ bool InitiatorMSEHandshakeCommand::executeInternal()
           peerConnection->presetBuffer(mseHandshake_->getBuffer(),
                                        mseHandshake_->getBufferLength());
         }
-        getDownloadEngine()->addCommand(std::make_unique<PeerInteractionCommand>(
-            getCuid(), requestGroup_, getPeer(), getDownloadEngine(),
-            btRuntime_, pieceStorage_, peerStorage_, getSocket(),
-            PeerInteractionCommand::INITIATOR_SEND_HANDSHAKE,
-            std::move(peerConnection)));
+        getDownloadEngine()->addCommand(
+            std::make_unique<PeerInteractionCommand>(
+                getCuid(), requestGroup_, getPeer(), getDownloadEngine(),
+                btRuntime_, pieceStorage_, peerStorage_, getSocket(),
+                PeerInteractionCommand::INITIATOR_SEND_HANDSHAKE,
+                std::move(peerConnection)));
         return true;
       }
       else {

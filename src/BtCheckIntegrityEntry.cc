@@ -90,7 +90,8 @@ void BtCheckIntegrityEntry::onDownloadFinished(
   if (!option->getAsBool(PREF_HASH_CHECK_ONLY) &&
       option->getAsBool(PREF_BT_HASH_CHECK_SEED)) {
     proceedFileAllocation(
-        commands, std::make_unique<BtFileAllocationEntry>(getRequestGroup()), e);
+        commands, std::make_unique<BtFileAllocationEntry>(getRequestGroup()),
+        e);
   }
 }
 

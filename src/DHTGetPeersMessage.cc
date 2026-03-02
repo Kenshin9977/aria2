@@ -131,10 +131,7 @@ std::unique_ptr<Dict> DHTGetPeersMessage::getArgument()
   return aDict;
 }
 
-const char* DHTGetPeersMessage::getMessageType() const
-{
-  return GET_PEERS;
-}
+const char* DHTGetPeersMessage::getMessageType() const { return GET_PEERS; }
 
 void DHTGetPeersMessage::setPeerAnnounceStorage(DHTPeerAnnounceStorage* storage)
 {

@@ -140,10 +140,7 @@ public:
 
   const std::string& getSameSite() const { return sameSite_; }
 
-  void setSameSite(std::string sameSite)
-  {
-    sameSite_ = std::move(sameSite);
-  }
+  void setSameSite(std::string sameSite) { sameSite_ = std::move(sameSite); }
 
   time_t getCreationTime() const { return creationTime_; }
 

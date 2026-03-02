@@ -71,10 +71,10 @@ void BrotliDecodingStreamFilter::release()
   }
 }
 
-ssize_t BrotliDecodingStreamFilter::transform(
-    const std::shared_ptr<BinaryStream>& out,
-    const std::shared_ptr<Segment>& segment, const unsigned char* inbuf,
-    size_t inlen)
+ssize_t
+BrotliDecodingStreamFilter::transform(const std::shared_ptr<BinaryStream>& out,
+                                      const std::shared_ptr<Segment>& segment,
+                                      const unsigned char* inbuf, size_t inlen)
 {
   bytesProcessed_ = 0;
   ssize_t outlen = 0;
@@ -90,9 +90,8 @@ ssize_t BrotliDecodingStreamFilter::transform(
     size_t availOut = OUTBUF_LENGTH;
     uint8_t* nextOut = outbuf;
 
-    auto result = BrotliDecoderDecompressStream(decoder_, &availIn,
-                                                &nextIn, &availOut,
-                                                &nextOut, nullptr);
+    auto result = BrotliDecoderDecompressStream(decoder_, &availIn, &nextIn,
+                                                &availOut, &nextOut, nullptr);
 
     if (result == BROTLI_DECODER_RESULT_SUCCESS) {
       finished_ = true;

@@ -444,7 +444,7 @@ std::string ParameterOptionHandler::createPossibleValuesString() const
 {
   std::stringstream s;
   std::ranges::copy(validParamValues_,
-                     std::ostream_iterator<std::string>(s, ", "));
+                    std::ostream_iterator<std::string>(s, ", "));
   return util::strip(s.str(), ", ");
 }
 
@@ -507,8 +507,7 @@ void HttpProxyOptionHandler::parseArg(Option& option,
   }
   else {
     std::string uri;
-    if (optarg.starts_with("http://") ||
-        optarg.starts_with("https://") ||
+    if (optarg.starts_with("http://") || optarg.starts_with("https://") ||
         optarg.starts_with("ftp://")) {
       uri = optarg;
     }

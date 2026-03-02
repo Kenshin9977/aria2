@@ -57,7 +57,8 @@ std::unique_ptr<PreDownloadHandler> memoryPreDownloadHandler;
 const PreDownloadHandler* getMemoryPreDownloadHandler()
 {
   if (!memoryPreDownloadHandler) {
-    memoryPreDownloadHandler = std::make_unique<MemoryBufferPreDownloadHandler>();
+    memoryPreDownloadHandler =
+        std::make_unique<MemoryBufferPreDownloadHandler>();
   }
   return memoryPreDownloadHandler.get();
 }
@@ -72,10 +73,11 @@ std::unique_ptr<PostDownloadHandler> metalinkPostDownloadHandler;
 const PreDownloadHandler* getMetalinkPreDownloadHandler()
 {
   if (!metalinkPreDownloadHandler) {
-    metalinkPreDownloadHandler = std::make_unique<MemoryBufferPreDownloadHandler>();
+    metalinkPreDownloadHandler =
+        std::make_unique<MemoryBufferPreDownloadHandler>();
     metalinkPreDownloadHandler->setCriteria(
-        std::make_unique<ContentTypeRequestGroupCriteria>(getMetalinkContentTypes(),
-                                                     getMetalinkExtensions()));
+        std::make_unique<ContentTypeRequestGroupCriteria>(
+            getMetalinkContentTypes(), getMetalinkExtensions()));
   }
   return metalinkPreDownloadHandler.get();
 }
@@ -83,7 +85,8 @@ const PreDownloadHandler* getMetalinkPreDownloadHandler()
 const PostDownloadHandler* getMetalinkPostDownloadHandler()
 {
   if (!metalinkPostDownloadHandler) {
-    metalinkPostDownloadHandler = std::make_unique<MetalinkPostDownloadHandler>();
+    metalinkPostDownloadHandler =
+        std::make_unique<MetalinkPostDownloadHandler>();
   }
   return metalinkPostDownloadHandler.get();
 }
@@ -105,7 +108,7 @@ const PreDownloadHandler* getBtPreDownloadHandler()
         std::make_unique<bittorrent::MemoryBencodePreDownloadHandler>();
     btPreDownloadHandler->setCriteria(
         std::make_unique<ContentTypeRequestGroupCriteria>(getBtContentTypes(),
-                                                     getBtExtensions()));
+                                                          getBtExtensions()));
   }
   return btPreDownloadHandler.get();
 }

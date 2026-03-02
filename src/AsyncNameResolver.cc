@@ -123,8 +123,7 @@ AsyncNameResolver::AsyncNameResolver(int family, const std::string& servers)
 
   int rv = ares_init_options(&channel_, &opts, ARES_OPT_SOCK_STATE_CB);
   if (rv != ARES_SUCCESS) {
-    throw DL_ABORT_EX(fmt("ares_init_options() failed: %s",
-                          ares_strerror(rv)));
+    throw DL_ABORT_EX(fmt("ares_init_options() failed: %s", ares_strerror(rv)));
   }
 
   if (!servers.empty()) {

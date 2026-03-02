@@ -178,8 +178,7 @@ HandshakeExtensionMessage::create(const unsigned char* data, size_t length)
       port && 0 < port->i() && port->i() < 65536) {
     msg->tcpPort_ = port->i();
   }
-  if (const auto* version =
-          downcast<String>(dict->get("v"))) {
+  if (const auto* version = downcast<String>(dict->get("v"))) {
     msg->clientVersion_ = version->s();
   }
   if (const auto* extDict = downcast<Dict>(dict->get("m"))) {

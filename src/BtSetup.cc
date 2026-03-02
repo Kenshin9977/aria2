@@ -94,7 +94,8 @@ void BtSetup::setup(std::vector<std::unique_ptr<Command>>& commands,
                     RequestGroup* requestGroup, DownloadEngine* e,
                     const Option* option)
 {
-  if (!requestGroup->getDownloadContext()->hasAttribute(ContextAttributeType::CTX_ATTR_BT)) {
+  if (!requestGroup->getDownloadContext()->hasAttribute(
+          ContextAttributeType::CTX_ATTR_BT)) {
     return;
   }
   auto torrentAttrs =
@@ -108,7 +109,8 @@ void BtSetup::setup(std::vector<std::unique_ptr<Command>>& commands,
   auto& btAnnounce = btObject->btAnnounce;
   // commands
   {
-    auto c = std::make_unique<TrackerWatcherCommand>(e->newCUID(), requestGroup, e);
+    auto c =
+        std::make_unique<TrackerWatcherCommand>(e->newCUID(), requestGroup, e);
     c->setPeerStorage(peerStorage);
     c->setPieceStorage(pieceStorage);
     c->setBtRuntime(btRuntime);
@@ -175,7 +177,7 @@ void BtSetup::setup(std::vector<std::unique_ptr<Command>>& commands,
     }
     if (!unionCri->getSeedCriterion().empty()) {
       auto c = std::make_unique<SeedCheckCommand>(e->newCUID(), requestGroup, e,
-                                             std::move(unionCri));
+                                                  std::move(unionCri));
       c->setPieceStorage(pieceStorage);
       c->setBtRuntime(btRuntime);
       commands.push_back(std::move(c));
@@ -247,8 +249,8 @@ void BtSetup::setup(std::vector<std::unique_ptr<Command>>& commands,
                         " localAddr=%s",
                         LPD_MULTICAST_ADDR, LPD_MULTICAST_PORT,
                         receiver->getLocalAddress().c_str()));
-        e->addCommand(
-            std::make_unique<LpdReceiveMessageCommand>(e->newCUID(), receiver, e));
+        e->addCommand(std::make_unique<LpdReceiveMessageCommand>(e->newCUID(),
+                                                                 receiver, e));
       }
       else {
         A2_LOG_INFO("LpdMessageReceiver not initialized.");
@@ -264,8 +266,8 @@ void BtSetup::setup(std::vector<std::unique_ptr<Command>>& commands,
       if (dispatcher->init(btReg->getLpdMessageReceiver()->getLocalAddress(),
                            /*ttl*/ 1, /*loop*/ 1)) {
         A2_LOG_INFO("LpdMessageDispatcher initialized.");
-        auto cmd =
-            std::make_unique<LpdDispatchMessageCommand>(e->newCUID(), dispatcher, e);
+        auto cmd = std::make_unique<LpdDispatchMessageCommand>(e->newCUID(),
+                                                               dispatcher, e);
         cmd->setBtRuntime(btRuntime);
         e->addCommand(std::move(cmd));
       }

@@ -56,8 +56,7 @@ private:
   static constexpr size_t OUTBUF_LENGTH = 16_k;
 
 public:
-  ZstdDecodingStreamFilter(
-      std::unique_ptr<StreamFilter> delegate = nullptr);
+  ZstdDecodingStreamFilter(std::unique_ptr<StreamFilter> delegate = nullptr);
 
   ~ZstdDecodingStreamFilter() override;
 

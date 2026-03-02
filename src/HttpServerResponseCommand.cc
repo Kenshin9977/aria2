@@ -59,7 +59,7 @@ void HttpServerResponseCommand::afterSend(
   if (httpServer->supportsPersistentConnection()) {
     A2_LOG_INFO(fmt("CUID#%" PRId64 " - Persist connection.", getCuid()));
     e->addCommand(std::make_unique<HttpServerCommand>(getCuid(), httpServer, e,
-                                                 httpServer->getSocket()));
+                                                      httpServer->getSocket()));
   }
 }
 

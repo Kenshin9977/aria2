@@ -62,7 +62,7 @@ IteratableChunkChecksumValidator::IteratableChunkChecksumValidator(
     : dctx_(dctx),
       pieceStorage_(pieceStorage),
       bitfield_(std::make_unique<BitfieldMan>(dctx_->getPieceLength(),
-                                         dctx_->getTotalLength())),
+                                              dctx_->getTotalLength())),
       currentIndex_(0),
       batchSize_(std::max(1u, std::thread::hardware_concurrency()))
 {
@@ -95,12 +95,11 @@ void IteratableChunkChecksumValidator::validateChunk()
       pieces[i].data = readPiece(idx);
     }
     catch (RecoverableException& ex) {
-      A2_LOG_DEBUG_EX(
-          fmt("Caught exception while reading piece index=%lu."
-              " Some part of file may be missing."
-              " Continue operation.",
-              static_cast<unsigned long>(idx)),
-          ex);
+      A2_LOG_DEBUG_EX(fmt("Caught exception while reading piece index=%lu."
+                          " Some part of file may be missing."
+                          " Continue operation.",
+                          static_cast<unsigned long>(idx)),
+                      ex);
       pieces[i].readOk = false;
     }
   }
@@ -111,11 +110,9 @@ void IteratableChunkChecksumValidator::validateChunk()
   futures.reserve(batchCount);
   for (auto& p : pieces) {
     if (p.readOk) {
-      futures.push_back(std::async(
-          std::launch::async,
-          [&hashType, &p]() {
-            return hashData(hashType, p.data.data(), p.data.size());
-          }));
+      futures.push_back(std::async(std::launch::async, [&hashType, &p]() {
+        return hashData(hashType, p.data.data(), p.data.size());
+      }));
     }
     else {
       std::promise<std::string> prom;
@@ -136,12 +133,11 @@ void IteratableChunkChecksumValidator::validateChunk()
         bitfield_->setBit(idx);
       }
       else {
-        A2_LOG_INFO(
-            fmt(EX_INVALID_CHUNK_CHECKSUM,
-                static_cast<unsigned long>(idx),
-                static_cast<int64_t>(idx) * dctx_->getPieceLength(),
-                util::toHex(dctx_->getPieceHashes()[idx]).c_str(),
-                util::toHex(actualChecksum).c_str()));
+        A2_LOG_INFO(fmt(EX_INVALID_CHUNK_CHECKSUM,
+                        static_cast<unsigned long>(idx),
+                        static_cast<int64_t>(idx) * dctx_->getPieceLength(),
+                        util::toHex(dctx_->getPieceHashes()[idx]).c_str(),
+                        util::toHex(actualChecksum).c_str()));
         bitfield_->unsetBit(idx);
       }
     }
@@ -172,8 +168,8 @@ IteratableChunkChecksumValidator::readPiece(size_t index)
     size_t r = pieceStorage_->getDiskAdaptor()->readDataDropCache(
         buf.data() + pos, length - pos, offset + pos);
     if (r == 0) {
-      throw DL_ABORT_EX(fmt(EX_FILE_READ, dctx_->getBasePath().c_str(),
-                            "data is too short"));
+      throw DL_ABORT_EX(
+          fmt(EX_FILE_READ, dctx_->getBasePath().c_str(), "data is too short"));
     }
     pos += r;
   }

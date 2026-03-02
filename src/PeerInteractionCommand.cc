@@ -133,8 +133,9 @@ PeerInteractionCommand::PeerInteractionCommand(
   exMsgRegistry->setExtensionMessageID(ExtensionMessageRegistry::UT_METADATA,
                                        9);
 
-  auto extensionMessageFactory = std::make_unique<DefaultExtensionMessageFactory>(
-      getPeer(), exMsgRegistry.get());
+  auto extensionMessageFactory =
+      std::make_unique<DefaultExtensionMessageFactory>(getPeer(),
+                                                       exMsgRegistry.get());
   auto extensionMessageFactoryPtr = extensionMessageFactory.get();
   extensionMessageFactory->setPeerStorage(peerStorage.get());
   extensionMessageFactory->setDownloadContext(
@@ -166,7 +167,8 @@ PeerInteractionCommand::PeerInteractionCommand(
   }
 
   if (!peerConnection) {
-    peerConnection = std::make_unique<PeerConnection>(cuid, getPeer(), getSocket());
+    peerConnection =
+        std::make_unique<PeerConnection>(cuid, getPeer(), getSocket());
   }
   else {
     if (sequence_ == RECEIVER_WAIT_HANDSHAKE &&
@@ -261,8 +263,10 @@ PeerInteractionCommand::PeerInteractionCommand(
   }
 
   if (metadataGetMode) {
-    auto utMetadataRequestFactory = std::make_unique<UTMetadataRequestFactory>();
-    auto utMetadataRequestTracker = std::make_unique<UTMetadataRequestTracker>();
+    auto utMetadataRequestFactory =
+        std::make_unique<UTMetadataRequestFactory>();
+    auto utMetadataRequestTracker =
+        std::make_unique<UTMetadataRequestTracker>();
 
     utMetadataRequestFactory->setCuid(cuid);
     utMetadataRequestFactory->setDownloadContext(

@@ -50,13 +50,11 @@ namespace aria2 {
 template <typename SeqType, typename ValueType, typename ReferenceType,
           typename PointerType, typename SeqIteratorType>
 struct IndexedListIterator {
-  using iterator =
-      IndexedListIterator<SeqType, ValueType, ValueType&, ValueType*,
-                          typename SeqType::iterator>;
+  using iterator = IndexedListIterator<SeqType, ValueType, ValueType&,
+                                       ValueType*, typename SeqType::iterator>;
   using const_iterator =
       IndexedListIterator<SeqType, ValueType, const ValueType&,
-                          const ValueType*,
-                          typename SeqType::const_iterator>;
+                          const ValueType*, typename SeqType::const_iterator>;
 
   using iterator_category = typename SeqIteratorType::iterator_category;
   using value_type = ValueType;
@@ -188,8 +186,8 @@ public:
   using SeqType = std::deque<std::pair<KeyType, ValuePtrType>>;
 
   using iterator =
-      IndexedListIterator<SeqType, ValuePtrType, ValuePtrType&,
-                          ValuePtrType*, typename SeqType::iterator>;
+      IndexedListIterator<SeqType, ValuePtrType, ValuePtrType&, ValuePtrType*,
+                          typename SeqType::iterator>;
   using const_iterator =
       IndexedListIterator<SeqType, ValuePtrType, const ValuePtrType&,
                           const ValuePtrType*,
@@ -428,8 +426,7 @@ public:
   // returns ValuePtrType().  Complexity: O(1)
   ValuePtrType get(KeyType key) const
   {
-    if (auto idxent = index_.find(key);
-        idxent == std::end(index_)) {
+    if (auto idxent = index_.find(key); idxent == std::end(index_)) {
       return ValuePtrType();
     }
     else {

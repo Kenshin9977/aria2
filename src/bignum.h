@@ -39,7 +39,8 @@ public:
   {
     memcpy(buf_.get(), (uchar_t*)&t, sizeof(t));
   }
-  inline ulong(const ulong<dim>& rhs) : buf_(aria2::std::make_unique<uchar_t[]>(dim))
+  inline ulong(const ulong<dim>& rhs)
+      : buf_(aria2::std::make_unique<uchar_t[]>(dim))
   {
     memcpy(buf_.get(), rhs.buf_.get(), dim);
   }

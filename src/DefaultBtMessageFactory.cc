@@ -338,8 +338,8 @@ DefaultBtMessageFactory::createNotInterestedMessage()
 std::unique_ptr<BtBitfieldMessage>
 DefaultBtMessageFactory::createBitfieldMessage()
 {
-  auto msg = std::make_unique<BtBitfieldMessage>(pieceStorage_->getBitfield(),
-                                            pieceStorage_->getBitfieldLength());
+  auto msg = std::make_unique<BtBitfieldMessage>(
+      pieceStorage_->getBitfield(), pieceStorage_->getBitfieldLength());
   setCommonProperty(msg.get());
   return msg;
 }

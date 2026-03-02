@@ -57,8 +57,7 @@ bool parseChallenge(const std::string& header, DigestChallenge& result);
 
 // Compute H(data) using the given algorithm ("md5" or "sha-256").
 // Returns lowercase hex string. Empty string on unsupported algo.
-std::string hashHex(const std::string& algorithm,
-                    const std::string& data);
+std::string hashHex(const std::string& algorithm, const std::string& data);
 
 // Generate a random cnonce (16 hex characters).
 std::string generateCnonce();
@@ -67,10 +66,8 @@ std::string generateCnonce();
 // (RFC 7616). Returns the complete "Digest username=..., ..." string.
 std::string computeAuthHeader(const std::string& user,
                               const std::string& password,
-                              const std::string& method,
-                              const std::string& uri,
-                              const DigestChallenge& challenge,
-                              uint32_t nc);
+                              const std::string& method, const std::string& uri,
+                              const DigestChallenge& challenge, uint32_t nc);
 
 // Map RFC 7616 algorithm names (e.g. "MD5", "SHA-256") to
 // MessageDigest hash type strings (e.g. "md5", "sha-256").

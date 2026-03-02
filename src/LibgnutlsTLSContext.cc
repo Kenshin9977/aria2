@@ -51,7 +51,7 @@
 namespace aria2 {
 
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
-                                              TLSVersion ver)
+                                             TLSVersion ver)
 {
   return std::make_unique<GnuTLSContext>(side, ver);
 }
@@ -109,8 +109,7 @@ bool GnuTLSContext::addP12CredentialFile(const std::string& p12file)
   BufferedFile(p12file.c_str(), BufferedFile::READ).transfer(ss);
   auto datastr = ss.str();
   const gnutls_datum_t data = {
-      reinterpret_cast<unsigned char*>(
-          const_cast<char*>(datastr.c_str())),
+      reinterpret_cast<unsigned char*>(const_cast<char*>(datastr.c_str())),
       static_cast<unsigned int>(datastr.length())};
   int err = gnutls_certificate_set_x509_simple_pkcs12_mem(
       certCred_, &data, GNUTLS_X509_FMT_DER, "");

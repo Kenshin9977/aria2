@@ -134,8 +134,8 @@ void writeHeader(Output& fp, Logger::LEVEL level, const char* sourceFile,
       strftime(datestr, sizeof(datestr), "%Y-%m-%d %H:%M:%S", &tm);
   assert(dateLength <= static_cast<size_t>(20));
   fp.printf("%s.%06ld [%s] [%s:%d] ", datestr,
-            static_cast<unsigned long>(tv.tv_usec),
-            levelToString(level), sourceFile, lineNum);
+            static_cast<unsigned long>(tv.tv_usec), levelToString(level),
+            sourceFile, lineNum);
 }
 } // namespace
 

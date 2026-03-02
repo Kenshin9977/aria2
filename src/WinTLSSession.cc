@@ -123,8 +123,7 @@ namespace aria2 {
 
 std::unique_ptr<TLSSession> TLSSession::make(TLSContext* ctx)
 {
-  return std::make_unique<WinTLSSession>(
-      static_cast<WinTLSContext*>(ctx));
+  return std::make_unique<WinTLSSession>(static_cast<WinTLSContext*>(ctx));
 }
 
 WinTLSSession::WinTLSSession(WinTLSContext* ctx)

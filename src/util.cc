@@ -204,7 +204,6 @@ int32_t difftvsec(struct timeval tv1, struct timeval tv2)
   return tv1.tv_sec - tv2.tv_sec;
 }
 
-
 bool inRFC3986ReservedChars(const char c)
 {
   static const char reserved[] = {':', '/',  '?', '#', '[', ']', '@', '!', '$',
@@ -662,16 +661,18 @@ void parsePrioritizePieceRange(
     }
     else if (util::startsWith(first, last, "head=")) {
       std::string sizestr(first + 5, last);
-      computeHeadPieces(indexes, fileEntries, pieceLength,
-                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
+      computeHeadPieces(
+          indexes, fileEntries, pieceLength,
+          std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
     else if (util::streq(first, last, "tail")) {
       computeTailPieces(indexes, fileEntries, pieceLength, defaultSize);
     }
     else if (util::startsWith(first, last, "tail=")) {
       std::string sizestr(first + 5, last);
-      computeTailPieces(indexes, fileEntries, pieceLength,
-                        std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
+      computeTailPieces(
+          indexes, fileEntries, pieceLength,
+          std::max(static_cast<int64_t>(0), getRealSize(sizestr)));
     }
     else {
       throw DL_ABORT_EX(
@@ -1859,9 +1860,9 @@ void convertBitfield(BitfieldMan* dest, const BitfieldMan* src)
 {
   size_t numBlock = dest->countBlock();
   for (size_t index = 0; index < numBlock; ++index) {
-    if (src->isBitSetOffsetRange(
-            static_cast<int64_t>(index) * dest->getBlockLength(),
-            dest->getBlockLength())) {
+    if (src->isBitSetOffsetRange(static_cast<int64_t>(index) *
+                                     dest->getBlockLength(),
+                                 dest->getBlockLength())) {
       dest->setBit(index);
     }
   }
@@ -1948,18 +1949,15 @@ std::string htmlEscape(std::string_view src)
 
 std::pair<size_t, std::string> parseIndexPath(std::string_view line)
 {
-  auto [indexPart, pathPart] =
-      divide(std::begin(line), std::end(line), '=');
-  auto index =
-      parseUIntNoThrow(std::string(indexPart.first, indexPart.second));
+  auto [indexPart, pathPart] = divide(std::begin(line), std::end(line), '=');
+  auto index = parseUIntNoThrow(std::string(indexPart.first, indexPart.second));
   if (!index) {
     throw DL_ABORT_EX("Bad path index");
   }
   if (pathPart.first == pathPart.second) {
     throw DL_ABORT_EX(fmt("Path with index=%u is empty.", *index));
   }
-  return std::make_pair(*index,
-                        std::string(pathPart.first, pathPart.second));
+  return std::make_pair(*index, std::string(pathPart.first, pathPart.second));
 }
 
 std::vector<std::pair<size_t, std::string>> createIndexPaths(std::istream& i)
@@ -2049,8 +2047,7 @@ void generateRandomKey(unsigned char* key)
 // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
 bool inPrivateAddress(std::string_view ipv4addr)
 {
-  if (ipv4addr.starts_with("10.") ||
-      ipv4addr.starts_with("192.168.")) {
+  if (ipv4addr.starts_with("10.") || ipv4addr.starts_with("192.168.")) {
     return true;
   }
   if (ipv4addr.starts_with("172.")) {
@@ -2077,10 +2074,8 @@ bool detectDirTraversal(std::string_view s)
     }
   }
   return s == "." || s == ".." || s[0] == '/' || s.starts_with("./") ||
-         s.starts_with("../") ||
-         s.find("/../") != std::string_view::npos ||
-         s.find("/./") != std::string_view::npos ||
-         s[s.size() - 1] == '/' ||
+         s.starts_with("../") || s.find("/../") != std::string_view::npos ||
+         s.find("/./") != std::string_view::npos || s[s.size() - 1] == '/' ||
          s.ends_with("/.") || s.ends_with("/..");
 }
 

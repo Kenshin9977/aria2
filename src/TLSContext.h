@@ -53,13 +53,13 @@ enum TLSVersion {
 
 class TLSContext {
 public:
-  [[nodiscard]] static std::unique_ptr<TLSContext>
-  make(TLSSessionSide side, TLSVersion minVer);
+  [[nodiscard]] static std::unique_ptr<TLSContext> make(TLSSessionSide side,
+                                                        TLSVersion minVer);
   virtual ~TLSContext() = default;
 
   // private key `keyfile' must be decrypted.
-  [[nodiscard]] virtual bool addCredentialFile(
-      const std::string& certfile, const std::string& keyfile) = 0;
+  [[nodiscard]] virtual bool addCredentialFile(const std::string& certfile,
+                                               const std::string& keyfile) = 0;
 
   [[nodiscard]] virtual bool addSystemTrustedCACerts() = 0;
 

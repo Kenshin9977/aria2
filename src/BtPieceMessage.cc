@@ -61,6 +61,7 @@
 #include "WrDiskCacheEntry.h"
 #include "DownloadFailureException.h"
 #include "BtRejectMessage.h"
+#include "util_security.h"
 
 namespace aria2 {
 
@@ -85,9 +86,9 @@ BtPieceMessage::create(std::span<const unsigned char> data)
 {
   bittorrent::assertPayloadLengthGreater(9, data.size(), NAME);
   bittorrent::assertID(ID, data.data(), NAME);
-  return std::make_unique<BtPieceMessage>(bittorrent::getIntParam(data.data(), 1),
-                                     bittorrent::getIntParam(data.data(), 5),
-                                     data.size() - 9);
+  return std::make_unique<BtPieceMessage>(
+      bittorrent::getIntParam(data.data(), 1),
+      bittorrent::getIntParam(data.data(), 5), data.size() - 9);
 }
 
 void BtPieceMessage::doReceivedAction()
@@ -221,8 +222,8 @@ void BtPieceMessage::pushPieceData(int64_t offset, int32_t length) const
   if (r == length) {
     const auto& peer = getPeer();
     getPeerConnection()->pushBytes(
-        std::move(buf), std::make_unique<PieceSendUpdate>(downloadContext_, peer,
-                                                     MESSAGE_HEADER_LENGTH));
+        std::move(buf), std::make_unique<PieceSendUpdate>(
+                            downloadContext_, peer, MESSAGE_HEADER_LENGTH));
     peer->updateUploadSpeed(length);
     downloadContext_->updateUploadSpeed(length);
   }
@@ -242,16 +243,17 @@ bool BtPieceMessage::checkPieceHash(const std::shared_ptr<Piece>& piece)
   if (!getPieceStorage()->isEndGame() && piece->isHashCalculated()) {
     A2_LOG_DEBUG(fmt("Hash is available!! index=%lu",
                      static_cast<unsigned long>(piece->getIndex())));
-    return piece->getDigest() ==
-           downloadContext_->getPieceHash(piece->getIndex());
+    return util::security::compare(
+        piece->getDigest(), downloadContext_->getPieceHash(piece->getIndex()));
   }
   else {
     A2_LOG_DEBUG(fmt("Calculating hash index=%lu",
                      static_cast<unsigned long>(piece->getIndex())));
     try {
-      return piece->getDigestWithWrCache(downloadContext_->getPieceLength(),
-                                         getPieceStorage()->getDiskAdaptor()) ==
-             downloadContext_->getPieceHash(piece->getIndex());
+      return util::security::compare(
+          piece->getDigestWithWrCache(downloadContext_->getPieceLength(),
+                                      getPieceStorage()->getDiskAdaptor()),
+          downloadContext_->getPieceHash(piece->getIndex()));
     }
     catch (RecoverableException& e) {
       piece->clearAllBlock(getPieceStorage()->getWrDiskCache());

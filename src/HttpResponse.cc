@@ -202,8 +202,8 @@ bool hasToken(std::string_view field, std::string_view token)
   std::vector<std::pair<std::string_view::const_iterator,
                         std::string_view::const_iterator>>
       tokens;
-  util::splitIter(field.begin(), field.end(), std::back_inserter(tokens),
-                  ',', true);
+  util::splitIter(field.begin(), field.end(), std::back_inserter(tokens), ',',
+                  true);
   return std::ranges::any_of(tokens, [&token](const auto& t) {
     return util::strieq(t.first, t.second, token.begin(), token.end());
   });
@@ -349,8 +349,7 @@ bool parseMetalinkHttpLink(MetalinkHttpEntry& result, const std::string& s)
   bool ok = false;
   while (1) {
     std::string name, value;
-    auto [nextItr, found] =
-        util::nextParam(name, value, last, s.end(), ';');
+    auto [nextItr, found] = util::nextParam(name, value, last, s.end(), ';');
     last = nextItr;
 
     if (!found) {
@@ -399,8 +398,7 @@ void HttpResponse::getMetalinKHttpEntries(
     std::vector<MetalinkHttpEntry>& result,
     const std::shared_ptr<Option>& option) const
 {
-  auto [linkIt, linkEnd] =
-      httpHeader_->equalRange(HttpHeader::LINK);
+  auto [linkIt, linkEnd] = httpHeader_->equalRange(HttpHeader::LINK);
   for (; linkIt != linkEnd; ++linkIt) {
     MetalinkHttpEntry e;
     if (parseMetalinkHttpLink(e, (*linkIt).second)) {
@@ -431,8 +429,7 @@ void HttpResponse::getMetalinKHttpEntries(
 // http://tools.ietf.org/html/rfc3230.
 void HttpResponse::getDigest(std::vector<Checksum>& result) const
 {
-  auto [digestIt, digestEnd] =
-      httpHeader_->equalRange(HttpHeader::DIGEST);
+  auto [digestIt, digestEnd] = httpHeader_->equalRange(HttpHeader::DIGEST);
   for (; digestIt != digestEnd; ++digestIt) {
     const std::string& s = (*digestIt).second;
     std::string::const_iterator itr = s.begin();

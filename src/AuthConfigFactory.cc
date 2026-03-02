@@ -64,8 +64,7 @@ AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
                                     const Option* op)
 {
   using enum Protocol;
-  if (request->getProtocol() == HTTP ||
-      request->getProtocol() == HTTPS) {
+  if (request->getProtocol() == HTTP || request->getProtocol() == HTTPS) {
     if (op->getAsBool(PREF_HTTP_AUTH_CHALLENGE)) {
       if (!request->getUsername().empty()) {
         updateBasicCred(std::make_unique<BasicCred>(
@@ -94,8 +93,7 @@ AuthConfigFactory::createAuthConfig(const std::shared_ptr<Request>& request,
       }
     }
   }
-  else if (request->getProtocol() == FTP ||
-           request->getProtocol() == FTPS ||
+  else if (request->getProtocol() == FTP || request->getProtocol() == FTPS ||
            request->getProtocol() == SFTP) {
     if (!request->getUsername().empty()) {
       if (request->hasPassword()) {
@@ -194,8 +192,8 @@ bool AuthConfigFactory::activateBasicCred(const std::string& host,
     }
     else {
       basicCreds_.insert(std::make_unique<BasicCred>(authConfig->getUser(),
-                                                authConfig->getPassword(), host,
-                                                port, path, true));
+                                                     authConfig->getPassword(),
+                                                     host, port, path, true));
       return true;
     }
   }
@@ -257,13 +255,12 @@ std::string AuthConfigFactory::makeDigestKey(const std::string& host,
   return host + ":" + util::uitos(port);
 }
 
-void AuthConfigFactory::updateDigestCred(const std::string& host,
-                                         uint16_t port,
+void AuthConfigFactory::updateDigestCred(const std::string& host, uint16_t port,
                                          DigestChallenge challenge)
 {
   auto key = makeDigestKey(host, port);
-  digestCreds_[key] = std::make_unique<DigestCred>(host, port,
-                                                   std::move(challenge));
+  digestCreds_[key] =
+      std::make_unique<DigestCred>(host, port, std::move(challenge));
 }
 
 DigestCred* AuthConfigFactory::findDigestCred(const std::string& host,
@@ -315,14 +312,13 @@ bool AuthConfigFactory::activateDigestCred(const std::string& host,
   // BasicCred (which stores user/password regardless of scheme).
   auto i = findBasicCred(host, port, "/");
   if (i == std::end(basicCreds_)) {
-    auto authConfig =
-        createHttpAuthResolver(op)->resolveAuthConfig(host);
+    auto authConfig = createHttpAuthResolver(op)->resolveAuthConfig(host);
     if (!authConfig) {
       return false;
     }
-    basicCreds_.insert(std::make_unique<BasicCred>(
-        authConfig->getUser(), authConfig->getPassword(), host, port,
-        "/", true));
+    basicCreds_.insert(std::make_unique<BasicCred>(authConfig->getUser(),
+                                                   authConfig->getPassword(),
+                                                   host, port, "/", true));
   }
   else {
     (*i)->activate();

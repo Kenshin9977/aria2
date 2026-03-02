@@ -343,8 +343,9 @@ size_t DefaultBtInteractive::receiveMessages()
       (countOldOutstandingRequest - dispatcher_->countOutstandingRequest()) *
               4 >=
           maxOutstandingRequest_) {
-    maxOutstandingRequest_ = std::min(static_cast<size_t>(UB_MAX_OUTSTANDING_REQUEST),
-                                      maxOutstandingRequest_ * 2);
+    maxOutstandingRequest_ =
+        std::min(static_cast<size_t>(UB_MAX_OUTSTANDING_REQUEST),
+                 maxOutstandingRequest_ * 2);
   }
   return msgcount;
 }

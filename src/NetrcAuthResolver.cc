@@ -71,7 +71,8 @@ NetrcAuthResolver::findNetrcAuthenticator(const std::string& hostname) const
         return getDefaultAuthConfig();
       }
       else {
-        return std::make_unique<AuthConfig>(auth->getLogin(), auth->getPassword());
+        return std::make_unique<AuthConfig>(auth->getLogin(),
+                                            auth->getPassword());
       }
     }
   }

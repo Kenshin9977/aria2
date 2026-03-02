@@ -279,8 +279,7 @@ ssize_t AbstractDiskWriter::writeDataInternal(const unsigned char* data,
       }
 #else  // !__MINGW32__
       ssize_t ret = 0;
-      while ((ret = a2pwrite(fd_, data + writtenLength,
-                             len - writtenLength,
+      while ((ret = a2pwrite(fd_, data + writtenLength, len - writtenLength,
                              offset + writtenLength)) == -1 &&
              errno == EINTR)
         ;

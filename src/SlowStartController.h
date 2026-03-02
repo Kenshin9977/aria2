@@ -84,8 +84,7 @@ public:
       return;
     }
     if (lastSpeed_ > 0 && currentSpeed > lastSpeed_) {
-      double gain =
-          static_cast<double>(currentSpeed - lastSpeed_) / lastSpeed_;
+      double gain = static_cast<double>(currentSpeed - lastSpeed_) / lastSpeed_;
       if (gain >= 0.10) {
         allowed_ = std::min(allowed_ * 2, ceiling_);
       }

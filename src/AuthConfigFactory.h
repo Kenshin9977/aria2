@@ -92,9 +92,8 @@ struct DigestCred {
 
 class AuthConfigFactory {
 public:
-  using BasicCredSet =
-      std::set<std::unique_ptr<BasicCred>,
-               DerefLess<std::unique_ptr<BasicCred>>>;
+  using BasicCredSet = std::set<std::unique_ptr<BasicCred>,
+                                DerefLess<std::unique_ptr<BasicCred>>>;
 
 private:
   std::unique_ptr<Netrc> netrc_;
@@ -158,8 +157,7 @@ public:
   // store challenge, and activate credentials. Returns true if
   // Digest auth was activated.
   bool activateDigestCred(const std::string& host, uint16_t port,
-                          const std::string& wwwAuthenticate,
-                          const Option* op);
+                          const std::string& wwwAuthenticate, const Option* op);
 };
 
 } // namespace aria2

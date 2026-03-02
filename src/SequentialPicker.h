@@ -73,14 +73,12 @@ public:
 
   size_t countEntryInQueue() const { return entries_.size(); }
 
-  template <typename Pred>
-  bool isPicked(const Pred& pred) const
+  template <typename Pred> bool isPicked(const Pred& pred) const
   {
     return pickedEntry_ && pred(*pickedEntry_);
   }
 
-  template <typename Pred>
-  bool isQueued(const Pred& pred) const
+  template <typename Pred> bool isQueued(const Pred& pred) const
   {
     for (auto& e : entries_) {
       if (pred(*e)) {

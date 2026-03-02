@@ -78,8 +78,8 @@ bool HttpListenCommand::execute()
                       endpoint.addr.c_str(), endpoint.port));
 
       e_->setNoWait(true);
-      e_->addCommand(
-          std::make_unique<HttpServerCommand>(e_->newCUID(), e_, socket, secure_));
+      e_->addCommand(std::make_unique<HttpServerCommand>(e_->newCUID(), e_,
+                                                         socket, secure_));
     }
   }
   catch (RecoverableException& e) {

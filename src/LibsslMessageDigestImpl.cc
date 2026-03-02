@@ -79,8 +79,7 @@ public:
     auto bytes = reinterpret_cast<const char*>(data);
     while (length) {
       size_t l = std::min(
-          length,
-          static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
+          length, static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
       EVP_DigestUpdate(ctx_, bytes, l);
       length -= l;
       bytes += l;

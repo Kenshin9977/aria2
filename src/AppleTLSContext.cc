@@ -178,7 +178,7 @@ bool checkIdentity(const SecIdentityRef id, const std::string& fingerPrint,
 namespace aria2 {
 
 std::unique_ptr<TLSContext> TLSContext::make(TLSSessionSide side,
-                                              TLSVersion ver)
+                                             TLSVersion ver)
 {
   return std::make_unique<AppleTLSContext>(side, ver);
 }

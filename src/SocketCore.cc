@@ -65,6 +65,7 @@
 #endif // ENABLE_SSL
 #ifdef HAVE_LIBSSH2
 #  include "SSHSession.h"
+#  include "error_code.h"
 #endif // HAVE_LIBSSH2
 
 namespace aria2 {
@@ -844,8 +845,7 @@ ssize_t SocketCore::writeData(const void* data, size_t len)
         throw DL_RETRY_EX(
             fmt(EX_SOCKET_SEND, tlsSession_->getLastErrorString().c_str()));
       }
-      if (tlsSession_->checkDirection() ==
-          TLSDirection::TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() == TLSDirection::TLS_WANT_READ) {
         wantRead_ = true;
       }
       else {
@@ -906,8 +906,7 @@ void SocketCore::readData(void* data, size_t& len)
           throw DL_RETRY_EX(
               fmt(EX_SOCKET_RECV, tlsSession_->getLastErrorString().c_str()));
         }
-        if (tlsSession_->checkDirection() ==
-            TLSDirection::TLS_WANT_READ) {
+        if (tlsSession_->checkDirection() == TLSDirection::TLS_WANT_READ) {
           wantRead_ = true;
         }
         else {
@@ -1026,8 +1025,8 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
       if (!alpnProtocols_.empty()) {
         negotiatedProtocol_ = tlsSession_->getNegotiatedProtocol();
         if (!negotiatedProtocol_.empty()) {
-          A2_LOG_INFO(fmt("ALPN negotiated protocol: %s",
-                          negotiatedProtocol_.c_str()));
+          A2_LOG_INFO(
+              fmt("ALPN negotiated protocol: %s", negotiatedProtocol_.c_str()));
         }
       }
 
@@ -1038,8 +1037,7 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
 
     if (rv == TLS_ERR_WOULDBLOCK) {
       // We're not done yet...
-      if (tlsSession_->checkDirection() ==
-          TLSDirection::TLS_WANT_READ) {
+      if (tlsSession_->checkDirection() == TLSDirection::TLS_WANT_READ) {
         // ... but read buffers are empty.
         wantRead_ = true;
       }
@@ -1084,7 +1082,8 @@ bool SocketCore::sshHandshake(const std::string& hashType,
   if (!sshSession_) {
     sshSession_ = std::make_unique<SSHSession>();
     if (sshSession_->init(sockfd_) == SSH_ERR_ERROR) {
-      throw DL_ABORT_EX("Could not create SSH session");
+      throw DL_ABORT_EX2("Could not create SSH session",
+                         error_code::NETWORK_PROBLEM);
     }
   }
   auto rv = sshSession_->handshake();
@@ -1093,20 +1092,23 @@ bool SocketCore::sshHandshake(const std::string& hashType,
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH handshake failure: %s",
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH handshake failure: %s",
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   if (!hashType.empty()) {
     auto actualDigest = sshSession_->hostkeyMessageDigest(hashType);
     if (actualDigest.empty()) {
-      throw DL_ABORT_EX(fmt("Empty host key fingerprint from SSH layer: "
-                            "perhaps hash type %s is not supported?",
-                            hashType.c_str()));
+      throw DL_ABORT_EX2(fmt("Empty host key fingerprint from SSH layer: "
+                             "perhaps hash type %s is not supported?",
+                             hashType.c_str()),
+                         error_code::NETWORK_PROBLEM);
     }
     if (digest != actualDigest) {
-      throw DL_ABORT_EX(fmt("Unexpected SSH host key: expected %s, actual %s",
-                            util::toHex(digest).c_str(),
-                            util::toHex(actualDigest).c_str()));
+      throw DL_ABORT_EX2(fmt("Unexpected SSH host key: expected %s, actual %s",
+                             util::toHex(digest).c_str(),
+                             util::toHex(actualDigest).c_str()),
+                         error_code::NETWORK_PROBLEM);
     }
   }
   return true;
@@ -1126,8 +1128,9 @@ bool SocketCore::sshAuthPassword(const std::string& user,
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH authentication failure: %s",
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH authentication failure: %s",
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   return true;
 }
@@ -1145,8 +1148,9 @@ bool SocketCore::sshSFTPOpen(const std::string& path)
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH opening SFTP path %s failed: %s", path.c_str(),
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH opening SFTP path %s failed: %s", path.c_str(),
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   return true;
 }
@@ -1164,8 +1168,9 @@ bool SocketCore::sshSFTPClose()
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH closing SFTP failed: %s",
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH closing SFTP failed: %s",
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   return true;
 }
@@ -1184,8 +1189,9 @@ bool SocketCore::sshSFTPStat(int64_t& totalLength, time_t& mtime,
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH stat SFTP path %s filed: %s", path.c_str(),
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH stat SFTP path %s filed: %s", path.c_str(),
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   return true;
 }
@@ -1206,8 +1212,9 @@ bool SocketCore::sshGracefulShutdown()
     return false;
   }
   if (rv == SSH_ERR_ERROR) {
-    throw DL_ABORT_EX(fmt("SSH graceful shutdown failed: %s",
-                          sshSession_->getLastErrorString().c_str()));
+    throw DL_ABORT_EX2(fmt("SSH graceful shutdown failed: %s",
+                           sshSession_->getLastErrorString().c_str()),
+                       error_code::NETWORK_PROBLEM);
   }
   return true;
 }

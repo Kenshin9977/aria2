@@ -182,10 +182,8 @@ std::string generateCnonce()
 
 std::string computeAuthHeader(const std::string& user,
                               const std::string& password,
-                              const std::string& method,
-                              const std::string& uri,
-                              const DigestChallenge& challenge,
-                              uint32_t nc)
+                              const std::string& method, const std::string& uri,
+                              const DigestChallenge& challenge, uint32_t nc)
 {
   auto algo = challenge.algorithm.empty() ? "MD5" : challenge.algorithm;
 
@@ -214,14 +212,13 @@ std::string computeAuthHeader(const std::string& user,
   bool useQop = !challenge.qop.empty();
   std::string qopUsed = "auth";
   if (useQop) {
-    std::string rdata = ha1 + ":" + challenge.nonce + ":" + ncStr +
-                        ":" + cnonce + ":" + qopUsed + ":" + ha2;
+    std::string rdata = ha1 + ":" + challenge.nonce + ":" + ncStr + ":" +
+                        cnonce + ":" + qopUsed + ":" + ha2;
     response = hashHex(algo, rdata);
   }
   else {
     // Legacy: response = H(HA1:nonce:HA2)
-    std::string rdata =
-        ha1 + ":" + challenge.nonce + ":" + ha2;
+    std::string rdata = ha1 + ":" + challenge.nonce + ":" + ha2;
     response = hashHex(algo, rdata);
   }
 

@@ -60,10 +60,7 @@ struct Http2StreamData {
   uint32_t errorCode;
 
   Http2StreamData()
-      : statusCode(0),
-        headersComplete(false),
-        closed(false),
-        errorCode(0)
+      : statusCode(0), headersComplete(false), closed(false), errorCode(0)
   {
   }
 };
@@ -113,25 +110,19 @@ public:
 
 private:
   // nghttp2 callbacks
-  static ssize_t sendCallback(nghttp2_session* session,
-                               const uint8_t* data, size_t length,
-                               int flags, void* userData);
+  static ssize_t sendCallback(nghttp2_session* session, const uint8_t* data,
+                              size_t length, int flags, void* userData);
   static int onFrameRecvCallback(nghttp2_session* session,
-                                  const nghttp2_frame* frame,
-                                  void* userData);
-  static int onDataChunkRecvCallback(nghttp2_session* session,
-                                      uint8_t flags, int32_t streamId,
-                                      const uint8_t* data, size_t len,
-                                      void* userData);
-  static int onStreamCloseCallback(nghttp2_session* session,
-                                    int32_t streamId,
-                                    uint32_t errorCode,
-                                    void* userData);
+                                 const nghttp2_frame* frame, void* userData);
+  static int onDataChunkRecvCallback(nghttp2_session* session, uint8_t flags,
+                                     int32_t streamId, const uint8_t* data,
+                                     size_t len, void* userData);
+  static int onStreamCloseCallback(nghttp2_session* session, int32_t streamId,
+                                   uint32_t errorCode, void* userData);
   static int onHeaderCallback(nghttp2_session* session,
-                               const nghttp2_frame* frame,
-                               const uint8_t* name, size_t namelen,
-                               const uint8_t* value, size_t valuelen,
-                               uint8_t flags, void* userData);
+                              const nghttp2_frame* frame, const uint8_t* name,
+                              size_t namelen, const uint8_t* value,
+                              size_t valuelen, uint8_t flags, void* userData);
 
   Http2StreamData& getOrCreateStream(int32_t streamId);
 

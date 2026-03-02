@@ -114,8 +114,8 @@ public:
     // We have data buffered...
     if (unlikely(offset_)) {
       const uint32_t rem = sizeof(buffer_) - offset_;
-      const uint32_t turn = static_cast<uint32_t>(
-          len + ((rem - len) & (rem - len) >> 31));
+      const uint32_t turn =
+          static_cast<uint32_t>(len + ((rem - len) & (rem - len) >> 31));
       memcpy(buffer_.bytes + offset_, bytes, turn);
       len -= turn;
       bytes += turn;
@@ -139,8 +139,8 @@ public:
     // Buffer remaining bytes, if any.
     if (unlikely(len)) {
       const uint32_t rem = sizeof(buffer_) - offset_;
-      const uint32_t turn = static_cast<uint32_t>(
-          len + ((rem - len) & (rem - len) >> 31));
+      const uint32_t turn =
+          static_cast<uint32_t>(len + ((rem - len) & (rem - len) >> 31));
       memcpy(buffer_.bytes + offset_, bytes, turn);
       offset_ += turn;
     }
@@ -351,9 +351,8 @@ public:
     state_.words[3] = __crypto_bswap(state_.words[3]);
 #endif // LITTLE_ENDIAN == BYTE_ORDER
 
-    auto rv = std::string(
-        reinterpret_cast<const char*>(state_.bytes),
-        sizeof(state_.bytes));
+    auto rv = std::string(reinterpret_cast<const char*>(state_.bytes),
+                          sizeof(state_.bytes));
     reset();
     return rv;
   }
