@@ -104,7 +104,10 @@ jobs:
           --disable-nls
     - name: Build aria2
       run: |
-        make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check
+        make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check || {
+          cat test/test-suite.log 2>/dev/null || true
+          exit 1
+        }
     - name: Run e2e tests
       run: make -C test check-e2e
 
@@ -149,6 +152,7 @@ jobs:
     - name: Build and test
       run: |
         autoreconf -i --no-recursive
+        (cd deps/wslay && autoreconf -if)
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \
