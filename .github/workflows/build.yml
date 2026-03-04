@@ -76,10 +76,14 @@ jobs:
         autoreconf -i
     - name: Setup compiler flags
       run: |
-        asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
-
-        CPPFLAGS="$asanflags -g3"
-        LDFLAGS="$asanflags"
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+          CPPFLAGS="$asanflags -g3"
+          LDFLAGS="$asanflags"
+        else
+          CPPFLAGS="-g"
+          LDFLAGS=""
+        fi
 
         echo 'CPPFLAGS='"$CPPFLAGS" >> $GITHUB_ENV
         echo 'LDFLAGS='"$LDFLAGS" >> $GITHUB_ENV
