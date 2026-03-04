@@ -62,7 +62,7 @@ _bt_tracker_pid=$!
 
 # Wait for tracker to accept connections
 _tries=0
-while ! curl -s "http://127.0.0.1:18135/announce" >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/18135) 2>/dev/null; do
   _tries=$((_tries + 1))
   if [[ $_tries -ge 30 ]]; then
     echo "ERROR: BT tracker failed to start on port 18135" >&2

@@ -18,7 +18,7 @@ start_http_server --port 18118 --dir "$E2E_TMPDIR"
 python3 "$SCRIPT_DIR/http_server.py" --port 18119 --dir "$E2E_TMPDIR" --delay 2 &
 _slow_server_pid=$!
 tries=0
-while ! curl -sk "http://127.0.0.1:18119/health" >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/18119) 2>/dev/null; do
   tries=$((tries + 1))
   [[ $tries -ge 30 ]] && { echo "ERROR: slow server failed to start" >&2; exit 1; }
   sleep 0.1

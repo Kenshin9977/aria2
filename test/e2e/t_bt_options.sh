@@ -75,7 +75,7 @@ python3 "$SCRIPT_DIR/bt_tracker.py" \
   --port 18354 --peer-ip 127.0.0.1 --peer-port 18355 &
 _bt_tracker_pid=$!
 _tries=0
-while ! curl -s "http://127.0.0.1:18354/announce" >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/18354) 2>/dev/null; do
   _tries=$((_tries + 1))
   if [[ $_tries -ge 30 ]]; then
     echo "ERROR: BT tracker failed to start" >&2

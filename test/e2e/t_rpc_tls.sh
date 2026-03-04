@@ -26,9 +26,7 @@ RPC_PORT=16813
 
 # Wait for TLS RPC to be ready
 tries=0
-while ! curl -sk "https://127.0.0.1:$RPC_PORT/jsonrpc" \
-  -d '{"jsonrpc":"2.0","id":"h","method":"aria2.getVersion"}' \
-  >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/$RPC_PORT) 2>/dev/null; do
   tries=$((tries + 1))
   if [[ $tries -ge 30 ]]; then
     echo "ERROR: aria2c TLS RPC failed to start on port $RPC_PORT" >&2

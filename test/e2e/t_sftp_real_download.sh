@@ -46,15 +46,7 @@ sshd_pid=$!
 
 # Wait for port to be ready
 tries=0
-while ! python3 -c "
-import socket, sys
-s = socket.socket()
-try:
-    s.connect(('127.0.0.1', $SFTP_PORT))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
+while ! (echo >/dev/tcp/127.0.0.1/$SFTP_PORT) 2>/dev/null; do
   tries=$((tries + 1))
   if [[ $tries -ge 50 ]]; then
     kill "$sshd_pid" 2>/dev/null || true

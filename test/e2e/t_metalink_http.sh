@@ -41,7 +41,7 @@ DIGEST_B64=$(openssl dgst -sha-256 -binary "$E2E_TMPDIR/testfile.bin" | base64)
 python3 "$SCRIPT_DIR/http_server.py" --port 18125 --dir "$E2E_TMPDIR" &
 _mirror_pid=$!
 tries=0
-while ! curl -sk "http://127.0.0.1:18125/health" >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/18125) 2>/dev/null; do
   tries=$((tries + 1))
   [[ $tries -ge 30 ]] && { echo "ERROR: mirror server failed to start" >&2; exit 1; }
   sleep 0.1

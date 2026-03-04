@@ -46,18 +46,7 @@ nghttpd_pid=$!
 
 # Wait for port readiness
 tries=0
-while ! python3 -c "
-import socket, ssl, sys
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
-s = ctx.wrap_socket(socket.socket(), server_hostname='localhost')
-try:
-    s.connect(('127.0.0.1', $H2_PORT))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
+while ! (echo >/dev/tcp/127.0.0.1/$H2_PORT) 2>/dev/null; do
   tries=$((tries + 1))
   if [[ $tries -ge 50 ]]; then
     kill "$nghttpd_pid" 2>/dev/null || true

@@ -24,15 +24,7 @@ s.close()
 stub_pid=$!
 # Wait for the stub to start listening
 tries=0
-while ! python3 -c "
-import socket, sys
-s = socket.socket()
-try:
-    s.connect(('127.0.0.1', 18140))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
+while ! (echo >/dev/tcp/127.0.0.1/18140) 2>/dev/null; do
   tries=$((tries + 1))
   if [[ $tries -ge 30 ]]; then
     echo "ERROR: TCP stub failed to start on port 18140" >&2

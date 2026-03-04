@@ -165,40 +165,15 @@ start_http_server() {
   _http_server_pid=$!
   # Wait for server to be ready
   local tries=0
-  if [[ "$require_client_cert" == true ]]; then
-    # mTLS server rejects normal curl; use TCP port check instead
-    while ! python3 -c "
-import socket, sys
-s = socket.socket()
-try:
-    s.connect(('127.0.0.1', $port))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
-      tries=$((tries + 1))
-      if [[ $tries -ge 30 ]]; then
-        echo "ERROR: HTTP server failed to start" >&2
-        exit 1
-      fi
-      sleep 0.1
-    done
-  else
-    local health_url
-    if [[ "$use_ssl" == true ]]; then
-      health_url="https://127.0.0.1:$port/health"
-    else
-      health_url="http://127.0.0.1:$port/health"
+  # Wait for TCP port to be listening (fast bash builtin, no fork)
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
+    tries=$((tries + 1))
+    if [[ $tries -ge 50 ]]; then
+      echo "ERROR: HTTP server on port $port failed to start" >&2
+      exit 1
     fi
-    while ! curl -sk "$health_url" >/dev/null 2>&1; do
-      tries=$((tries + 1))
-      if [[ $tries -ge 30 ]]; then
-        echo "ERROR: HTTP server failed to start" >&2
-        exit 1
-      fi
-      sleep 0.1
-    done
-  fi
+    sleep 0.1
+  done
   HTTP_PORT=$port
 }
 
@@ -288,17 +263,9 @@ start_ftp_server() {
   _ftp_server_pid=$!
   # Wait for FTP server to accept connections
   local tries=0
-  while ! python3 -c "
-import socket, sys
-s = socket.socket()
-try:
-    s.connect(('127.0.0.1', $port))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
     tries=$((tries + 1))
-    if [[ $tries -ge 30 ]]; then
+    if [[ $tries -ge 50 ]]; then
       echo "ERROR: FTP server failed to start on port $port" >&2
       exit 1
     fi
@@ -345,9 +312,9 @@ start_proxy_server() {
   python3 "$script_dir/proxy_server.py" "${args[@]}" &
   _proxy_server_pid=$!
   local tries=0
-  while ! curl -s "http://127.0.0.1:$port/health" >/dev/null 2>&1; do
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
     tries=$((tries + 1))
-    if [[ $tries -ge 30 ]]; then
+    if [[ $tries -ge 50 ]]; then
       echo "ERROR: Proxy server failed to start on port $port" >&2
       exit 1
     fi
@@ -395,17 +362,9 @@ start_socks5_server() {
   _socks5_server_pid=$!
   # Wait for SOCKS5 server to accept connections
   local tries=0
-  while ! python3 -c "
-import socket, sys
-s = socket.socket()
-try:
-    s.connect(('127.0.0.1', $port))
-    s.close()
-except:
-    sys.exit(1)
-" 2>/dev/null; do
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
     tries=$((tries + 1))
-    if [[ $tries -ge 30 ]]; then
+    if [[ $tries -ge 50 ]]; then
       echo "ERROR: SOCKS5 server failed to start on port $port" >&2
       exit 1
     fi
@@ -452,9 +411,9 @@ start_bt_tracker() {
   python3 "$script_dir/bt_tracker.py" "${args[@]}" &
   _bt_tracker_pid=$!
   local tries=0
-  while ! curl -s "http://127.0.0.1:$port/announce" >/dev/null 2>&1; do
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
     tries=$((tries + 1))
-    if [[ $tries -ge 30 ]]; then
+    if [[ $tries -ge 50 ]]; then
       echo "ERROR: BT tracker failed to start on port $port" >&2
       exit 1
     fi
@@ -491,11 +450,9 @@ start_aria2_rpc() {
     "$@" &
   _rpc_aria2_pid=$!
   local tries=0
-  while ! curl -s "http://127.0.0.1:$port/jsonrpc" \
-    -d '{"jsonrpc":"2.0","id":"health","method":"aria2.getVersion"}' \
-    >/dev/null 2>&1; do
+  while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
     tries=$((tries + 1))
-    if [[ $tries -ge 30 ]]; then
+    if [[ $tries -ge 50 ]]; then
       echo "ERROR: aria2c RPC failed to start on port $port" >&2
       exit 1
     fi
@@ -610,7 +567,7 @@ _e2e_cleanup() {
   stop_bt_tracker
   stop_aria2_rpc
   if [[ -n "${E2E_TMPDIR:-}" ]]; then
-    rm -rf "$E2E_TMPDIR"
+    rm -rf "$E2E_TMPDIR" 2>/dev/null || true
   fi
 }
 

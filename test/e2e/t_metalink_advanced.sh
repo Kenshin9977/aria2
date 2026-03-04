@@ -84,7 +84,7 @@ python3 "$SCRIPT_DIR/http_server.py" --port 18109 --dir "$E2E_TMPDIR" &
 _http_server2_pid=$!
 # Wait for second server to be ready
 tries=0
-while ! curl -sk "http://127.0.0.1:18109/health" >/dev/null 2>&1; do
+while ! (echo >/dev/tcp/127.0.0.1/18109) 2>/dev/null; do
   tries=$((tries + 1))
   if [[ $tries -ge 30 ]]; then
     echo "ERROR: second HTTP server failed to start" >&2
