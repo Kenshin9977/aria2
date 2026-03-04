@@ -161,7 +161,7 @@ start_bt_tracker --port 18260 --peer-ip 127.0.0.1 --peer-port 18261
 _bt_seeder_pid=$!
 
 # Give the seeder a moment to start listening
-sleep 2
+sleep 1
 
 cat > "$E2E_TMPDIR/on_bt_complete.sh" <<HOOKEOF
 #!/bin/bash

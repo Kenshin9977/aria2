@@ -69,7 +69,7 @@ else
 fi
 # Unpause to clean up
 rpc_call $RPC_PORT "aria2.unpause" "[\"$gid\"]" >/dev/null 2>&1
-sleep 4
+sleep 2
 
 # 5. getVersion — returns version and enabledFeatures
 resp=$(rpc_call $RPC_PORT "aria2.getVersion")

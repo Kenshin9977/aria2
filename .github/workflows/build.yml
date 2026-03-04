@@ -18,7 +18,7 @@ jobs:
           bittorrent: without-bt
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 20
 
     steps:
     - uses: actions/checkout@v6

@@ -57,14 +57,14 @@ start_bt_tracker --port 18138 --peer-ip 127.0.0.1 --peer-port 18145
   --bt-force-encryption=true --bt-require-crypto=true \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # 1. Leecher with --bt-force-encryption=true downloads successfully
 mkdir -p "$E2E_TMPDIR/leech_enc1"
 "$ARIA2C" --listen-port=18146 --dir="$E2E_TMPDIR/leech_enc1" --no-conf \
   --bt-tracker="http://127.0.0.1:18138/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   --bt-force-encryption=true \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 
@@ -78,7 +78,7 @@ mkdir -p "$E2E_TMPDIR/leech_enc2"
 "$ARIA2C" --listen-port=18146 --dir="$E2E_TMPDIR/leech_enc2" --no-conf \
   --bt-tracker="http://127.0.0.1:18138/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   --bt-require-crypto=true --bt-min-crypto-level=arc4 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 
@@ -97,14 +97,14 @@ _kill_seeder
   --enable-dht=false --enable-peer-exchange=false \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # 3. Default seeder, leecher requires crypto — negotiation succeeds
 mkdir -p "$E2E_TMPDIR/leech_enc3"
 "$ARIA2C" --listen-port=18146 --dir="$E2E_TMPDIR/leech_enc3" --no-conf \
   --bt-tracker="http://127.0.0.1:18138/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   --bt-require-crypto=true \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 

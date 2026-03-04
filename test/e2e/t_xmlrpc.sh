@@ -34,7 +34,7 @@ else
 fi
 
 # 3. Wait for download, then aria2.tellStatus — status returned
-sleep 4
+sleep 2
 resp=$(xmlrpc_call $RPC_PORT "aria2.tellStatus" "[\"$gid\"]")
 if echo "$resp" | grep -q "status"; then
   tap_ok "xmlrpc: aria2.tellStatus returns status for GID"

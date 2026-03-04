@@ -56,13 +56,13 @@ start_bt_tracker --port 18136 --peer-ip 127.0.0.1 --peer-port 18141
 _bt_seeder_pid=$!
 
 # Give the seeder a moment to start listening
-sleep 2
+sleep 1
 
 # Start leecher — downloads using the magnet URI
 mkdir -p "$E2E_TMPDIR/leech_dir"
 "$ARIA2C" --listen-port=18142 --dir="$E2E_TMPDIR/leech_dir" --no-conf \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   --bt-save-metadata=true \
   "$MAGNET" >/dev/null 2>&1
 

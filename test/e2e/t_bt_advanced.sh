@@ -76,14 +76,14 @@ done
   --enable-dht=false --enable-peer-exchange=false \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # ── Test 1: bt-force-encryption downloads with encrypted connections ──────────
 mkdir -p "$E2E_TMPDIR/enc_dir"
 "$ARIA2C" --no-conf --listen-port=18262 --dir="$E2E_TMPDIR/enc_dir" \
   --bt-tracker="http://127.0.0.1:18260/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-force-encryption=true --seed-time=0 --bt-stop-timeout=30 \
+  --bt-force-encryption=true --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/enc_dir/payload.bin" \
   "bt-force-encryption completes download"
@@ -93,7 +93,7 @@ mkdir -p "$E2E_TMPDIR/hashcheck_dir"
 "$ARIA2C" --no-conf --listen-port=18263 --dir="$E2E_TMPDIR/hashcheck_dir" \
   --bt-tracker="http://127.0.0.1:18260/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-hash-check-seed=true --seed-time=0 --bt-stop-timeout=30 \
+  --bt-hash-check-seed=true --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/hashcheck_dir/payload.bin" \
   "bt-hash-check-seed downloads and verifies payload"
@@ -103,7 +103,7 @@ mkdir -p "$E2E_TMPDIR/prio_dir"
 "$ARIA2C" --no-conf --listen-port=18264 --dir="$E2E_TMPDIR/prio_dir" \
   --bt-tracker="http://127.0.0.1:18260/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-prioritize-piece=head --seed-time=0 --bt-stop-timeout=30 \
+  --bt-prioritize-piece=head --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/prio_dir/payload.bin" \
   "bt-prioritize-piece=head completes download"
@@ -113,7 +113,7 @@ mkdir -p "$E2E_TMPDIR/idxout_dir"
 "$ARIA2C" --no-conf --listen-port=18265 --dir="$E2E_TMPDIR/idxout_dir" \
   --bt-tracker="http://127.0.0.1:18260/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --index-out=1=renamed_payload.bin --seed-time=0 --bt-stop-timeout=30 \
+  --index-out=1=renamed_payload.bin --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/idxout_dir/renamed_payload.bin" \
   "index-out renames output file"
@@ -123,7 +123,7 @@ mkdir -p "$E2E_TMPDIR/maxpeer_dir"
 "$ARIA2C" --no-conf --listen-port=18266 --dir="$E2E_TMPDIR/maxpeer_dir" \
   --bt-tracker="http://127.0.0.1:18260/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-max-peers=1 --seed-time=0 --bt-stop-timeout=30 \
+  --bt-max-peers=1 --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/maxpeer_dir/payload.bin" \
   "bt-max-peers=1 download succeeds"

@@ -41,7 +41,7 @@ else
 fi
 
 # 4. Wait for download, then aria2.tellStatus via WebSocket — status complete
-sleep 4
+sleep 2
 resp=$(ws_rpc_call $RPC_PORT "aria2.tellStatus" "[\"$gid\"]")
 if echo "$resp" | grep -q "complete"; then
   tap_ok "websocket: aria2.tellStatus shows complete after download"

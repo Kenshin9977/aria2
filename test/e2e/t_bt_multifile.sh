@@ -59,14 +59,14 @@ start_bt_tracker --port 18137 --peer-ip 127.0.0.1 --peer-port 18143
 _bt_seeder_pid=$!
 
 # Give the seeder a moment to start listening
-sleep 2
+sleep 1
 
 # ── Test 1: Download all files (default behavior) ──
 mkdir -p "$E2E_TMPDIR/leech_all"
 "$ARIA2C" --listen-port=18144 --dir="$E2E_TMPDIR/leech_all" --no-conf \
   --bt-tracker="http://127.0.0.1:18137/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/multi.torrent" >/dev/null 2>&1
 
 # 1. All three files downloaded
@@ -84,7 +84,7 @@ mkdir -p "$E2E_TMPDIR/leech_sel"
 "$ARIA2C" --listen-port=18144 --dir="$E2E_TMPDIR/leech_sel" --no-conf \
   --bt-tracker="http://127.0.0.1:18137/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   --select-file=1,3 \
   "$E2E_TMPDIR/multi.torrent" >/dev/null 2>&1
 

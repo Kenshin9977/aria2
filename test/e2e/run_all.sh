@@ -55,7 +55,7 @@ done
 results_dir=$(mktemp -d "${TMPDIR:-/tmp}/aria2-e2e-results.XXXXXX")
 trap 'rm -rf "$results_dir"' EXIT
 
-per_test_timeout=${E2E_TIMEOUT:-120}
+per_test_timeout=${E2E_TIMEOUT:-60}
 
 # macOS doesn't have GNU timeout; use gtimeout from coreutils if available
 if command -v timeout >/dev/null 2>&1; then

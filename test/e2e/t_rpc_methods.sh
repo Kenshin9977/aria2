@@ -42,7 +42,14 @@ else
   tap_fail "changePosition moves download in queue (response: $resp)"
 fi
 # Wait for both downloads to complete
-sleep 8
+for _gid in "$gid1" "$gid2"; do
+  for _i in $(seq 1 30); do
+    _st=$(rpc_call $RPC_PORT "aria2.tellStatus" "[\"$_gid\"]" 2>/dev/null \
+      | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
+    [[ "$_st" == "complete" || "$_st" == "error" || -z "$_st" ]] && break
+    sleep 0.5
+  done
+done
 
 # 3. changeUri adds URI to download
 # Add URI in paused state so changeUri can modify it before it starts.
@@ -59,7 +66,12 @@ else
 fi
 # Unpause and wait for download to complete
 rpc_call $RPC_PORT "aria2.unpause" "[\"$gid\"]" >/dev/null 2>&1
-sleep 5
+for _i in $(seq 1 30); do
+  _st=$(rpc_call $RPC_PORT "aria2.tellStatus" "[\"$gid\"]" 2>/dev/null \
+    | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
+  [[ "$_st" == "complete" || "$_st" == "error" || -z "$_st" ]] && break
+  sleep 0.5
+done
 
 # 4. purgeDownloadResult clears completed results
 resp=$(rpc_call $RPC_PORT "aria2.purgeDownloadResult")
@@ -73,7 +85,13 @@ fi
 resp=$(rpc_call $RPC_PORT "aria2.addUri" \
   "[[\"http://127.0.0.1:$HTTP_PORT/testfile.bin\"],{\"out\":\"rmresult.bin\"}]")
 gid=$(echo "$resp" | sed -n 's/.*"result":"\([^"]*\)".*/\1/p')
-sleep 3
+# Poll until download reaches complete/error status
+for _i in $(seq 1 30); do
+  _st=$(rpc_call $RPC_PORT "aria2.tellStatus" "[\"$gid\"]" 2>/dev/null \
+    | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
+  [[ "$_st" == "complete" || "$_st" == "error" ]] && break
+  sleep 0.5
+done
 resp=$(rpc_call $RPC_PORT "aria2.removeDownloadResult" "[\"$gid\"]")
 if echo "$resp" | grep -q '"OK"'; then
   tap_ok "removeDownloadResult removes specific result"

@@ -55,7 +55,7 @@ start_http_server --port 18320 --dir "$E2E_TMPDIR" --delay 5
   --save-session-interval=1 \
   "http://127.0.0.1:$HTTP_PORT/testfile.bin" >/dev/null 2>&1 &
 _bg_pid=$!
-sleep 3
+sleep 2
 if [[ -f "$E2E_TMPDIR/session4.txt" ]]; then
   tap_ok "save-session-interval=1 writes session file during download"
 else
@@ -87,7 +87,7 @@ dd if=/dev/urandom of="$E2E_TMPDIR/bigfile.bin" \
   --auto-save-interval=1 \
   "http://127.0.0.1:$HTTP_PORT/bigfile.bin" >/dev/null 2>&1 &
 _bg_pid=$!
-sleep 3
+sleep 2
 if [[ -f "$E2E_TMPDIR/out6/bigfile.bin.aria2" ]]; then
   tap_ok "auto-save-interval=1 creates .aria2 control file during download"
 else

@@ -106,7 +106,7 @@ done
   --enable-peer-exchange=false \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # ── Test 1: --bt-enable-lpd=true accepted, download completes ───────────
 # LPD multicast may not work in CI/containers, but with tracker as fallback
@@ -117,7 +117,7 @@ rc=0
   --bt-tracker="http://127.0.0.1:18400/announce" \
   --enable-dht=false --enable-peer-exchange=false \
   --bt-enable-lpd=true \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/lpd_dir/payload.bin" \
   "bt-enable-lpd=true accepted, download completes"
@@ -129,7 +129,7 @@ rc=0
   --bt-tracker="http://127.0.0.1:18400/announce" \
   --enable-dht=false --enable-peer-exchange=false \
   --bt-enable-lpd=true --bt-lpd-interface="$LO_IFACE" \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/lpdi_dir/payload.bin" \
   "bt-lpd-interface=$LO_IFACE accepted, download completes"
@@ -142,7 +142,7 @@ rc=0
   --enable-dht=true --dht-entry-point=127.0.0.1:18403 \
   --dht-file-path="$E2E_TMPDIR/leech_dht.dat" \
   --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/dhtep_dir/payload.bin" \
   "dht-entry-point discovers seeder via DHT"
@@ -157,7 +157,7 @@ if skip_if_no_ipv6; then
     --dht-file-path="$E2E_TMPDIR/leech_dht6.dat" \
     --dht-file-path6="$E2E_TMPDIR/leech_dht6_v6.dat" \
     --enable-peer-exchange=false \
-    --seed-time=0 --bt-stop-timeout=30 \
+    --seed-time=0 --bt-stop-timeout=15 \
     "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
   assert_file_exists "$E2E_TMPDIR/dhtep6_dir/payload.bin" \
     "dht-entry-point6 with IPv6 accepted, download completes"
@@ -175,7 +175,7 @@ if skip_if_no_ipv6; then
     --dht-file-path="$E2E_TMPDIR/leech_dht_a6.dat" \
     --dht-file-path6="$E2E_TMPDIR/leech_dht_a6_v6.dat" \
     --enable-peer-exchange=false \
-    --seed-time=0 --bt-stop-timeout=30 \
+    --seed-time=0 --bt-stop-timeout=15 \
     "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
   assert_file_exists "$E2E_TMPDIR/dhtaddr6_dir/payload.bin" \
     "dht-listen-addr6=::1 accepted, download completes"

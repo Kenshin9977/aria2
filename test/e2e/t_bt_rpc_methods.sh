@@ -50,7 +50,7 @@ if echo "$resp" | grep -q '"uri"'; then
 else
   tap_fail "getServers returns server list for HTTP download (response: $resp)"
 fi
-sleep 3
+sleep 1
 
 # 4. addMetalink via base64 metalink XML — returns list of GIDs
 cat > "$E2E_TMPDIR/test.metalink" <<'MLEOF'

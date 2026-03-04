@@ -93,7 +93,7 @@ done
   "$E2E_TMPDIR/test.torrent" "$E2E_TMPDIR/multi.torrent" \
   >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # ── Test 1: --bt-exclude-tracker prevents tracker contact ───────────────
 mkdir -p "$E2E_TMPDIR/excl_dir"
@@ -115,7 +115,7 @@ mkdir -p "$E2E_TMPDIR/maxfiles_dir"
 "$ARIA2C" --no-conf --listen-port=18357 --dir="$E2E_TMPDIR/maxfiles_dir" \
   --bt-tracker="http://127.0.0.1:18354/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-max-open-files=1 --seed-time=0 --bt-stop-timeout=30 \
+  --bt-max-open-files=1 --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/multi.torrent" >/dev/null 2>&1
 if [[ -f "$E2E_TMPDIR/maxfiles_dir/multi/alpha.dat" ]] && \
    [[ -f "$E2E_TMPDIR/maxfiles_dir/multi/bravo.dat" ]]; then
@@ -130,7 +130,7 @@ mkdir -p "$E2E_TMPDIR/rmsel_dir"
   --bt-tracker="http://127.0.0.1:18354/announce" \
   --enable-dht=false --enable-peer-exchange=false \
   --select-file=1 --bt-remove-unselected-file=true \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/multi.torrent" >/dev/null 2>&1
 if [[ -f "$E2E_TMPDIR/rmsel_dir/multi/alpha.dat" ]] && \
    [[ ! -f "$E2E_TMPDIR/rmsel_dir/multi/bravo.dat" ]]; then
@@ -158,7 +158,7 @@ mkdir -p "$E2E_TMPDIR/detach_dir"
 "$ARIA2C" --no-conf --listen-port=18359 --dir="$E2E_TMPDIR/detach_dir" \
   --bt-tracker="http://127.0.0.1:18354/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-detach-seed-only=true --seed-time=0 --bt-stop-timeout=30 \
+  --bt-detach-seed-only=true --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/detach_dir/payload.bin" \
   "bt-detach-seed-only=true download completes"
@@ -169,14 +169,14 @@ mkdir -p "$E2E_TMPDIR/meta1_dir" "$E2E_TMPDIR/meta2_dir"
 "$ARIA2C" --no-conf --listen-port=18360 --dir="$E2E_TMPDIR/meta1_dir" \
   --bt-tracker="http://127.0.0.1:18354/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-save-metadata=true --seed-time=0 --bt-stop-timeout=30 \
+  --bt-save-metadata=true --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 # Second run with bt-load-saved-metadata
 rc=0
 "$ARIA2C" --no-conf --listen-port=18360 --dir="$E2E_TMPDIR/meta2_dir" \
   --bt-tracker="http://127.0.0.1:18354/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-load-saved-metadata=true --seed-time=0 --bt-stop-timeout=30 \
+  --bt-load-saved-metadata=true --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/meta2_dir/payload.bin" \
   "bt-load-saved-metadata=true reuses metadata successfully"

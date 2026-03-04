@@ -81,14 +81,14 @@ done
 _bt_seeder_pid=$!
 
 # Give the seeder a moment to start listening
-sleep 2
+sleep 1
 
 # Start leecher — downloads to a separate directory
 mkdir -p "$E2E_TMPDIR/leech_dir"
 "$ARIA2C" --listen-port=18131 --dir="$E2E_TMPDIR/leech_dir" --no-conf \
   --bt-tracker="http://127.0.0.1:18135/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 
 # 1. Leecher downloaded the file

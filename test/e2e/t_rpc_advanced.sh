@@ -89,7 +89,7 @@ for i in 1 2 3 4 5; do
     >/dev/null 2>&1
   sleep 0.5
 done
-sleep 3
+sleep 1
 resp=$(rpc_call $RPC_PORT "aria2.tellStopped" "[0,100]")
 # Count the number of GIDs in the result
 count=$(echo "$resp" | grep -o '"gid"' | wc -l | tr -d ' ')

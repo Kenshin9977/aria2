@@ -23,7 +23,7 @@ resp=$(rpc_call $RPC_PORT "aria2.addUri" \
 gid1=$(echo "$resp" | sed -n 's/.*"result":"\([^"]*\)".*/\1/p')
 if [[ -n "$gid1" ]]; then
   # Wait for the slow download to complete (3s delay + transfer)
-  sleep 5
+  sleep 2
   if [[ -f "$E2E_TMPDIR/downloads/custom.bin" ]]; then
     tap_ok "addUri with custom output name"
   else
@@ -45,7 +45,7 @@ else
   tap_fail "tellActive returns valid response (response: $resp)"
 fi
 # Wait for this download to finish before next tests
-sleep 5
+sleep 2
 
 # 3. tellWaiting — add 2 URIs quickly with max-concurrent=1
 resp=$(rpc_call $RPC_PORT "aria2.addUri" \
@@ -62,7 +62,7 @@ else
   tap_fail "tellWaiting returns waiting downloads (response: $resp)"
 fi
 # Wait for both to complete
-sleep 8
+sleep 3
 
 # 4. tellStopped — previous downloads should be in stopped list
 resp=$(rpc_call $RPC_PORT "aria2.tellStopped" "[0,10]")
@@ -91,7 +91,7 @@ if echo "$resp" | grep -q '"uri"' && echo "$resp" | grep -q '"status"'; then
 else
   tap_fail "getUris returns uri and status (response: $resp)"
 fi
-sleep 5
+sleep 2
 
 # 7. getGlobalStat
 resp=$(rpc_call $RPC_PORT "aria2.getGlobalStat")

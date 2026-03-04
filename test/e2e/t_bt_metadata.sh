@@ -96,14 +96,14 @@ done
   --enable-dht=false --enable-peer-exchange=false \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 &
 _bt_seeder_pid=$!
-sleep 2
+sleep 1
 
 # ── Test 2: --max-upload-limit=1K download completes ────────────────────
 mkdir -p "$E2E_TMPDIR/uplimit_dir"
 "$ARIA2C" --no-conf --listen-port=18367 --dir="$E2E_TMPDIR/uplimit_dir" \
   --bt-tracker="http://127.0.0.1:18363/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --max-upload-limit=1K --seed-time=0 --bt-stop-timeout=30 \
+  --max-upload-limit=1K --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/uplimit_dir/payload.bin" \
   "max-upload-limit=1K download completes"
@@ -113,7 +113,7 @@ mkdir -p "$E2E_TMPDIR/ovuplimit_dir"
 "$ARIA2C" --no-conf --listen-port=18368 --dir="$E2E_TMPDIR/ovuplimit_dir" \
   --bt-tracker="http://127.0.0.1:18363/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --max-overall-upload-limit=1K --seed-time=0 --bt-stop-timeout=30 \
+  --max-overall-upload-limit=1K --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/ovuplimit_dir/payload.bin" \
   "max-overall-upload-limit=1K download completes"
@@ -125,7 +125,7 @@ rc=0
   --bt-tracker="http://127.0.0.1:18363/announce" \
   --enable-dht=true --dht-file-path="$E2E_TMPDIR/dht.dat" \
   --enable-peer-exchange=false \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/dht.dat" \
   "dht-file-path creates DHT routing table file"
@@ -143,7 +143,7 @@ chmod +x "$E2E_TMPDIR/hook.sh"
   --enable-dht=false --enable-peer-exchange=false \
   --bt-enable-hook-after-hash-check=true \
   --on-bt-download-complete="$E2E_TMPDIR/hook.sh" \
-  --seed-time=0 --bt-stop-timeout=30 \
+  --seed-time=0 --bt-stop-timeout=15 \
   "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
 assert_file_exists "$E2E_TMPDIR/hook_dir/hook_fired.marker" \
   "bt-enable-hook-after-hash-check=true fires hook"
