@@ -37,6 +37,10 @@
 
 #include "a2io.h"
 
+#ifdef HAVE_WINSOCK2_H
+#  include <winsock2.h>
+#endif // HAVE_WINSOCK2_H
+
 #ifdef __MINGW32__
 #  ifdef HAVE_WS2TCPIP_H
 #    include <ws2tcpip.h>

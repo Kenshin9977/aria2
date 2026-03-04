@@ -16,8 +16,22 @@ total_pass=0
 total_fail=0
 failed_scripts=()
 
+# Detect if the aria2c binary supports BitTorrent
+ARIA2C="${ARIA2C:-$(dirname "$SCRIPT_DIR")/../src/aria2c}"
+if [[ -x "$ARIA2C" ]] && "$ARIA2C" --help 2>&1 | grep -q -- '--bt-'; then
+  bt_enabled=true
+else
+  bt_enabled=false
+fi
+
 for test_script in "$SCRIPT_DIR"/t_*.sh; do
   name=$(basename "$test_script")
+
+  # Skip BT tests if BitTorrent support is disabled
+  if [[ "$bt_enabled" != true && "$name" =~ ^t_bt_ ]]; then
+    echo "# Skipping $name (BitTorrent disabled)"
+    continue
+  fi
 
   # Apply filter if set
   if [[ -n "$filter" && ! "$name" =~ $filter ]]; then
