@@ -142,8 +142,8 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
     resbufOffset_ = i;
     if (done) {
       if (data) {
-        std::copy_n(resbuf_.get() + msgOffset_ + 4, currentPayloadLength_,
-                    data);
+        unsigned char* buf = resbuf_.get();
+        std::copy_n(buf + msgOffset_ + 4, currentPayloadLength_, data);
       }
       dataLength = currentPayloadLength_;
       return true;
@@ -161,8 +161,8 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
         else {
           // Shift buffer so that resbuf_[msgOffset_] moves to
           // rebuf_[0].
-          memmove(resbuf_.get(), resbuf_.get() + msgOffset_,
-                  resbufLength_ - msgOffset_);
+          unsigned char* buf = resbuf_.get();
+          memmove(buf, buf + msgOffset_, resbufLength_ - msgOffset_);
           resbufLength_ -= msgOffset_;
           resbufOffset_ = resbufLength_;
           msgOffset_ = 0;
@@ -177,7 +177,8 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
       else {
         nread = bufferCapacity_ - resbufLength_;
       }
-      readData(resbuf_.get() + resbufLength_, nread, encryptionEnabled_);
+      unsigned char* rbuf = resbuf_.get();
+      readData(rbuf + resbufLength_, nread, encryptionEnabled_);
       if (nread == 0) {
         if (socket_->wantRead() || socket_->wantWrite()) {
           break;
@@ -206,7 +207,8 @@ bool PeerConnection::receiveHandshake(unsigned char* data, size_t& dataLength,
   size_t remaining = BtHandshakeMessage::MESSAGE_LENGTH - resbufLength_;
   if (remaining > 0) {
     size_t temp = remaining;
-    readData(resbuf_.get() + resbufLength_, remaining, encryptionEnabled_);
+    unsigned char* buf = resbuf_.get();
+    readData(buf + resbufLength_, remaining, encryptionEnabled_);
     if (remaining == 0 && !socket_->wantRead() && !socket_->wantWrite()) {
       // we got EOF
       A2_LOG_DEBUG(fmt("CUID#%" PRId64
@@ -273,7 +275,8 @@ ssize_t PeerConnection::sendPendingData()
 
 const unsigned char* PeerConnection::getMsgPayloadBuffer() const
 {
-  return resbuf_.get() + msgOffset_ + 4;
+  unsigned char* buf = resbuf_.get();
+  return buf + msgOffset_ + 4;
 }
 
 void PeerConnection::reserveBuffer(size_t minSize)

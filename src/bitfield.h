@@ -62,7 +62,7 @@ constexpr unsigned char lastByteMask(size_t nbits)
       return 0xffu;
     }
     else {
-      return -256 >> s;
+      return static_cast<unsigned char>(0xffu << (8 - s));
     }
   }
 }

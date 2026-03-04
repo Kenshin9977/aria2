@@ -691,10 +691,6 @@ if HAVE_POLL
 SRCS += PollEventPoll.cc PollEventPoll.h
 endif # HAVE_POLL
 
-if HAVE_PORT_ASSOCIATE
-SRCS += PortEventPoll.cc PortEventPoll.h
-endif # HAVE_PORT_ASSOCIATE
-
 if HAVE_KQUEUE
 SRCS += KqueueEventPoll.cc KqueueEventPoll.h
 endif # HAVE_KQUEUE

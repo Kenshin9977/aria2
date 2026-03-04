@@ -96,7 +96,6 @@ extern const std::string V_LIBUV;
 extern const std::string V_IOURING;
 extern const std::string V_EPOLL;
 extern const std::string V_KQUEUE;
-extern const std::string V_PORT;
 extern const std::string V_POLL;
 extern const std::string V_SELECT;
 extern const std::string V_BINARY;

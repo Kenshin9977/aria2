@@ -34,9 +34,11 @@
 /* copyright --> */
 #include "SocketCore.h"
 
-#ifdef HAVE_IPHLPAPI_H
+#ifdef __MINGW32__
 #  include <iphlpapi.h>
-#endif // HAVE_IPHLPAPI_H
+#elif defined(HAVE_IPHLPAPI_H)
+#  include <iphlpapi.h>
+#endif // __MINGW32__
 
 #include <unistd.h>
 #ifdef HAVE_IFADDRS_H
@@ -1621,7 +1623,7 @@ constexpr uint32_t APIPA_IPV4_END = 2852061183u;   // 169.254.255.255
 
 void checkAddrconfig()
 {
-#ifdef HAVE_IPHLPAPI_H
+#if defined(__MINGW32__) || defined(HAVE_IPHLPAPI_H)
   A2_LOG_INFO("Checking configured addresses");
   ULONG bufsize = 15_k;
   ULONG retval = 0;

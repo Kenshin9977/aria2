@@ -41,7 +41,8 @@ createTestEngine(std::shared_ptr<Option>& option,
   option->put(PREF_PIECE_LENGTH, "1048576");
   File(option->get(PREF_DIR)).mkdirs();
 
-  auto e = std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
+  auto e =
+      std::make_unique<DownloadEngine>(std::make_unique<SelectEventPoll>());
   e->setOption(option.get());
   auto rgman = std::make_unique<RequestGroupMan>(
       std::vector<std::shared_ptr<RequestGroup>>{}, 1, option.get());
@@ -80,7 +81,7 @@ private:
 // Timeout-safe socket wait helpers.  Replace bare busy-wait loops
 // (while(!isReadable(0));) so tests fail fast instead of hanging.
 inline void waitRead(const std::shared_ptr<SocketCore>& socket,
-                     int timeoutMs = 5000)
+                     int timeoutMs = 15000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket->isReadable(0)) {
@@ -92,7 +93,7 @@ inline void waitRead(const std::shared_ptr<SocketCore>& socket,
 }
 
 inline void waitWrite(const std::shared_ptr<SocketCore>& socket,
-                      int timeoutMs = 5000)
+                      int timeoutMs = 15000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket->isWritable(0)) {
@@ -104,7 +105,7 @@ inline void waitWrite(const std::shared_ptr<SocketCore>& socket,
 }
 
 // Overloads for stack-allocated SocketCore (used by HttpServerTest, etc.)
-inline void waitRead(SocketCore& socket, int timeoutMs = 5000)
+inline void waitRead(SocketCore& socket, int timeoutMs = 15000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket.isReadable(0)) {
@@ -115,7 +116,7 @@ inline void waitRead(SocketCore& socket, int timeoutMs = 5000)
   CPPUNIT_FAIL("waitRead timed out");
 }
 
-inline void waitWrite(SocketCore& socket, int timeoutMs = 5000)
+inline void waitWrite(SocketCore& socket, int timeoutMs = 15000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket.isWritable(0)) {

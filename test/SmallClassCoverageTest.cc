@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "ContextAttribute.h"
 #include "DefaultBtInteractive.h"
 #include "Notifier.h"
@@ -6,11 +8,13 @@
 #include "UnknownOptionException.h"
 #include "ByteArrayDiskWriter.h"
 #include "RequestGroup.h"
-#include "BtLeecherStateChoke.h"
-#include "BtSeederStateChoke.h"
-#include "Peer.h"
+#ifdef ENABLE_BITTORRENT
+#  include "BtLeecherStateChoke.h"
+#  include "BtSeederStateChoke.h"
+#  include "Peer.h"
+#  include "MockBtMessageDispatcher.h"
+#endif // ENABLE_BITTORRENT
 #include "paramed_string.h"
-#include "MockBtMessageDispatcher.h"
 #include "UnknownLengthPieceStorage.h"
 #include "DownloadContext.h"
 #include "Piece.h"
@@ -52,12 +56,14 @@ class SmallClassCoverageTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testFloodingStatBasic);
   CPPUNIT_TEST(testFloodingStatReset);
   CPPUNIT_TEST(testFloodingStatOverflow);
+#ifdef ENABLE_BITTORRENT
   CPPUNIT_TEST(testLeecherChokeEmpty);
   CPPUNIT_TEST(testLeecherChokeWithPeers);
   CPPUNIT_TEST(testLeecherChokeRoundCycle);
   CPPUNIT_TEST(testSeederChokeEmpty);
   CPPUNIT_TEST(testSeederChokeWithPeers);
   CPPUNIT_TEST(testSeederChokeRoundCycle);
+#endif // ENABLE_BITTORRENT
   CPPUNIT_TEST(testParamedStringExpand);
   CPPUNIT_TEST(testParamedStringExpandLoop);
   CPPUNIT_TEST(testParamedStringExpandChoice);
@@ -76,7 +82,8 @@ public:
   void testContextAttributeType()
   {
     CPPUNIT_ASSERT_EQUAL(std::string("BitTorrent"),
-                         std::string(strContextAttributeType(ContextAttributeType::CTX_ATTR_BT)));
+                         std::string(strContextAttributeType(
+                             ContextAttributeType::CTX_ATTR_BT)));
   }
 
   void testNotifierSingleListener()
@@ -186,6 +193,7 @@ public:
     CPPUNIT_ASSERT_EQUAL(100, stat.getChokeUnchokeCount());
     CPPUNIT_ASSERT_EQUAL(100, stat.getKeepAliveCount());
   }
+#ifdef ENABLE_BITTORRENT
   void testLeecherChokeEmpty()
   {
     BtLeecherStateChoke choke;
@@ -300,6 +308,7 @@ public:
     // After round 2, peer should not be choked (only 1 peer)
     CPPUNIT_ASSERT(!peer->chokingRequired());
   }
+#endif // ENABLE_BITTORRENT
 
   void testParamedStringExpand()
   {

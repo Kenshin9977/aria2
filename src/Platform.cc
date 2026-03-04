@@ -174,13 +174,13 @@ bool Platform::setUp()
   }
 #endif // HAVE_LIBSSH2
 
-#ifdef HAVE_WINSOCK2_H
+#ifdef __MINGW32__
   WSADATA wsaData;
   memset(reinterpret_cast<char*>(&wsaData), 0, sizeof(wsaData));
   if (WSAStartup(MAKEWORD(1, 1), &wsaData)) {
     throw DL_ABORT_EX(MSG_WINSOCK_INIT_FAILD);
   }
-#endif // HAVE_WINSOCK2_H
+#endif // __MINGW32__
 
 #ifdef __MINGW32__
   (void)_setmode(_fileno(stdin), _O_BINARY);
@@ -225,9 +225,9 @@ bool Platform::tearDown()
   libssh2_exit();
 #endif // HAVE_LIBSSH2
 
-#ifdef HAVE_WINSOCK2_H
+#ifdef __MINGW32__
   WSACleanup();
-#endif // HAVE_WINSOCK2_H
+#endif // __MINGW32__
   // Deletes statically allocated resources. This is done to
   // distinguish memory leak from them. This is handy to use
   // valgrind.

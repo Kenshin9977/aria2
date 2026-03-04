@@ -82,7 +82,7 @@ void MetalinkParserController::newEntryTransaction()
   tChunkChecksum_.reset();
 }
 
-void MetalinkParserController::setFileNameOfEntry(std::string filename)
+void MetalinkParserController::setFileNameOfEntry(const std::string& filename)
 {
   if (!tEntry_) {
     return;
@@ -192,7 +192,7 @@ void MetalinkParserController::setURLOfResource(std::string url)
   }
 }
 
-void MetalinkParserController::setTypeOfResource(std::string type)
+void MetalinkParserController::setTypeOfResource(const std::string& type)
 {
   if (!tResource_) {
     return;
@@ -274,7 +274,7 @@ void MetalinkParserController::newChecksumTransaction()
   tChecksum_ = std::make_unique<Checksum>();
 }
 
-void MetalinkParserController::setTypeOfChecksum(std::string type)
+void MetalinkParserController::setTypeOfChecksum(const std::string& type)
 {
   if (!tChecksum_) {
     return;
@@ -328,7 +328,7 @@ void MetalinkParserController::newChunkChecksumTransactionV4()
   tempChunkChecksumsV4_.clear();
 }
 
-void MetalinkParserController::setTypeOfChunkChecksumV4(std::string type)
+void MetalinkParserController::setTypeOfChunkChecksumV4(const std::string& type)
 {
   if (!tChunkChecksumV4_) {
     return;
@@ -396,7 +396,7 @@ void MetalinkParserController::newChunkChecksumTransaction()
   tempChunkChecksums_.clear();
 }
 
-void MetalinkParserController::setTypeOfChunkChecksum(std::string type)
+void MetalinkParserController::setTypeOfChunkChecksum(const std::string& type)
 {
   if (!tChunkChecksum_) {
     return;

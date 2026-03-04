@@ -246,7 +246,7 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
         A2_LOG_INFO(MSG_HASH_CHECK_NOT_DONE);
         auto tempEntry = std::make_unique<ChecksumCheckIntegrityEntry>(this);
         tempEntry->setRedownload(true);
-        return std::move(tempEntry);
+        return tempEntry;
       }
       downloadContext_->setChecksumVerified(true);
       A2_LOG_NOTICE(fmt(MSG_DOWNLOAD_ALREADY_COMPLETED, gid_->toHex().c_str(),
@@ -262,7 +262,7 @@ std::unique_ptr<CheckIntegrityEntry> RequestGroup::createCheckIntegrityEntry()
     loadAndOpenFile(std::move(infoFile));
     auto tempEntry = std::make_unique<ChecksumCheckIntegrityEntry>(this);
     tempEntry->setRedownload(true);
-    return std::move(tempEntry);
+    return tempEntry;
   }
 
   loadAndOpenFile(std::move(infoFile));

@@ -29,6 +29,11 @@ tap_fail() {
   echo "not ok $_tap_count - $1"
 }
 
+tap_skip() {
+  _tap_count=$((_tap_count + 1))
+  echo "ok $_tap_count - $1 # SKIP ${2:-}"
+}
+
 assert_file_exists() {
   if [[ -f "$1" ]]; then
     tap_ok "$2"
@@ -244,10 +249,14 @@ assert_file_not_exists() {
   fi
 }
 
+get_mtime_epoch() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo "0"
+}
+
 assert_file_mtime_year() {
   local mtime_year
-  mtime_year=$(stat -f '%Sm' -t '%Y' "$1" 2>/dev/null || \
-               date -r "$1" +%Y 2>/dev/null || echo "0000")
+  mtime_year=$(date -r "$1" +%Y 2>/dev/null || \
+               stat -f '%Sm' -t '%Y' "$1" 2>/dev/null || echo "0000")
   if [[ "$mtime_year" == "$2" ]]; then
     tap_ok "$3"
   else

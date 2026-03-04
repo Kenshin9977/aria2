@@ -336,6 +336,7 @@ case "$host" in
 # include <winsock2.h>
 #endif
 #ifdef HAVE_WINDOWS_H
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 #endif
                       ]])
@@ -1036,9 +1037,6 @@ esac
 AC_CHECK_FUNCS([timegm],
     [AM_CONDITIONAL([HAVE_TIMEGM], true)],
     [AM_CONDITIONAL([HAVE_TIMEGM], false)])
-
-AC_CHECK_FUNCS([port_associate], [have_port_associate=yes])
-AM_CONDITIONAL([HAVE_PORT_ASSOCIATE], [test "x$have_port_associate" = "xyes"])
 
 AC_CHECK_FUNCS([kqueue], [have_kqueue=yes])
 AM_CONDITIONAL([HAVE_KQUEUE], [test "x$have_kqueue" = "xyes"])

@@ -953,7 +953,7 @@ std::unique_ptr<ValueBase> GetFilesRpcMethod::process(const RpcRequest& req,
                     dctx->getTotalLength(), dctx->getPieceLength(),
                     group->getPieceStorage());
   }
-  return std::move(files);
+  return files;
 }
 
 std::unique_ptr<ValueBase> GetUrisRpcMethod::process(const RpcRequest& req,
@@ -973,7 +973,7 @@ std::unique_ptr<ValueBase> GetUrisRpcMethod::process(const RpcRequest& req,
     createUriEntry(uriList.get(),
                    group->getDownloadContext()->getFirstFileEntry());
   }
-  return std::move(uriList);
+  return uriList;
 }
 
 #ifdef ENABLE_BITTORRENT
@@ -1034,7 +1034,7 @@ std::unique_ptr<ValueBase> TellStatusRpcMethod::process(const RpcRequest& req,
     }
     gatherProgress(entryDict.get(), group, e, keys);
   }
-  return std::move(entryDict);
+  return entryDict;
 }
 
 std::unique_ptr<ValueBase> TellActiveRpcMethod::process(const RpcRequest& req,
@@ -1053,7 +1053,7 @@ std::unique_ptr<ValueBase> TellActiveRpcMethod::process(const RpcRequest& req,
     gatherProgress(entryDict.get(), group, e, keys);
     list->append(std::move(entryDict));
   }
-  return std::move(list);
+  return list;
 }
 
 const RequestGroupList& TellWaitingRpcMethod::getItems(DownloadEngine* e) const
@@ -1170,7 +1170,7 @@ std::unique_ptr<ValueBase> GetVersionRpcMethod::process(const RpcRequest& req,
     }
   }
   result->put(KEY_ENABLED_FEATURES, std::move(featureList));
-  return std::move(result);
+  return result;
 }
 
 namespace {
@@ -1206,7 +1206,7 @@ std::unique_ptr<ValueBase> GetOptionRpcMethod::process(const RpcRequest& req,
   else {
     pushRequestOption(result.get(), group->getOption(), getOptionParser());
   }
-  return std::move(result);
+  return result;
 }
 
 std::unique_ptr<ValueBase>
@@ -1223,7 +1223,7 @@ GetGlobalOptionRpcMethod::process(const RpcRequest& req, DownloadEngine* e)
       result->put(pref->k, e->getOption()->get(pref));
     }
   }
-  return std::move(result);
+  return result;
 }
 
 std::unique_ptr<ValueBase>
@@ -1259,7 +1259,7 @@ GetSessionInfoRpcMethod::process(const RpcRequest& req, DownloadEngine* e)
 {
   auto result = Dict::g();
   result->put(KEY_SESSION_ID, util::toHex(e->getSessionId()));
-  return std::move(result);
+  return result;
 }
 
 std::unique_ptr<ValueBase> GetServersRpcMethod::process(const RpcRequest& req,
@@ -1293,7 +1293,7 @@ std::unique_ptr<ValueBase> GetServersRpcMethod::process(const RpcRequest& req,
     fileEntry->put(KEY_SERVERS, std::move(servers));
     result->append(std::move(fileEntry));
   }
-  return std::move(result);
+  return result;
 }
 
 std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
@@ -1353,7 +1353,7 @@ std::unique_ptr<ValueBase> ChangeUriRpcMethod::process(const RpcRequest& req,
   auto res = List::g();
   res->append(Integer::g(delcount));
   res->append(Integer::g(addcount));
-  return std::move(res);
+  return res;
 }
 
 namespace {
@@ -1393,7 +1393,7 @@ GetGlobalStatRpcMethod::process(const RpcRequest& req, DownloadEngine* e)
   res->put(KEY_NUM_STOPPED, util::uitos(rgman->getDownloadResults().size()));
   res->put(KEY_NUM_STOPPED_TOTAL, util::uitos(rgman->getNumStoppedTotal()));
   res->put(KEY_NUM_ACTIVE, util::uitos(rgman->getRequestGroups().size()));
-  return std::move(res);
+  return res;
 }
 
 std::unique_ptr<ValueBase> SaveSessionRpcMethod::process(const RpcRequest& req,
@@ -1488,7 +1488,7 @@ SystemListMethodsRpcMethod::process(const RpcRequest& req, DownloadEngine* e)
     list->append(s);
   }
 
-  return std::move(list);
+  return list;
 }
 
 RpcResponse SystemListMethodsRpcMethod::execute(RpcRequest req,
@@ -1508,7 +1508,7 @@ SystemListNotificationsRpcMethod::process(const RpcRequest& req,
     list->append(s);
   }
 
-  return std::move(list);
+  return list;
 }
 
 RpcResponse SystemListNotificationsRpcMethod::execute(RpcRequest req,

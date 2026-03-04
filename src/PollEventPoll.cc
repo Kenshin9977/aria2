@@ -93,8 +93,8 @@ void PollEventPoll::poll(const struct timeval& tv)
          errno == EINTR)
     ;
   if (res > 0) {
-    for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
-         first != last; ++first) {
+    struct pollfd* pfds = pollfds_.get();
+    for (auto first = pfds, last = pfds + pollfdNum_; first != last; ++first) {
       if (first->revents) {
         if (auto itr = socketEntries_.find(first->fd);
             itr == std::end(socketEntries_)) {
@@ -148,8 +148,8 @@ bool PollEventPoll::addEvents(sock_t socket, const PollEventPoll::KEvent& event)
   if (i != socketEntries_.end()) {
     auto& socketEntry = i->second;
     event.addSelf(&socketEntry);
-    for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
-         first != last; ++first) {
+    struct pollfd* pfds = pollfds_.get();
+    for (auto first = pfds, last = pfds + pollfdNum_; first != last; ++first) {
       if (first->fd == socket) {
         *first = socketEntry.getEvents();
         break;
@@ -199,8 +199,8 @@ bool PollEventPoll::deleteEvents(sock_t socket,
 
   auto& socketEntry = (*i).second;
   event.removeSelf(&socketEntry);
-  for (auto first = pollfds_.get(), last = pollfds_.get() + pollfdNum_;
-       first != last; ++first) {
+  struct pollfd* pfds = pollfds_.get();
+  for (auto first = pfds, last = pfds + pollfdNum_; first != last; ++first) {
     if (first->fd == socket) {
       if (socketEntry.eventEmpty()) {
         if (pollfdNum_ >= 2) {

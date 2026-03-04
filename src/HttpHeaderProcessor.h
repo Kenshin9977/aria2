@@ -74,7 +74,7 @@ public:
    */
   std::unique_ptr<HttpHeader> getResult();
 
-  std::string getHeaderString() const;
+  const std::string& getHeaderString() const;
 
   /**
    * Resets internal status and ready for next header processing.

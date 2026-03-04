@@ -90,7 +90,7 @@ public:
 
   void newEntryTransaction();
 
-  void setFileNameOfEntry(std::string filename);
+  void setFileNameOfEntry(const std::string& filename);
 
   void setFileLengthOfEntry(int64_t length);
 
@@ -110,7 +110,7 @@ public:
 
   void setURLOfResource(std::string url);
 
-  void setTypeOfResource(std::string type);
+  void setTypeOfResource(const std::string& type);
 
   void setLocationOfResource(std::string location);
 
@@ -124,7 +124,7 @@ public:
 
   void newChecksumTransaction();
 
-  void setTypeOfChecksum(std::string type);
+  void setTypeOfChecksum(const std::string& type);
 
   void setHashOfChecksum(std::string md);
 
@@ -134,7 +134,7 @@ public:
 
   void newChunkChecksumTransactionV4(); // Metalink4Spec
 
-  void setTypeOfChunkChecksumV4(std::string type); // Metalink4Spec
+  void setTypeOfChunkChecksumV4(const std::string& type); // Metalink4Spec
 
   void setLengthOfChunkChecksumV4(size_t length); // Metalink4Spec
 
@@ -146,7 +146,7 @@ public:
 
   void newChunkChecksumTransaction(); // Metalink3Spec
 
-  void setTypeOfChunkChecksum(std::string type); // Metalink3Spec
+  void setTypeOfChunkChecksum(const std::string& type); // Metalink3Spec
 
   void setLengthOfChunkChecksum(size_t length); // Metalink3Spec
 

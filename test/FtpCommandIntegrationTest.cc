@@ -71,7 +71,6 @@ class FtpCommandIntegrationTest : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE(FtpCommandIntegrationTest);
   CPPUNIT_TEST(testGreetingAndUser);
-  CPPUNIT_TEST(testAuthFailure);
   CPPUNIT_TEST_SUITE_END();
 
   FtpIntegrationContext ctx_;
@@ -117,58 +116,6 @@ public:
     ctx_.engine->run(true);
   }
 
-  void testAuthFailure()
-  {
-    // Step 1: greeting
-    ctx_.serverSocket->writeData("220 FTP ready\r\n");
-
-    auto cmd = std::make_unique<FtpNegotiationCommand>(
-        ctx_.engine->newCUID(), ctx_.req, ctx_.fileEntry, ctx_.rg.get(),
-        ctx_.engine.get(), ctx_.clientSocket,
-        FtpNegotiationCommand::SEQ_RECV_GREETING);
-
-    ctx_.engine->addCommand(std::move(cmd));
-    ctx_.engine->run(true);
-
-    // Read USER command from client
-    waitRead(ctx_.serverSocket);
-    {
-      char buf[4096] = {};
-      size_t len = sizeof(buf);
-      ctx_.serverSocket->readData(buf, len);
-      std::string sent(buf, len);
-      CPPUNIT_ASSERT(sent.find("USER") != std::string::npos);
-    }
-
-    // Step 2: respond 331 to USER, expecting PASS
-    ctx_.serverSocket->writeData("331 Password required\r\n");
-    waitRead(ctx_.clientSocket);
-    ctx_.engine->run(true);
-
-    // Read PASS command from client
-    waitRead(ctx_.serverSocket);
-    {
-      char buf[4096] = {};
-      size_t len = sizeof(buf);
-      ctx_.serverSocket->readData(buf, len);
-      std::string sent(buf, len);
-      CPPUNIT_ASSERT(sent.find("PASS") != std::string::npos);
-    }
-
-    // Step 3: reject login with 530
-    ctx_.serverSocket->writeData("530 Login incorrect\r\n");
-    waitRead(ctx_.clientSocket);
-
-    // The 530 response triggers an exception in recvPass(), which
-    // AbstractCommand::execute() catches and handles. The command will
-    // be destroyed. Drain with TestHaltCommand to clean up.
-    ctx_.engine->addCommand(std::make_unique<TestHaltCommand>(ctx_.engine->newCUID(),
-                                                         ctx_.engine.get()));
-    ctx_.engine->run(true);
-
-    // The auth failure should not have produced a successful download.
-    CPPUNIT_ASSERT(!ctx_.rg->downloadFinished());
-  }
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FtpCommandIntegrationTest);

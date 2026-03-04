@@ -24,11 +24,11 @@ assert_file_size "$E2E_TMPDIR/out1/testfile.bin" 1024 \
 # 2. Set file mtime to Jan 2023 (newer than Last-Modified),
 #    re-download with --conditional-get=true — 304 skip, file unchanged
 touch -t 202301010000.00 "$E2E_TMPDIR/out1/testfile.bin"
-mtime_before=$(stat -f %m "$E2E_TMPDIR/out1/testfile.bin")
+mtime_before=$(get_mtime_epoch "$E2E_TMPDIR/out1/testfile.bin")
 "$ARIA2C" -d "$E2E_TMPDIR/out1" --allow-overwrite=true \
   --conditional-get=true \
   "http://127.0.0.1:$HTTP_PORT/testfile.bin" >/dev/null 2>&1
-mtime_after=$(stat -f %m "$E2E_TMPDIR/out1/testfile.bin")
+mtime_after=$(get_mtime_epoch "$E2E_TMPDIR/out1/testfile.bin")
 if [[ "$mtime_before" == "$mtime_after" ]]; then
   tap_ok "conditional GET: file mtime unchanged (304 skip)"
 else

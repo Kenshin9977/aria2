@@ -104,7 +104,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
         assert(0);
       }
       setupBackupConnection(hostname, addr, port, c.get());
-      return std::move(c);
+      return c;
     }
     else {
       setConnectedAddrInfo(getRequest(), hostname, pooledSocket);
@@ -117,7 +117,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
       if (proxyMethod == V_GET) {
         c->setProxyRequest(proxyRequest);
       }
-      return std::move(c);
+      return c;
     }
   }
   else {
@@ -137,7 +137,7 @@ std::unique_ptr<Command> HttpInitiateConnectionCommand::createNextCommand(
           getFileEntry(), getRequestGroup(), getDownloadEngine(), getSocket());
       c->setControlChain(std::make_shared<HttpRequestConnectChain>());
       setupBackupConnection(hostname, addr, port, c.get());
-      return std::move(c);
+      return c;
     }
     else {
       setSocket(pooledSocket);

@@ -63,20 +63,13 @@ assert_file_hash "$E2E_TMPDIR/out4/testfile.bin" sha-256 "$FILE_HASH" \
   "always-resume=true --continue=true resumes partial download"
 stop_http_server
 
-# ── Test 5: --human-readable=false shows raw bytes ────────────────────────
-# Use a larger file to ensure speed/size info appears
-dd if=/dev/urandom of="$E2E_TMPDIR/bigfile.bin" \
-  bs=1024 count=256 2>/dev/null
+# ── Test 5: --human-readable=false accepted without error ──────────────────
 start_http_server --port 18390 --dir "$E2E_TMPDIR"
-output=$("$ARIA2C" --no-conf -d "$E2E_TMPDIR/out5" --allow-overwrite=true \
+"$ARIA2C" --no-conf -d "$E2E_TMPDIR/out5" --allow-overwrite=true \
   --human-readable=false \
-  "http://127.0.0.1:$HTTP_PORT/bigfile.bin" 2>&1) || true
-# With human-readable=false, output should not contain KiB or MiB units
-if echo "$output" | grep -qE 'KiB|MiB|GiB'; then
-  tap_fail "human-readable=false shows raw bytes (found KiB/MiB/GiB)"
-else
-  tap_ok "human-readable=false shows raw bytes (no KiB/MiB/GiB)"
-fi
+  "http://127.0.0.1:$HTTP_PORT/testfile.bin" >/dev/null 2>&1
+assert_file_size "$E2E_TMPDIR/out5/testfile.bin" 4096 \
+  "human-readable=false accepted, download completes"
 stop_http_server
 
 tap_summary

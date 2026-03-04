@@ -490,6 +490,9 @@ std::unique_ptr<HttpHeader> HttpHeaderProcessor::getResult()
   return std::move(result_);
 }
 
-std::string HttpHeaderProcessor::getHeaderString() const { return headers_; }
+const std::string& HttpHeaderProcessor::getHeaderString() const
+{
+  return headers_;
+}
 
 } // namespace aria2
