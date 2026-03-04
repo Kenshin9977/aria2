@@ -10,6 +10,15 @@ source "$SCRIPT_DIR/tap_helpers.sh"
 tap_plan 5
 make_tempdir
 
+# Detect loopback interface name (lo on Linux, lo0 on macOS/BSD)
+if ip link show lo >/dev/null 2>&1; then
+  LO_IFACE=lo
+elif ifconfig lo0 >/dev/null 2>&1; then
+  LO_IFACE=lo0
+else
+  LO_IFACE=lo
+fi
+
 _bt_seeder_pid=""
 _bt_tracker_pid=""
 
@@ -103,35 +112,38 @@ sleep 2
 # LPD multicast may not work in CI/containers, but with tracker as fallback
 # we just verify the option is accepted and download succeeds
 mkdir -p "$E2E_TMPDIR/lpd_dir"
+rc=0
 "$ARIA2C" --no-conf --listen-port=18402 --dir="$E2E_TMPDIR/lpd_dir" \
   --bt-tracker="http://127.0.0.1:18400/announce" \
   --enable-dht=false --enable-peer-exchange=false \
   --bt-enable-lpd=true \
   --seed-time=0 --bt-stop-timeout=30 \
-  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
+  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/lpd_dir/payload.bin" \
   "bt-enable-lpd=true accepted, download completes"
 
-# ── Test 2: --bt-lpd-interface=lo0 accepted, download completes ─────────
+# ── Test 2: --bt-lpd-interface=$LO_IFACE accepted, download completes ──
 mkdir -p "$E2E_TMPDIR/lpdi_dir"
+rc=0
 "$ARIA2C" --no-conf --listen-port=18402 --dir="$E2E_TMPDIR/lpdi_dir" \
   --bt-tracker="http://127.0.0.1:18400/announce" \
   --enable-dht=false --enable-peer-exchange=false \
-  --bt-enable-lpd=true --bt-lpd-interface=lo0 \
+  --bt-enable-lpd=true --bt-lpd-interface="$LO_IFACE" \
   --seed-time=0 --bt-stop-timeout=30 \
-  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
+  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/lpdi_dir/payload.bin" \
-  "bt-lpd-interface=lo0 accepted, download completes"
+  "bt-lpd-interface=$LO_IFACE accepted, download completes"
 
 # ── Test 3: --dht-entry-point discovers seeder via DHT ──────────────────
 mkdir -p "$E2E_TMPDIR/dhtep_dir"
+rc=0
 "$ARIA2C" --no-conf --listen-port=18402 --dir="$E2E_TMPDIR/dhtep_dir" \
   --bt-tracker="http://127.0.0.1:18400/announce" \
   --enable-dht=true --dht-entry-point=127.0.0.1:18403 \
   --dht-file-path="$E2E_TMPDIR/leech_dht.dat" \
   --enable-peer-exchange=false \
   --seed-time=0 --bt-stop-timeout=30 \
-  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1
+  "$E2E_TMPDIR/test.torrent" >/dev/null 2>&1 || rc=$?
 assert_file_exists "$E2E_TMPDIR/dhtep_dir/payload.bin" \
   "dht-entry-point discovers seeder via DHT"
 
