@@ -49,32 +49,35 @@ fi
 stop_aria2_rpc
 
 # ── Test 3: --rpc-save-upload-metadata=true saves .torrent on addTorrent ─
-# Create a minimal torrent for upload
-dd if=/dev/urandom of="$E2E_TMPDIR/tiny.bin" bs=1024 count=1 2>/dev/null
-python3 "$SCRIPT_DIR/create_torrent.py" \
-  --file "$E2E_TMPDIR/tiny.bin" \
-  --output "$E2E_TMPDIR/tiny.torrent" \
-  --piece-length 16384
-torrent_b64=$(base64 < "$E2E_TMPDIR/tiny.torrent" | tr -d '\n')
-start_aria2_rpc 16816 --dir="$E2E_TMPDIR/downloads" \
-  --rpc-save-upload-metadata=true --bt-stop-timeout=3 --seed-time=0
-resp=$(rpc_call $RPC_PORT "aria2.addTorrent" "[\"$torrent_b64\"]")
-gid=$(echo "$resp" | sed -n 's/.*"result":"\([^"]*\)".*/\1/p')
-sleep 1
-# Check if a .torrent file was saved in the download directory
-torrent_saved=false
-for f in "$E2E_TMPDIR/downloads"/*.torrent; do
-  if [[ -f "$f" ]]; then
-    torrent_saved=true
-    break
+# Requires BitTorrent support (addTorrent, --bt-stop-timeout)
+if "$ARIA2C" -v 2>&1 | grep -q 'BitTorrent'; then
+  dd if=/dev/urandom of="$E2E_TMPDIR/tiny.bin" bs=1024 count=1 2>/dev/null
+  python3 "$SCRIPT_DIR/create_torrent.py" \
+    --file "$E2E_TMPDIR/tiny.bin" \
+    --output "$E2E_TMPDIR/tiny.torrent" \
+    --piece-length 16384
+  torrent_b64=$(base64 < "$E2E_TMPDIR/tiny.torrent" | tr -d '\n')
+  start_aria2_rpc 16816 --dir="$E2E_TMPDIR/downloads" \
+    --rpc-save-upload-metadata=true --bt-stop-timeout=3 --seed-time=0
+  resp=$(rpc_call $RPC_PORT "aria2.addTorrent" "[\"$torrent_b64\"]")
+  gid=$(echo "$resp" | sed -n 's/.*"result":"\([^"]*\)".*/\1/p')
+  sleep 1
+  torrent_saved=false
+  for f in "$E2E_TMPDIR/downloads"/*.torrent; do
+    if [[ -f "$f" ]]; then
+      torrent_saved=true
+      break
+    fi
+  done
+  if $torrent_saved; then
+    tap_ok "rpc-save-upload-metadata=true saves .torrent file"
+  else
+    tap_fail "rpc-save-upload-metadata=true saves .torrent file"
   fi
-done
-if $torrent_saved; then
-  tap_ok "rpc-save-upload-metadata=true saves .torrent file"
+  stop_aria2_rpc
 else
-  tap_fail "rpc-save-upload-metadata=true saves .torrent file"
+  tap_skip "rpc-save-upload-metadata=true saves .torrent file" "BitTorrent disabled"
 fi
-stop_aria2_rpc
 
 # ── Test 4: --max-download-result=3 caps result queue ───────────────────
 start_aria2_rpc 16816 --dir="$E2E_TMPDIR/downloads" \

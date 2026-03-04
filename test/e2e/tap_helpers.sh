@@ -29,6 +29,11 @@ tap_fail() {
   echo "not ok $_tap_count - $1"
 }
 
+tap_skip() {
+  _tap_count=$((_tap_count + 1))
+  echo "ok $_tap_count - $1 # SKIP ${2:-}"
+}
+
 assert_file_exists() {
   if [[ -f "$1" ]]; then
     tap_ok "$2"
