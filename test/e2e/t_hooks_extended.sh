@@ -5,7 +5,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tap_helpers.sh
 source "$SCRIPT_DIR/tap_helpers.sh"
 
-tap_plan 4
+# Detect if BT is available (test 4 requires it)
+_bt_available=false
+if "$ARIA2C" -v 2>&1 | grep -q 'BitTorrent'; then
+  _bt_available=true
+fi
+
+if [[ "$_bt_available" == true ]]; then
+  tap_plan 4
+else
+  tap_plan 3
+fi
 make_tempdir
 
 # ── Shared fixture: 1KB test file ──
@@ -124,6 +134,10 @@ stop_http_server
 # ── Test 4: --on-bt-download-complete fires on leecher finish ──
 # Seeder/leecher pattern: start a seeder, then have a leecher download
 # with an on-bt-download-complete hook; check that the hook fires.
+
+if [[ "$_bt_available" != true ]]; then
+  tap_summary
+fi
 
 mkdir -p "$E2E_TMPDIR/bt_seed_dir"
 dd if=/dev/urandom of="$E2E_TMPDIR/bt_seed_dir/bt_payload.bin" \

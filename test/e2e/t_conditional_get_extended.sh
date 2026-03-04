@@ -40,11 +40,11 @@ mkdir -p "$E2E_TMPDIR/out3"
 # Pre-create a file with different content but newer mtime
 echo "local-newer-content" > "$E2E_TMPDIR/out3/testfile.bin"
 touch -t 202401010000.00 "$E2E_TMPDIR/out3/testfile.bin"
-mtime_before=$(stat -f %m "$E2E_TMPDIR/out3/testfile.bin")
+mtime_before=$(get_mtime_epoch "$E2E_TMPDIR/out3/testfile.bin")
 "$ARIA2C" -d "$E2E_TMPDIR/out3" --no-conf --allow-overwrite=true \
   --conditional-get=true \
   "http://127.0.0.1:$HTTP_PORT/testfile.bin" >/dev/null 2>&1
-mtime_after=$(stat -f %m "$E2E_TMPDIR/out3/testfile.bin")
+mtime_after=$(get_mtime_epoch "$E2E_TMPDIR/out3/testfile.bin")
 if [[ "$mtime_before" == "$mtime_after" ]]; then
   tap_ok "conditional-get: newer local file not re-downloaded (mtime unchanged)"
 else

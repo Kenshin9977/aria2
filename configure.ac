@@ -336,6 +336,7 @@ case "$host" in
 # include <winsock2.h>
 #endif
 #ifdef HAVE_WINDOWS_H
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 #endif
                       ]])

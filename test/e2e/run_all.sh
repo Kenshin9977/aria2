@@ -18,7 +18,7 @@ failed_scripts=()
 
 # Detect if the aria2c binary supports BitTorrent
 ARIA2C="${ARIA2C:-$(dirname "$SCRIPT_DIR")/../src/aria2c}"
-if [[ -x "$ARIA2C" ]] && "$ARIA2C" --help 2>&1 | grep -q -- '--bt-'; then
+if [[ -x "$ARIA2C" ]] && "$ARIA2C" -v 2>&1 | grep -q 'BitTorrent'; then
   bt_enabled=true
 else
   bt_enabled=false

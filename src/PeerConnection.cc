@@ -142,7 +142,7 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
     resbufOffset_ = i;
     if (done) {
       if (data) {
-        auto* buf = resbuf_.get();
+        unsigned char* buf = resbuf_.get();
         std::copy_n(buf + msgOffset_ + 4, currentPayloadLength_, data);
       }
       dataLength = currentPayloadLength_;
@@ -161,7 +161,7 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
         else {
           // Shift buffer so that resbuf_[msgOffset_] moves to
           // rebuf_[0].
-          auto* buf = resbuf_.get();
+          unsigned char* buf = resbuf_.get();
           memmove(buf, buf + msgOffset_, resbufLength_ - msgOffset_);
           resbufLength_ -= msgOffset_;
           resbufOffset_ = resbufLength_;
@@ -177,7 +177,7 @@ bool PeerConnection::receiveMessage(unsigned char* data, size_t& dataLength)
       else {
         nread = bufferCapacity_ - resbufLength_;
       }
-      auto* rbuf = resbuf_.get();
+      unsigned char* rbuf = resbuf_.get();
       readData(rbuf + resbufLength_, nread, encryptionEnabled_);
       if (nread == 0) {
         if (socket_->wantRead() || socket_->wantWrite()) {
@@ -207,7 +207,7 @@ bool PeerConnection::receiveHandshake(unsigned char* data, size_t& dataLength,
   size_t remaining = BtHandshakeMessage::MESSAGE_LENGTH - resbufLength_;
   if (remaining > 0) {
     size_t temp = remaining;
-    auto* buf = resbuf_.get();
+    unsigned char* buf = resbuf_.get();
     readData(buf + resbufLength_, remaining, encryptionEnabled_);
     if (remaining == 0 && !socket_->wantRead() && !socket_->wantWrite()) {
       // we got EOF
@@ -275,7 +275,7 @@ ssize_t PeerConnection::sendPendingData()
 
 const unsigned char* PeerConnection::getMsgPayloadBuffer() const
 {
-  auto* buf = resbuf_.get();
+  unsigned char* buf = resbuf_.get();
   return buf + msgOffset_ + 4;
 }
 
