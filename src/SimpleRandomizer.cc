@@ -41,10 +41,6 @@
 #include <cstring>
 #include <iostream>
 
-#ifdef HAVE_APPLETLS
-#  include <Security/SecRandom.h>
-#endif // HAVE_APPLETLS
-
 #ifdef HAVE_LIBGNUTLS
 #  include <gnutls/crypto.h>
 #endif // HAVE_LIBGNUTLS
@@ -106,9 +102,6 @@ void SimpleRandomizer::getRandomBytes(unsigned char* buf, size_t len)
     assert(r);
     abort();
   }
-#elif defined(HAVE_APPLETLS)
-  [[maybe_unused]] auto rv = SecRandomCopyBytes(kSecRandomDefault, len, buf);
-  assert(errSecSuccess == rv);
 #elif defined(HAVE_LIBGNUTLS)
   auto rv = gnutls_rnd(GNUTLS_RND_RANDOM, buf, len);
   if (rv != 0) {

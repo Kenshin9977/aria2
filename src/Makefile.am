@@ -336,16 +336,6 @@ if ENABLE_SSL
 SRCS += TLSContext.h TLSSession.h
 endif # ENABLE_SSL
 
-if USE_APPLE_MD
-SRCS += AppleMessageDigestImpl.cc
-endif # USE_APPLE_MD
-
-if HAVE_APPLETLS
-SRCS += \
-	AppleTLSContext.cc AppleTLSContext.h \
-	AppleTLSSession.cc AppleTLSSession.h
-endif # HAVE_APPLETLS
-
 if HAVE_WINTLS
 SRCS += \
 	WinTLSContext.cc WinTLSContext.h \
@@ -399,12 +389,9 @@ endif # HAVE_LIBGMP
 if HAVE_OPENSSL
 SRCS += \
 	LibsslARC4Encryptor.cc LibsslARC4Encryptor.h \
-        LibsslDHKeyExchange.cc LibsslDHKeyExchange.h
-if !HAVE_APPLETLS
-SRCS += \
+        LibsslDHKeyExchange.cc LibsslDHKeyExchange.h \
 	LibsslTLSContext.cc LibsslTLSContext.h \
         LibsslTLSSession.cc LibsslTLSSession.h
-endif # !HAVE_APPLETLS
 if USE_OPENSSL_MD
 SRCS += LibsslMessageDigestImpl.cc
 endif
@@ -747,8 +734,7 @@ AM_CPPFLAGS = \
 	@JEMALLOC_CFLAGS@
 
 AM_LDFLAGS = \
-	@EXTRALDFLAGS@ \
-	@APPLETLS_LDFLAGS@
+	@EXTRALDFLAGS@
 
 EXTLDADD = @ALLOCA@ \
 	@EXTRALIBS@ \

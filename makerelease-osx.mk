@@ -7,7 +7,7 @@
 #  - Build static libraries of aria2 dependencies.
 #  - Create a statically linked, aria2 release.
 #    - The build will have all major features enabled, and will use
-#      AppleTLS and GMP.
+#      OpenSSL and GMP.
 #  - Create a corresponding .tar.bz containing the binaries:
 #  - Create a corresponding .pkg installer.
 #  - Create a corresponding .dmg image containing said installer.
@@ -182,7 +182,7 @@ ARIA2_CONFFLAGS = \
         --enable-metalink \
         --enable-bittorrent \
         --disable-nls \
-        --with-appletls \
+        --with-openssl \
         --with-libgmp \
         --with-sqlite3 \
         --with-libz \

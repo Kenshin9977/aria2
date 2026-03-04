@@ -178,7 +178,7 @@ Clang 17+, MSVC 2022+).
 ======================== ========================================
 Feature                  Dependency
 ======================== ========================================
-HTTPS                    OpenSSL, GnuTLS, AppleTLS, or WinTLS
+HTTPS                    OpenSSL, GnuTLS, or WinTLS
 SFTP                     libssh2
 BitTorrent               None (optional: libnettle/libgcrypt/OpenSSL)
 Metalink                 libxml2 or Expat
@@ -206,7 +206,7 @@ JSON-RPC over WebSocket  libnettle, libgcrypt, or OpenSSL
         c-ares libssh2 sqlite libxml2 cppunit brotli zstd
     $ autoreconf -i
     $ ./configure \
-        --with-openssl --without-appletls --without-gnutls \
+        --with-openssl --without-gnutls \
         --with-libcares --with-sqlite3 --with-libssh2 \
         PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig:$(brew --prefix cppunit)/lib/pkgconfig"
     $ make -j$(sysctl -n hw.ncpu)

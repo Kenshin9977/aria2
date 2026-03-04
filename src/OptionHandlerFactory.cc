@@ -741,16 +741,9 @@ OptionHandlerFactory::createOptionHandlers()
     handlers.push_back(std::move(op));
   }
   {
-    auto op =
-#ifdef HAVE_APPLETLS
-        std::make_unique<LocalFilePathOptionHandler>(
-            PREF_RPC_CERTIFICATE, TEXT_RPC_CERTIFICATE, NO_DEFAULT_VALUE,
-            /* acceptStdin = */ false, 0, /* mustExist = */ false);
-#else  // HAVE_APPLETLS
-        std::make_unique<LocalFilePathOptionHandler>(PREF_RPC_CERTIFICATE,
-                                                     TEXT_RPC_CERTIFICATE,
-                                                     NO_DEFAULT_VALUE, false);
-#endif // HAVE_APPLETLS
+    auto op = std::make_unique<LocalFilePathOptionHandler>(
+        PREF_RPC_CERTIFICATE, TEXT_RPC_CERTIFICATE,
+        NO_DEFAULT_VALUE, false);
     op->addTag(TAG_RPC);
     handlers.push_back(std::move(op));
   }
@@ -1032,14 +1025,8 @@ OptionHandlerFactory::createOptionHandlers()
     handlers.push_back(std::move(op));
   }
   {
-    auto op =
-#ifdef HAVE_APPLETLS
-        std::make_unique<DefaultOptionHandler>(
-            PREF_CERTIFICATE, TEXT_CERTIFICATE, NO_DEFAULT_VALUE);
-#else  // HAVE_APPLETLS
-        std::make_unique<LocalFilePathOptionHandler>(
-            PREF_CERTIFICATE, TEXT_CERTIFICATE, NO_DEFAULT_VALUE, false);
-#endif // HAVE_APPLETLS
+    auto op = std::make_unique<LocalFilePathOptionHandler>(
+        PREF_CERTIFICATE, TEXT_CERTIFICATE, NO_DEFAULT_VALUE, false);
     op->addTag(TAG_HTTP);
     op->addTag(TAG_HTTPS);
     handlers.push_back(std::move(op));
