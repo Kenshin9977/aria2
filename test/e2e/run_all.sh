@@ -57,6 +57,16 @@ trap 'rm -rf "$results_dir"' EXIT
 
 per_test_timeout=${E2E_TIMEOUT:-120}
 
+# macOS doesn't have GNU timeout; use gtimeout from coreutils if available
+if command -v timeout >/dev/null 2>&1; then
+  TIMEOUT_CMD=timeout
+elif command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT_CMD=gtimeout
+else
+  TIMEOUT_CMD=""
+fi
+export TIMEOUT_CMD
+
 # Run a single test script and write results to a file
 run_one_test() {
   local test_script="$1"
@@ -66,8 +76,13 @@ run_one_test() {
 
   local exit_code=0
   local output
-  output=$(timeout "$per_test_timeout" bash "$test_script" 2>&1) \
-    || exit_code=$?
+  if [[ -n "$TIMEOUT_CMD" ]]; then
+    output=$($TIMEOUT_CMD "$per_test_timeout" bash "$test_script" 2>&1) \
+      || exit_code=$?
+  else
+    output=$(bash "$test_script" 2>&1) \
+      || exit_code=$?
+  fi
   if [[ $exit_code -eq 124 ]]; then
     output+=$'\n'"not ok - $name timed out after ${per_test_timeout}s"
   fi

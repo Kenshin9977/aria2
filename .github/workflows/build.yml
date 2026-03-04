@@ -46,7 +46,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install cppunit gettext openssl libssh2 c-ares sqlite3 \
-          autoconf automake pkg-config libtool
+          autoconf automake pkg-config libtool coreutils
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
