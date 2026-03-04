@@ -229,7 +229,7 @@ DefaultBtMessageFactory::createBtMessage(std::span<const unsigned char> data)
     }
   }
   setCommonProperty(msg.get());
-  return std::move(msg);
+  return msg;
 }
 
 void DefaultBtMessageFactory::setCommonProperty(AbstractBtMessage* msg)

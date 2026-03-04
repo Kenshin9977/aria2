@@ -410,7 +410,7 @@ std::string HttpServer::createPath() const
       break;
     }
   }
-  reqPath = reqPath.substr(0, i);
+  reqPath.resize(i);
   if (reqPath.empty()) {
     reqPath = "/";
   }

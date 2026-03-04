@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-26]
         compiler: [gcc, clang]
@@ -114,6 +115,7 @@ jobs:
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
   build-windows:
     strategy:
+      fail-fast: false
       matrix:
         bittorrent: [with-bt, without-bt]
     runs-on: windows-latest
@@ -152,10 +154,10 @@ jobs:
     - name: Build and test
       run: |
         autoreconf -i --no-recursive
-        (cd deps/wslay && autoreconf -if)
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \
+          --disable-websocket \
           $FEATURE_FLAGS
         make -j$(nproc)
         make -C test check

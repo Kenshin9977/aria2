@@ -67,9 +67,6 @@
 #ifdef HAVE_EPOLL
 #  include "EpollEventPoll.h"
 #endif // HAVE_EPOLL
-#ifdef HAVE_PORT_ASSOCIATE
-#  include "PortEventPoll.h"
-#endif // HAVE_PORT_ASSOCIATE
 #ifdef HAVE_KQUEUE
 #  include "KqueueEventPoll.h"
 #endif // HAVE_KQUEUE
@@ -134,17 +131,6 @@ std::unique_ptr<EventPoll> createEventPoll(Option* op)
   }
   else
 #endif // HAVE_KQUEUE
-#ifdef HAVE_PORT_ASSOCIATE
-      if (pollMethod == V_PORT) {
-    auto pp = std::make_unique<PortEventPoll>();
-    if (!pp->good()) {
-      throw DL_ABORT_EX("Initializing PortEventPoll failed."
-                        " Try --event-poll=select");
-    }
-    return std::move(pp);
-  }
-  else
-#endif // HAVE_PORT_ASSOCIATE
 #ifdef HAVE_POLL
       if (pollMethod == V_POLL) {
     return std::make_unique<PollEventPoll>();

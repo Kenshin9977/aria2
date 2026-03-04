@@ -37,7 +37,7 @@ public:
   inline ulong() : buf_(std::make_unique<uchar_t[]>(dim)) {}
   inline ulong(size_t t) : buf_(std::make_unique<uchar_t[]>(dim))
   {
-    memcpy(buf_.get(), (uchar_t*)&t, sizeof(t));
+    memcpy(buf_.get(), reinterpret_cast<const uchar_t*>(&t), sizeof(t));
   }
   inline ulong(const ulong<dim>& rhs) : buf_(std::make_unique<uchar_t[]>(dim))
   {

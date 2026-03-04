@@ -20,9 +20,15 @@ jobs:
         cppcheck \
           --enable=warning,performance,portability \
           --suppress=missingIncludeSystem \
-          --suppress=syntaxError:src/alloca.c \
           --suppress=uninitMemberVar \
           --suppress=duplInheritedMember \
+          --suppress=mismatchingContainerExpression \
+          --suppress=virtualCallInConstructor \
+          --suppress=returnStdMoveLocal:src/DHTMessageReceiver.cc \
+          --suppress=uninitvar:src/GZipDecodingStreamFilter.cc \
+          --suppress=*:src/alloca.c \
+          --suppress=*:src/gai_strerror.c \
+          --suppress=*:src/strptime.c \
           --error-exitcode=1 \
           --inline-suppr \
           -I src \

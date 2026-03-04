@@ -325,7 +325,7 @@ public:
 
   void setRefreshInterval(std::chrono::milliseconds interval);
 
-  const std::string getSessionId() const { return sessionId_; }
+  const std::string& getSessionId() const { return sessionId_; }
 
 #ifdef ENABLE_WEBSOCKET
   void setWebSocketSessionMan(std::unique_ptr<rpc::WebSocketSessionMan> wsman);

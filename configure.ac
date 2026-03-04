@@ -1037,9 +1037,6 @@ AC_CHECK_FUNCS([timegm],
     [AM_CONDITIONAL([HAVE_TIMEGM], true)],
     [AM_CONDITIONAL([HAVE_TIMEGM], false)])
 
-AC_CHECK_FUNCS([port_associate], [have_port_associate=yes])
-AM_CONDITIONAL([HAVE_PORT_ASSOCIATE], [test "x$have_port_associate" = "xyes"])
-
 AC_CHECK_FUNCS([kqueue], [have_kqueue=yes])
 AM_CONDITIONAL([HAVE_KQUEUE], [test "x$have_kqueue" = "xyes"])
 if test "x$have_kqueue" = "xyes"; then
