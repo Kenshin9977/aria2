@@ -101,8 +101,9 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         ./configure \
-          --without-openssl --without-gnutls --with-appletls \
-          --disable-nls
+          --with-openssl --without-gnutls --without-appletls \
+          --disable-nls \
+          PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig:$(brew --prefix cppunit)/lib/pkgconfig"
     - name: Build aria2
       run: |
         make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check || {
