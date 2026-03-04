@@ -176,7 +176,7 @@ CredHandle* WinTLSContext::getCredHandle()
   }
 
   TimeStamp ts;
-  cred_ = std::make_unique<CredHandle>();
+  cred_ = wintls::CredPtr(new CredHandle());
 
   const CERT_CONTEXT* ctx = nullptr;
   if (store_) {
