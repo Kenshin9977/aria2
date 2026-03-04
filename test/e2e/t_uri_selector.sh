@@ -15,7 +15,7 @@ dd if=/dev/urandom of="$E2E_TMPDIR/testfile.bin" bs=1024 count=64 2>/dev/null
 start_http_server --port 18118 --dir "$E2E_TMPDIR"
 
 # Start slow server manually (--delay 2)
-python3 "$SCRIPT_DIR/http_server.py" --port 18119 --dir "$E2E_TMPDIR" --delay 2 &
+python3 "$SCRIPT_DIR/http_server.py" --port 18119 --dir "$E2E_TMPDIR" --delay 2 >/dev/null 2>&1 &
 _slow_server_pid=$!
 tries=0
 while ! (echo >/dev/tcp/127.0.0.1/18119) 2>/dev/null; do

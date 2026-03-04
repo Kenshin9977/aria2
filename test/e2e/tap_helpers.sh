@@ -161,7 +161,7 @@ start_http_server() {
     esac
   done
   args+=(--port "$port")
-  python3 "$script_dir/http_server.py" "${args[@]}" &
+  python3 "$script_dir/http_server.py" "${args[@]}" >/dev/null 2>&1 &
   _http_server_pid=$!
   # Wait for server to be ready
   local tries=0
@@ -259,7 +259,7 @@ start_ftp_server() {
     esac
   done
   args+=(--port "$port")
-  python3 "$script_dir/ftp_server.py" "${args[@]}" &
+  python3 "$script_dir/ftp_server.py" "${args[@]}" >/dev/null 2>&1 &
   _ftp_server_pid=$!
   # Wait for FTP server to accept connections
   local tries=0
@@ -309,7 +309,7 @@ start_proxy_server() {
     esac
   done
   args+=(--port "$port")
-  python3 "$script_dir/proxy_server.py" "${args[@]}" &
+  python3 "$script_dir/proxy_server.py" "${args[@]}" >/dev/null 2>&1 &
   _proxy_server_pid=$!
   local tries=0
   while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
@@ -358,7 +358,7 @@ start_socks5_server() {
     esac
   done
   args+=(--port "$port")
-  python3 "$script_dir/socks5_server.py" "${args[@]}" &
+  python3 "$script_dir/socks5_server.py" "${args[@]}" >/dev/null 2>&1 &
   _socks5_server_pid=$!
   # Wait for SOCKS5 server to accept connections
   local tries=0
@@ -408,7 +408,7 @@ start_bt_tracker() {
     esac
   done
   args+=(--port "$port")
-  python3 "$script_dir/bt_tracker.py" "${args[@]}" &
+  python3 "$script_dir/bt_tracker.py" "${args[@]}" >/dev/null 2>&1 &
   _bt_tracker_pid=$!
   local tries=0
   while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
@@ -447,7 +447,7 @@ start_aria2_rpc() {
   local port="$1"; shift
   "$ARIA2C" --enable-rpc --rpc-listen-port="$port" \
     --rpc-listen-all=false --no-conf --daemon=false --quiet=true \
-    "$@" &
+    "$@" >/dev/null 2>&1 &
   _rpc_aria2_pid=$!
   local tries=0
   while ! (echo >/dev/tcp/127.0.0.1/$port) 2>/dev/null; do
@@ -560,6 +560,8 @@ ws_rpc_call() {
 # ── Extended cleanup ──
 
 _e2e_cleanup() {
+  # Disable errexit so cleanup always runs fully
+  set +e
   stop_http_server
   stop_ftp_server
   stop_proxy_server
