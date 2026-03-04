@@ -554,7 +554,7 @@ ws_rpc_call() {
   if [[ -n "$params" ]]; then
     args+=(--params "$params")
   fi
-  python3 "$script_dir/ws_client.py" "${args[@]}" "${extra_args[@]}"
+  python3 "$script_dir/ws_client.py" "${args[@]}" ${extra_args[@]+"${extra_args[@]}"}
 }
 
 # ── Extended cleanup ──
