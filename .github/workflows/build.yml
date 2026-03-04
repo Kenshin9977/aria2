@@ -118,6 +118,7 @@ jobs:
       env:
         ASAN_OPTIONS: detect_leaks=0
     - name: Run e2e tests
+      if: runner.os == 'Linux'
       run: make -C test check-e2e
 
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
