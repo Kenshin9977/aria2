@@ -118,7 +118,18 @@ jobs:
       env:
         ASAN_OPTIONS: detect_leaks=0
     - name: Run e2e tests
-      run: make -C test check-e2e
+      run: |
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          # macOS CI VMs are ~5x slower for Python process spawning.
+          # Run a focused subset; Ubuntu provides full e2e coverage.
+          bash test/e2e/run_all.sh \
+            --filter='t_(cli_basic|http_download|ftp_download|bt_seed_download|rpc)' \
+            --jobs=2
+        else
+          make -C test check-e2e
+        fi
+      env:
+        E2E_TIMEOUT: "90"
 
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
   build-windows:
