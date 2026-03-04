@@ -19,10 +19,11 @@ jobs:
       run: |
         apk add --no-cache \
           build-base autoconf automake libtool pkgconf gettext-dev \
-          openssl-dev openssl-libs-static c-ares-dev \
+          openssl-dev openssl-libs-static c-ares-dev c-ares-static \
           zlib-dev zlib-static sqlite-dev sqlite-static \
           libssh2-dev libssh2-static libxml2-dev libxml2-static \
-          brotli-dev brotli-static zstd-dev zstd-static
+          brotli-dev brotli-static zstd-dev zstd-static \
+          xz-dev
     - name: Build static binary
       run: |
         autoreconf -i
@@ -30,7 +31,8 @@ jobs:
           --without-gnutls --with-openssl \
           --with-libcares --with-sqlite3 --with-libssh2 \
           --with-libxml2 --disable-nls \
-          ARIA2_STATIC=yes
+          ARIA2_STATIC=yes \
+          LDFLAGS="-L/usr/lib"
         make -j$(nproc)
         strip src/aria2c
     - name: Upload artifact
@@ -50,16 +52,18 @@ jobs:
         run: |
           apk add --no-cache \
             build-base autoconf automake libtool pkgconf gettext-dev \
-            openssl-dev openssl-libs-static c-ares-dev \
+            openssl-dev openssl-libs-static c-ares-dev c-ares-static \
             zlib-dev zlib-static sqlite-dev sqlite-static \
             libssh2-dev libssh2-static libxml2-dev libxml2-static \
-            brotli-dev brotli-static zstd-dev zstd-static
+            brotli-dev brotli-static zstd-dev zstd-static \
+            xz-dev
           autoreconf -i
           ./configure \
             --without-gnutls --with-openssl \
             --with-libcares --with-sqlite3 --with-libssh2 \
             --with-libxml2 --disable-nls \
-            ARIA2_STATIC=yes
+            ARIA2_STATIC=yes \
+            LDFLAGS="-L/usr/lib"
           make -j$(nproc)
           strip src/aria2c
     - name: Upload artifact
@@ -93,7 +97,7 @@ jobs:
         path: src/aria2c
 
   macos-x86_64:
-    runs-on: macos-13
+    runs-on: macos-15-large
     steps:
     - uses: actions/checkout@v6
     - name: Install dependencies
@@ -145,10 +149,11 @@ jobs:
           gettext-devel
     - name: Build
       run: |
-        autoreconf -i --no-recursive
+        autoreconf -i
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
-          --with-libcares --with-sqlite3 --with-libssh2
+          --with-libcares --with-sqlite3 --with-libssh2 \
+          --disable-nls
         make -j$(nproc)
         strip src/aria2c.exe
     - name: Upload artifact
