@@ -34,9 +34,6 @@
 /* copyright --> */
 #include "AbstractDiskWriter.h"
 
-#ifdef __MINGW32__
-#  include <winioctl.h>
-#endif // __MINGW32__
 #include <unistd.h>
 #ifdef HAVE_MMAP
 #  include <sys/mman.h>

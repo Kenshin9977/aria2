@@ -43,15 +43,13 @@
 #ifdef HAVE_POLL_H
 #  include <poll.h>
 #endif // HAVE_POLL_H
-#ifdef HAVE_IO_H
+#ifdef __MINGW32__
 #  include <io.h>
-#endif // HAVE_IO_H
-#ifdef HAVE_WINIOCTL_H
 #  include <winioctl.h>
-#endif // HAVE_WINIOCTL_H
-#ifdef HAVE_SHARE_H
 #  include <share.h>
-#endif // HAVE_SHARE_H
+#elif defined(HAVE_IO_H)
+#  include <io.h>
+#endif // __MINGW32__
 
 // in some platforms following definitions are missing:
 #ifndef EINPROGRESS
