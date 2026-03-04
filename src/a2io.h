@@ -103,20 +103,20 @@
 #endif /* S_IRWXO               */
 
 // Use 'nul' instead of /dev/null in win32.
-#ifdef HAVE_WINSOCK2_H
+#ifdef __MINGW32__
 #  define DEV_NULL "nul"
 #else
 #  define DEV_NULL "/dev/null"
-#endif // HAVE_WINSOCK2_H
+#endif // __MINGW32__
 
 // Use 'con' instead of '/dev/stdin' and '/dev/stdout' in win32.
-#ifdef HAVE_WINSOCK2_H
+#ifdef __MINGW32__
 #  define DEV_STDIN "con"
 #  define DEV_STDOUT "con"
 #else
 #  define DEV_STDIN "/dev/stdin"
 #  define DEV_STDOUT "/dev/stdout"
-#endif // HAVE_WINSOCK2_H
+#endif // __MINGW32__
 
 #ifdef __MINGW32__
 #  define a2lseek(fd, offset, origin) _lseeki64(fd, offset, origin)

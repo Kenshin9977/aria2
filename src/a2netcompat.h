@@ -92,7 +92,7 @@
 
 #include <string>
 
-#ifdef HAVE_WINSOCK2_H
+#ifdef __MINGW32__
 #  define sock_t SOCKET
 #else
 #  define sock_t int
