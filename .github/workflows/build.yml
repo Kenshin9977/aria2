@@ -18,7 +18,7 @@ jobs:
           bittorrent: without-bt
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@v6
@@ -118,7 +118,6 @@ jobs:
       env:
         ASAN_OPTIONS: detect_leaks=0
     - name: Run e2e tests
-      if: runner.os == 'Linux'
       run: make -C test check-e2e
 
   # ASan is not supported with MinGW gcc, so no sanitizer flags here.
