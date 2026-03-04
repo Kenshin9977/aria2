@@ -52,7 +52,6 @@ AC_DEFINE_UNQUOTED([TARGET], ["$target"], [Define target-type])
 
 # Checks for arguments.
 ARIA2_ARG_WITH([libuv])
-ARIA2_ARG_WITHOUT([appletls])
 ARIA2_ARG_WITHOUT([wintls])
 ARIA2_ARG_WITHOUT([gnutls])
 ARIA2_ARG_WITHOUT([libnettle])
@@ -345,31 +344,11 @@ esac
 
 
 if test "x$enable_ssl" != "xyes"; then
-  with_appletls=no
   with_wintls=no
   with_libnettle=no
   with_libgcrypt=no
   with_gnutls=no
   with_openssl=no
-fi
-
-have_appletls=no
-if test "x$with_appletls" = "xyes"; then
-  AC_MSG_CHECKING([whether to enable Mac OS X native SSL/TLS])
-  if test "x$have_osx" = "xyes"; then
-    AC_DEFINE([HAVE_APPLETLS], [1], [Define to 1 if you have Apple TLS])
-    APPLETLS_LDFLAGS="-framework CoreFoundation -framework Security"
-    AC_SUBST([APPLETLS_LDFLAGS])
-    have_appletls="yes"
-    have_ssl=yes
-    have_nativetls=yes
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-    if test "x$with_appletls_requested" = "xyes"; then
-      ARIA2_DEP_NOT_MET([appletls])
-    fi
-  fi
 fi
 
 have_wintls=no
@@ -602,25 +581,20 @@ if test "x$with_libcares" = "xyes"; then
 fi
 
 use_md=""
-if test "x$have_appletls" = "xyes"; then
-  use_md="apple"
-  AC_DEFINE([USE_APPLE_MD], [1], [What message digest implementation to use])
+if test "x$have_libnettle" = "xyes"; then
+  AC_DEFINE([USE_LIBNETTLE_MD], [1], [What message digest implementation to use])
+  use_md="libnettle"
 else
-  if test "x$have_libnettle" = "xyes"; then
-    AC_DEFINE([USE_LIBNETTLE_MD], [1], [What message digest implementation to use])
-    use_md="libnettle"
+  if test "x$have_libgcrypt" = "xyes"; then
+    AC_DEFINE([USE_LIBGCRYPT_MD], [1], [What message digest implementation to use])
+    use_md="libgcrypt"
   else
-    if test "x$have_libgcrypt" = "xyes"; then
-      AC_DEFINE([USE_LIBGCRYPT_MD], [1], [What message digest implementation to use])
-      use_md="libgcrypt"
+    if test "x$have_openssl" = "xyes"; then
+      AC_DEFINE([USE_OPENSSL_MD], [1], [What message digest implementation to use])
+      use_md="openssl"
     else
-      if test "x$have_openssl" = "xyes"; then
-        AC_DEFINE([USE_OPENSSL_MD], [1], [What message digest implementation to use])
-        use_md="openssl"
-      else
-        AC_DEFINE([USE_INTERNAL_MD], [1], [What message digest implementation to use])
-        use_md="internal"
-      fi
+      AC_DEFINE([USE_INTERNAL_MD], [1], [What message digest implementation to use])
+      use_md="internal"
     fi
   fi
 fi
@@ -636,9 +610,7 @@ fi
 
 
 AM_CONDITIONAL([HAVE_OSX], [ test "x$have_osx" = "xyes" ])
-AM_CONDITIONAL([HAVE_APPLETLS], [ test "x$have_appletls" = "xyes" ])
 AM_CONDITIONAL([HAVE_WINTLS], [ test "x$have_wintls" = "xyes" ])
-AM_CONDITIONAL([USE_APPLE_MD], [ test "x$use_md" = "xapple" ])
 AM_CONDITIONAL([USE_WINDOWS_MD], [ test "x$use_md" = "xwindows" ])
 AM_CONDITIONAL([HAVE_LIBGNUTLS], [ test "x$have_libgnutls" = "xyes" ])
 AM_CONDITIONAL([HAVE_LIBNETTLE], [ test "x$have_libnettle" = "xyes" ])
@@ -1197,7 +1169,6 @@ WARNCXXFLAGS:   $WARNCXXFLAGS
 LibUV:          $have_libuv (CFLAGS='$LIBUV_CFLAGS' LIBS='$LIBUV_LIBS')
 SQLite3:        $have_sqlite3 (CFLAGS='$SQLITE3_CFLAGS' LIBS='$SQLITE3_LIBS')
 SSL Support:    $have_ssl
-AppleTLS:       $have_appletls (LDFLAGS='$APPLETLS_LDFLAGS')
 WinTLS:         $have_wintls (LIBS='$WINTLS_LIBS')
 GnuTLS:         $have_libgnutls (CFLAGS='$LIBGNUTLS_CFLAGS' LIBS='$LIBGNUTLS_LIBS')
 OpenSSL:        $have_openssl (CFLAGS='$OPENSSL_CFLAGS' LIBS='$OPENSSL_LIBS')

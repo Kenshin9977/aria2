@@ -38,7 +38,7 @@ dd if=/dev/urandom of="$E2E_TMPDIR/testfile.bin" bs=1024 count=64 2>/dev/null
 DIGEST_B64=$(openssl dgst -sha-256 -binary "$E2E_TMPDIR/testfile.bin" | base64)
 
 # Start mirror server (18125) manually — serves same file
-python3 "$SCRIPT_DIR/http_server.py" --port 18125 --dir "$E2E_TMPDIR" &
+python3 "$SCRIPT_DIR/http_server.py" --port 18125 --dir "$E2E_TMPDIR" >/dev/null 2>&1 &
 _mirror_pid=$!
 tries=0
 while ! (echo >/dev/tcp/127.0.0.1/18125) 2>/dev/null; do

@@ -48,7 +48,6 @@
 
 /* ── Library detection ── */
 
-#cmakedefine HAVE_APPLETLS 1
 #cmakedefine HAVE_WINTLS 1
 #cmakedefine HAVE_LIBGNUTLS 1
 #cmakedefine HAVE_OPENSSL 1
@@ -66,7 +65,6 @@
 
 /* ── Message digest implementation ── */
 
-#cmakedefine USE_APPLE_MD 1
 #cmakedefine USE_OPENSSL_MD 1
 #cmakedefine USE_LIBNETTLE_MD 1
 #cmakedefine USE_LIBGCRYPT_MD 1

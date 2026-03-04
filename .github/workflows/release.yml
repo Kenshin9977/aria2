@@ -80,7 +80,7 @@ jobs:
       run: |
         autoreconf -i
         ./configure \
-          --without-appletls --without-gnutls --with-openssl \
+          --without-gnutls --with-openssl \
           --with-libcares --with-sqlite3 --with-libssh2 \
           --disable-nls \
           PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig"
@@ -104,7 +104,7 @@ jobs:
       run: |
         autoreconf -i
         ./configure \
-          --without-appletls --without-gnutls --with-openssl \
+          --without-gnutls --with-openssl \
           --with-libcares --with-sqlite3 --with-libssh2 \
           --disable-nls \
           PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig"

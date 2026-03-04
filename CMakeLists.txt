@@ -37,7 +37,6 @@ option(ENABLE_WERROR      "Treat warnings as errors"    OFF)
 option(ARIA2_STATIC       "Build statically linked"     OFF)
 
 # Library options (default = auto-detect)
-option(WITH_APPLETLS   "Use Apple TLS (macOS)"       ON)
 option(WITH_WINTLS     "Use Windows TLS"             ON)
 option(WITH_GNUTLS     "Use GnuTLS"                  ON)
 option(WITH_OPENSSL    "Use OpenSSL"                  ON)
@@ -252,27 +251,18 @@ if(WITH_SQLITE3)
   endif()
 endif()
 
-# ── SSL/TLS detection (priority: Apple > Win > GnuTLS > OpenSSL) ──
+# ── SSL/TLS detection (priority: Win > GnuTLS > OpenSSL) ──
 set(HAVE_SSL OFF)
-set(HAVE_APPLETLS OFF)
 set(HAVE_WINTLS OFF)
 set(HAVE_LIBGNUTLS OFF)
 set(HAVE_OPENSSL OFF)
 
 if(NOT ENABLE_SSL)
-  set(WITH_APPLETLS OFF)
   set(WITH_WINTLS OFF)
   set(WITH_GNUTLS OFF)
   set(WITH_OPENSSL OFF)
   set(WITH_LIBNETTLE OFF)
   set(WITH_LIBGCRYPT OFF)
-endif()
-
-# Apple TLS (macOS native)
-if(WITH_APPLETLS AND HAVE_OSX)
-  set(HAVE_APPLETLS ON)
-  set(HAVE_SSL ON)
-  set(APPLETLS_LDFLAGS "-framework CoreFoundation -framework Security")
 endif()
 
 # Windows TLS
@@ -311,13 +301,13 @@ set(HAVE_LIBGMP OFF)
 set(HAVE_LIBGCRYPT OFF)
 
 if(NOT HAVE_OPENSSL)
-  if(WITH_LIBNETTLE AND NOT HAVE_APPLETLS AND NOT HAVE_WINTLS)
+  if(WITH_LIBNETTLE AND NOT HAVE_WINTLS)
     pkg_check_modules(LIBNETTLE nettle)
     if(LIBNETTLE_FOUND)
       set(HAVE_LIBNETTLE ON)
     endif()
   endif()
-  if(WITH_LIBGMP AND (HAVE_LIBNETTLE OR HAVE_APPLETLS OR HAVE_WINTLS)
+  if(WITH_LIBGMP AND (HAVE_LIBNETTLE OR HAVE_WINTLS)
      AND ENABLE_BITTORRENT)
     find_library(LIBGMP_LIBRARY gmp)
     if(LIBGMP_LIBRARY)
@@ -325,7 +315,7 @@ if(NOT HAVE_OPENSSL)
       set(LIBGMP_LIBRARIES ${LIBGMP_LIBRARY})
     endif()
   endif()
-  if(WITH_LIBGCRYPT AND NOT HAVE_APPLETLS AND NOT HAVE_WINTLS
+  if(WITH_LIBGCRYPT AND NOT HAVE_WINTLS
      AND NOT HAVE_LIBNETTLE)
     pkg_check_modules(LIBGCRYPT libgcrypt>=1.2.4)
     if(LIBGCRYPT_FOUND)
@@ -407,9 +397,7 @@ endif()
 set(HAVE_SOME_XMLLIB ${ENABLE_XML_RPC})
 
 # Message digest implementation selection
-if(HAVE_APPLETLS)
-  set(USE_APPLE_MD ON)
-elseif(HAVE_LIBNETTLE)
+if(HAVE_LIBNETTLE)
   set(USE_LIBNETTLE_MD ON)
 elseif(HAVE_LIBGCRYPT)
   set(USE_LIBGCRYPT_MD ON)
@@ -719,12 +707,6 @@ if(HAVE_IOURING)
 endif()
 
 # SSL/TLS backends
-if(HAVE_APPLETLS)
-  list(APPEND ARIA2_SOURCES
-    src/AppleTLSContext.cc
-    src/AppleTLSSession.cc
-  )
-endif()
 if(HAVE_WINTLS)
   list(APPEND ARIA2_SOURCES
     src/WinTLSContext.cc
@@ -737,7 +719,7 @@ if(HAVE_LIBGNUTLS)
     src/LibgnutlsTLSSession.cc
   )
 endif()
-if(HAVE_OPENSSL AND NOT HAVE_APPLETLS)
+if(HAVE_OPENSSL)
   list(APPEND ARIA2_SOURCES
     src/LibsslTLSContext.cc
     src/LibsslTLSSession.cc
@@ -745,9 +727,6 @@ if(HAVE_OPENSSL AND NOT HAVE_APPLETLS)
 endif()
 
 # Message digest implementations
-if(USE_APPLE_MD)
-  list(APPEND ARIA2_SOURCES src/AppleMessageDigestImpl.cc)
-endif()
 if(USE_INTERNAL_MD)
   list(APPEND ARIA2_SOURCES
     src/InternalMessageDigestImpl.cc
@@ -1150,12 +1129,6 @@ endif()
 if(HAVE_WINTLS)
   target_link_libraries(aria2_lib PUBLIC ${WINTLS_LIBRARIES})
 endif()
-if(HAVE_APPLETLS)
-  find_library(COREFOUNDATION_FRAMEWORK CoreFoundation)
-  find_library(SECURITY_FRAMEWORK Security)
-  target_link_libraries(aria2_lib PUBLIC
-    ${COREFOUNDATION_FRAMEWORK} ${SECURITY_FRAMEWORK})
-endif()
 if(ENABLE_WEBSOCKET)
   target_include_directories(aria2_lib PUBLIC ${WSLAY_INCLUDE_DIRS})
   target_link_libraries(aria2_lib PUBLIC wslay)
@@ -1494,7 +1467,6 @@ message(STATUS "  C++ compiler:    ${CMAKE_CXX_COMPILER}")
 message(STATUS "  C++ standard:    C++${CMAKE_CXX_STANDARD}")
 message(STATUS "")
 message(STATUS "  SSL Support:     ${HAVE_SSL}")
-message(STATUS "    AppleTLS:      ${HAVE_APPLETLS}")
 message(STATUS "    WinTLS:        ${HAVE_WINTLS}")
 message(STATUS "    GnuTLS:        ${HAVE_LIBGNUTLS}")
 message(STATUS "    OpenSSL:       ${HAVE_OPENSSL}")

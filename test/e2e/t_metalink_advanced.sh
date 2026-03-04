@@ -80,7 +80,7 @@ else
 fi
 
 # 3. Metalink with 2 mirrors — start second server, download succeeds
-python3 "$SCRIPT_DIR/http_server.py" --port 18109 --dir "$E2E_TMPDIR" &
+python3 "$SCRIPT_DIR/http_server.py" --port 18109 --dir "$E2E_TMPDIR" >/dev/null 2>&1 &
 _http_server2_pid=$!
 # Wait for second server to be ready
 tries=0
