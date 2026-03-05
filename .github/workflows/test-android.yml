@@ -1,0 +1,81 @@
+name: test-android
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  android-aarch64:
+    runs-on: ubuntu-24.04
+    env:
+      NDK_VERSION: r27c
+      API_LEVEL: "24"
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install host tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y autoconf automake libtool pkg-config gettext
+    - name: Setup NDK
+      run: |
+        wget -q "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"
+        unzip -q "android-ndk-${NDK_VERSION}-linux.zip"
+        echo "NDK_HOME=$PWD/android-ndk-${NDK_VERSION}" >> $GITHUB_ENV
+    - name: Build dependencies and aria2
+      run: |
+        export TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+        export PATH="$TOOLCHAIN/bin:$PATH"
+        export ANDROID_NDK_HOME="$NDK_HOME"
+        export ANDROID_NDK_ROOT="$NDK_HOME"
+        export TARGET=aarch64-linux-android
+        export CC="${TARGET}${API_LEVEL}-clang"
+        export CXX="${TARGET}${API_LEVEL}-clang++"
+        export AR="llvm-ar"
+        export RANLIB="llvm-ranlib"
+        export STRIP="llvm-strip"
+        export SYSROOT="$TOOLCHAIN/sysroot"
+        export PREFIX="$PWD/android-deps"
+        export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+        export CFLAGS="-O2 -fPIC"
+        export CXXFLAGS="-O2 -fPIC"
+        export LDFLAGS="-L$PREFIX/lib"
+        export CPPFLAGS="-I$PREFIX/include"
+        mkdir -p "$PREFIX"
+
+        # Build OpenSSL
+        wget -q https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz
+        tar xzf openssl-3.4.1.tar.gz && cd openssl-3.4.1
+        ./Configure android-arm64 no-shared --prefix="$PREFIX" \
+          -D__ANDROID_API__=$API_LEVEL
+        make -j$(nproc) && make install_sw
+        cd ..
+
+        # Build c-ares
+        wget -q https://github.com/c-ares/c-ares/releases/download/v1.34.4/c-ares-1.34.4.tar.gz
+        tar xzf c-ares-1.34.4.tar.gz && cd c-ares-1.34.4
+        ./configure --host=$TARGET --prefix="$PREFIX" \
+          --disable-shared --enable-static
+        make -j$(nproc) && make install
+        cd ..
+
+        # Build zlib
+        wget -q https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
+        tar xzf zlib-1.3.1.tar.gz && cd zlib-1.3.1
+        ./configure --prefix="$PREFIX" --static
+        make -j$(nproc) && make install
+        cd ..
+
+        # Build aria2
+        autoreconf -i
+        ./configure \
+          --host=$TARGET \
+          --with-openssl --without-gnutls \
+          --with-libcares --without-sqlite3 --without-libssh2 \
+          --without-libxml2 --without-libexpat \
+          --disable-nls --disable-websocket \
+          --disable-shared --enable-static \
+          PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" \
+          CPPFLAGS="-I$PREFIX/include" \
+          LDFLAGS="-L$PREFIX/lib -static"
+        make -j$(nproc)
+        $STRIP src/aria2c

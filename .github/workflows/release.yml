@@ -156,9 +156,8 @@ jobs:
         make -j$(nproc) && make install
         cd ..
 
-        # Build aria2 (create gettext stubs since we use --disable-nls)
-        touch config.rpath ABOUT-NLS
-        AUTOPOINT=true autoreconf -i
+        # Build aria2
+        autoreconf -i
         ./configure \
           --host=$TARGET \
           --with-openssl --without-gnutls \
