@@ -115,12 +115,14 @@ jobs:
     - name: Build dependencies and aria2
       run: |
         export TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+        export PATH="$TOOLCHAIN/bin:$PATH"
+        export ANDROID_NDK_HOME="$NDK_HOME"
         export TARGET=aarch64-linux-android
-        export CC="$TOOLCHAIN/bin/${TARGET}${API_LEVEL}-clang"
-        export CXX="$TOOLCHAIN/bin/${TARGET}${API_LEVEL}-clang++"
-        export AR="$TOOLCHAIN/bin/llvm-ar"
-        export RANLIB="$TOOLCHAIN/bin/llvm-ranlib"
-        export STRIP="$TOOLCHAIN/bin/llvm-strip"
+        export CC="${TARGET}${API_LEVEL}-clang"
+        export CXX="${TARGET}${API_LEVEL}-clang++"
+        export AR="llvm-ar"
+        export RANLIB="llvm-ranlib"
+        export STRIP="llvm-strip"
         export SYSROOT="$TOOLCHAIN/sysroot"
         export PREFIX="$PWD/android-deps"
         export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
