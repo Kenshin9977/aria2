@@ -158,7 +158,12 @@ jobs:
 
         # Build aria2 (bypass gettext/autopoint — NLS is disabled)
         touch config.rpath ABOUT-NLS
-        mkdir -p po && touch po/Makefile.in.in
+        mkdir -p po
+        cat > po/Makefile.in.in <<'POMK'
+all install install-data install-exec uninstall:
+clean distclean mostlyclean maintainer-clean:
+check installcheck dvi pdf ps info html tags ctags:
+POMK
         AUTOPOINT=true autoreconf -i
         ./configure \
           --host=$TARGET \
