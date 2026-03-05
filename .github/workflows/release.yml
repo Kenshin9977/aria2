@@ -156,8 +156,8 @@ jobs:
         make -j$(nproc) && make install
         cd ..
 
-        # Build aria2
-        autoreconf -i
+        # Build aria2 (AUTOPOINT=true skips autopoint since we use --disable-nls)
+        AUTOPOINT=true autoreconf -i
         ./configure \
           --host=$TARGET \
           --with-openssl --without-gnutls \
