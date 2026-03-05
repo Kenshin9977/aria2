@@ -117,6 +117,7 @@ jobs:
         export TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
         export PATH="$TOOLCHAIN/bin:$PATH"
         export ANDROID_NDK_HOME="$NDK_HOME"
+        export ANDROID_NDK_ROOT="$NDK_HOME"
         export TARGET=aarch64-linux-android
         export CC="${TARGET}${API_LEVEL}-clang"
         export CXX="${TARGET}${API_LEVEL}-clang++"
