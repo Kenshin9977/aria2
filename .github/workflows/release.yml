@@ -23,7 +23,7 @@ jobs:
           zlib-dev zlib-static sqlite-dev sqlite-static \
           libssh2-dev libssh2-static libxml2-dev libxml2-static \
           brotli-dev brotli-static zstd-dev zstd-static \
-          xz-dev
+          xz-dev xz-static
     - name: Build static binary
       run: |
         autoreconf -i
@@ -56,7 +56,7 @@ jobs:
             zlib-dev zlib-static sqlite-dev sqlite-static \
             libssh2-dev libssh2-static libxml2-dev libxml2-static \
             brotli-dev brotli-static zstd-dev zstd-static \
-            xz-dev
+            xz-dev xz-static
           autoreconf -i
           ./configure \
             --without-gnutls --with-openssl \

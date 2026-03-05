@@ -742,8 +742,7 @@ OptionHandlerFactory::createOptionHandlers()
   }
   {
     auto op = std::make_unique<LocalFilePathOptionHandler>(
-        PREF_RPC_CERTIFICATE, TEXT_RPC_CERTIFICATE,
-        NO_DEFAULT_VALUE, false);
+        PREF_RPC_CERTIFICATE, TEXT_RPC_CERTIFICATE, NO_DEFAULT_VALUE, false);
     op->addTag(TAG_RPC);
     handlers.push_back(std::move(op));
   }
