@@ -159,11 +159,7 @@ jobs:
         # Build aria2 (bypass gettext/autopoint — NLS is disabled)
         touch config.rpath ABOUT-NLS
         mkdir -p po
-        cat > po/Makefile.in.in <<'POMK'
-all install install-data install-exec uninstall:
-clean distclean mostlyclean maintainer-clean:
-check installcheck dvi pdf ps info html tags ctags:
-POMK
+        printf 'all install install-data install-exec uninstall:\nclean distclean mostlyclean maintainer-clean:\ncheck installcheck dvi pdf ps info html tags ctags:\n' > po/Makefile.in.in
         AUTOPOINT=true autoreconf -i
         ./configure \
           --host=$TARGET \
