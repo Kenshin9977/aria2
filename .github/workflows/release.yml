@@ -156,8 +156,10 @@ jobs:
         make -j$(nproc) && make install
         cd ..
 
-        # Build aria2
-        autoreconf -i
+        # Build aria2 (bypass gettext/autopoint — NLS is disabled)
+        touch config.rpath ABOUT-NLS
+        mkdir -p po && touch po/Makefile.in.in
+        AUTOPOINT=true autoreconf -i
         ./configure \
           --host=$TARGET \
           --with-openssl --without-gnutls \
