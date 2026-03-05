@@ -19,7 +19,7 @@ jobs:
       run: |
         apk add --no-cache \
           build-base autoconf automake libtool pkgconf gettext-dev \
-          openssl-dev openssl-libs-static c-ares-dev c-ares-static \
+          openssl-dev openssl-libs-static c-ares-dev \
           zlib-dev zlib-static sqlite-dev sqlite-static \
           libssh2-dev libssh2-static libxml2-dev libxml2-static \
           brotli-dev brotli-static zstd-dev zstd-static \
@@ -52,7 +52,7 @@ jobs:
         run: |
           apk add --no-cache \
             build-base autoconf automake libtool pkgconf gettext-dev \
-            openssl-dev openssl-libs-static c-ares-dev c-ares-static \
+            openssl-dev openssl-libs-static c-ares-dev \
             zlib-dev zlib-static sqlite-dev sqlite-static \
             libssh2-dev libssh2-static libxml2-dev libxml2-static \
             brotli-dev brotli-static zstd-dev zstd-static \
@@ -96,30 +96,6 @@ jobs:
         name: aria2c-macos-arm64
         path: src/aria2c
 
-  macos-x86_64:
-    runs-on: macos-15-large
-    steps:
-    - uses: actions/checkout@v6
-    - name: Install dependencies
-      run: |
-        brew install autoconf automake libtool pkgconf \
-          openssl@3 c-ares libssh2 sqlite libxml2 brotli zstd
-    - name: Build
-      run: |
-        autoreconf -i
-        ./configure \
-          --without-gnutls --with-openssl \
-          --with-libcares --with-sqlite3 --with-libssh2 \
-          --disable-nls \
-          PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig"
-        make -j$(sysctl -n hw.ncpu)
-        strip src/aria2c
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: aria2c-macos-x86_64
-        path: src/aria2c
-
   windows-x86_64:
     runs-on: windows-latest
     defaults:
@@ -149,11 +125,11 @@ jobs:
           gettext-devel
     - name: Build
       run: |
-        autoreconf -i
+        autoreconf -i --no-recursive
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \
-          --disable-nls
+          --disable-websocket --disable-nls
         make -j$(nproc)
         strip src/aria2c.exe
     - name: Upload artifact
@@ -163,7 +139,7 @@ jobs:
         path: src/aria2c.exe
 
   create-release:
-    needs: [linux-x86_64, linux-aarch64, macos-arm64, macos-x86_64, windows-x86_64]
+    needs: [linux-x86_64, linux-aarch64, macos-arm64, windows-x86_64]
     runs-on: ubuntu-24.04
     steps:
     - name: Download all artifacts
@@ -176,7 +152,6 @@ jobs:
         cp artifacts/aria2c-linux-x86_64/aria2c   release/aria2c-linux-x86_64
         cp artifacts/aria2c-linux-aarch64/aria2c   release/aria2c-linux-aarch64
         cp artifacts/aria2c-macos-arm64/aria2c     release/aria2c-macos-arm64
-        cp artifacts/aria2c-macos-x86_64/aria2c    release/aria2c-macos-x86_64
         cp artifacts/aria2c-windows-x86_64/aria2c.exe release/aria2c-windows-x86_64.exe
         cd release && sha256sum * > SHA256SUMS
     - name: Create GitHub Release
