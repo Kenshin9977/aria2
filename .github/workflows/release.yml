@@ -167,6 +167,7 @@ jobs:
           --with-libcares --without-sqlite3 --without-libssh2 \
           --without-libxml2 --without-libexpat \
           --disable-nls --disable-websocket \
+          --without-zstd --without-libbrotli \
           --disable-shared --enable-static \
           PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" \
           CPPFLAGS="-I$PREFIX/include" \
