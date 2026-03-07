@@ -41,7 +41,7 @@ What's New in This Fork
 * TTL-based DNS cache expiration
 * Cookie ``SameSite`` attribute support
 * ``NO_COLOR`` environment variable support
-* Max connections per server raised from 16 to 10,000
+* Max connections per server raised to 128 (default: 16)
 * RPC port 0 for OS-assigned port (``--rpc-listen-port=0``)
 * Thread pool for parallel checksum verification
 * TLS 1.3 on Windows (WinTLS/Schannel)
@@ -285,6 +285,15 @@ libaria2
 The libaria2 is a C++ library that offers aria2 functionality to the
 client code.  To enable libaria2, use ``--enable-libaria2`` configure
 option.
+
+Upstream / Legacy
+-----------------
+
+This fork is based on `aria2/aria2 <https://github.com/aria2/aria2>`_
+v1.37.0 (the last upstream release, January 2024).  The original project
+by Tatsuhiro Tsujikawa is no longer actively maintained.  If you are
+looking for the legacy version, see the `upstream repository
+<https://github.com/aria2/aria2>`_.
 
 Disclaimer
 ----------

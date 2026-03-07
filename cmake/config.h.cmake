@@ -13,7 +13,7 @@
 #define PACKAGE "${PROJECT_NAME}"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/aria2/aria2/issues"
+#define PACKAGE_BUGREPORT "https://github.com/Kenshin9977/aria2/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "${PROJECT_NAME}"

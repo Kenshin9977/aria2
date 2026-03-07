@@ -400,8 +400,8 @@ HTTP Specific Options
 
   .. note::
 
-    *WinTLS* and *AppleTLS* do not support this option. Instead you will
-    have to import the certificate into the OS trust store.
+    *WinTLS* does not support this option. Instead you will have to
+    import the certificate into the OS trust store.
 
 .. option:: --certificate=<FILE>
 
@@ -419,13 +419,6 @@ HTTP Specific Options
     *WinTLS* does not support PEM files at the moment. Users have to use PKCS12
     files.
 
-  .. note::
-    *AppleTLS* users should use the KeyChain Access utility to import the client
-    certificate and get the SHA-1 fingerprint from the Information dialog
-    corresponding to that certificate.
-    To start aria2c use `--certificate=<SHA-1>`.
-    Alternatively PKCS12 files are also supported. PEM files, however, are not
-    supported.
 
 .. option:: --check-certificate [true|false]
 
@@ -1097,15 +1090,6 @@ RPC Options
     *WinTLS* does not support PEM files at the moment. Users have to use PKCS12
     files.
 
-  .. note::
-    *AppleTLS* users should use the KeyChain Access utility to first generate a
-    self-signed SSL-Server certificate, e.g. using the wizard, and get the
-    SHA-1 fingerprint from the Information dialog corresponding to that new
-    certificate.
-    To start aria2c with :option:`--rpc-secure` use
-    `--rpc-certificate=<SHA-1>`.
-    Alternatively PKCS12 files are also supported. PEM files, however, are not
-    supported.
 
 .. option:: --rpc-listen-all [true|false]
 
@@ -4301,8 +4285,8 @@ Verify SSL/TLS servers using given CA certificates
 
   This option is only available when aria2 was compiled against GnuTLS or
   OpenSSL.
-  WinTLS and AppleTLS will always use the system certificate store. Instead of
-  ```--ca-certificate`` install the certificate in that store.
+  WinTLS will always use the system certificate store. Instead of
+  ``--ca-certificate`` install the certificate in that store.
 
 RPC
 ~~~

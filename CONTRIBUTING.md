@@ -95,7 +95,7 @@ test(dht): add DHT routing table tests
 
 ## Reporting issues
 
-Open an issue at https://github.com/aria2/aria2/issues with:
+Open an issue at https://github.com/Kenshin9977/aria2/issues with:
 
 - aria2 version (`aria2c --version`)
 - Operating system
