@@ -224,8 +224,51 @@ jobs:
         name: aria2c-windows-x86_64
         path: src/aria2c.exe
 
+  deb-x86_64:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          g++-14 autoconf automake autotools-dev autopoint libtool pkg-config \
+          libssl-dev libc-ares-dev zlib1g-dev libsqlite3-dev \
+          libssh2-1-dev libxml2-dev dpkg-dev
+    - name: Build
+      run: |
+        autoreconf -i
+        ./configure \
+          --prefix=/usr \
+          --without-gnutls --with-openssl \
+          --with-libcares --with-sqlite3 --with-libssh2 \
+          --with-libxml2 \
+          CC=gcc-14 CXX=g++-14
+        make -j$(nproc)
+    - name: Package .deb
+      run: |
+        VERSION="${GITHUB_REF_NAME#release-}"
+        PKG="aria2_${VERSION}_amd64"
+        mkdir -p "$PKG/DEBIAN"
+        mkdir -p "$PKG/usr/bin"
+        mkdir -p "$PKG/usr/share/man/man1"
+        mkdir -p "$PKG/usr/share/doc/aria2"
+        cp src/aria2c "$PKG/usr/bin/"
+        strip "$PKG/usr/bin/aria2c"
+        cp doc/aria2c.1 "$PKG/usr/share/man/man1/" 2>/dev/null || true
+        cp COPYING "$PKG/usr/share/doc/aria2/copyright"
+        INSTALLED_SIZE=$(du -sk "$PKG/usr" | awk '{print $1}')
+        printf 'Package: aria2\nVersion: %s\nSection: net\nPriority: optional\nArchitecture: amd64\nDepends: libssl3t64 | libssl3, libc-ares2, zlib1g, libsqlite3-0, libssh2-1t64 | libssh2-1, libxml2, libstdc++6\nInstalled-Size: %s\nMaintainer: Kenshin9977 <https://github.com/Kenshin9977>\nHomepage: https://github.com/Kenshin9977/aria2\nDescription: Lightweight multi-protocol download utility (modernised fork)\n aria2 is a lightweight multi-protocol & multi-source, cross-platform\n download utility. It supports HTTP(S), FTP, SFTP, BitTorrent, and\n Metalink. This is a modernised C++23 fork with HTTP/2, SOCKS5, HSTS,\n Brotli/Zstd decompression, and many performance improvements.\n' "$VERSION" "$INSTALLED_SIZE" > "$PKG/DEBIAN/control"
+        dpkg-deb --build --root-owner-group "$PKG"
+        mv "${PKG}.deb" "aria2-${VERSION}-amd64.deb"
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: aria2-deb-x86_64
+        path: aria2-*.deb
+
   create-release:
-    needs: [linux-x86_64, linux-aarch64, macos-arm64, android-aarch64, windows-x86_64]
+    needs: [linux-x86_64, linux-aarch64, macos-arm64, android-aarch64, windows-x86_64, deb-x86_64]
     runs-on: ubuntu-24.04
     steps:
     - name: Download all artifacts
@@ -240,9 +283,31 @@ jobs:
         cp artifacts/aria2c-macos-arm64/aria2c     release/aria2c-macos-arm64
         cp artifacts/aria2c-android-aarch64/aria2c release/aria2c-android-aarch64
         cp artifacts/aria2c-windows-x86_64/aria2c.exe release/aria2c-windows-x86_64.exe
+        cp artifacts/aria2-deb-x86_64/*.deb release/
         cd release && sha256sum * > SHA256SUMS
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         generate_release_notes: true
         files: release/*
+
+  update-homebrew:
+    needs: [create-release]
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Update Homebrew formula
+      env:
+        GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      run: |
+        VERSION="${GITHUB_REF_NAME#release-}"
+        TARBALL="https://github.com/Kenshin9977/aria2/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz"
+        SHA256=$(curl -sL "$TARBALL" | sha256sum | awk '{print $1}')
+        git clone https://x-access-token:${GH_TOKEN}@github.com/Kenshin9977/homebrew-tap.git
+        cd homebrew-tap
+        sed -i "s|url \".*\"|url \"${TARBALL}\"|" Formula/aria2.rb
+        sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|" Formula/aria2.rb
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add Formula/aria2.rb
+        git commit -m "Update aria2 to ${VERSION}"
+        git push
