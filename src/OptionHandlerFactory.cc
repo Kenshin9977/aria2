@@ -438,7 +438,7 @@ OptionHandlerFactory::createOptionHandlers()
   }
   {
     auto op = std::make_unique<NumberOptionHandler>(
-        PREF_MAX_CONNECTION_PER_SERVER, TEXT_MAX_CONNECTION_PER_SERVER, "1", 1,
+        PREF_MAX_CONNECTION_PER_SERVER, TEXT_MAX_CONNECTION_PER_SERVER, "16", 1,
         128, 'x');
     op->addTag(TAG_BASIC);
     op->addTag(TAG_FTP);
