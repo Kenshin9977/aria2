@@ -137,7 +137,7 @@ jobs:
         # Build OpenSSL
         wget -q https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz
         tar xzf openssl-3.4.1.tar.gz && cd openssl-3.4.1
-        ./Configure android-arm64 no-shared --prefix="$PREFIX" \
+        ./Configure android-arm64 no-shared no-module --prefix="$PREFIX" \
           -D__ANDROID_API__=$API_LEVEL
         make -j$(nproc) && make install_sw
         cd ..
