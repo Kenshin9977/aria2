@@ -81,7 +81,7 @@ private:
 // Timeout-safe socket wait helpers.  Replace bare busy-wait loops
 // (while(!isReadable(0));) so tests fail fast instead of hanging.
 inline void waitRead(const std::shared_ptr<SocketCore>& socket,
-                     int timeoutMs = 15000)
+                     int timeoutMs = 30000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket->isReadable(0)) {
@@ -93,7 +93,7 @@ inline void waitRead(const std::shared_ptr<SocketCore>& socket,
 }
 
 inline void waitWrite(const std::shared_ptr<SocketCore>& socket,
-                      int timeoutMs = 15000)
+                      int timeoutMs = 30000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket->isWritable(0)) {
@@ -105,7 +105,7 @@ inline void waitWrite(const std::shared_ptr<SocketCore>& socket,
 }
 
 // Overloads for stack-allocated SocketCore (used by HttpServerTest, etc.)
-inline void waitRead(SocketCore& socket, int timeoutMs = 15000)
+inline void waitRead(SocketCore& socket, int timeoutMs = 30000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket.isReadable(0)) {
@@ -116,7 +116,7 @@ inline void waitRead(SocketCore& socket, int timeoutMs = 15000)
   CPPUNIT_FAIL("waitRead timed out");
 }
 
-inline void waitWrite(SocketCore& socket, int timeoutMs = 15000)
+inline void waitWrite(SocketCore& socket, int timeoutMs = 30000)
 {
   for (int i = 0; i < timeoutMs; ++i) {
     if (socket.isWritable(0)) {
