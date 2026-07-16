@@ -271,7 +271,11 @@ jobs:
         make -j$(nproc)
     - name: Package .deb
       run: |
+        # On a release-* tag this is the version; on a workflow_dispatch test build
+        # the ref is a branch name, which dpkg rejects (must start with a digit), so
+        # fall back to a placeholder that keeps the test build green.
         VERSION="${GITHUB_REF_NAME#release-}"
+        [[ "$VERSION" =~ ^[0-9] ]] || VERSION="0.0.0"
         PKG="aria2_${VERSION}_amd64"
         mkdir -p "$PKG/DEBIAN"
         mkdir -p "$PKG/usr/bin"
