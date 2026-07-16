@@ -79,18 +79,38 @@ jobs:
     - uses: actions/checkout@v6
     - name: Install dependencies
       run: |
-        brew install autoconf automake libtool pkgconf \
-          openssl@3 c-ares libssh2 sqlite libxml2 brotli zstd
+        brew install autoconf automake libtool pkgconf openssl@3
     - name: Build
       run: |
         autoreconf -i
+        # macOS can't produce a fully static binary (libSystem stays dynamic), so
+        # instead: link openssl from its static archives and drop every other
+        # third-party dependency. The result depends only on macOS system libraries,
+        # which is what makes it run on a Mac with nothing from Homebrew installed —
+        # the dynamically-linked build needed the user to have keg-only libxml2 etc.
+        #
+        # Everything dropped is unused for plain HTTP/HTTPS downloads: libxml2
+        # (Metalink), libssh2 (SFTP), c-ares (async DNS), sqlite (Firefox cookie DB),
+        # brotli/zstd (content-encoding, servers fall back to gzip/identity). Passing
+        # OPENSSL_LIBS as the .a paths bypasses pkg-config, whose -lssl would pull the
+        # dylib in instead.
+        OSSL=$(brew --prefix openssl@3)
         ./configure \
-          --without-gnutls --with-openssl \
-          --with-libcares --with-sqlite3 --with-libssh2 \
-          --disable-nls \
-          PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix c-ares)/lib/pkgconfig:$(brew --prefix libssh2)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig"
+          --with-openssl --without-gnutls \
+          --without-libxml2 --without-libcares --without-sqlite3 \
+          --without-libssh2 --disable-nls \
+          OPENSSL_CFLAGS="-I$OSSL/include" \
+          OPENSSL_LIBS="$OSSL/lib/libssl.a $OSSL/lib/libcrypto.a"
         make -j$(sysctl -n hw.ncpu)
         strip src/aria2c
+        # The whole point is portability, so fail loudly if any Homebrew dylib leaked
+        # back into the binary rather than shipping one that dies on someone's Mac.
+        if otool -L src/aria2c | grep -q /opt/homebrew; then
+          echo "::error::aria2c still links a Homebrew dylib"
+          otool -L src/aria2c
+          exit 1
+        fi
+        otool -L src/aria2c
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
