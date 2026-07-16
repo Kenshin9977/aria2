@@ -94,11 +94,15 @@ jobs:
         # brotli/zstd (content-encoding, servers fall back to gzip/identity). Passing
         # OPENSSL_LIBS as the .a paths bypasses pkg-config, whose -lssl would pull the
         # dylib in instead.
+        # The GitHub macOS runner has brotli and zstd preinstalled, so configure
+        # auto-links them from Homebrew unless told not to. Disable them explicitly
+        # (and the rest): system zlib and expat stay, both under /usr/lib, so the
+        # binary keeps only system dependencies.
         OSSL=$(brew --prefix openssl@3)
         ./configure \
           --with-openssl --without-gnutls \
           --without-libxml2 --without-libcares --without-sqlite3 \
-          --without-libssh2 --disable-nls \
+          --without-libssh2 --without-libbrotlidec --without-libzstd --disable-nls \
           OPENSSL_CFLAGS="-I$OSSL/include" \
           OPENSSL_LIBS="$OSSL/lib/libssl.a $OSSL/lib/libcrypto.a"
         make -j$(sysctl -n hw.ncpu)
