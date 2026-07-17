@@ -264,7 +264,7 @@ jobs:
         # exact failure this build exists to fix. Fail here rather than ship it.
         deps=$(objdump -p src/aria2c.exe | awk '/DLL Name:/{print tolower($3)}')
         echo "Imported DLLs:"; echo "$deps"
-        allowed='^(kernel32|advapi32|crypt32|msvcrt|secur32|shell32|ws2_32|user32|gdi32|ole32|bcrypt|ncrypt|iphlpapi|userenv|ntdll|dnsapi|winmm)\.dll$'
+        allowed='^(kernel32|advapi32|crypt32|msvcrt|secur32|shell32|ws2_32|wsock32|user32|gdi32|ole32|bcrypt|ncrypt|iphlpapi|userenv|ntdll|dnsapi|winmm)\.dll$'
         stray=$(echo "$deps" | grep -viE "$allowed" || true)
         if [ -n "$stray" ]; then
           echo "::error::aria2c.exe still depends on non-system DLLs:"; echo "$stray"
