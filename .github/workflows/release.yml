@@ -235,13 +235,42 @@ jobs:
     - name: Build
       run: |
         autoreconf -i --no-recursive
+        # `--enable-static` alone only makes aria2's own libs static. The MinGW
+        # packages ship both a .dll.a import lib and a .a archive, and the linker
+        # picks the DLL unless `-static` forces the archive, so the old binary
+        # depended on ~10 runtime DLLs (libgcc, libstdc++, libwinpthread, libssh2,
+        # libxml2, ...) that were never shipped. It popped a missing-DLL dialog per
+        # library on the user's machine.
+        #
+        # ARIA2_STATIC=yes turns on `pkg-config --static` so the dependency link
+        # lines pull their static archives and private deps; LDFLAGS="-static" makes
+        # the linker use those archives and statically link the C/C++ runtime. The
+        # -D*_STATICLIB defines stop c-ares and libxml2 headers from declaring their
+        # symbols dllimport, which would otherwise break a static link.
         ./configure \
           --without-gnutls --with-openssl --with-libxml2 \
           --with-libcares --with-sqlite3 --with-libssh2 \
           --disable-websocket --disable-nls \
-          --disable-shared --enable-static
+          --disable-shared --enable-static \
+          ARIA2_STATIC=yes \
+          CPPFLAGS="-DCARES_STATICLIB -DLIBXML_STATIC" \
+          LDFLAGS="-static"
         make -j$(nproc)
         strip src/aria2c.exe
+    - name: Verify the binary is standalone
+      run: |
+        # A static build imports nothing but core Windows DLLs. Anything else, a
+        # lib*.dll or the MinGW runtime, is a DLL the user does not have, and the
+        # exact failure this build exists to fix. Fail here rather than ship it.
+        deps=$(objdump -p src/aria2c.exe | awk '/DLL Name:/{print tolower($3)}')
+        echo "Imported DLLs:"; echo "$deps"
+        allowed='^(kernel32|advapi32|crypt32|msvcrt|secur32|shell32|ws2_32|user32|gdi32|ole32|bcrypt|ncrypt|iphlpapi|userenv|ntdll|dnsapi|winmm)\.dll$'
+        stray=$(echo "$deps" | grep -viE "$allowed" || true)
+        if [ -n "$stray" ]; then
+          echo "::error::aria2c.exe still depends on non-system DLLs:"; echo "$stray"
+          exit 1
+        fi
+        ./src/aria2c.exe --version | head -1
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
